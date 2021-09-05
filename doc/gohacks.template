@@ -1,0 +1,11 @@
+-*- Mode: gfm -*-
+
+# {{ .Name }} -- Asmodai's Go Hacks
+
+```go
+    import "github.com/Asmodai/gohacks/{{ .Name }}"
+```
+
+{{ .EmitUsage }}
+
+
