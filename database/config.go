@@ -34,7 +34,7 @@ SQL configuration structure.
 type Config struct {
 	Driver        string `json:"driver"`
 	Username      string `json:"username"`
-	Password      string `json:"password"`
+	Password      string `json:"password" config_obscure:"true"`
 	Hostname      string `json:"hostname"`
 	Port          int    `json:"port"`
 	Database      string `json:"database"`

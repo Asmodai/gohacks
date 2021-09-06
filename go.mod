@@ -8,4 +8,5 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/stretchr/testify v1.7.0 // indirect
+	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
 )
