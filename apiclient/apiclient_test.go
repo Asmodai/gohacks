@@ -54,9 +54,8 @@ func TestGet(t *testing.T) {
 	payload := []byte("{}")
 
 	conf := &Config{
-		BytesPerSecond: 10000,
-		MaxBytes:       10000,
-		Timeout:        5,
+		RequestsPerSecond: 5,
+		Timeout:           5,
 	}
 
 	client := NewClient(conf)
@@ -89,9 +88,8 @@ func TestPost(t *testing.T) {
 	payload := []byte("{}")
 
 	conf := &Config{
-		BytesPerSecond: 10000,
-		MaxBytes:       10000,
-		Timeout:        5,
+		RequestsPerSecond: 5,
+		Timeout:           5,
 	}
 
 	client := NewClient(conf)
@@ -119,28 +117,31 @@ func TestPost(t *testing.T) {
 }
 
 func TestAims(t *testing.T) {
-	t.Log("Does 'X-Aimms-Auth-Token' get added if there is a token?")
+	t.Log("Does token header get added if there is a token?")
 
 	payload := []byte("TOKEN")
 
 	conf := &Config{
-		BytesPerSecond: 10000,
-		MaxBytes:       10000,
-		Timeout:        5,
+		RequestsPerSecond: 10000,
+		Timeout:           5,
 	}
 
 	client := NewClient(conf)
 	client.Client = &FakeHttp{
 		Payload: func(req *http.Request) (int, []byte, error) {
-			tok := req.Header.Get("X-Aims-Auth-Token")
+			tok := req.Header.Get("HEADER")
 
 			return 200, []byte(tok), nil
 		},
 	}
 
 	params := &Params{
-		Url:   "http://127.0.0.1/test",
-		Token: "TOKEN",
+		Url:      "http://127.0.0.1/test",
+		UseToken: true,
+		Token: AuthToken{
+			Header: "HEADER",
+			Data:   "TOKEN",
+		},
 	}
 
 	data, code, err := client.Get(params)
@@ -157,14 +158,13 @@ func TestAims(t *testing.T) {
 }
 
 func TestAuth(t *testing.T) {
-	t.Log("Is basic auth added when username/password exists?")
+	t.Log("Is basic auth added when requested?")
 
 	payload := []byte("user:pass")
 
 	conf := &Config{
-		BytesPerSecond: 10000,
-		MaxBytes:       10000,
-		Timeout:        5,
+		RequestsPerSecond: 5,
+		Timeout:           5,
 	}
 
 	client := NewClient(conf)
@@ -181,8 +181,11 @@ func TestAuth(t *testing.T) {
 
 	params := &Params{
 		Url:      "http://127.0.0.1/test",
-		Username: "user",
-		Password: "pass",
+		UseBasic: true,
+		Basic: AuthBasic{
+			Username: "user",
+			Password: "pass",
+		},
 	}
 
 	data, code, err := client.Get(params)
@@ -202,9 +205,8 @@ func TestStatusCode(t *testing.T) {
 	t.Log("Is an error returned when a non-200 status code is received?")
 
 	conf := &Config{
-		BytesPerSecond: 10000,
-		MaxBytes:       10000,
-		Timeout:        5,
+		RequestsPerSecond: 5,
+		Timeout:           5,
 	}
 
 	client := NewClient(conf)
@@ -220,7 +222,7 @@ func TestStatusCode(t *testing.T) {
 
 	_, _, err := client.Get(params)
 	if err != nil {
-		if err.Error() == "APICLIENT: Received status code of 404 for http://127.0.0.1/test" {
+		if err.Error() == "APICLIENT: Received status code 404 for http://127.0.0.1/test" {
 			t.Log("Yes.")
 		} else {
 			t.Errorf("Error, but wrong type: %s", err.Error())
@@ -236,9 +238,8 @@ func TestNoConnect(t *testing.T) {
 	t.Log("Is an error returned when a non-200 status code is received?")
 
 	conf := &Config{
-		BytesPerSecond: 10000,
-		MaxBytes:       10000,
-		Timeout:        5,
+		RequestsPerSecond: 5,
+		Timeout:           5,
 	}
 
 	client := NewClient(conf)
