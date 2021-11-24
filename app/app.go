@@ -32,6 +32,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+)
+
+const (
+	EventLoopSleep time.Duration = 250 * time.Millisecond
 )
 
 type OnExitFn func(os.Signal)
@@ -46,7 +51,11 @@ type Application struct {
 
 	running      bool
 	exitMainLoop chan os.Signal
-	dism         *di.Service
+
+	config *config.Config
+
+	dism    *di.Service
+	procmgr *process.Manager
 }
 
 func DefaultOnExit(junk os.Signal) {
@@ -80,6 +89,8 @@ func NewApplication(name string, version string) *Application {
 }
 
 func (app *Application) InitConfig(confname string, confobj interface{}, fns config.ValidatorsMap) error {
+	var err error
+
 	if app.dism == nil {
 		return types.NewError(
 			"APPLICATION",
@@ -97,13 +108,17 @@ func (app *Application) InitConfig(confname string, confobj interface{}, fns con
 
 	app.dism.Add(confname, confobj)
 
-	cnf, err := config.InitWithDI(app.Name, app.Version, confname, fns)
+	app.config, err = config.InitWithDI(app.Name, app.Version, confname, fns)
 	if err != nil {
 		return err
 	}
-	cnf.Parse()
+	app.config.Parse()
 
 	return nil
+}
+
+func (app *Application) ProcessManager() *process.Manager {
+	return app.procmgr
 }
 
 func (app *Application) SetOnExit(fn OnExitFn) {
@@ -118,6 +133,10 @@ func (app *Application) IsRunning() bool {
 	return app.running == true
 }
 
+func (app *Application) IsDebug() bool {
+	return app.config.IsDebug()
+}
+
 func (app *Application) init() error {
 	app.dism = di.GetInstance()
 	if app.dism == nil {
@@ -127,10 +146,12 @@ func (app *Application) init() error {
 		)
 	}
 
-	_, found := app.dism.Get("ProcMgr")
+	pm, found := app.dism.Get("ProcMgr")
 	if !found {
-		app.dism.Add("ProcMgr", process.NewManager())
+		pm = process.NewManager()
+		app.dism.Add("ProcMgr", pm)
 	}
+	app.procmgr = pm.(*process.Manager)
 
 	app.installSignals()
 
@@ -155,6 +176,8 @@ func (app *Application) loop() {
 		}
 
 		app.MainLoop()
+
+		time.Sleep(EventLoopSleep)
 	}
 
 	pmgr.(*process.Manager).StopAll()

@@ -26,7 +26,8 @@ import (
 	"github.com/Asmodai/gohacks/di"
 	"github.com/Asmodai/gohacks/types"
 
-	"encoding/json"
+	"github.com/goccy/go-json"
+
 	"flag"
 	"fmt"
 	"io/ioutil"

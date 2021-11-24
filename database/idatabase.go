@@ -28,6 +28,11 @@ import (
 	"database/sql"
 )
 
+type ITx interface {
+	NamedExec(string, interface{}) (sql.Result, error)
+	Commit()
+}
+
 // Interface for `sql.Row` objects.
 type IRow interface {
 	Err() error
@@ -59,10 +64,12 @@ type IRows interface {
 
 // Interface for `sql.DB` objects.
 type IDatabase interface {
+	MustBegin() *sqlx.Tx
 	Begin() (*sql.Tx, error)
 	Beginx() (*sqlx.Tx, error)
 	Close() error
 	Exec(string, ...interface{}) (sql.Result, error)
+	NamedExec(string, interface{}) (sql.Result, error)
 	Ping() error
 	Prepare(string) (*sql.Stmt, error)
 	Query(string, ...interface{}) (IRows, error)

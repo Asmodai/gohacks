@@ -65,6 +65,16 @@ func (p *Params) ClearQueryParams() {
 	p.Queries = []*QueryParam{}
 }
 
+// Enable/disable basic authentication.
+func (p *Params) SetUseBasic(val bool) {
+	p.UseBasic = val
+}
+
+// Enable/disable authentication token.
+func (p *Params) SetUseToken(val bool) {
+	p.UseToken = val
+}
+
 // Create a new API parameters object,
 func NewParams() *Params {
 	return &Params{

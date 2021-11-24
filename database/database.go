@@ -43,6 +43,8 @@ type Database struct {
 	real *sqlx.DB
 }
 
+func (db *Database) MustBegin() *sqlx.Tx { return db.real.MustBegin() }
+
 func (db *Database) Begin() (*sql.Tx, error)   { return db.real.Begin() }
 func (db *Database) Beginx() (*sqlx.Tx, error) { return db.real.Beginx() }
 
@@ -58,6 +60,10 @@ func (db *Database) Prepare(query string) (*sql.Stmt, error) {
 
 func (db *Database) Exec(query string, args ...interface{}) (sql.Result, error) {
 	return db.real.Exec(query, args...)
+}
+
+func (db *Database) NamedExec(query string, args interface{}) (sql.Result, error) {
+	return db.real.NamedExec(query, args)
 }
 
 func (db *Database) Query(query string, args ...interface{}) (IRows, error) {
@@ -86,6 +92,18 @@ func Open(driver string, dsn string) (IDatabase, error) {
 	return &Database{
 		real: db,
 	}, err
+}
+
+type Tx struct {
+	real *sqlx.Tx
+}
+
+func (tx *Tx) NamedExec(query string, arg interface{}) (sql.Result, error) {
+	return tx.real.NamedExec(query, arg)
+}
+
+func (tx *Tx) Commit() {
+	tx.real.Commit()
 }
 
 /* database.go ends here. */

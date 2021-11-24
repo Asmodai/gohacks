@@ -32,6 +32,10 @@ var (
 	procs = []*Process{}
 )
 
+const (
+	EventLoopSleep time.Duration = 250 * time.Millisecond
+)
+
 // Process callback function.
 type ProcessFn func(**State)
 
@@ -232,6 +236,8 @@ func (p *Process) runAction() {
 
 		if p.Function != nil {
 			p.Function(&p.state)
+		} else {
+			time.Sleep(EventLoopSleep)
 		}
 	}
 }

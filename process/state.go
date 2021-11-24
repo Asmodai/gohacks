@@ -27,6 +27,10 @@ type State struct {
 	parent *Process
 }
 
+func NewState() *State {
+	return &State{}
+}
+
 // Send data from a process to an external entity.
 func (ps *State) Send(data interface{}) bool {
 	select {
