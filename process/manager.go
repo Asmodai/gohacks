@@ -91,7 +91,7 @@ func (pm *Manager) Add(proc *Process) {
 // Find and return the given process, or nil if not found.
 func (pm *Manager) Find(name string) (*Process, bool) {
 	for _, p := range pm.processes {
-		if p.Name == name {
+		if p.config.Name == name {
 			return p, true
 		}
 	}

@@ -23,6 +23,7 @@
 package process
 
 import (
+	"context"
 	"log"
 	"os"
 	"testing"
@@ -30,314 +31,249 @@ import (
 )
 
 var (
-	manager    *Manager
-	testProc   *Process
-	testNBProc *Process
-	testBProc  *Process
-	testEProc  *Process
-
-	testBlockingSend bool
-	fromNonblocking  interface{}
-	fromBlocking     interface{}
-
-	EveryVal int = 0
+	manager       *Manager
+	testRunProc   *Process
+	testEveryProc *Process
+	testMessage   interface{}
 )
 
-// Test `blocking` function.
-func BlockingFn(state **State) {
-	var ps *State = *state
+func testAction(ctx context.Context, ipc *IPC) {
+	if val, ok := ipc.Receive(); ok {
+		switch val {
+		case "test":
+			// This test does not send anything back via the mailbox.
+			testMessage = val
+			break
 
-	fromBlocking = ps.ReceiveBlocking()
-
-	time.Sleep(1 * time.Second)
-	ps.Send(fromBlocking)
-
-	// Sneakily test the `default` clause.
-	testBlockingSend = ps.Send("Nope")
-}
-
-// Test `Nonblocking` function.
-func NonblockingFn(state **State) {
-	var ps *State = *state
-
-	data, ok := ps.Receive()
-	if ok {
-		fromNonblocking = data
-		ps.SendBlocking(data)
+		default:
+			// Anything else will write a string to the mailbox.
+			ipc.Send("result")
+			break
+		}
 	}
 }
 
-// Test `every` function.
-func EveryFn(state **State) {
-	EveryVal++
+func testStop() {
+	log.Printf("Process is terminating due to context cancel.\n")
 }
 
-// Create a new test config.
-func NewTestConfig() *Config {
+func newRunConfig() *Config {
 	return &Config{
-		Name:     "Test",
+		Name:     "Test Run Process",
 		Interval: 0,
-		Function: nil,
+		ActionFn: testAction,
+		StopFn:   testStop,
 	}
 }
 
-// Create a new config for blocking send test.
-func NewBlockingConfig() *Config {
+func newEveryConfig() *Config {
 	return &Config{
-		Name:     "Blocking",
-		Interval: 0,
-		Function: BlockingFn,
-	}
-}
-
-// Create a new config for nonblocking send test.
-func NewNonblockingConfig() *Config {
-	return &Config{
-		Name:     "Nonblocking",
-		Interval: 0,
-		Function: NonblockingFn,
-	}
-}
-
-// Create a new config for the `every` event test.
-func NewEveryConfig() *Config {
-	return &Config{
-		Name:     "Every",
+		Name:     "Test Every Process",
 		Interval: 1,
-		Function: EveryFn,
+		ActionFn: testAction,
+		StopFn:   testStop,
 	}
 }
 
-// Main testing function.
+// ==================================================================
+// {{{ Setup:
+
 func TestMain(m *testing.M) {
 	log.Println("Setting up processes.")
-
-	manager = NewManager()
-	testProc = manager.Create(NewTestConfig())
-	testNBProc = manager.Create(NewNonblockingConfig())
-	testBProc = manager.Create(NewBlockingConfig())
-	testEProc = manager.Create(NewEveryConfig())
+	{
+		manager = NewManager()
+		testRunProc = manager.Create(newRunConfig())
+		testEveryProc = manager.Create(newEveryConfig())
+	}
 
 	log.Println("Starting processes.")
+	{
+		go manager.Run("Test Run Process")
+		go manager.Run("Test Every Process")
 
-	go manager.Run("Test")
-	defer testProc.Stop()
-
-	go manager.Run("Blocking")
-	defer testBProc.Stop()
-
-	go manager.Run("Nonblocking")
-	defer testNBProc.Stop()
-
-	go manager.Run("Every")
-	defer testEProc.Stop()
+		// Allow the processes to start.
+		time.Sleep(2 * time.Second)
+	}
 
 	log.Println("Running tests.")
 	val := m.Run()
 
 	log.Println("Shutting down.")
+	{
+		testRunProc.Stop()
+		testEveryProc.Stop()
+	}
+
 	os.Exit(val)
 }
 
-// Test Nonblocking functions.
-func TestNonblocking(t *testing.T) {
-	t.Log("Does non-blocking `Receive` work as expected?")
+// }}}
+// ==================================================================
 
-	testNBProc.Send("test")
-	time.Sleep(1 * time.Second)
+// ==================================================================
+// {{{ Regular non-interval process:
 
-	t.Logf("Function got '%v'", fromNonblocking)
-	if fromNonblocking == "test" {
+func TestRunProc(t *testing.T) {
+	t.Run("Is it running?", func(t *testing.T) {
+		if testRunProc.Running() == false {
+			t.Error("Process is *not* running.")
+			return
+		}
+	})
+
+	t.Run("Can we write to its mailbox?", func(t *testing.T) {
+		payload := "test"
+
+		testMessage = nil
+		testRunProc.Send(payload)
 		time.Sleep(1 * time.Second)
-		result := testNBProc.Receive()
 
-		t.Logf("Process got '%v'", result)
-		if result == "test" {
-			t.Log("Expected result.")
-		} else {
-			t.Error("Unexpected result.")
+		if testMessage == nil {
+			t.Error("Mailbox Send failed!")
 			return
 		}
-	} else {
-		t.Error("Unexpected result.")
-		return
-	}
 
-	t.Log("Did the second `send` fail because of a channel buffer?")
-	if !testBlockingSend {
-		t.Log("Yes.")
-		return
-	}
+		if payload != testMessage.(string) {
+			t.Errorf("Unexpected result '%v'", testMessage)
+			return
+		}
+	})
 
-	t.Error("No.")
+	t.Run("Can we read from its mailbox?", func(t *testing.T) {
+		payload := "read"
+
+		testMessage = nil
+		testRunProc.Send(payload)
+		time.Sleep(2 * time.Second)
+
+		val, ok := testRunProc.Receive()
+		if !ok {
+			t.Error("Mailbox Get failed!")
+			return
+		}
+
+		if val.(string) != "result" {
+			t.Errorf("Unexpected result '%v'", val)
+			return
+		}
+	})
 }
 
-// Test blocking functions.
-func TestBlocking(t *testing.T) {
-	t.Log("Does blocking `Receive` work as expected?")
+// }}}
+// ==================================================================
 
-	testBProc.Send("test")
-	time.Sleep(1 * time.Second)
+// ==================================================================
+// {{{ Interval process:
 
-	t.Logf("Function got '%v'", fromBlocking)
-	if fromBlocking == "test" {
-		t.Log("Expected result.")
-		return
-	}
+// }}}
+// ==================================================================
 
-	t.Error("Unexpected result.")
-}
+// ==================================================================
+// {{{ Process manager:
 
-// Test `every` repeating processes.
-func TestEvery(t *testing.T) {
-	t.Log("Does `Every` fire as expected?")
-
-	time.Sleep(2 * time.Second)
-	if EveryVal > 1 {
-		t.Log("Yes.")
-	} else {
-		t.Error("No.")
-	}
-}
-
-// Test process manager.
+// Test main manager functions.
 func TestManager(t *testing.T) {
-	pm := NewManager()
+	t.Run("Does `Add` do nothing if given nothing?", func(t *testing.T) {
+		manager.Add(nil)
+		if manager.Count() > 2 {
+			t.Errorf("Somehow we have %d processes!", manager.Count())
+		}
+	})
 
-	t.Log("Does `Manager.Add` do nothing if given no process?")
-	pm.Add(nil)
-	if pm.Count() > 0 {
-		t.Errorf("Somehow we have %d processes!", pm.Count())
-		return
-	}
-	t.Log("Yes.")
+	t.Run("Does `Stop` do nothing if given invalid process?", func(t *testing.T) {
+		if manager.Stop("chickens") {
+			t.Error("Manager reports success for stopping invalid process!")
+		}
+	})
 
-	t.Log("Does `Manager.Stop` do nothing if given an invalid process?")
-	if !pm.Stop("chickens") {
-		t.Log("Yes.")
-	} else {
-		t.Error("No.")
-		return
-	}
-
-	t.Log("Does `Manager.Run` do nothing if the process is invalid?")
-	if !pm.Run("chickens") {
-		t.Log("Yes.")
-	} else {
-		t.Error("No.")
-	}
+	t.Run("Does `Run` do nothing if given invalid process?", func(t *testing.T) {
+		if manager.Run("chickens") {
+			t.Error("Manager reports success for running invalid process!")
+		}
+	})
 }
 
-// Test finding invalid processes.
-func TestInfalidFind(t *testing.T) {
-	t.Log("Does `Manager.Find` do the right thing when no process is found?`")
-
-	_, found := manager.Find("nope")
-	if found {
-		t.Error("No, found a non-existing process!")
-		return
-	}
-
-	t.Log("Yes.")
-}
-
-// Test finding processes.
 func TestFind(t *testing.T) {
-	t.Log("Can I find my instance?")
-	i, found := manager.Find("Test")
-	if !found {
-		t.Error("Could not find my instance!")
-		return
-	}
-	t.Log("Yes.")
+	t.Run("Does it return false for invalid process?", func(t *testing.T) {
+		if _, found := manager.Find("chickens"); found {
+			t.Error("Manager claims to be able to find invalid process!")
+		}
+	})
 
-	t.Log("Did we get the *right* process?")
-	if i != testProc {
-		t.Error("Returned process was not ours.")
-		return
-	}
-	t.Log("Yes.")
+	t.Run("Does it work as expected?", func(t *testing.T) {
+		inst, found := manager.Find("Test Run Process")
 
-	t.Log("Is it running?")
-	if !i.Running {
-		t.Error("Process is not running!")
-		return
-	}
-	t.Log("Yes.")
-}
-
-// Test `RunEvery` when process is already running.
-func TestEveryAlreadyRunning(t *testing.T) {
-	t.Log("Does `RunEvery` return `false` if already running?")
-
-	res := testEProc.Run()
-	if testEProc.Running {
-		if res {
-			t.Error("No.")
+		if !found {
+			t.Error("Could not find test process!")
 			return
 		}
 
-		t.Log("Yes.")
-		return
-	}
+		if inst != testRunProc {
+			t.Error("Found wrong instance!")
+		}
 
-	t.Error("Process was not running!")
+		if !inst.Running() {
+			t.Error("Found process is not running!")
+		}
+	})
 }
 
-// Test dumping.
-func TestDump(t *testing.T) {
-	t.Log("Can we list processes?")
+// Test utility functions.
+func TestUtils(t *testing.T) {
+	t.Run("Can we list processes?", func(t *testing.T) {
+		res := manager.Processes()
 
-	res := manager.Processes()
-	if res != nil {
-		if len(*res) == 4 {
-			t.Log("Yes.")
+		if res == nil {
+			t.Error("No process list was returned!")
 			return
 		}
-	}
 
-	t.Error("No.")
+		if len(*res) != 2 {
+			t.Errorf("Incorrect number of processes: %d", len(*res))
+			return
+		}
+	})
 }
 
-// Test stopping processes.
+// Test process killing abilities.
 func TestStop(t *testing.T) {
-	t.Log("Does `Stop` work as expected?")
+	t.Run("Does it work as expected?", func(t *testing.T) {
+		res := testRunProc.Stop()
+		time.Sleep(100 * time.Millisecond)
 
-	res1 := testNBProc.Stop()
-	if !testNBProc.Running {
-		if res1 {
-			t.Log("Yes.")
-		} else {
-			t.Error("No.")
-			return
+		if testRunProc.Running() {
+			t.Error("Process reports as still running.")
 		}
-	} else {
-		t.Error("Process did not shut down!")
-		return
-	}
 
-	t.Log("Does `Stop` return `false` if process not running?")
-	time.Sleep(1 * time.Second)
-	res2 := testNBProc.Stop()
-	if !testNBProc.Running {
-		if !res2 {
-			t.Log("Yes.")
-		} else {
-			t.Error("No.")
-			return
+		if !res {
+			t.Error("Process was already stopped.")
 		}
-	} else {
-		t.Error("Process did not shut down!")
-		return
-	}
+	})
 
-	t.Log("Does `Manager.StopAll` work as expected?")
-	res3 := manager.StopAll()
-	if res3 {
-		t.Log("Yes.")
-	} else {
-		t.Error("No.")
-	}
+	t.Run("Does it return `false` if already stopped?", func(t *testing.T) {
+		res := testRunProc.Stop()
+		time.Sleep(100 * time.Millisecond)
+
+		if testRunProc.Running() {
+			t.Error("Process reports as still running.")
+		}
+
+		if res {
+			t.Error("Process could not be stopped apparently.")
+		}
+	})
+
+	t.Run("Does `Manager.StopAll` work?", func(t *testing.T) {
+		if res := manager.StopAll(); !res {
+			t.Error("`StopAll` failed!")
+		}
+
+		// Sleep here to allow system to catch up.
+		time.Sleep(100 * time.Millisecond)
+	})
 }
+
+// }}}
+// ==================================================================
 
 /* process_test.go ends here. */

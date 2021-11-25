@@ -27,8 +27,8 @@ import (
 	"github.com/Asmodai/gohacks/process"
 	"github.com/Asmodai/gohacks/types"
 
+	"context"
 	"log"
-	"time"
 )
 
 type SysInfoProc struct {
@@ -41,7 +41,7 @@ func NewSysInfoProc() *SysInfoProc {
 	}
 }
 
-func (sip *SysInfoProc) Action(state **process.State) {
+func (sip *SysInfoProc) Action(_ context.Context, _ *process.IPC) {
 	sip.si.UpdateStats()
 
 	log.Printf(
@@ -55,7 +55,7 @@ func (sip *SysInfoProc) Action(state **process.State) {
 	)
 }
 
-func Spawn(interval time.Duration) (*process.Process, error) {
+func Spawn(interval int) (*process.Process, error) {
 	name := "SysInfo"
 
 	dism := di.GetInstance()
@@ -76,7 +76,7 @@ func Spawn(interval time.Duration) (*process.Process, error) {
 	conf := &process.Config{
 		Name:     name,
 		Interval: interval,
-		Function: si.Action,
+		ActionFn: si.Action,
 	}
 	pr := mgr.(*process.Manager).Create(conf)
 

@@ -23,7 +23,9 @@
 package process
 
 import (
+	"context"
 	"log"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -37,7 +39,7 @@ const (
 )
 
 // Process callback function.
-type ProcessFn func(**State)
+type CallbackFn func(context.Context, *IPC)
 
 // Process stopping callback function.
 type OnStopFn func()
@@ -53,7 +55,7 @@ To use:
   conf := &process.Config{
     Name:     "Windows 95",
     Interval: 10,        // 10 seconds.
-    Function: func(state **State) {
+    Function: func(_ context.Context) {
       // Crash or something.
     },
   }
@@ -82,53 +84,36 @@ To use:
 type Process struct {
 	sync.Mutex
 
-	Name     string        // Pretty name.
-	Function ProcessFn     // `Action` callback.
-	OnStop   OnStopFn      // `Stop` callback.
-	Running  bool          // Is the process running?
-	Interval time.Duration // `RunEvery` time interval.
-
-	chanStop      chan bool
-	chanToState   chan interface{}
-	chanFromState chan interface{}
-	period        time.Duration
-	state         *State
-	manager       *Manager
-}
-
-// Process configuration structure.
-type Config struct {
-	Name     string        // Pretty name.
-	Interval time.Duration // `RunEvery` time interval.
-	Function ProcessFn     // `Action` callback.
-	OnStop   OnStopFn      // `Stop` callback.
-}
-
-// Create a default process configuration.
-func NewDefaultConfig() *Config {
-	return &Config{}
+	config   *Config
+	running  bool               // Is the process running?
+	interval time.Duration      // Real interval, as a time.Duration.
+	period   time.Duration      // Remaining interval.
+	ctx      context.Context    // Processes' context.
+	cancelFn context.CancelFunc // Context 'cancel' function.
+	ipc      *IPC               // IPC mechanism
 }
 
 // Create a new process with the given configuration.
 func NewProcess(config *Config) *Process {
+	duration := time.Duration(config.Interval) * time.Second
+
+	// Set up a new cancelable context.
+	ctx, cancel := context.WithCancel(context.Background())
+
 	p := &Process{
-		Name:          config.Name,
-		Function:      config.Function,
-		OnStop:        config.OnStop,
-		Running:       false,
-		Interval:      config.Interval * time.Second,
-		period:        config.Interval * time.Second,
-		chanStop:      make(chan bool),
-		chanToState:   make(chan interface{}, 1),
-		chanFromState: make(chan interface{}, 1),
-		state:         &State{},
+		config:   config,
+		running:  false,
+		interval: duration,
+		period:   duration,
+		ipc:      NewIPC(ctx),
+		ctx:      ctx,
+		cancelFn: cancel,
 	}
 
-	if config.Function == nil {
-		p.Function = p.nilFunction
+	// Set default callback if none is provided.
+	if p.config.ActionFn == nil {
+		p.config.ActionFn = p.nilFunction
 	}
-
-	p.state.parent = p
 
 	return p
 }
@@ -138,25 +123,25 @@ func NewProcess(config *Config) *Process {
 // Returns 'true' if the process has been started, or 'false' if it is
 // already running.
 func (p *Process) Run() bool {
-	if p.Running {
+	if p.running {
 		return false
 	}
 
-	p.Running = true
+	p.running = true
 
 	// Are we to run on an interval?
-	if p.Interval > 0 {
+	if p.config.Interval > 0 {
 		log.Printf(
-			"PROCESS: %s started, will invoke every %d seconds.\n",
-			p.Name,
-			p.Interval/time.Second,
+			"PROCESS: %s started, will invoke every %d second(s).\n",
+			p.config.Name,
+			p.interval/time.Second,
 		)
 		p.everyAction()
 
 		return true
 	}
 
-	log.Printf("PROCESS: %s started.\n", p.Name)
+	log.Printf("PROCESS: %s started.\n", p.config.Name)
 	p.runAction()
 
 	return true
@@ -167,52 +152,36 @@ func (p *Process) Run() bool {
 // Returns 'true' if the process was successfully stopped, or 'false'
 // if it was not running.
 func (p *Process) Stop() bool {
-	if !p.Running {
+	if !p.running {
 		return false
 	}
 
-	p.Send(nil)
-	p.chanStop <- true
-	<-p.chanStop
+	p.cancelFn()
 
-	p.Running = false
-	log.Printf("PROCESS: %s stopped.\n", p.Name)
+	p.running = false
+	log.Printf("PROCESS: %s stopped.\n", p.config.Name)
 
 	return true
 }
 
-// Send data to the process with blocking.
-func (p *Process) Send(data interface{}) {
-	p.chanToState <- data
+// Is the process running?
+func (p *Process) Running() bool {
+	return p.running
 }
 
-// Send data to the process without blocking.
-func (p *Process) SendNonBlocking(data interface{}) {
-	select {
-	case p.chanToState <- data:
-	default:
-	}
+// Send data to the process with blocking.
+func (p *Process) Send(data interface{}) {
+	p.ipc.ClientSend(data)
 }
 
 // Receive data from the process with blocking.
-func (p *Process) Receive() interface{} {
-	return <-p.chanFromState
-}
-
-// Receive data from the process without blocking.
-func (p *Process) ReceiveNonBlocking() (interface{}, bool) {
-	select {
-	case data := <-p.chanFromState:
-		return data, true
-
-	default:
-	}
-
-	return nil, false
+func (p *Process) Receive() (interface{}, bool) {
+	return p.ipc.ClientReceive()
 }
 
 // Default action callback.
-func (p *Process) nilFunction(state **State) {
+func (p *Process) nilFunction(_ context.Context, _ *IPC) {
+	// noop.
 }
 
 // Run the configured action for this process.
@@ -222,23 +191,30 @@ func (p *Process) runAction() {
 
 	for {
 		select {
-		case stop := <-p.chanStop:
-			if stop {
-				if p.OnStop != nil {
-					p.OnStop()
+		case <-p.ctx.Done():
+			// Invoked when context is cancelled.
+			{
+				if p.config.StopFn != nil {
+					p.config.StopFn()
 				}
-				p.chanStop <- true
+
 				return
 			}
 
 		default:
+			// Non-blocking select!
 		}
 
-		if p.Function != nil {
-			p.Function(&p.state)
-		} else {
-			time.Sleep(EventLoopSleep)
+		if p.config.ActionFn != nil {
+			ctx, cancel := context.WithCancel(p.ctx)
+
+			p.config.ActionFn(ctx, p.ipc)
+			cancel()
 		}
+
+		// Give time to both Go and OS for scheduler.
+		runtime.Gosched()
+		time.Sleep(EventLoopSleep)
 	}
 }
 
@@ -252,27 +228,40 @@ func (p *Process) everyAction() {
 
 	for {
 		select {
-		case stop := <-p.chanStop:
-			if stop {
-				if p.OnStop != nil {
-					p.OnStop()
+		case <-p.ctx.Done():
+			// Invoked when context is cancelled.
+			{
+				if p.config.StopFn != nil {
+					p.config.StopFn()
 				}
-				p.chanStop <- true
+
 				return
 			}
 
 		case <-time.After(p.period):
+			// Invoked when timer fires.
 			break
 		}
 
 		started := time.Now()
-		if p.Function != nil {
-			p.Function(&p.state)
+		if p.config.ActionFn != nil {
+			ctx, cancel := context.WithCancel(p.ctx)
+
+			p.config.ActionFn(ctx, p.ipc)
+			cancel()
 		}
 		finished := time.Now()
 
 		duration := finished.Sub(started)
-		p.period = p.Interval - duration
+		p.period = p.interval - duration
+
+		if p.period < 0 {
+			log.Printf(
+				"PROCESS: WARNING: Event loop for %s took longer than interval of %d!\n",
+				p.config.Name,
+				p.interval/time.Second,
+			)
+		}
 	}
 }
 

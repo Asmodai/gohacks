@@ -1,5 +1,5 @@
 /*
- * process_test.go --- SysInfo process tests.
+ * config.go --- Process configuration.
  *
  * Copyright (c) 2021 Paul Ward <asmodai@gmail.com>
  *
@@ -20,50 +20,19 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package sysinfo
+package process
 
-import (
-	"github.com/Asmodai/gohacks/di"
-	"github.com/Asmodai/gohacks/process"
-
-	"testing"
-	"time"
-)
-
-var (
-	testSIProc *process.Process
-	dism       = di.GetInstance()
-)
-
-// Init DI.
-func InitDI() {
-	_, found := dism.Get("ProcMgr")
-	if !found {
-		dism.Add("ProcMgr", process.NewManager())
-	}
+// Process configuration structure.
+type Config struct {
+	Name     string     // Pretty name.
+	Interval int        // `RunEvery` time interval.
+	ActionFn CallbackFn // `Action` callback.
+	StopFn   OnStopFn   // `Stop` callback.
 }
 
-func TestProcess(t *testing.T) {
-	t.Log("Does the system info process run as expected?")
-
-	InitDI()
-
-	testSIProc, err := Spawn(1)
-	if err != nil {
-		t.Errorf("Spawn: %s", err.Error())
-		return
-	}
-
-	time.Sleep(2 * time.Second)
-
-	if !testSIProc.Running() {
-		t.Error("Process is not running.")
-		testSIProc.Stop()
-		return
-	}
-
-	testSIProc.Stop()
-	t.Log("Yes.")
+// Create a default process configuration.
+func NewDefaultConfig() *Config {
+	return &Config{}
 }
 
-/* process_test.go ends here. */
+/* config.go ends here. */
