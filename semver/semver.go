@@ -23,8 +23,8 @@
 package semver
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -36,16 +36,22 @@ type SemVer struct {
 	Commit string
 }
 
-func MakeSemVer(info string) *SemVer {
+func MakeSemVer(info string) (*SemVer, error) {
 	semver := &SemVer{}
+	err := semver.FromString(info)
+	if err != nil {
+		semver = nil
+	}
 
-	semver.FromString(info)
+	return semver, err
+}
 
-	return semver
+func NewSemVer() *SemVer {
+	return &SemVer{}
 }
 
 // Convert numeric version to components
-func (s *SemVer) FromString(info string) {
+func (s *SemVer) FromString(info string) error {
 	var str string = info
 	var commit string = "<local>"
 
@@ -53,7 +59,7 @@ func (s *SemVer) FromString(info string) {
 		arr := strings.Split(info, ":")
 
 		if len(arr) != 2 {
-			log.Fatalf("Invalid version string '%s'", info)
+			return errors.New(fmt.Sprintf("Invalid version string '%s'", info))
 		}
 
 		str = arr[0]
@@ -62,7 +68,7 @@ func (s *SemVer) FromString(info string) {
 
 	i, err := strconv.Atoi(str)
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 
 	nmaj := i / 10000000
@@ -73,6 +79,8 @@ func (s *SemVer) FromString(info string) {
 	s.Minor = nmin
 	s.Patch = npatch
 	s.Commit = commit
+
+	return nil
 }
 
 func (s *SemVer) String() string {
