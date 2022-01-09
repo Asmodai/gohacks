@@ -23,7 +23,10 @@
 package process
 
 import (
-	"log"
+	"github.com/Asmodai/gohacks/logger"
+
+	"context"
+	"sync"
 )
 
 /*
@@ -61,18 +64,45 @@ To use,
 */
 type Manager struct {
 	processes []*Process
+	logger    logger.ILogger
+	parent    context.Context
+	ctx       context.Context
+	cancel    context.CancelFunc
+	cwg       *sync.WaitGroup
 }
 
 // Create a new process manager.
 func NewManager() *Manager {
+	ctx, cancel := context.WithCancel(context.TODO())
+
 	return &Manager{
 		processes: []*Process{},
+		logger:    &logger.DefaultLogger{},
+		ctx:       ctx,
+		cancel:    cancel,
+		cwg:       &sync.WaitGroup{},
 	}
+}
+
+// Set the process manager's logger.
+func (pm *Manager) SetLogger(lgr logger.ILogger) {
+	pm.logger = lgr
+}
+
+// Set the process manager's context.
+func (pm *Manager) SetContext(parent context.Context) {
+	ctx, cancel := context.WithCancel(parent)
+
+	pm.parent = parent
+	pm.ctx = ctx
+	pm.cancel = cancel
 }
 
 // Create a new process with the given configuration.
 func (pm *Manager) Create(config *Config) *Process {
 	proc := NewProcess(config)
+	proc.SetLogger(pm.logger)
+	proc.SetWaitGroup(pm.cwg)
 
 	pm.processes = append(pm.processes, proc)
 
@@ -85,13 +115,14 @@ func (pm *Manager) Add(proc *Process) {
 		return
 	}
 
+	proc.SetLogger(pm.logger)
 	pm.processes = append(pm.processes, proc)
 }
 
 // Find and return the given process, or nil if not found.
 func (pm *Manager) Find(name string) (*Process, bool) {
 	for _, p := range pm.processes {
-		if p.config.Name == name {
+		if p.Name == name {
 			return p, true
 		}
 	}
@@ -109,6 +140,8 @@ func (pm *Manager) Run(name string) bool {
 		return false
 	}
 
+	proc.SetContext(pm.ctx)
+
 	return proc.Run()
 }
 
@@ -121,6 +154,7 @@ func (pm *Manager) Stop(name string) bool {
 		return false
 	}
 
+	// Stopping one process doesn't require us to wait for the group.
 	return proc.Stop()
 }
 
@@ -131,11 +165,29 @@ func (pm *Manager) Stop(name string) bool {
 func (pm *Manager) StopAll() bool {
 	res := true
 
-	// TODO: This is ugly, make it better.
-	log.Printf("PROCESSMANAGER: Stopping all processes.")
+	pm.logger.Info(
+		"Stopping all processes.",
+		"type", "stop",
+	)
+
+	// This is better than invoking the context's cancel, as it allows
+	// cleanup to be executed.
 	for _, proc := range pm.processes {
+		pm.logger.Info(
+			"Stopping process.",
+			"type", "stop",
+			"name", proc.Name,
+		)
 		res = proc.Stop()
 	}
+
+	// Stopping all process requires us to wait.
+	pm.cwg.Wait()
+
+	pm.logger.Info(
+		"All processes stopped.",
+		"type", "stop",
+	)
 
 	return res
 }

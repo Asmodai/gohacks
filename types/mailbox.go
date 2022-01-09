@@ -31,7 +31,7 @@ import (
 
 const (
 	// Amount of time to delay semaphore acquisition loops.
-	MailboxDelaySleep  time.Duration = 100 * time.Millisecond
+	MailboxDelaySleep  time.Duration = 50 * time.Millisecond
 	DefaultCtxDeadline time.Duration = 5 * time.Second
 )
 

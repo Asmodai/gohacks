@@ -1,7 +1,7 @@
 /*
- * imanager.go --- Process manager interface.
+ * logger.go --- Default logger.
  *
- * Copyright (c) 2021 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -20,28 +20,35 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package process
+package logger
 
 import (
-	"github.com/Asmodai/gohacks/logger"
-
-	"context"
+	"log"
 )
 
-/*
-Process manager interface.
-*/
-type IManager interface {
-	SetLogger(logger.ILogger)
-	SetContext(context.Context)
-	Create(*Config) *Process
-	Add(*Process)
-	Find(string) (*Process, bool)
-	Run(string) bool
-	Stop(string) bool
-	StopAll() bool
-	Processes() *[]*Process
-	Count() int
+type DefaultLogger struct {
 }
 
-/* imanager.go ends here. */
+func (l *DefaultLogger) SetDebug(junk bool) {
+}
+
+func (l *DefaultLogger) SetLogFile(junk string) {
+}
+
+func (l *DefaultLogger) Debug(msg string, rest ...interface{}) {
+	log.Printf("DEBUG: %s  %v", msg, rest)
+}
+
+func (l *DefaultLogger) Warn(msg string, rest ...interface{}) {
+	log.Printf("WARN: %s  %v", msg, rest)
+}
+
+func (l *DefaultLogger) Info(msg string, rest ...interface{}) {
+	log.Printf("INFO: %s  %v", msg, rest)
+}
+
+func (l *DefaultLogger) Fatal(msg string, rest ...interface{}) {
+	log.Fatalf("FATAL: %s  %v", msg, rest)
+}
+
+/* logger.go ends here. */

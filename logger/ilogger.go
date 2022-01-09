@@ -1,7 +1,7 @@
 /*
- * imanager.go --- Process manager interface.
+ * ilogger.go --- Logger interface.
  *
- * Copyright (c) 2021 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -20,28 +20,15 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package process
+package logger
 
-import (
-	"github.com/Asmodai/gohacks/logger"
-
-	"context"
-)
-
-/*
-Process manager interface.
-*/
-type IManager interface {
-	SetLogger(logger.ILogger)
-	SetContext(context.Context)
-	Create(*Config) *Process
-	Add(*Process)
-	Find(string) (*Process, bool)
-	Run(string) bool
-	Stop(string) bool
-	StopAll() bool
-	Processes() *[]*Process
-	Count() int
+type ILogger interface {
+	SetDebug(bool)
+	SetLogFile(string)
+	Debug(string, ...interface{})
+	Warn(string, ...interface{})
+	Info(string, ...interface{})
+	Fatal(string, ...interface{})
 }
 
-/* imanager.go ends here. */
+/* ilogger.go ends here. */

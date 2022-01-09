@@ -110,6 +110,7 @@ type Config struct {
 		Version  bool   `config_hide:"true"`
 		Dump     bool   `config_hide:"true"`
 		ConfFile string `config_hide:"true"`
+		LogFile  string `config_hide:"true"`
 	} `config_hide:"true"`
 
 	App        interface{}   `config_hide:"true"`
@@ -217,6 +218,11 @@ func (c *Config) Parse() {
 	}
 
 	c.handleCLI()
+}
+
+// Return the path to the specified logging file.
+func (c *Config) LogFile() string {
+	return c.ConfigCLI.LogFile
 }
 
 // Call a given function with arguments, and return any error.
@@ -413,6 +419,7 @@ func (c *Config) addFlags() {
 	c.flags.BoolVar(&c.ConfigCLI.Version, "version", false, "Print version and exit")
 	c.flags.BoolVar(&c.ConfigCLI.Dump, "dump", false, "Dump config to stdout and exit")
 	c.flags.StringVar(&c.ConfigCLI.ConfFile, "config", "", "Configuration file")
+	c.flags.StringVar(&c.ConfigCLI.LogFile, "log", "", "Log file")
 }
 
 // Perform ations for specific CLI options.

@@ -43,6 +43,7 @@ type IConfig interface {
 	AddUint64Flag(p *uint64, name string, value uint64, usage string)
 	LookupFlag(name string) *flag.Flag
 	Parse()
+	LogFile() string
 }
 
 /* iconfig.go ends here. */

@@ -1,7 +1,7 @@
 /*
- * config.go --- Process configuration.
+ * config.go --- Configuration.
  *
- * Copyright (c) 2021 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -22,17 +22,26 @@
 
 package process
 
+import (
+	"github.com/Asmodai/gohacks/logger"
+
+	"time"
+)
+
 // Process configuration structure.
 type Config struct {
-	Name     string     // Pretty name.
-	Interval int        // `RunEvery` time interval.
-	ActionFn CallbackFn // `Action` callback.
-	StopFn   OnStopFn   // `Stop` callback.
+	Name     string         // Pretty name.
+	Interval time.Duration  // `RunEvery` time interval.
+	Function ProcessFn      // `Action` callback.
+	OnStop   OnStopFn       // `Stop` callback.
+	Logger   logger.ILogger // Logger.
 }
 
 // Create a default process configuration.
 func NewDefaultConfig() *Config {
-	return &Config{}
+	return &Config{
+		Logger: &logger.DefaultLogger{},
+	}
 }
 
 /* config.go ends here. */

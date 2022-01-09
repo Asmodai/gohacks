@@ -56,7 +56,7 @@ func TestProcess(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	if !testSIProc.Running() {
+	if !testSIProc.Running {
 		t.Error("Process is not running.")
 		testSIProc.Stop()
 		return

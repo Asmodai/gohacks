@@ -29,10 +29,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"context"
 	"fmt"
 	"sync"
-	"time"
 )
 
 const (
@@ -55,37 +53,24 @@ func (p *DispatcherProc) start() {
 	p.inst.Start()
 }
 
-func (p *DispatcherProc) Action(ctx context.Context, ipc *process.IPC) {
-	/*
-		var ps *process.State = *state
+func (p *DispatcherProc) Action(state **process.State) {
+	var ps *process.State = *state
 
-		cmd := ps.ReceiveBlocking()
-		if cmd == nil {
-			return
-		}
-
-		p.Lock()
-		switch cmd.(*types.Pair).First {
-		case getRouter:
-			ps.Send(p.inst.GetRouter())
-			break
-		}
-		p.Unlock()
-	*/
-
-	cmd, ok := ipc.Receive()
-	if ok {
-		p.Lock()
-		switch cmd.(*types.Pair).First {
-		case getRouter:
-			ipc.Send(p.inst.GetRouter())
-			break
-		}
-		p.Unlock()
+	cmd := ps.ReceiveBlocking()
+	if cmd == nil {
+		return
 	}
+
+	p.Lock()
+	switch cmd.(*types.Pair).First {
+	case getRouter:
+		ps.Send(p.inst.GetRouter())
+		break
+	}
+	p.Unlock()
 }
 
-func (p *DispatcherProc) stop() {
+func (p *DispatcherProc) stop(state **process.State) {
 	p.inst.Stop()
 }
 
@@ -111,8 +96,8 @@ func Spawn(config *Config) (*process.Process, error) {
 	conf := &process.Config{
 		Name:     name,
 		Interval: 0,
-		ActionFn: dispatch.Action,
-		StopFn:   dispatch.stop,
+		Function: dispatch.Action,
+		OnStop:   dispatch.stop,
 	}
 	pr := mgr.(*process.Manager).Create(conf)
 
@@ -128,13 +113,8 @@ func GetRouter(mgr process.IManager) (*gin.Engine, error) {
 		return nil, fmt.Errorf("Could not find Dispatcher process!")
 	}
 
-	// Ugh
-	for !inst.Running() {
-		time.Sleep(10 * time.Millisecond)
-	}
-
 	inst.Send(types.NewPair(getRouter, nil))
-	result, _ := inst.Receive()
+	result := inst.Receive()
 
 	return result.(*gin.Engine), nil
 }
