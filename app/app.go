@@ -27,6 +27,7 @@ import (
 	"github.com/Asmodai/gohacks/di"
 	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/process"
+	"github.com/Asmodai/gohacks/semver"
 	"github.com/Asmodai/gohacks/types"
 
 	"context"
@@ -45,8 +46,8 @@ type OnSignalFn func(*Application)
 type MainLoopFn func(*Application)
 
 type Application struct {
-	Name    string // Application name.
-	Version string // Version string.
+	Name    string         // Application name.
+	Version *semver.SemVer // Version string.
 
 	OnExit   OnSignalFn // Function called on app exit.
 	OnHup    OnSignalFn // Function called when SIGHUP received.
@@ -90,13 +91,9 @@ func DefaultMainLoop(*Application) {
 }
 
 // Create a new application.
-func NewApplication(name string, version string) *Application {
+func NewApplication(name string, version *semver.SemVer) *Application {
 	if name == "" {
 		name = "<anonymous>"
-	}
-
-	if version == "" {
-		version = "<local>"
 	}
 
 	// Set up a new context for the application here.
@@ -130,6 +127,7 @@ func (app *Application) Init() error {
 		"type", "start",
 		"name", app.Name,
 		"version", app.Version,
+		"commit", app.Version.Commit,
 	)
 
 	pm, found := app.dism.Get("ProcMgr")

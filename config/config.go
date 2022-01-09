@@ -24,6 +24,7 @@ package config
 
 import (
 	"github.com/Asmodai/gohacks/di"
+	"github.com/Asmodai/gohacks/semver"
 	"github.com/Asmodai/gohacks/types"
 
 	"github.com/goccy/go-json"
@@ -82,7 +83,8 @@ The validator *must* return an `error` or `nil`.
             "ValidateOption1": ValidateOption1,
         }
 
-        conf := config.Init("App Name", "Version", opts, fns)
+        vers := &semver.SemVer{1, 2, 3, "herpderp"}
+        conf := config.Init("App Name", vers, opts, fns)
         conf.Parse()
 
         // ...
@@ -101,7 +103,7 @@ type Config struct {
 	// Application information.
 	ConfigApp struct {
 		Name    string
-		Version string
+		Version *semver.SemVer
 	} `config_hide:"true"`
 
 	// CLI flags
@@ -202,10 +204,18 @@ func (c *Config) LookupFlag(name string) *flag.Flag {
 
 // Parse config and CLI flags.
 func (c *Config) Parse() {
+	var err []error
+
 	c.flags.Parse(os.Args[1:])
+
+	// Check if we're something that should just print and exit here.
+	if c.ConfigCLI.Version {
+		goto only_handle
+	}
+
 	c.load()
 
-	err := c.Validate()
+	err = c.Validate()
 	if len(err) > 0 {
 		fmt.Printf("Error(s) when parsing %s:\n\n", c.ConfigCLI.ConfFile)
 
@@ -217,6 +227,7 @@ func (c *Config) Parse() {
 		os.Exit(1)
 	}
 
+only_handle:
 	c.handleCLI()
 }
 
@@ -425,7 +436,12 @@ func (c *Config) addFlags() {
 // Perform ations for specific CLI options.
 func (c *Config) handleCLI() {
 	if c.ConfigCLI.Version {
-		fmt.Printf("This is %s, version %s\n", c.ConfigApp.Name, c.ConfigApp.Version)
+		fmt.Printf(
+			"This is %s, version %s (%s)\n",
+			c.ConfigApp.Name,
+			c.ConfigApp.Version,
+			c.ConfigApp.Version.Commit,
+		)
 		os.Exit(0)
 	}
 
@@ -461,7 +477,7 @@ func (c *Config) load() {
 }
 
 // Init a new configuration instance.
-func Init(name string, version string, data interface{}, fns ValidatorsMap) *Config {
+func Init(name string, version *semver.SemVer, data interface{}, fns ValidatorsMap) *Config {
 	inst := NewConfig()
 
 	inst.ConfigApp.Name = name
@@ -480,7 +496,7 @@ func Init(name string, version string, data interface{}, fns ValidatorsMap) *Con
 //
 // The service passed via `service` ought to hold the application's
 // configuration object.  This is where configuration will be stored.
-func InitWithDI(name string, version string, service string, fns ValidatorsMap) (*Config, error) {
+func InitWithDI(name string, version *semver.SemVer, service string, fns ValidatorsMap) (*Config, error) {
 	dism := di.GetInstance()
 	if dism == nil {
 		return nil, types.NewError(
