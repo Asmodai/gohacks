@@ -23,13 +23,17 @@
 package config
 
 import (
-	"fmt"
 	"github.com/Asmodai/gohacks/di"
+	"github.com/Asmodai/gohacks/semver"
+
+	"fmt"
 	"os"
 	"testing"
 )
 
 var DummyConfigJson = "{\"testing\":{\"opt1\":\"testing\",\"opt2\":42}}"
+
+var version = &semver.SemVer{0, 1, 0, "test"}
 
 var StringRep = `Configuration:
     Opt1: [testing]
@@ -86,7 +90,7 @@ func TestSimple(t *testing.T) {
 	os.Args = []string{"wibble", "-config", path + "/../testing/conf.json"}
 
 	opts := &DummyConfig{}
-	conf := Init("Test", "0.0.1", opts, MakeFns())
+	conf := Init("Test", version, opts, MakeFns())
 	if conf == nil {
 		t.Error("No, nil config object!")
 	}
@@ -146,7 +150,7 @@ func TestCLIFlags(t *testing.T) {
 	}
 
 	o := &DummyConfig{}
-	c := Init("Test", "0.0.1", o, MakeFns())
+	c := Init("Test", version, o, MakeFns())
 
 	c.AddBoolFlag(&o.Flags.BoolFlag, "bool", false, "bool")
 	c.AddFloat64Flag(&o.Flags.F64Flag, "float64", 0.0, "float64")
@@ -218,7 +222,7 @@ func TestWithDI(t *testing.T) {
 
 	dism.Add("test", &Injectable{})
 	t.Log("Test DI fails when no app config service is available.")
-	if _, err := InitWithDI("test", "0.0.1", "TestService", nil); err != nil {
+	if _, err := InitWithDI("test", version, "TestService", nil); err != nil {
 		if err.Error() == "CONFIG: Could not locate TestService service." {
 			t.Log("Yes.")
 		} else {
@@ -229,7 +233,7 @@ func TestWithDI(t *testing.T) {
 
 	dism.Add("TestService", &AppConfig{})
 	t.Log("Test DI works when all dependencies are available.")
-	if _, err := InitWithDI("test", "0.0.1", "TestService", nil); err != nil {
+	if _, err := InitWithDI("test", version, "TestService", nil); err != nil {
 		t.Errorf("No, %s", err.Error())
 	} else {
 		t.Log("Yes.")
