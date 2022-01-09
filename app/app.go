@@ -56,9 +56,9 @@ type Application struct {
 	OnWinch  OnSignalFn // Function used when SIGWINCH received.
 	MainLoop MainLoopFn // Application main loop function.
 
-	running   bool               // Is the app running?
-	appctx    context.Context    // Main context.
-	appcancel context.CancelFunc // Context cancellation function.
+	running bool               // Is the app running?
+	ctx     context.Context    // Main context.
+	cancel  context.CancelFunc // Context cancellation function.
 
 	config *config.Config // Application configuration.
 
@@ -100,17 +100,17 @@ func NewApplication(name string, version *semver.SemVer) *Application {
 	ctx, cancelfn := context.WithCancel(context.Background())
 
 	a := &Application{
-		Name:      name,
-		Version:   version,
-		OnExit:    DefaultOnExit,
-		OnHup:     DefaultOnHup,
-		OnUsr1:    DefaultOnUsr,
-		OnUsr2:    DefaultOnUsr,
-		OnWinch:   DefaultOnWinch,
-		MainLoop:  DefaultMainLoop,
-		appctx:    ctx,
-		appcancel: cancelfn,
-		logger:    nil,
+		Name:     name,
+		Version:  version,
+		OnExit:   DefaultOnExit,
+		OnHup:    DefaultOnHup,
+		OnUsr1:   DefaultOnUsr,
+		OnUsr2:   DefaultOnUsr,
+		OnWinch:  DefaultOnWinch,
+		MainLoop: DefaultMainLoop,
+		ctx:      ctx,
+		cancel:   cancelfn,
+		logger:   nil,
 	}
 
 	if err := a.init(); err != nil {
@@ -134,6 +134,7 @@ func (app *Application) Init() error {
 	if !found {
 		pm = process.NewManager()
 		pm.(*process.Manager).SetLogger(app.logger)
+		pm.(*process.Manager).SetContext(app.ctx)
 
 		app.dism.Add("ProcMgr", pm)
 	}
@@ -180,7 +181,7 @@ func (app *Application) InitConfig(confname string, confobj interface{}, fns con
 
 // Return the application's context.
 func (app *Application) Context() context.Context {
-	return app.appctx
+	return app.ctx
 }
 
 // Return the application's process manager.
@@ -253,7 +254,7 @@ func (app *Application) loop() {
 	app.running = true
 	for app.running == true {
 		select {
-		case <-app.appctx.Done():
+		case <-app.ctx.Done():
 			// Application context was cancelled.
 			app.running = false
 
@@ -357,7 +358,7 @@ func (app *Application) Terminate() {
 	}
 
 	app.running = false
-	app.appcancel()
+	app.cancel()
 }
 
 /* app.go ends here. */
