@@ -2,8 +2,8 @@
 // Source: ./database/idatabase.go
 // +build testing
 
-// Package mock_database is a generated GoMock package.
-package mock_database
+// Package database is a generated GoMock package.
+package database
 
 import (
 	sql "database/sql"
@@ -13,6 +13,56 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	sqlx "github.com/jmoiron/sqlx"
 )
+
+// MockITx is a mock of ITx interface.
+type MockITx struct {
+	ctrl     *gomock.Controller
+	recorder *MockITxMockRecorder
+}
+
+// MockITxMockRecorder is the mock recorder for MockITx.
+type MockITxMockRecorder struct {
+	mock *MockITx
+}
+
+// NewMockITx creates a new mock instance.
+func NewMockITx(ctrl *gomock.Controller) *MockITx {
+	mock := &MockITx{ctrl: ctrl}
+	mock.recorder = &MockITxMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockITx) EXPECT() *MockITxMockRecorder {
+	return m.recorder
+}
+
+// Commit mocks base method.
+func (m *MockITx) Commit() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Commit")
+}
+
+// Commit indicates an expected call of Commit.
+func (mr *MockITxMockRecorder) Commit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockITx)(nil).Commit))
+}
+
+// NamedExec mocks base method.
+func (m *MockITx) NamedExec(arg0 string, arg1 interface{}) (sql.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NamedExec", arg0, arg1)
+	ret0, _ := ret[0].(sql.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NamedExec indicates an expected call of NamedExec.
+func (mr *MockITxMockRecorder) NamedExec(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NamedExec", reflect.TypeOf((*MockITx)(nil).NamedExec), arg0, arg1)
+}
 
 // MockIRow is a mock of IRow interface.
 type MockIRow struct {
@@ -441,6 +491,35 @@ func (mr *MockIDatabaseMockRecorder) Get(arg0, arg1 interface{}, arg2 ...interfa
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockIDatabase)(nil).Get), varargs...)
+}
+
+// MustBegin mocks base method.
+func (m *MockIDatabase) MustBegin() *sqlx.Tx {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MustBegin")
+	ret0, _ := ret[0].(*sqlx.Tx)
+	return ret0
+}
+
+// MustBegin indicates an expected call of MustBegin.
+func (mr *MockIDatabaseMockRecorder) MustBegin() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MustBegin", reflect.TypeOf((*MockIDatabase)(nil).MustBegin))
+}
+
+// NamedExec mocks base method.
+func (m *MockIDatabase) NamedExec(arg0 string, arg1 interface{}) (sql.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NamedExec", arg0, arg1)
+	ret0, _ := ret[0].(sql.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NamedExec indicates an expected call of NamedExec.
+func (mr *MockIDatabaseMockRecorder) NamedExec(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NamedExec", reflect.TypeOf((*MockIDatabase)(nil).NamedExec), arg0, arg1)
 }
 
 // Ping mocks base method.

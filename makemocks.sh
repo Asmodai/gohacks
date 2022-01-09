@@ -57,11 +57,12 @@ do
     echo "Processing ${fname} (${pname}) => ${output}"
 
     mockgen                             \
-        -package="mock_${pname}" \
+        -package="${pname}" \
         -source=${file}                 \
         -destination="${output}"
     case $? in
         0)
+          echo "hacking ${output}"
             sed                                           \
                 -i ''                                     \
                 -e "2s/^//p; 2s/^.*/\/\/ +build testing/" \

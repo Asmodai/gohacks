@@ -2,12 +2,14 @@
 // Source: ./process/imanager.go
 // +build testing
 
-// Package mock_process is a generated GoMock package.
-package mock_process
+// Package process is a generated GoMock package.
+package process
 
 import (
+	context "context"
 	reflect "reflect"
 
+	logger "github.com/Asmodai/gohacks/logger"
 	process "github.com/Asmodai/gohacks/process"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -36,15 +38,15 @@ func (m *MockIManager) EXPECT() *MockIManagerMockRecorder {
 }
 
 // Add mocks base method.
-func (m *MockIManager) Add(proc *process.Process) {
+func (m *MockIManager) Add(arg0 *process.Process) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Add", proc)
+	m.ctrl.Call(m, "Add", arg0)
 }
 
 // Add indicates an expected call of Add.
-func (mr *MockIManagerMockRecorder) Add(proc interface{}) *gomock.Call {
+func (mr *MockIManagerMockRecorder) Add(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockIManager)(nil).Add), proc)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockIManager)(nil).Add), arg0)
 }
 
 // Count mocks base method.
@@ -62,32 +64,32 @@ func (mr *MockIManagerMockRecorder) Count() *gomock.Call {
 }
 
 // Create mocks base method.
-func (m *MockIManager) Create(config *process.Config) *process.Process {
+func (m *MockIManager) Create(arg0 *process.Config) *process.Process {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", config)
+	ret := m.ctrl.Call(m, "Create", arg0)
 	ret0, _ := ret[0].(*process.Process)
 	return ret0
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockIManagerMockRecorder) Create(config interface{}) *gomock.Call {
+func (mr *MockIManagerMockRecorder) Create(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockIManager)(nil).Create), config)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockIManager)(nil).Create), arg0)
 }
 
 // Find mocks base method.
-func (m *MockIManager) Find(name string) (*process.Process, bool) {
+func (m *MockIManager) Find(arg0 string) (*process.Process, bool) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Find", name)
+	ret := m.ctrl.Call(m, "Find", arg0)
 	ret0, _ := ret[0].(*process.Process)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
 // Find indicates an expected call of Find.
-func (mr *MockIManagerMockRecorder) Find(name interface{}) *gomock.Call {
+func (mr *MockIManagerMockRecorder) Find(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockIManager)(nil).Find), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockIManager)(nil).Find), arg0)
 }
 
 // Processes mocks base method.
@@ -105,31 +107,55 @@ func (mr *MockIManagerMockRecorder) Processes() *gomock.Call {
 }
 
 // Run mocks base method.
-func (m *MockIManager) Run(name string) bool {
+func (m *MockIManager) Run(arg0 string) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Run", name)
+	ret := m.ctrl.Call(m, "Run", arg0)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // Run indicates an expected call of Run.
-func (mr *MockIManagerMockRecorder) Run(name interface{}) *gomock.Call {
+func (mr *MockIManagerMockRecorder) Run(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockIManager)(nil).Run), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockIManager)(nil).Run), arg0)
+}
+
+// SetContext mocks base method.
+func (m *MockIManager) SetContext(arg0 context.Context) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetContext", arg0)
+}
+
+// SetContext indicates an expected call of SetContext.
+func (mr *MockIManagerMockRecorder) SetContext(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetContext", reflect.TypeOf((*MockIManager)(nil).SetContext), arg0)
+}
+
+// SetLogger mocks base method.
+func (m *MockIManager) SetLogger(arg0 logger.ILogger) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetLogger", arg0)
+}
+
+// SetLogger indicates an expected call of SetLogger.
+func (mr *MockIManagerMockRecorder) SetLogger(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogger", reflect.TypeOf((*MockIManager)(nil).SetLogger), arg0)
 }
 
 // Stop mocks base method.
-func (m *MockIManager) Stop(name string) bool {
+func (m *MockIManager) Stop(arg0 string) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Stop", name)
+	ret := m.ctrl.Call(m, "Stop", arg0)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // Stop indicates an expected call of Stop.
-func (mr *MockIManagerMockRecorder) Stop(name interface{}) *gomock.Call {
+func (mr *MockIManagerMockRecorder) Stop(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockIManager)(nil).Stop), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockIManager)(nil).Stop), arg0)
 }
 
 // StopAll mocks base method.

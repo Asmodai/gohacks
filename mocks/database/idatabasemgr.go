@@ -2,8 +2,8 @@
 // Source: ./database/idatabasemgr.go
 // +build testing
 
-// Package mock_database is a generated GoMock package.
-package mock_database
+// Package database is a generated GoMock package.
+package database
 
 import (
 	reflect "reflect"

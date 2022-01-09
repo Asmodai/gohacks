@@ -2,8 +2,8 @@
 // Source: ./config/iconfig.go
 // +build testing
 
-// Package mock_config is a generated GoMock package.
-package mock_config
+// Package config is a generated GoMock package.
+package config
 
 import (
 	flag "flag"
@@ -143,6 +143,20 @@ func (m *MockIConfig) IsDebug() bool {
 func (mr *MockIConfigMockRecorder) IsDebug() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsDebug", reflect.TypeOf((*MockIConfig)(nil).IsDebug))
+}
+
+// LogFile mocks base method.
+func (m *MockIConfig) LogFile() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LogFile")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// LogFile indicates an expected call of LogFile.
+func (mr *MockIConfigMockRecorder) LogFile() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogFile", reflect.TypeOf((*MockIConfig)(nil).LogFile))
 }
 
 // LookupFlag mocks base method.
