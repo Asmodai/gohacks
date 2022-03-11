@@ -28,13 +28,23 @@ import (
 	"github.com/Asmodai/gohacks/types"
 )
 
+/*
+
+Database management.
+
+This is a series of wrappers around Go's internal DB stuff to ensure
+that we set up max idle/open connections et al.
+
+*/
 type DatabaseMgr struct {
 }
 
+// Open a connection to the database specified in the DSN string.
 func (dbm *DatabaseMgr) Open(driver string, dsn string) (IDatabase, error) {
 	return Open(driver, dsn)
 }
 
+// Open and configure a database connection.
 func (dbm *DatabaseMgr) OpenConfig(conf *Config) (IDatabase, error) {
 	db, err := dbm.Open(conf.Driver, conf.ToDSN())
 	if err != nil {
@@ -52,6 +62,7 @@ func (dbm *DatabaseMgr) OpenConfig(conf *Config) (IDatabase, error) {
 	return db, nil
 }
 
+// Check the db connection.
 func (dbm *DatabaseMgr) CheckDB(db IDatabase) error {
 	if err := db.Ping(); err != nil {
 		return types.NewError(
