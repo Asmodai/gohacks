@@ -1,7 +1,7 @@
 /*
- * reverse.go --- Reverse an array of things.
+ * substr_test.go --- Substring tests.
  *
- * Copyright (c) 2021 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -22,26 +22,28 @@
 
 package utils
 
-// Reverse a string in place.
-//
-// This is destructive!
-func NReverseStr(ss []string) []string {
-	last := len(ss) - 1
-	for i := 0; i < len(ss)/2; i++ {
-		ss[i], ss[last-i] = ss[last-i], ss[i]
-	}
+import "testing"
 
-	return ss
+func TestSubstr(t *testing.T) {
+	var input string = "One two three"
+
+	t.Run("Works with sane arguments", func(t *testing.T) {
+		if output := Substr(input, 4, 3); output != "two" {
+			t.Errorf("Unexpected '%v'", output)
+		}
+	})
+
+	t.Run("Works when length is longer than input", func(t *testing.T) {
+		if output := Substr(input, 4, 100); output != "two three" {
+			t.Errorf("Unexpected '%v'", output)
+		}
+	})
+
+	t.Run("Returns empty string with insane args", func(t *testing.T) {
+		if output := Substr(input, 100, 24); output != "" {
+			t.Errorf("Unexpected '%v'", output)
+		}
+	})
 }
 
-// Copy and reverse a string.
-func ReverseStr(ss []string) []string {
-	length := len(ss)
-	narray := make([]string, length)
-
-	copy(narray, ss)
-
-	return NReverseStr(narray)
-}
-
-/* reverse.go ends here. */
+/* substr_test.go ends here. */

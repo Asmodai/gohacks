@@ -23,7 +23,7 @@
 package apiserver
 
 import (
-	"github.com/Asmodai/gohacks/mocks/logger"
+	"github.com/Asmodai/gohacks/logger"
 	"github.com/gin-gonic/gin"
 
 	"context"
