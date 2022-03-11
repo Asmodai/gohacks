@@ -23,7 +23,6 @@
 package config
 
 import (
-	"github.com/Asmodai/gohacks/di"
 	"github.com/Asmodai/gohacks/semver"
 
 	"fmt"
@@ -208,35 +207,6 @@ func TestCLIFlags(t *testing.T) {
 		t.Log("UInt64 yes.")
 	} else {
 		t.Error("UInt64 no!")
-	}
-}
-
-type Injectable struct {
-}
-
-type AppConfig struct {
-}
-
-func TestWithDI(t *testing.T) {
-	dism := di.GetInstance()
-
-	dism.Add("test", &Injectable{})
-	t.Log("Test DI fails when no app config service is available.")
-	if _, err := InitWithDI("test", version, "TestService", nil); err != nil {
-		if err.Error() == "CONFIG: Could not locate TestService service." {
-			t.Log("Yes.")
-		} else {
-			t.Error("No, succeeds even with missing test service!")
-			return
-		}
-	}
-
-	dism.Add("TestService", &AppConfig{})
-	t.Log("Test DI works when all dependencies are available.")
-	if _, err := InitWithDI("test", version, "TestService", nil); err != nil {
-		t.Errorf("No, %s", err.Error())
-	} else {
-		t.Log("Yes.")
 	}
 }
 

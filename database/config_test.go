@@ -40,17 +40,25 @@ func MakeSQL() *Config {
 }
 
 func TestSQLDSN(t *testing.T) {
-	t.Log("Does `ToDSN` work as expected?")
+	var dsn1 string
 
 	sql := MakeSQL()
-	dsn := sql.ToDSN()
 
-	if dsn == "user:pass@tcp(localhost:1337)/db?parseTime=True&loc=UTC&time_zone='-00:00'" {
-		t.Log("Yes.")
-		return
-	}
+	t.Run("Does `ToDSN` work as expected?", func(t *testing.T) {
+		dsn1 = sql.ToDSN()
 
-	t.Errorf("No, got '%v'", dsn)
+		if dsn1 != "user:pass@tcp(localhost:1337)/db?parseTime=True&loc=UTC&time_zone='-00:00'" {
+			t.Errorf("No, got '%v'", dsn1)
+		}
+	})
+
+	t.Run("Do subsequent calls work?", func(t *testing.T) {
+		dsn2 := sql.ToDSN()
+
+		if dsn2 != dsn1 {
+			t.Errorf("No, got '%v'", dsn2)
+		}
+	})
 }
 
 /* config_test.go ends here. */

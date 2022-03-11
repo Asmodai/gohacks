@@ -1,5 +1,5 @@
 /*
- * config.go --- Configuration.
+ * server.go --- Wrapper around http.Server.
  *
  * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
@@ -20,26 +20,49 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package process
+package apiserver
 
 import (
-	"github.com/Asmodai/gohacks/logger"
+	"github.com/gin-gonic/gin"
+
+	"context"
+	"crypto/tls"
+	"net/http"
 )
 
-// Process configuration structure.
-type Config struct {
-	Name     string         // Pretty name.
-	Interval int            // `RunEvery` time interval.
-	Function CallbackFn     // `Action` callback.
-	OnStop   CallbackFn     // `Stop` callback.
-	Logger   logger.ILogger // Logger.
+type Server struct {
+	srv *http.Server
 }
 
-// Create a default process configuration.
-func NewDefaultConfig() *Config {
-	return &Config{
-		Logger: logger.NewDefaultLogger(""),
+func NewServer(addr string, router *gin.Engine) *Server {
+	return &Server{
+		srv: &http.Server{
+			Addr:    addr,
+			Handler: router,
+		},
 	}
 }
 
-/* config.go ends here. */
+func NewDefaultServer() *Server {
+	return &Server{
+		srv: &http.Server{},
+	}
+}
+
+func (s *Server) ListenAndServeTLS(cert, key string) error {
+	return s.srv.ListenAndServeTLS(cert, key)
+}
+
+func (s *Server) ListenAndServe() error {
+	return s.srv.ListenAndServe()
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.srv.Shutdown(ctx)
+}
+
+func (s *Server) SetTLSConfig(conf *tls.Config) {
+	s.srv.TLSConfig = conf
+}
+
+/* server.go ends here. */

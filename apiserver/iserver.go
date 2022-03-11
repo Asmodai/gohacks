@@ -1,7 +1,7 @@
 /*
- * process_test.go --- SysInfo process tests.
+ * iserver.go --- Interface for our server wrapper.
  *
- * Copyright (c) 2021 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -20,40 +20,18 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package sysinfo
+package apiserver
 
 import (
-	"github.com/Asmodai/gohacks/process"
-
-	"testing"
-	"time"
+	"context"
+	"crypto/tls"
 )
 
-var (
-	testSIProc *process.Process
-)
-
-func TestProcess(t *testing.T) {
-	t.Log("Does the system info process run as expected?")
-
-	mgr := process.NewManager()
-
-	testSIProc, err := Spawn(mgr, 1)
-	if err != nil {
-		t.Errorf("Spawn: %s", err.Error())
-		return
-	}
-
-	time.Sleep(2 * time.Second)
-
-	if !testSIProc.Running {
-		t.Error("Process is not running.")
-		testSIProc.Stop()
-		return
-	}
-
-	testSIProc.Stop()
-	t.Log("Yes.")
+type IServer interface {
+	ListenAndServeTLS(string, string) error
+	ListenAndServe() error
+	Shutdown(context.Context) error
+	SetTLSConfig(*tls.Config)
 }
 
-/* process_test.go ends here. */
+/* iserver.go ends here. */

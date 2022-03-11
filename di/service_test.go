@@ -44,137 +44,128 @@ func (t *TestService) IsOK() bool {
 // }}}
 // ==================================================================
 
-// Test we can add services.
-func TestAddService(t *testing.T) {
-	t.Log("Can we add a new service?")
+// ==================================================================
+// {{{ Test class:
 
-	di := GetInstance()
-	if di == nil {
-		t.Error("No, service instance was nil.")
-		return
-	}
-
-	di.Add("test1", &TestService{})
-
-	inst, found := di.Get("test1")
-	if !found {
-		t.Error("No, service could not be found.")
-		return
-	}
-
-	if inst != nil {
-		t.Log("Yes.")
-		return
-	}
-
-	t.Error("No.")
+type TestClass struct {
+	SomeVar int
 }
 
-// Test service creation.
-func TestCreation(t *testing.T) {
-	t.Log("Can we create a new service?")
-
-	di := GetInstance()
-	if di == nil {
-		t.Error("No, service instance was nil.")
-		return
-	}
-
-	di.Create(
-		"test2",
-		func() interface{} {
-			return &TestService{}
-		},
-	)
-
-	inst, found := di.Get("test2")
-	if !found {
-		t.Error("No, service could not be found.")
-		return
-	}
-
-	if inst != nil {
-		t.Log("Yes.")
-		return
-	}
-
-	t.Error("No.")
+func MakeTestClass() *TestClass {
+	return &TestClass{SomeVar: 0}
 }
 
-// Test if we can get a service.
-func TestGet(t *testing.T) {
-	t.Log("Can we get services as expected?")
+func (tc *TestClass) Whee() int {
+	return 42
+}
 
-	di := GetInstance()
-	if di == nil {
-		t.Error("No, service instance was nil.")
-		return
-	}
-
-	_, f1 := di.Get("test1")
-	_, f2 := di.Get("nosuchthing")
-
-	if f1 {
-		t.Log("Yes, we can find existing services.")
-	} else {
-		t.Error("No, it did not find an existing service.")
-	}
-
-	if !f2 {
-		t.Log("Yes, it did not find a non-existing service.")
-	} else {
-		t.Error("No, it managed to find a non-existing service.")
+func ConstructTestClass() func() interface{} {
+	return func() interface{} {
+		return MakeTestClass()
 	}
 }
 
-// Does it return the same instance for multiple calls?
-func TestInstance(t *testing.T) {
-	t.Log("Do we get the same object for multiple gets?")
+// }}}
+// ==================================================================
 
+func TestClasses(t *testing.T) {
 	di := GetInstance()
-	if di == nil {
-		t.Error("No, service instance was nil.")
-		return
-	}
 
-	// Two 'pointers' to the same instance.
-	t1, _ := di.Get("test1")
-	t2, _ := di.Get("test1")
+	t.Run("It registers", func(t *testing.T) {
+		di.AddClass("TestClass", ConstructTestClass())
+	})
 
-	t1.(*TestService).Do()
+	t.Run("It locates", func(t *testing.T) {
+		inst, found := di.CreateNew("TestClass")
+		if !found {
+			t.Error("Class was not found")
+			return
+		}
 
-	if t2.(*TestService).IsOK() == true {
-		t.Log("Yes.")
-		return
-	}
+		if inst == nil {
+			t.Error("Instance was nil")
+			return
+		}
 
-	t.Error("No.")
+		if inst.(*TestClass).Whee() != 42 {
+			t.Error("something went wrong!")
+		}
+	})
 }
 
-// Test various utilities.
-func TestUtils(t *testing.T) {
-	t.Log("Do the utility functions work?")
-
+func TestInstances(t *testing.T) {
 	di := GetInstance()
 	if di == nil {
-		t.Error("No, service instance was nil.")
+		t.Error("Service instance was nil.")
 		return
 	}
 
-	c := di.Count()
-	l := di.Services()
+	// Test we can add services.
+	t.Run("Can we add services?", func(t *testing.T) {
+		di.Add("test1", &TestService{})
 
-	if c == 2 {
-		t.Log("`Count` works as expected.")
-	} else {
-		t.Error("`Count` failed.")
-	}
+		inst, found := di.Get("test1")
+		if !found {
+			t.Error("No, service could not be found.")
+			return
+		}
 
-	if len(l) == 2 {
-		t.Log("`Services` works as expected.")
-	} else {
-		t.Error("`Services` failed.")
-	}
+		if inst == nil {
+			t.Error("No.")
+			return
+		}
+	})
+
+	t.Run("Can we get the service?", func(t *testing.T) {
+		_, f1 := di.Get("test1")
+		_, f2 := di.Get("nosuchthing")
+
+		if !f1 {
+			t.Error("No, it did not find an existing service.")
+		}
+
+		if f2 {
+			t.Error("No, it managed to find a non-existing service.")
+		}
+	})
+
+	t.Run("Does it return the same instance?", func(t *testing.T) {
+		// Two 'pointers' to the same instance.
+		t1, _ := di.Get("test1")
+		t2, _ := di.Get("test1")
+
+		t1.(*TestService).Do()
+
+		if t2.(*TestService).IsOK() == false {
+			t.Error("No.")
+		}
+	})
+
+	t.Run("Does counting work?", func(t *testing.T) {
+		s := di.CountServices()
+		c := di.CountClasses()
+
+		if s != 1 {
+			t.Errorf("`CountServices` failed, got %d, expected 2", s)
+		}
+
+		if c != 1 {
+			t.Error("`CountClasses` failed.")
+		}
+	})
+
+	t.Run("Can we get a list of keys?", func(t *testing.T) {
+		s := di.Services()
+		c := di.Classes()
+
+		if len(s) != 1 {
+			t.Error("`Services` failed.")
+		}
+
+		if len(c) != 1 {
+			t.Error("`Classes` failed.")
+		}
+	})
 }
 
 /* service_test.go ends here. */

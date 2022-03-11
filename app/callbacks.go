@@ -1,7 +1,7 @@
 /*
- * process_test.go --- SysInfo process tests.
+ * callbacks.go --- Default callbacks.
  *
- * Copyright (c) 2021 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -20,40 +20,21 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package sysinfo
+package app
 
-import (
-	"github.com/Asmodai/gohacks/process"
-
-	"testing"
-	"time"
-)
-
-var (
-	testSIProc *process.Process
-)
-
-func TestProcess(t *testing.T) {
-	t.Log("Does the system info process run as expected?")
-
-	mgr := process.NewManager()
-
-	testSIProc, err := Spawn(mgr, 1)
-	if err != nil {
-		t.Errorf("Spawn: %s", err.Error())
-		return
-	}
-
-	time.Sleep(2 * time.Second)
-
-	if !testSIProc.Running {
-		t.Error("Process is not running.")
-		testSIProc.Stop()
-		return
-	}
-
-	testSIProc.Stop()
-	t.Log("Yes.")
+// Default signal handler.
+func defaultHandler(*Application) {
 }
 
-/* process_test.go ends here. */
+// Default main loop.
+func defaultMainLoop(*Application) {
+}
+
+// Special case for HUP support.
+func defaultOnHUP(app *Application) {
+	app.logger.Info(
+		"Default SIGHUP handler invoked.",
+	)
+}
+
+/* callbacks.go ends here. */

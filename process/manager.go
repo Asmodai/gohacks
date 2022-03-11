@@ -71,17 +71,22 @@ type Manager struct {
 	cwg       *sync.WaitGroup
 }
 
-// Create a new process manager.
-func NewManager() *Manager {
-	ctx, cancel := context.WithCancel(context.TODO())
+// Create a new process manager with a given parent context.
+func NewManagerWithContext(parent context.Context) *Manager {
+	ctx, cancel := context.WithCancel(parent)
 
 	return &Manager{
 		processes: []*Process{},
-		logger:    &logger.DefaultLogger{},
+		logger:    logger.NewDefaultLogger(""),
 		ctx:       ctx,
 		cancel:    cancel,
 		cwg:       &sync.WaitGroup{},
 	}
+}
+
+// Create a new process manager.
+func NewManager() *Manager {
+	return NewManagerWithContext(context.TODO())
 }
 
 // Set the process manager's logger.

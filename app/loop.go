@@ -1,7 +1,7 @@
 /*
- * process_test.go --- SysInfo process tests.
+ * loop.go --- Application loop code.
  *
- * Copyright (c) 2021 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -20,40 +20,38 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package sysinfo
+package app
 
 import (
-	"github.com/Asmodai/gohacks/process"
-
-	"testing"
 	"time"
 )
 
-var (
-	testSIProc *process.Process
-)
+// Main loop.
+func (app *Application) loop() {
+	app.running = true
 
-func TestProcess(t *testing.T) {
-	t.Log("Does the system info process run as expected?")
+	// While we're running...
+	for app.running == true {
+		// Check for parent context cancellation
+		select {
+		case <-app.ctx.Done():
+			// Stop the happening train!
+			app.running = false
 
-	mgr := process.NewManager()
+		default:
+		}
 
-	testSIProc, err := Spawn(mgr, 1)
-	if err != nil {
-		t.Errorf("Spawn: %s", err.Error())
-		return
+		app.MainLoop(app)
+		time.Sleep(EventLoopSleep)
 	}
 
-	time.Sleep(2 * time.Second)
-
-	if !testSIProc.Running {
-		t.Error("Process is not running.")
-		testSIProc.Stop()
-		return
-	}
-
-	testSIProc.Stop()
-	t.Log("Yes.")
+	// No longer running, so shut things down.
+	app.OnExit(app)
+	app.procmgr.StopAll()
+	app.logger.Info(
+		"Application is terminating.",
+		"type", "stop",
+	)
 }
 
-/* process_test.go ends here. */
+/* loop.go ends here. */

@@ -23,7 +23,6 @@
 package config
 
 import (
-	"github.com/Asmodai/gohacks/di"
 	"github.com/Asmodai/gohacks/semver"
 	"github.com/Asmodai/gohacks/types"
 
@@ -490,34 +489,6 @@ func Init(name string, version *semver.SemVer, data interface{}, fns ValidatorsM
 	inst.addFlags()
 
 	return inst
-}
-
-// Init using the DI service manager.
-//
-// The service passed via `service` ought to hold the application's
-// configuration object.  This is where configuration will be stored.
-func InitWithDI(name string, version *semver.SemVer, service string, fns ValidatorsMap) (*Config, error) {
-	dism := di.GetInstance()
-	if dism == nil {
-		return nil, types.NewError(
-			"CONFIG",
-			"Could not locate service manager.",
-		)
-	}
-
-	config, found := dism.Get(service)
-	if !found {
-		return nil, types.NewError(
-			"CONFIG",
-			"Could not locate %s service.",
-			service,
-		)
-	}
-
-	obj := Init(name, version, config, fns)
-	dism.Add("Config", obj)
-
-	return obj, nil
 }
 
 /* config.go ends here. */

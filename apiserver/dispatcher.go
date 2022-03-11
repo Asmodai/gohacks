@@ -23,13 +23,13 @@
 package apiserver
 
 import (
+	"github.com/Asmodai/gohacks/logger"
 	"github.com/gin-gonic/gin"
 
 	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -37,14 +37,16 @@ import (
 
 type Dispatcher struct {
 	config *Config
-	srv    *http.Server
+	srv    IServer
 	router *gin.Engine
+	logger logger.ILogger
 }
 
-func NewDispatcher(config *Config) *Dispatcher {
+func NewDispatcher(lgr logger.ILogger, config *Config) *Dispatcher {
 	obj := &Dispatcher{
 		config: config,
 		router: gin.New(),
+		logger: lgr,
 	}
 
 	obj.router.NoRoute(obj.notFound)
@@ -56,11 +58,14 @@ func NewDispatcher(config *Config) *Dispatcher {
 		c.Next()
 	})
 
+	obj.srv = NewServer(obj.config.Addr, obj.router)
+
 	return obj
 }
 
 func NewDefaultDispatcher() *Dispatcher {
 	return NewDispatcher(
+		logger.NewDefaultLogger(""),
 		&Config{
 			Addr:   ":8080",
 			UseTLS: false,
@@ -82,11 +87,17 @@ func (d *Dispatcher) logWriter() io.Writer {
 
 	f, err := os.OpenFile(d.config.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Printf("Could not open '%s' for writing: %+s", d.config.LogFile, err.Error())
-		os.Exit(2)
+		d.logger.Fatal(
+			"Could not open file for writing.",
+			"file", d.config.LogFile,
+			"err", err.Error(),
+		)
 	}
 
-	log.Printf("APISERVER: Logging to %s", d.config.LogFile)
+	d.logger.Info(
+		"API server logging initialised.",
+		"file", d.config.LogFile,
+	)
 
 	return f
 }
@@ -120,20 +131,15 @@ func (d *Dispatcher) GetRouter() *gin.Engine {
 }
 
 func (d *Dispatcher) Start() {
-	d.srv = &http.Server{
-		Addr:    d.config.Addr,
-		Handler: d.router,
-	}
-
 	go func() {
 		var err error
 
 		switch d.config.UseTLS {
 		case true:
-			d.srv.TLSConfig = &tls.Config{
+			d.srv.SetTLSConfig(&tls.Config{
 				MaxVersion:               tls.VersionTLS13,
 				PreferServerCipherSuites: true,
-			}
+			})
 			err = d.srv.ListenAndServeTLS(d.config.Cert, d.config.Key)
 			break
 
@@ -142,7 +148,10 @@ func (d *Dispatcher) Start() {
 		}
 
 		if err != nil && err != http.ErrServerClosed {
-			log.Fatalf("DISPATCHER Start: Listen(): %+s", err.Error())
+			d.logger.Fatal(
+				"listen() failed.",
+				"err", err.Error(),
+			)
 		}
 	}()
 }
@@ -154,7 +163,10 @@ func (d *Dispatcher) Stop() {
 	}()
 
 	if err := d.srv.Shutdown(ctx); err != nil {
-		log.Fatalf("DISPATCHER: Server shutdown failed: %+s", err.Error())
+		d.logger.Fatal(
+			"API dispatcher server shutdown failure.",
+			"err", err.Error(),
+		)
 	}
 }
 

@@ -27,7 +27,6 @@ import (
 
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptrace"
 	"time"
@@ -74,11 +73,7 @@ type Client struct {
 
 // Create a new API client with the given configuration.
 func NewClient(config *Config) *Client {
-	trace := &httptrace.ClientTrace{
-		GotConn: func(info httptrace.GotConnInfo) {
-			log.Printf("HTTP connection reused? %t", info.Reused)
-		},
-	}
+	trace := &httptrace.ClientTrace{}
 
 	limiter := rate.NewLimiter(
 		rate.Every(1*time.Second),

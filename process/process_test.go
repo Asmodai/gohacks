@@ -74,11 +74,13 @@ func EveryFn(state **State) {
 
 // Create a new test config.
 func NewTestConfig() *Config {
-	return &Config{
-		Name:     "Test",
-		Interval: 0,
-		Function: nil,
-	}
+	cnf := NewDefaultConfig()
+
+	cnf.Name = "Test"
+	cnf.Interval = 0
+	cnf.Function = nil
+
+	return cnf
 }
 
 // Create a new config for blocking send test.

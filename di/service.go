@@ -55,6 +55,7 @@ type Service struct {
 	sync.RWMutex
 
 	services map[string]interface{}
+	classes  map[string]ServiceCtorFn
 }
 
 var (
@@ -72,6 +73,7 @@ func GetInstance() *Service {
 	once.Do(func() {
 		instance = &Service{
 			services: make(map[string]interface{}),
+			classes:  make(map[string]ServiceCtorFn),
 		}
 	})
 
@@ -85,12 +87,11 @@ func (s *Service) Add(name string, thing interface{}) {
 	s.Unlock()
 }
 
-// Create a new service instance with a function that returns `interface{}`.
-//
-// The function's return value should be a new instance of the service you
-// wish to manage.
-func (s *Service) Create(name string, thing ServiceCtorFn) {
-	s.Add(name, thing())
+// Add a new class with the given name.
+func (s *Service) AddClass(name string, ctor ServiceCtorFn) {
+	s.Lock()
+	s.classes[name] = ctor
+	s.Unlock()
 }
 
 // Get a service with the given name.
@@ -104,6 +105,20 @@ func (s *Service) Get(name string) (interface{}, bool) {
 	}
 
 	return t, true
+}
+
+// Create a new instance of the given class by invoking its registered
+// constructor.
+func (s *Service) CreateNew(name string) (interface{}, bool) {
+	s.Lock()
+	c := s.classes[name]
+	s.Unlock()
+
+	if c == nil {
+		return nil, false
+	}
+
+	return c(), true
 }
 
 // Get a list of registered services.
@@ -122,10 +137,35 @@ func (s *Service) Services() []string {
 	return keys
 }
 
+// Get a list of registered classes.
+func (s *Service) Classes() []string {
+	s.Lock()
+	keys := make([]string, len(s.classes))
+	i := 0
+
+	for k := range s.classes {
+		keys[i] = k
+		i++
+	}
+
+	s.Unlock()
+
+	return keys
+}
+
 // Return a count of registered services.
-func (s *Service) Count() int {
+func (s *Service) CountServices() int {
 	s.Lock()
 	c := len(s.services)
+	s.Unlock()
+
+	return c
+}
+
+// Return a count of registered classes.
+func (s *Service) CountClasses() int {
+	s.Lock()
+	c := len(s.classes)
 	s.Unlock()
 
 	return c

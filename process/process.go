@@ -38,11 +38,8 @@ const (
 	EventLoopSleep time.Duration = 250 * time.Millisecond
 )
 
-// Process callback function.
-type ProcessFn func(**State)
-
-// Process stopping callback function.
-type OnStopFn func(**State)
+// Callback function.
+type CallbackFn func(**State)
 
 /*
 
@@ -85,8 +82,8 @@ type Process struct {
 	sync.Mutex
 
 	Name     string        // Pretty name.
-	Function ProcessFn     // `Action` callback.
-	OnStop   OnStopFn      // `Stop` callback.
+	Function CallbackFn    // `Action` callback.
+	OnStop   CallbackFn    // `Stop` callback.
 	Running  bool          // Is the process running?
 	Interval time.Duration // `RunEvery` time interval.
 
@@ -98,26 +95,27 @@ type Process struct {
 
 	chanToState   chan interface{}
 	chanFromState chan interface{}
-	period        time.Duration
-	state         *State
-	manager       *Manager
+
+	period  time.Duration
+	state   *State
+	manager *Manager
 }
 
-// Create a new process with the given configuration.
-func NewProcess(config *Config) *Process {
+// Create a new process with the given configuration and parent context.
+func NewProcessWithContext(config *Config, parent context.Context) *Process {
 	if config.Logger == nil {
-		config.Logger = &logger.DefaultLogger{}
+		config.Logger = logger.NewDefaultLogger("")
 	}
 
-	ctx, cancel := context.WithCancel(context.TODO())
+	ctx, cancel := context.WithCancel(parent)
 
 	p := &Process{
 		Name:          config.Name,
 		Function:      config.Function,
 		OnStop:        config.OnStop,
 		Running:       false,
-		Interval:      config.Interval * time.Second,
-		period:        config.Interval * time.Second,
+		Interval:      (time.Duration)(config.Interval) * time.Second,
+		period:        (time.Duration)(config.Interval) * time.Second,
 		logger:        config.Logger,
 		ctx:           ctx,
 		cancel:        cancel,
@@ -134,6 +132,11 @@ func NewProcess(config *Config) *Process {
 	p.state.parent = p
 
 	return p
+}
+
+// Create a new process with the given configuration.
+func NewProcess(config *Config) *Process {
+	return NewProcessWithContext(config, context.TODO())
 }
 
 // Set the process's logger.
@@ -154,17 +157,6 @@ func (p *Process) SetWaitGroup(wg *sync.WaitGroup) {
 	p.wg = wg
 }
 
-func (p *Process) internalStop() {
-	p.logger.Info(
-		"Process stopped.",
-		"type", "stop",
-		"name", p.Name,
-	)
-
-	// Set wait as done.
-	p.wg.Done()
-}
-
 // Run the process with its action taking place on a continuous loop.
 //
 // Returns 'true' if the process has been started, or 'false' if it is
@@ -182,18 +174,17 @@ func (p *Process) Run() bool {
 	// Are we to run on an interval?
 	if p.Interval > 0 {
 		p.logger.Info(
-			"Process started",
+			"Process started.",
 			"type", "start",
 			"name", p.Name,
 			"interval", p.Interval.Round(time.Second),
 		)
 		p.everyAction()
-
 		return true
 	}
 
 	p.logger.Info(
-		"Process started",
+		"Process started.",
 		"type", "start",
 		"name", p.Name,
 	)
@@ -214,7 +205,6 @@ func (p *Process) Stop() bool {
 
 	p.Send(nil)
 	p.cancel()
-
 	p.Running = false
 
 	return true
@@ -252,6 +242,18 @@ func (p *Process) ReceiveNonBlocking() (interface{}, bool) {
 
 // Default action callback.
 func (p *Process) nilFunction(state **State) {
+}
+
+// Internal callback invoked upon process stop.
+func (p *Process) internalStop() {
+	p.logger.Info(
+		"Process stopped.",
+		"type", "stop",
+		"name", p.Name,
+	)
+
+	// Set wait as done.
+	p.wg.Done()
 }
 
 // Run the configured action for this process.

@@ -23,9 +23,7 @@
 package sysinfo
 
 import (
-	"github.com/Asmodai/gohacks/di"
 	"github.com/Asmodai/gohacks/process"
-	"github.com/Asmodai/gohacks/types"
 
 	"time"
 )
@@ -46,7 +44,7 @@ func (sip *SysInfoProc) Action(state **process.State) {
 	sip.si.UpdateStats()
 
 	ps.Logger().Info(
-		"System Information",
+		"System Information.",
 		"runtime", sip.si.RunTime().Round(time.Second),
 		"allocated_mib", sip.si.Allocated(),
 		"heap_mib", sip.si.Heap(),
@@ -56,19 +54,10 @@ func (sip *SysInfoProc) Action(state **process.State) {
 	)
 }
 
-func Spawn(interval time.Duration) (*process.Process, error) {
+func Spawn(mgr process.IManager, interval int) (*process.Process, error) {
 	name := "SysInfo"
 
-	dism := di.GetInstance()
-	mgr, found := dism.Get("ProcMgr")
-	if !found {
-		return nil, types.NewError(
-			"SYSINFO",
-			"Could not locate 'ProcMgr' service.",
-		)
-	}
-
-	inst, found := mgr.(*process.Manager).Find(name)
+	inst, found := mgr.Find(name)
 	if found {
 		return inst, nil
 	}
@@ -79,7 +68,7 @@ func Spawn(interval time.Duration) (*process.Process, error) {
 		Interval: interval,
 		Function: si.Action,
 	}
-	pr := mgr.(*process.Manager).Create(conf)
+	pr := mgr.Create(conf)
 
 	go pr.Run()
 

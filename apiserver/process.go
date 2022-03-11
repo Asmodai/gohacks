@@ -23,7 +23,7 @@
 package apiserver
 
 import (
-	"github.com/Asmodai/gohacks/di"
+	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/process"
 	"github.com/Asmodai/gohacks/types"
 
@@ -43,9 +43,9 @@ type DispatcherProc struct {
 	inst *Dispatcher
 }
 
-func NewDispatcherProc(config *Config) *DispatcherProc {
+func NewDispatcherProc(lgr logger.ILogger, config *Config) *DispatcherProc {
 	return &DispatcherProc{
-		inst: NewDispatcher(config),
+		inst: NewDispatcher(lgr, config),
 	}
 }
 
@@ -74,32 +74,26 @@ func (p *DispatcherProc) stop(state **process.State) {
 	p.inst.Stop()
 }
 
-func Spawn(config *Config) (*process.Process, error) {
+func Spawn(mgr process.IManager, lgr logger.ILogger, config *Config) (*process.Process, error) {
 	name := "Dispatcher"
 
-	dism := di.GetInstance()
-
-	mgr, found := dism.Get("ProcMgr")
-	if !found {
-		return nil, types.NewError(
-			"DISPATCHER",
-			"Could not locate 'ProcMgr' service.",
-		)
+	if mgr == nil {
+		return nil, fmt.Errorf("Process manager not provided!")
 	}
 
-	inst, found := mgr.(*process.Manager).Find(name)
+	inst, found := mgr.Find(name)
 	if found {
 		return inst, nil
 	}
 
-	dispatch := NewDispatcherProc(config)
+	dispatch := NewDispatcherProc(lgr, config)
 	conf := &process.Config{
 		Name:     name,
 		Interval: 0,
 		Function: dispatch.Action,
 		OnStop:   dispatch.stop,
 	}
-	pr := mgr.(*process.Manager).Create(conf)
+	pr := mgr.Create(conf)
 
 	dispatch.start()
 	go pr.Run()
