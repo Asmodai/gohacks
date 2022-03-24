@@ -104,7 +104,7 @@ type Process struct {
 // Create a new process with the given configuration and parent context.
 func NewProcessWithContext(config *Config, parent context.Context) *Process {
 	if config.Logger == nil {
-		config.Logger = logger.NewDefaultLogger("")
+		config.Logger = logger.NewDefaultLogger()
 	}
 
 	ctx, cancel := context.WithCancel(parent)

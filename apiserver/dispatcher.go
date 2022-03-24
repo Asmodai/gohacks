@@ -65,7 +65,7 @@ func NewDispatcher(lgr logger.ILogger, config *Config) *Dispatcher {
 
 func NewDefaultDispatcher() *Dispatcher {
 	return NewDispatcher(
-		logger.NewDefaultLogger(""),
+		logger.NewDefaultLogger(),
 		&Config{
 			Addr:   ":8080",
 			UseTLS: false,

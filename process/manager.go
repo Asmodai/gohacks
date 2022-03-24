@@ -77,7 +77,7 @@ func NewManagerWithContext(parent context.Context) *Manager {
 
 	return &Manager{
 		processes: []*Process{},
-		logger:    logger.NewDefaultLogger(""),
+		logger:    logger.NewDefaultLogger(),
 		ctx:       ctx,
 		cancel:    cancel,
 		cwg:       &sync.WaitGroup{},

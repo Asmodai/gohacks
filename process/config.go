@@ -38,7 +38,7 @@ type Config struct {
 // Create a default process configuration.
 func NewDefaultConfig() *Config {
 	return &Config{
-		Logger: logger.NewDefaultLogger(""),
+		Logger: logger.NewDefaultLogger(),
 	}
 }
 

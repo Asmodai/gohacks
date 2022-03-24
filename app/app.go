@@ -75,7 +75,7 @@ func NewApplication(
 
 	// If we don't have a logger, set up a default one.
 	if alogger == nil {
-		alogger = logger.NewDefaultLogger("")
+		alogger = logger.NewDefaultLogger()
 	}
 
 	// Set up a new parent context for the whole application.

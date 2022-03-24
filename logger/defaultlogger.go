@@ -40,7 +40,7 @@ type DefaultLogger struct {
 }
 
 // Create a new default logger.
-func NewDefaultLogger(junk string) *DefaultLogger {
+func NewDefaultLogger() *DefaultLogger {
 	return &DefaultLogger{}
 }
 

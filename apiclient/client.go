@@ -23,6 +23,7 @@
 package apiclient
 
 import (
+	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/rlhttp"
 
 	"fmt"
@@ -69,10 +70,11 @@ type Client struct {
 	Client  IHTTPClient
 	Limiter *rate.Limiter
 	Trace   *httptrace.ClientTrace
+	logger  logger.ILogger
 }
 
 // Create a new API client with the given configuration.
-func NewClient(config *Config) *Client {
+func NewClient(config *Config, logger logger.ILogger) *Client {
 	trace := &httptrace.ClientTrace{}
 
 	limiter := rate.NewLimiter(
@@ -89,6 +91,7 @@ func NewClient(config *Config) *Client {
 		Limiter: limiter,
 		Client:  client,
 		Trace:   trace,
+		logger:  logger,
 	}
 }
 

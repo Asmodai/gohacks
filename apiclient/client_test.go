@@ -23,6 +23,8 @@
 package apiclient
 
 import (
+	"github.com/Asmodai/gohacks/logger"
+
 	"bytes"
 	"fmt"
 	"io/ioutil"
@@ -62,7 +64,7 @@ func defaultParams() *Params {
 // Invoke afake HTTP magic GET request.
 func invokeGet(params *Params, payloadfn FakeHttpFn) ([]byte, int, error) {
 	conf := NewDefaultConfig()
-	client := NewClient(conf)
+	client := NewClient(conf, logger.NewDefaultLogger())
 	client.Client = &FakeHttp{
 		Payload: payloadfn,
 	}
@@ -73,7 +75,7 @@ func invokeGet(params *Params, payloadfn FakeHttpFn) ([]byte, int, error) {
 // Invoke afake HTTP magic POST request.
 func invokePost(params *Params, payloadfn FakeHttpFn) ([]byte, int, error) {
 	conf := NewDefaultConfig()
-	client := NewClient(conf)
+	client := NewClient(conf, logger.NewDefaultLogger())
 	client.Client = &FakeHttp{
 		Payload: payloadfn,
 	}
@@ -88,7 +90,7 @@ func invokeVerb(verb string, params *Params, payloadfn FakeHttpFn) ([]byte, int,
 		Timeout:           5,
 	}
 
-	client := NewClient(conf)
+	client := NewClient(conf, logger.NewDefaultLogger())
 	client.Client = &FakeHttp{
 		Payload: payloadfn,
 	}
