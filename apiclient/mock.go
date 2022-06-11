@@ -1,7 +1,7 @@
 /*
- * queryparam.go --- Query parameters.
+ * mock.go --- Mock API client.
  *
- * Copyright (c) 2021 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -22,18 +22,38 @@
 
 package apiclient
 
-// API URL query parameter.
-type QueryParam struct {
-	Name    string
-	Content string
+import (
+	"github.com/Asmodai/gohacks/logger"
+)
+
+type MockCallbackFn func(data *Params) ([]byte, int, error)
+
+type MockClient struct {
+	logger logger.ILogger
+	GetFn  MockCallbackFn
+	PostFn MockCallbackFn
 }
 
-// Create a new query parameter.
-func NewQueryParam(name, content string) *QueryParam {
-	return &QueryParam{
-		Name:    name,
-		Content: content,
+func NewMockClient(config *Config, lgr logger.ILogger) *MockClient {
+	return &MockClient{
+		logger: lgr,
 	}
 }
 
-/* queryparam.go ends here. */
+func (c *MockClient) Get(data *Params) ([]byte, int, error) {
+	if c.GetFn == nil {
+		return []byte(""), 200, nil
+	}
+
+	return c.GetFn(data)
+}
+
+func (c *MockClient) Post(data *Params) ([]byte, int, error) {
+	if c.PostFn == nil {
+		return []byte(""), 200, nil
+	}
+
+	return c.PostFn(data)
+}
+
+/* mock.go ends here. */

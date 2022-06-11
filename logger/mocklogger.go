@@ -7,16 +7,16 @@
  * Maintainer: Paul Ward <asmodai@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
+ * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -40,7 +40,7 @@ type MockLogger struct {
 }
 
 // Create a new mock logger.
-func NewMockLogger(junk string) *MockLogger {
+func NewMockLogger(_ string) *MockLogger {
 	return &MockLogger{}
 }
 
@@ -88,6 +88,70 @@ func (l *MockLogger) Fatal(msg string, rest ...interface{}) {
 	// Don't ever use `Fatal` or whatever here, we don't want to exit.
 	l.LastFatal = fmt.Sprintf("FATAL: %s  %v", msg, rest)
 	l.Test.Log(l.LastFatal)
+}
+
+// Write a debug message to the log.
+func (l *MockLogger) Debugf(msg string, rest ...interface{}) {
+	if l.Test == nil {
+		return
+	}
+
+	l.Test.Logf("DEBUG: %s", fmt.Sprintf(msg, rest...))
+}
+
+// Write a warning message to the log.
+func (l *MockLogger) Warnf(msg string, rest ...interface{}) {
+	if l.Test == nil {
+		return
+	}
+
+	l.Test.Logf("WARN:  %s", fmt.Sprintf(msg, rest...))
+}
+
+// Write an information message to the log.
+func (l *MockLogger) Infof(msg string, rest ...interface{}) {
+	if l.Test == nil {
+		return
+	}
+
+	l.Test.Logf("INFO:  %s", fmt.Sprintf(msg, rest...))
+}
+
+// Write a fatal message to the log and then exit.
+func (l *MockLogger) Fatalf(msg string, rest ...interface{}) {
+	if l.Test == nil {
+		return
+	}
+
+	// Don't ever use `Fatal` or whatever here, we don't want to exit.
+	l.LastFatal = fmt.Sprintf("FATAL: %s", fmt.Sprintf(msg, rest...))
+	l.Test.Log(l.LastFatal)
+}
+
+// Write a fatal message to the log and then exit.
+func (l *MockLogger) Errorf(msg string, rest ...interface{}) {
+	if l.Test == nil {
+		return
+	}
+
+	// Don't ever use `Fatal` or whatever here, we don't want to exit.
+	l.LastFatal = fmt.Sprintf("ERROR: %s", fmt.Sprintf(msg, rest...))
+	l.Test.Log(l.LastFatal)
+}
+
+// Write a fatal message to the log and then exit.
+func (l *MockLogger) Panicf(msg string, rest ...interface{}) {
+	if l.Test == nil {
+		return
+	}
+
+	// Don't ever use `Fatal` or whatever here, we don't want to exit.
+	l.LastFatal = fmt.Sprintf("PANIC: %s", fmt.Sprintf(msg, rest...))
+	l.Test.Log(l.LastFatal)
+}
+
+func (l *MockLogger) WithFields(_ Fields) ILogger {
+	return NewMockLogger("")
 }
 
 /* mocklogger.go ends here. */

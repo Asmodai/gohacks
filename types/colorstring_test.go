@@ -1,5 +1,5 @@
 /*
- * all_test.go --- `All` tests.
+ * colorstring_test.go --- Colour string tests.
  *
  * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
@@ -20,33 +20,47 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package utils
+package types
 
 import "testing"
 
-func TestIntAll(t *testing.T) {
-	goodArr := []int{2, 4, 6, 8, 10}
-	badArr := []int{2, 3, 6, 8, 10}
+func TestColorString(t *testing.T) {
+	onlyFG := "\x1b[0;31;49mTest\x1b[0m"
+	onlyBG := "\x1b[0;39;41mTest\x1b[0m"
+	onlyAttr := "\x1b[1;39;49mTest\x1b[0m"
 
-	t.Run("Returns true for good array", func(t *testing.T) {
-		res := IntAll(goodArr, func(elt int) bool {
-			return elt%2 == 0
-		})
+	t.Run("Sets FG properly", func(t *testing.T) {
+		cl := MakeColorString()
 
-		if !res {
-			t.Error("Unexpected result!")
+		cl.SetString("Test")
+		cl.SetFG(RED)
+
+		if cl.String() != onlyFG {
+			t.Errorf("Unexpected '%s'", cl.String())
 		}
 	})
 
-	t.Run("Returns false for bad array", func(t *testing.T) {
-		res := IntAll(badArr, func(elt int) bool {
-			return elt%2 == 0
-		})
+	t.Run("Sets BG properly", func(t *testing.T) {
+		cl := MakeColorString()
 
-		if res {
-			t.Error("Unexpected result!")
+		cl.SetString("Test")
+		cl.SetBG(RED)
+
+		if cl.String() != onlyBG {
+			t.Errorf("Unexpected '%s'", cl.String())
+		}
+	})
+
+	t.Run("Sets attribute properly", func(t *testing.T) {
+		cl := MakeColorString()
+
+		cl.SetString("Test")
+		cl.SetAttr(BOLD)
+
+		if cl.String() != onlyAttr {
+			t.Errorf("Unexpected '%s'", cl.String())
 		}
 	})
 }
 
-/* all_test.go ends here. */
+/* colorstring_test.go ends here. */

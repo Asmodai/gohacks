@@ -7,16 +7,16 @@
  * Maintainer: Paul Ward <asmodai@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
+ * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -40,6 +40,7 @@ const (
 
 // Callback function.
 type CallbackFn func(**State)
+type QueryFn func(interface{}) interface{}
 
 /*
 
@@ -84,6 +85,7 @@ type Process struct {
 	Name     string        // Pretty name.
 	Function CallbackFn    // `Action` callback.
 	OnStop   CallbackFn    // `Stop` callback.
+	OnQuery  QueryFn       // `Query` callback.
 	Running  bool          // Is the process running?
 	Interval time.Duration // `RunEvery` time interval.
 
@@ -113,6 +115,7 @@ func NewProcessWithContext(config *Config, parent context.Context) *Process {
 		Name:          config.Name,
 		Function:      config.Function,
 		OnStop:        config.OnStop,
+		OnQuery:       config.OnQuery,
 		Running:       false,
 		Interval:      (time.Duration)(config.Interval) * time.Second,
 		period:        (time.Duration)(config.Interval) * time.Second,
@@ -150,6 +153,11 @@ func (p *Process) SetContext(parent context.Context) {
 
 	p.ctx = ctx
 	p.cancel = cancel
+}
+
+// Return the context for the process.
+func (p *Process) Context() context.Context {
+	return p.ctx
 }
 
 // Set the process's wait group.
@@ -213,6 +221,18 @@ func (p *Process) Stop() bool {
 // Send data to the process with blocking.
 func (p *Process) Send(data interface{}) {
 	p.chanToState <- data
+}
+
+// Query the running process.
+//
+// This allows interaction with the process's base object without using
+// `Action`.
+func (p *Process) Query(arg interface{}) interface{} {
+	if p.OnQuery == nil {
+		return nil
+	}
+
+	return p.OnQuery(arg)
 }
 
 // Send data to the process without blocking.

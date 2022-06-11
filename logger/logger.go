@@ -7,16 +7,16 @@
  * Maintainer: Paul Ward <asmodai@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
+ * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -34,6 +34,8 @@ var (
 	once     sync.Once
 	instance *Logger
 )
+
+type Fields map[string]interface{}
 
 /*
 
@@ -153,6 +155,51 @@ func (l *Logger) Info(msg string, rest ...interface{}) {
 // Write a fatal message to the log and then exit.
 func (l *Logger) Fatal(msg string, rest ...interface{}) {
 	l.logger.Fatalw(msg, rest...)
+}
+
+// Compatibility method.
+func (l *Logger) Debugf(format string, args ...interface{}) {
+	l.logger.Debugf(format, args...)
+}
+
+// Compatibility method.
+func (l *Logger) Warnf(format string, args ...interface{}) {
+	l.logger.Warnf(format, args...)
+}
+
+// Compatibility method.
+func (l *Logger) Infof(format string, args ...interface{}) {
+	l.logger.Infof(format, args...)
+}
+
+// Compatibility method.
+func (l *Logger) Fatalf(format string, args ...interface{}) {
+	l.logger.Fatalf(format, args...)
+}
+
+// Compatibility method.
+func (l *Logger) Errorf(format string, args ...interface{}) {
+	l.logger.Errorf(format, args...)
+}
+
+// Compatibility method.
+func (l *Logger) Panicf(format string, args ...interface{}) {
+	l.logger.Panicf(format, args...)
+}
+
+func (l *Logger) WithFields(fields Fields) ILogger {
+	var f = make([]interface{}, 0)
+	for k, v := range fields {
+		f = append(f, k)
+		f = append(f, v)
+	}
+	newLogger := l.logger.With(f...)
+	return &Logger{
+		logger:   newLogger,
+		logfile:  l.logfile,
+		debug:    l.debug,
+		facility: l.facility,
+	}
 }
 
 /* logger.go ends here. */

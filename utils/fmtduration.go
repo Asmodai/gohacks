@@ -1,7 +1,7 @@
 /*
- * queryparam.go --- Query parameters.
+ * fmtduration.go --- Format a Time duration.
  *
- * Copyright (c) 2021 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -20,20 +20,24 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package apiclient
+package utils
 
-// API URL query parameter.
-type QueryParam struct {
-	Name    string
-	Content string
+import (
+	"fmt"
+	"time"
+)
+
+func FormatDuration(d time.Duration) string {
+	d = d.Round(time.Minute)
+
+	// Compute hours, and then subtract from the duration.
+	h := d / time.Hour
+	d -= h * time.Hour
+
+	// Compute minutes.
+	m := d / time.Minute
+
+	return fmt.Sprintf("%0d hour(s), %0d minute(s)", h, m)
 }
 
-// Create a new query parameter.
-func NewQueryParam(name, content string) *QueryParam {
-	return &QueryParam{
-		Name:    name,
-		Content: content,
-	}
-}
-
-/* queryparam.go ends here. */
+/* fmtduration.go ends here. */

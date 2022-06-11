@@ -7,16 +7,16 @@
  * Maintainer: Paul Ward <asmodai@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
+ * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -105,7 +105,7 @@ func (pm *Manager) SetContext(parent context.Context) {
 
 // Create a new process with the given configuration.
 func (pm *Manager) Create(config *Config) *Process {
-	proc := NewProcess(config)
+	proc := NewProcessWithContext(config, pm.ctx)
 	proc.SetLogger(pm.logger)
 	proc.SetWaitGroup(pm.cwg)
 
