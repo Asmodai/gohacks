@@ -142,6 +142,11 @@ func (l *Logger) Debug(msg string, rest ...interface{}) {
 	l.logger.Debugw(msg, rest...)
 }
 
+// Write an error message to the log.
+func (l *Logger) Error(msg string, rest ...interface{}) {
+	l.logger.Errorw(msg, rest...)
+}
+
 // Write a warning message to the log.
 func (l *Logger) Warn(msg string, rest ...interface{}) {
 	l.logger.Warnw(msg, rest...)

@@ -27,6 +27,7 @@ type ILogger interface {
 	SetLogFile(string)
 
 	Debug(string, ...interface{})
+	Error(string, ...interface{})
 	Warn(string, ...interface{})
 	Info(string, ...interface{})
 	Fatal(string, ...interface{})

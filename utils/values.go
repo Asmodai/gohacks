@@ -27,7 +27,7 @@ import (
 )
 
 type Numeric interface {
-	int64 | float64
+	~int64 | ~float64
 }
 
 // Does the given float have a faction?

@@ -103,6 +103,11 @@ func (pm *Manager) SetContext(parent context.Context) {
 	pm.cancel = cancel
 }
 
+// Get the process manager's context.
+func (pm *Manager) Context() context.Context {
+	return pm.ctx
+}
+
 // Create a new process with the given configuration.
 func (pm *Manager) Create(config *Config) *Process {
 	proc := NewProcessWithContext(config, pm.ctx)

@@ -58,6 +58,11 @@ func (l *DefaultLogger) Debug(msg string, rest ...interface{}) {
 	log.Printf("DEBUG: %s  %v", msg, rest)
 }
 
+// Write an error message to the log.
+func (l *DefaultLogger) Error(msg string, rest ...interface{}) {
+	log.Printf("ERROR:  %s  %v", msg, rest)
+}
+
 // Write a warning message to the log.
 func (l *DefaultLogger) Warn(msg string, rest ...interface{}) {
 	log.Printf("WARN:  %s  %v", msg, rest)

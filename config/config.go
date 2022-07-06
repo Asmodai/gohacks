@@ -31,7 +31,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"reflect"
 )
@@ -453,12 +452,14 @@ func (c *Config) handleCLI() {
 // Load JSON config file.
 func (c *Config) load() {
 	if c.ConfigCLI.ConfFile == "" {
-		log.Fatal("A configuration file must be provided via `-config`.")
+		fmt.Println("Not loading a configuration file.")
+		return
+		//log.Fatal("A configuration file must be provided via `-config`.")
 	}
 
 	file, err := os.Open(c.ConfigCLI.ConfFile)
 	if err != nil {
-		log.Fatalf("Error loading config file: %s", err.Error())
+		panic(fmt.Errorf("Error loading config file: %s", err.Error()))
 	}
 	defer file.Close()
 

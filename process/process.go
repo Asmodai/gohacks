@@ -84,6 +84,7 @@ type Process struct {
 
 	Name     string        // Pretty name.
 	Function CallbackFn    // `Action` callback.
+	OnStart  CallbackFn    // `Start` callback.
 	OnStop   CallbackFn    // `Stop` callback.
 	OnQuery  QueryFn       // `Query` callback.
 	Running  bool          // Is the process running?
@@ -114,6 +115,7 @@ func NewProcessWithContext(config *Config, parent context.Context) *Process {
 	p := &Process{
 		Name:          config.Name,
 		Function:      config.Function,
+		OnStart:       config.OnStart,
 		OnStop:        config.OnStop,
 		OnQuery:       config.OnQuery,
 		Running:       false,
@@ -175,6 +177,11 @@ func (p *Process) Run() bool {
 	}
 
 	p.Running = true
+
+	// Execute startup callback if available.
+	if p.OnStart != nil {
+		p.OnStart(&p.state)
+	}
 
 	// Add child to wait group
 	p.wg.Add(1)

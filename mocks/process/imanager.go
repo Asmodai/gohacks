@@ -49,6 +49,20 @@ func (mr *MockIManagerMockRecorder) Add(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockIManager)(nil).Add), arg0)
 }
 
+// Context mocks base method.
+func (m *MockIManager) Context() context.Context {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Context")
+	ret0, _ := ret[0].(context.Context)
+	return ret0
+}
+
+// Context indicates an expected call of Context.
+func (mr *MockIManagerMockRecorder) Context() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Context", reflect.TypeOf((*MockIManager)(nil).Context))
+}
+
 // Count mocks base method.
 func (m *MockIManager) Count() int {
 	m.ctrl.T.Helper()

@@ -44,11 +44,13 @@ type Application struct {
 	Name    string         // Application name.
 	Version *semver.SemVer // Version string.
 
+	OnStart  OnSignalFn // Function called on app startup.
 	OnExit   OnSignalFn // Function called on app exit.
 	OnHUP    OnSignalFn // Function called when SIGHUP received.
 	OnUSR1   OnSignalFn // Function called when SIGUSR1 received.
 	OnUSR2   OnSignalFn // Function called when SIGUSR2 received.
 	OnWINCH  OnSignalFn // Function used when SIGWINCH received.
+	OnCHLD   OnSignalFn // Function used when SIGCHLD received.
 	MainLoop MainLoopFn // Application main loop function.
 
 	running bool               // Is the app running?
@@ -73,6 +75,11 @@ func NewApplication(
 		name = "<anonymous>"
 	}
 
+	// Do we not have a config?
+	if aconfig == nil {
+		aconfig = &AppConfig{}
+	}
+
 	// If we don't have a logger, set up a default one.
 	if alogger == nil {
 		alogger = logger.NewDefaultLogger()
@@ -84,11 +91,13 @@ func NewApplication(
 	a := &Application{
 		Name:     name,
 		Version:  version,
+		OnStart:  defaultHandler,
 		OnExit:   defaultHandler,
 		OnHUP:    defaultOnHUP,
 		OnUSR1:   defaultHandler,
 		OnUSR2:   defaultHandler,
 		OnWINCH:  defaultHandler,
+		OnCHLD:   defaultHandler,
 		MainLoop: defaultMainLoop,
 		ctx:      ctx,
 		cancel:   cancelFn,
@@ -96,7 +105,9 @@ func NewApplication(
 		logger:   alogger,
 	}
 
-	a.config = config.Init(name, version, aconfig, acnffns)
+	if aconfig != nil {
+		a.config = config.Init(name, version, aconfig, acnffns)
+	}
 
 	return a
 }
@@ -138,6 +149,11 @@ func (app *Application) Configuration() *config.Config {
 	return app.config
 }
 
+// Set the `OnStart` callback.
+func (app *Application) SetOnStart(fn OnSignalFn) {
+	app.OnStart = fn
+}
+
 // Set the `OnExit` callback.
 func (app *Application) SetOnExit(fn OnSignalFn) {
 	app.OnExit = fn
@@ -161,6 +177,11 @@ func (app *Application) SetOnUSR2(fn OnSignalFn) {
 // Set the `OnWINCH` callback.
 func (app *Application) SetOnWINCH(fn OnSignalFn) {
 	app.OnWINCH = fn
+}
+
+// Set the `OnCHLD` callback.
+func (app *Application) SetOnCHLD(fn OnSignalFn) {
+	app.OnCHLD = fn
 }
 
 // Set the main loop callback.

@@ -61,6 +61,15 @@ func (l *MockLogger) Debug(msg string, rest ...interface{}) {
 	l.Test.Logf("DEBUG: %s  %v", msg, rest)
 }
 
+// Write an error message to the log.
+func (l *MockLogger) Error(msg string, rest ...interface{}) {
+	if l.Test == nil {
+		return
+	}
+
+	l.Test.Logf("ERROR:  %s  %v", msg, rest)
+}
+
 // Write a warning message to the log.
 func (l *MockLogger) Warn(msg string, rest ...interface{}) {
 	if l.Test == nil {

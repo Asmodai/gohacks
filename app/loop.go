@@ -30,6 +30,11 @@ import (
 func (app *Application) loop() {
 	app.running = true
 
+	// Execute startup code (if any)
+	if app.OnStart != nil {
+		app.OnStart(app)
+	}
+
 	// While we're running...
 	for app.running == true {
 		// Check for parent context cancellation
