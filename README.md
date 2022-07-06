@@ -4,7 +4,7 @@ Hi, Emacs.  This is -*- mode: gfm -*-
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 [![made-with-Go](https://img.shields.io/badge/Made%20with-Go-1f425f.svg)](https://go.dev/)
 [![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/Asmodai/gohacks.svg)](https://github.com/Asmodai/gohacks)
-[![CodeQL](https://github.com/Asmodai/gohacks/workflows/CodeQL/badge.svg)
+![CodeQL](https://github.com/Asmodai/gohacks/workflows/CodeQL/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Asmodai/gohacks)](https://goreportcard.com/report/github.com/Asmodai/gohacks)
 
 # gohacks
