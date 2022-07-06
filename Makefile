@@ -69,6 +69,10 @@ prunedeps:
 	@echo Pruning dependencies
 	@go mod tidy
 
+lint:
+	@echo Running linter
+	@golangci-lint run
+
 build:
 	@echo THIS IS A LIBRARY
 
