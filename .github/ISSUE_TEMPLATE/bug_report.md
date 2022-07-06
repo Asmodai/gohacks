@@ -11,7 +11,7 @@ assignees: 'Asmodai'
 
 Have you read the Code of Conduct?  By filling in an issue, you are expected
 to comply with it, including treating everyone with respect:
-https://github.com/Asmodai/verbuild/blob/master/CODE_OF_CONDUCT.md
+https://github.com/Asmodai/gohacks/blob/master/CODE_OF_CONDUCT.md
 
 Do you want to ask a question?  Are you looking for support?
 If so, then please do NOT create an issue, email the author!
@@ -23,7 +23,6 @@ If so, then please do NOT create an issue, email the author!
 * [ ] Put an X between the brackets on this line if and only if you have
       done all of the following:
     * Reproduced the problem.
-    * Ran verbuild with `-V -D 9` to ensure it's not a user issue.
     * Checked that your issue isn't already filed.
 
 ### Description
@@ -46,10 +45,8 @@ If so, then please do NOT create an issue, email the author!
 
 ### Version(s) affected
 
-You can get this information from copying and pasting the output of
-`verbuild --version`.  Please include operating system version and
-architecture and, if you compiled from source, compiler name and
-version.
+You can get this information from the `go.mod` file in the package
+from which gohacks is included.
 
 ### Additional information
 
