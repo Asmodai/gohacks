@@ -1,6 +1,6 @@
 -*- Mode: gfm -*-
 
-# database -- Asmodai's Go Hacks
+# database -- Go Hacks Library
 
 ```go
     import "github.com/Asmodai/gohacks/database"
@@ -268,7 +268,7 @@ Interface for `sqlx.Rows` objects.
 ```go
 type ITx interface {
 	NamedExec(string, interface{}) (sql.Result, error)
-	Commit()
+	Commit() error
 }
 ```
 
@@ -284,7 +284,7 @@ type Tx struct {
 #### func (*Tx) Commit
 
 ```go
-func (tx *Tx) Commit()
+func (tx *Tx) Commit() error
 ```
 
 #### func (*Tx) NamedExec

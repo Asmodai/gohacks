@@ -1,6 +1,6 @@
 -*- Mode: gfm -*-
 
-# conversion -- Asmodai's Go Hacks
+# conversion -- Go Hacks Library
 
 ```go
     import "github.com/Asmodai/gohacks/conversion"

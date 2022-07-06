@@ -38,9 +38,11 @@ func (m *MockITx) EXPECT() *MockITxMockRecorder {
 }
 
 // Commit mocks base method.
-func (m *MockITx) Commit() {
+func (m *MockITx) Commit() error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Commit")
+	ret := m.ctrl.Call(m, "Commit")
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Commit indicates an expected call of Commit.

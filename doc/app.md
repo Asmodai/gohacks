@@ -1,6 +1,6 @@
 -*- Mode: gfm -*-
 
-# app -- Asmodai's Go Hacks
+# app -- Go Hacks Library
 
 ```go
     import "github.com/Asmodai/gohacks/app"

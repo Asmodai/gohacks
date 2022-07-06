@@ -2,33 +2,32 @@ Hi Emacs, this is -*- mode: gfm -*-
 
 # Contributing to gohacks
 
-## Table of Contents
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-generate-toc again -->
+**Table of Contents**
 
-  * [Contributing to gohacks](#contributing-to-verbuild)
-    * [Code of Conduct](#code-of-conduct)
-    * [Do I have to read this?](#do-i-have-to-read-this)
-    * [What should I know before I get started?](#what-should-i-know-before-i-get-started)
-      * [Requirements](#requirements)
-        * [CMake](#cmake)
-          * [Windows](#windows)
-          * [macOS](#macos)
-          * [GNU/Linux](#gnulinux)
-          * [Visual Studio 2017](#visual-studio-2017)
-        * [boost](#boost)
-          * [GNU/Linux](#gnulinux-1)
-          * [Windows](#windows-1)
-    * [How can I contribute?](#how-can-i-contribute)
-      * [Reporting bugs](#reporting-bugs)
-      * [Feature requests](#feature-requests)
-      * [Pull requests](#pull-requests)
-    * [Style guides](#style-guides)
-      * [Git commit messages](#git-commit-messages)
-      * [C   style guide](#c-style-guide)
-      * [Documentation style guide](#documentation-style-guide)
-    * [Additional notes](#additional-notes)
-      * [Issue and PR labels](#issue-and-pr-labels)
-        * [Issues](#issues)
-        * [Pull request labels](#pull-request-labels)
+- [Contributing to gohacks](#contributing-to-gohacks)
+    - [Table of Contents](#table-of-contents)
+    - [Code of Conduct](#code-of-conduct)
+    - [Do I have to read this?](#do-i-have-to-read-this)
+    - [What should I know before I get started?](#what-should-i-know-before-i-get-started)
+        - [Requirements](#requirements)
+            - [Go version](#go-version)
+            - [Go linter](#go-linter)
+            - [Go document markdown generator](#go-document-markdown-generator)
+    - [How can I contribute?](#how-can-i-contribute)
+        - [Reporting bugs](#reporting-bugs)
+        - [Feature requests](#feature-requests)
+        - [Pull requests](#pull-requests)
+    - [Style guides](#style-guides)
+        - [Git commit messages](#git-commit-messages)
+        - [Go style guide](#go-style-guide)
+        - [Documentation style guide](#documentation-style-guide)
+    - [Additional notes](#additional-notes)
+        - [Issue and PR labels](#issue-and-pr-labels)
+            - [Issues](#issues)
+            - [Pull request labels](#pull-request-labels)
+
+<!-- markdown-toc end -->
 
 ## Code of Conduct
 
@@ -39,6 +38,7 @@ unacceptable behaviour
 to [asmodai@gmail.com](mailto:asmodai@gmail.com).
 
 ## Do I have to read this?
+
 > **note:** Please do *not* file an issue to ask a question.  You will
 > get faster results by emailing the author.
 
@@ -50,8 +50,23 @@ to email the author.
 ### Requirements
 
 #### Go version
+
 gohacks requires [Go 1.18](https://go.dev/) (or newer) due to the use
 of generics.
+
+#### Go linter
+
+Please ensure you
+have [golangci-lint](https://golangci-lint.run/usage/install/)
+installed and that you actively run it to lint your code prior to
+committing.
+
+#### Go document markdown generator
+
+If you need to generate user documentation, please insure
+that [gomarkdown](https://github.com/robertkrimen/godocdown/) is
+installed, and run `make doc` in the top-level directory prior to
+committing.
 
 ## How can I contribute?
 
@@ -77,8 +92,10 @@ Other requests will be evaluated on a case-by-case version.
 ### Pull requests
 
 Please ensure to consider the following when opening a pull request:
+
  * Do *not* include issue numbers in the PR title.
- * Ensure your code is formatted with `go fmt`.
+ * Ensure your code is formatted with `gofmt -s`.
+ * Ensure you have ran `golangci-lint run` or `make lint`.
  * Follow the [documentation style guide](#documentation-style-guide).
  * Ensure you have written tests.
  * End **all** files with a newline.
@@ -86,16 +103,17 @@ Please ensure to consider the following when opening a pull request:
 ## Style guides
  
 ### Git commit messages
+
  * Use the present tense ("Add feature", not "Added feature")
  * Use the imperative mood ("Move thing to..." not "Moves thing to...")
  * Limit the first line to 50 characters or less.
  * Reference issues and pull requests *after* the first line.
- * Install the git hooks in `git-hooks`.
+ * Install the git hooks in `git-hooks` (if present).
  * Do **not** use emoji in either the title or message.
  
 ### Go style guide
 
-Please ensure you have formatted your code with `go fmt` before submitting.
+Please ensure you have formatted your code with `gofmt -s` before submitting.
 
 ### Documentation style guide
 

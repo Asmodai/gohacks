@@ -1,6 +1,6 @@
 -*- Mode: gfm -*-
 
-# {{ .Name }} -- Asmodai's Go Hacks
+# {{ .Name }} -- Go Hacks Library
 
 ```go
     import "github.com/Asmodai/gohacks/{{ .Name }}"

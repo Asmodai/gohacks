@@ -43,16 +43,19 @@ Service structure.
 To use:
 
 1) Invoke `di.GetInstance` to access the singleton:
+
 ```go
   svc := di.GetInstance
 ```
 
 2a) Add your required service:
+
 ```go
    svc.Add("SomeName", someInstance)
 ```
 
 2b) Create your required service:
+
 ```go
    svc.Create("SomeName", func() interface{} { return NewThing() })
 ```

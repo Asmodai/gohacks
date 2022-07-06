@@ -1,6 +1,6 @@
 -*- Mode: gfm -*-
 
-# config -- Asmodai's Go Hacks
+# config -- Go Hacks Library
 
 ```go
     import "github.com/Asmodai/gohacks/config"
@@ -39,17 +39,23 @@ validators stuffed into `Validators`.
 
 The magic happens like this.
 
-1) Define the structure you want your options to live in: ```go
+1) Define the structure you want your options to live in:
+
+```go
 
     type Options struct {
         Option1 string `json:"option1" config_validator:"ValidateOption1"
         // ...
     }
 
-``` The `config_validator` tag informs the Config module that you wish to
-validate the `Option1` field using the `ValidateOption1` function.
+```
 
-2) Define your validators: ```go
+The `config_validator` tag informs the Config module that you wish to validate
+the `Option1` field using the `ValidateOption1` function.
+
+2) Define your validators:
+
+```go
 
     func ValidateOption1(value string) error {
         if value == "" {
@@ -59,9 +65,13 @@ validate the `Option1` field using the `ValidateOption1` function.
         return nil
     }
 
-``` The validator *must* return an `error` or `nil`.
+```
 
-3) Set it all up: ```go
+The validator *must* return an `error` or `nil`.
+
+3) Set it all up:
+
+```go
 
     func main() {
         // ...
@@ -81,13 +91,18 @@ validate the `Option1` field using the `ValidateOption1` function.
         // ...
     }
 
-``` Options will be parsed during `init`. Any validation or JSON errors will
-result in the program exiting with error information dumped to stdout.
+```
 
-It is worth noting that there are three special structure tags: * `config_hide`:
-Field is hidden when the config is dumped to string, * `config_obscure`: Field
-is obscured with asterisks when dumped, * `config_validator`: The validation
-function for the field.
+Options will be parsed during `init`. Any validation or JSON errors will result
+in the program exiting with error information dumped to stdout.
+
+It is worth noting that there are three special structure tags:
+
+* `config_hide`: Field is hidden when the config is dumped to string,
+
+* `config_obscure`: Field is obscured with asterisks when dumped,
+
+* `config_validator`: The validation function for the field.
 
 #### func  Init
 

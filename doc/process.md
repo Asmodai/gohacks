@@ -1,6 +1,6 @@
 -*- Mode: gfm -*-
 
-# process -- Asmodai's Go Hacks
+# process -- Go Hacks Library
 
 ```go
     import "github.com/Asmodai/gohacks/process"
@@ -78,9 +78,15 @@ To use,
 
 1) Create a new process manager:
 
+```go
+
     procmgr := process.NewManager()
 
+```
+
 2) Create your process configuration:
+
+```go
 
     conf := &process.Config{
       Name:     "Windows 95",
@@ -90,17 +96,31 @@ To use,
       }
     }
 
+```
+
 3) Create the process itself.
+
+```go
 
     proc := procmgr.Create(conf)
 
+```
+
 4) Run the process.
+
+```go
 
     procmgr.Run("Windows 95")
 
+```
+
 /or/
 
+```go
+
     proc.Run()
+
+```
 
 #### func  NewManager
 
@@ -223,6 +243,8 @@ To use:
 
 1) Create a config:
 
+```go
+
     conf := &process.Config{
       Name:     "Windows 95",
       Interval: 10,        // 10 seconds.
@@ -231,25 +253,47 @@ To use:
       },
     }
 
+```
+
 2) Create a process:
+
+```go
 
     proc := process.NewProcess(conf)
 
+```
+
 3) Run the process:
+
+```go
 
     go proc.Run()
 
+```
+
 4) Send data to the process:
+
+```go
 
     proc.Send("Blue Screen of Death")
 
+```
+
 5) Read data from the process:
+
+```go
 
     data := proc.Receive()
 
+```
+
 6) Stop the process
 
+```go
+
     proc.Stop()
+
+```
 
 #### func  NewProcess
 

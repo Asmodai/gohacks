@@ -1,6 +1,6 @@
 -*- Mode: gfm -*-
 
-# types -- Asmodai's Go Hacks
+# types -- Go Hacks Library
 
 ```go
     import "github.com/Asmodai/gohacks/types"
@@ -169,7 +169,7 @@ func NewMailbox() *Mailbox
 ```
 Create and return a new empty mailbox.
 
-Note: this acquires the `preventRead` semaphore.
+Note: this acquires the `preventRead` semaphore. nolint:errcheck
 
 #### func (*Mailbox) Full
 

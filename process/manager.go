@@ -44,10 +44,13 @@ To use,
 
 1) Create a new process manager:
 
+```go
   procmgr := process.NewManager()
+```
 
 2) Create your process configuration:
 
+```go
   conf := &process.Config{
     Name:     "Windows 95",
     Interval: 10, // seconds
@@ -55,18 +58,25 @@ To use,
       // Crash or something.
     }
   }
+```
 
 3) Create the process itself.
 
+```go
   proc := procmgr.Create(conf)
+```
 
 4) Run the process.
 
+```go
   procmgr.Run("Windows 95")
+```
 
 /or/
 
+```go
   proc.Run()
+```
 
 */
 type Manager struct {

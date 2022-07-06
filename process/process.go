@@ -53,6 +53,7 @@ To use:
 
 1) Create a config:
 
+```go
   conf := &process.Config{
     Name:     "Windows 95",
     Interval: 10,        // 10 seconds.
@@ -60,26 +61,37 @@ To use:
       // Crash or something.
     },
   }
+```
 
 2) Create a process:
 
+```go
   proc := process.NewProcess(conf)
+```
 
 3) Run the process:
 
+```go
   go proc.Run()
+```
 
 4) Send data to the process:
 
+```go
   proc.Send("Blue Screen of Death")
+```
 
 5) Read data from the process:
 
+```go
   data := proc.Receive()
+```
 
 6) Stop the process
 
+```go
   proc.Stop()
+```
 
 */
 type Process struct {

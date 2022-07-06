@@ -1,6 +1,6 @@
 -*- Mode: gfm -*-
 
-# sysinfo -- Asmodai's Go Hacks
+# sysinfo -- Go Hacks Library
 
 ```go
     import "github.com/Asmodai/gohacks/sysinfo"
