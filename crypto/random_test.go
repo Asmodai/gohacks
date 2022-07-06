@@ -62,7 +62,7 @@ func TestRandomBytes(t *testing.T) {
 			return
 		}
 
-		if !bytes.Equal(r1, r2) {
+		if bytes.Equal(r1, r2) {
 			t.Errorf("Not unique!")
 		}
 	})
