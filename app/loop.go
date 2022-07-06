@@ -43,7 +43,7 @@ func (app *Application) loop() {
 	}
 
 	// While we're running...
-	for app.running == true {
+	for app.running {
 		// Check for parent context cancellation
 		select {
 		case <-app.ctx.Done():

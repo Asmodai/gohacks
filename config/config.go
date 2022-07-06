@@ -150,7 +150,7 @@ func (c *Config) String() string {
 	// Attempt to initialise the user config.
 	c.checkCanInit(reflect.ValueOf(c.App))
 
-	s := fmt.Sprintf("Configuration:")
+	s := "Configuration:"
 	s += c.recursePrint("    ", reflect.ValueOf(c), make(map[interface{}]bool))
 	s += c.recursePrint("    ", reflect.ValueOf(c.App), make(map[interface{}]bool))
 
@@ -211,6 +211,7 @@ func (c *Config) LookupFlag(name string) *flag.Flag {
 func (c *Config) Parse() {
 	var err []error
 
+	//nolint:errcheck
 	c.flags.Parse(os.Args[1:])
 
 	// Check if we're something that should just print and exit here.
@@ -371,13 +372,13 @@ func (c *Config) recursePrint(prefix string, val reflect.Value, visited map[inte
 				// Is the field exported?
 				if !val.Field(i).CanSet() {
 					// No, mark it so and ignore it.
-					s += fmt.Sprintf(" <unexported>")
+					s += " <unexported>"
 					continue
 				}
 
 				// Should we obscure the field's value?
 				if t.Field(i).Tag.Get("config_obscure") == "true" {
-					s += fmt.Sprintf(" [**********]")
+					s += " [**********]"
 				} else {
 					// Not obscuring, recurse-print.
 					s += c.recursePrint(prefix+"    ", val.Field(i), visited)
@@ -472,7 +473,7 @@ func (c *Config) load() {
 
 	bytes, _ := ioutil.ReadAll(file)
 
-	if bytes == nil || len(bytes) == 0 {
+	if len(bytes) == 0 {
 		return
 	}
 

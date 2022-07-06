@@ -66,6 +66,7 @@ type Mailbox struct {
 // Create and return a new empty mailbox.
 //
 // Note: this acquires the `preventRead` semaphore.
+//nolint:errcheck
 func NewMailbox() *Mailbox {
 	// Please note that the context given here should never be one
 	// passed in by the user, we want a TODO context because *we* are
@@ -83,7 +84,7 @@ func NewMailbox() *Mailbox {
 // Put an element into the mailbox.
 func (m *Mailbox) Put(elem interface{}) {
 	// Attempt to acquire `preventWrite` semaphore.
-	for m.preventWrite.TryAcquire(1) == false {
+	for !m.preventWrite.TryAcquire(1) {
 		time.Sleep(MailboxDelaySleep)
 	}
 
@@ -109,14 +110,14 @@ func (m *Mailbox) Get() (interface{}, bool) {
 }
 
 func (m *Mailbox) GetWithContext(ctx context.Context) (interface{}, bool) {
-	var result interface{} = nil
+	var result interface{}
 
 	if m.element == nil {
 		return nil, false
 	}
 
 	// Attempt to acquire the `preventRead` semaphore
-	for m.preventRead.TryAcquire(1) == false {
+	for !m.preventRead.TryAcquire(1) {
 		time.Sleep(MailboxDelaySleep)
 
 		select {

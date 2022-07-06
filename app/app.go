@@ -198,7 +198,7 @@ func (app *Application) SetMainLoop(fn MainLoopFn) {
 
 // Is the application running?
 func (app *Application) IsRunning() bool {
-	return app.running == true
+	return app.running
 }
 
 // Is the application using debug mode?

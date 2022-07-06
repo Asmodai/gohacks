@@ -36,6 +36,7 @@ import (
 	"time"
 )
 
+// nolint:govet
 type Document struct {
 	status  int               `json:"-"`
 	headers map[string]string `json:"-"`

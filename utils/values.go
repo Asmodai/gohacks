@@ -68,6 +68,7 @@ func Number[V Numeric](val V) interface{} {
  * This could be used for other things too, I guess.
  */
 func ValueOf(thing interface{}) interface{} {
+	//nolint:gosimple
 	switch thing.(type) {
 	case float64:
 		return Number(thing.(float64))

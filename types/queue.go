@@ -109,7 +109,7 @@ func (q *Queue) Get() (interface{}, bool) {
 
 // Return the number of elements in the queue.
 func (q *Queue) Len() int {
-	var length int = 0
+	var length int
 
 	q.Lock()
 	{

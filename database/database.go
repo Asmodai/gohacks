@@ -109,8 +109,8 @@ func (tx *Tx) NamedExec(query string, arg interface{}) (sql.Result, error) {
 	return tx.real.NamedExec(query, arg)
 }
 
-func (tx *Tx) Commit() {
-	tx.real.Commit()
+func (tx *Tx) Commit() error {
+	return tx.real.Commit()
 }
 
 /* database.go ends here. */

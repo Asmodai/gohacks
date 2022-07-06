@@ -36,10 +36,6 @@ import (
 	"time"
 )
 
-var (
-	testSIProc *process.Process
-)
-
 func TestProcess(t *testing.T) {
 	t.Log("Does the system info process run as expected?")
 

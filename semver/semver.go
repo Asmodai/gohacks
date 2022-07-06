@@ -30,7 +30,6 @@
 package semver
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -66,7 +65,7 @@ func (s *SemVer) FromString(info string) error {
 		arr := strings.Split(info, ":")
 
 		if len(arr) != 2 {
-			return errors.New(fmt.Sprintf("Invalid version string '%s'", info))
+			return fmt.Errorf("Invalid version string '%s'", info)
 		}
 
 		str = arr[0]

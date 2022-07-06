@@ -57,6 +57,7 @@ func TestPop(t *testing.T) {
 		arr = arr[:len(arr)-1]
 	}
 
+	// nolint:ineffassign,staticcheck
 	// Now test zero-length array.
 	last, rest = Pop([]string{})
 	if last != "" {

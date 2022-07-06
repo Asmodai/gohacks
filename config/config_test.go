@@ -39,7 +39,12 @@ import (
 
 var DummyConfigJson = "{\"testing\":{\"opt1\":\"testing\",\"opt2\":42}}"
 
-var version = &semver.SemVer{0, 1, 0, "test"}
+var version = &semver.SemVer{
+	Major:  0,
+	Minor:  1,
+	Patch:  0,
+	Commit: "test",
+}
 
 var StringRep = `Configuration:
     Opt1: [testing]

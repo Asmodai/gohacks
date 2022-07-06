@@ -37,7 +37,7 @@ import (
 
 type ITx interface {
 	NamedExec(string, interface{}) (sql.Result, error)
-	Commit()
+	Commit() error
 }
 
 // Interface for `sql.Row` objects.

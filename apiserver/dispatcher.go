@@ -148,7 +148,6 @@ func (d *Dispatcher) Start() {
 				PreferServerCipherSuites: true,
 			})
 			err = d.srv.ListenAndServeTLS(d.config.Cert, d.config.Key)
-			break
 
 		case false:
 			err = d.srv.ListenAndServe()

@@ -89,7 +89,7 @@ func (si *SysInfo) Hostname() string {
 
 // Return the time running.
 func (si *SysInfo) RunTime() time.Duration {
-	return time.Now().Sub(si.start)
+	return time.Since(si.start)
 }
 
 // Return number of MiB currently allocated.

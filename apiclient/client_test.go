@@ -127,7 +127,7 @@ func TestGet(t *testing.T) {
 				t.Errorf("No, code %v", code)
 			}
 
-			if bytes.Compare(data, payload) != 0 {
+			if !bytes.Equal(data, payload) {
 				t.Error("No, payload does not match.")
 			}
 		},
@@ -325,7 +325,7 @@ func TestPost(t *testing.T) {
 				},
 			)
 
-			if bytes.Compare(data, payload) != 0 || code != 200 || err != nil {
+			if !bytes.Equal(data, payload) || code != 200 || err != nil {
 				t.Errorf("No, unexpected data='%v', code='%v', err='%v'", data, code, err.Error())
 			}
 		},
@@ -355,7 +355,7 @@ func TestTokenAuth(t *testing.T) {
 				},
 			)
 
-			if bytes.Compare(data, payload) != 0 || code != 200 || err != nil {
+			if !bytes.Equal(data, payload) || code != 200 || err != nil {
 				t.Errorf("No, unexpected data='%v', code='%v', err='%v'", data, code, err.Error())
 			}
 		},
@@ -388,7 +388,7 @@ func TestBasicAuth(t *testing.T) {
 				},
 			)
 
-			if bytes.Compare(data, payload) != 0 || code != 200 || err != nil {
+			if !bytes.Equal(data, payload) || code != 200 || err != nil {
 				t.Errorf("No, unexpected data='%v', code='%v', err='%v'", data, code, err.Error())
 			}
 		},

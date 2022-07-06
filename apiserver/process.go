@@ -72,7 +72,6 @@ func (p *DispatcherProc) Action(state **process.State) {
 	switch cmd.(*types.Pair).First {
 	case getRouter:
 		ps.Send(p.inst.GetRouter())
-		break
 	}
 	p.Unlock()
 }

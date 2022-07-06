@@ -134,7 +134,9 @@ func (l *Logger) SetDebug(flag bool) {
 	l.logger = built.Sugar()
 	l.debug = flag
 
-	l.logger.Sync()
+	if err = l.logger.Sync(); err != nil {
+		log.Panic(err.Error())
+	}
 }
 
 // Set the log file to use.

@@ -61,7 +61,7 @@ func (dbm *DatabaseMgr) OpenConfig(conf *Config) (IDatabase, error) {
 		)
 	}
 
-	if conf.SetPoolLimits == true {
+	if conf.SetPoolLimits {
 		db.SetMaxIdleConns(conf.MaxIdleConns)
 		db.SetMaxOpenConns(conf.MaxOpenConns)
 	}

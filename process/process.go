@@ -37,10 +37,6 @@ import (
 	"time"
 )
 
-var (
-	procs = []*Process{}
-)
-
 const (
 	EventLoopSleep time.Duration = 250 * time.Millisecond
 )
@@ -106,9 +102,8 @@ type Process struct {
 	chanToState   chan interface{}
 	chanFromState chan interface{}
 
-	period  time.Duration
-	state   *State
-	manager *Manager
+	period time.Duration
+	state  *State
 }
 
 // Create a new process with the given configuration and parent context.
