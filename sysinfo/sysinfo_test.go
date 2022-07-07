@@ -113,12 +113,16 @@ func TestMemStats(t *testing.T) {
 func TestGoRoutine(t *testing.T) {
 	t.Log("Does `GoRoutines` match?")
 
-	if runtime.NumGoroutine() == sinfo.GoRoutines() {
+	sinfo.UpdateStats()
+	rtgo := runtime.NumGoroutine()
+	sigo := sinfo.GoRoutines()
+
+	if rtgo == sigo {
 		t.Log("Yes.")
 		return
 	}
 
-	t.Error("No.")
+	t.Errorf("No, runtime:%v, sysinfo:%v", rtgo, sigo)
 }
 
 /* sysinfo_test.go ends here. */
