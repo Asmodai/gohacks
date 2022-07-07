@@ -33,10 +33,6 @@ import (
 	"math"
 )
 
-type Numeric interface {
-	~int64 | ~float64
-}
-
 // Does the given float have a faction?
 func HasFraction(num float64) bool {
 	const epsilon = 1e-9
@@ -57,17 +53,19 @@ func Number[V Numeric](val V) interface{} {
 	return int64(val)
 }
 
-/*
- * This pretty much only exists because, as far as Go's JSON parser is
- * concerned, all numbers are floats.
- *
- * This will check if the thing passed to it is `float64`.  If it is, then
- * the float will be passed off to `Number`, and converted to an int if
- * there is no fraction.
- *
- * This could be used for other things too, I guess.
- */
+// Return the value of an interface.
 func ValueOf(thing interface{}) interface{} {
+	/*
+	 * This pretty much only exists because, as far as Go's JSON parser is
+	 * concerned, all numbers are floats.
+	 *
+	 * This will check if the thing passed to it is `float64`.  If it is, then
+	 * the float will be passed off to `Number`, and converted to an int if
+	 * there is no fraction.
+	 *
+	 * This could be used for other things too, I guess.
+	 */
+
 	//nolint:gosimple
 	switch thing.(type) {
 	case float64:

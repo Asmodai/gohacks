@@ -1,5 +1,5 @@
 /*
- * all_test.go --- `All` tests.
+ * types.go --- Type definitions.
  *
  * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
@@ -29,59 +29,8 @@
 
 package utils
 
-import (
-	"math"
-	"testing"
-)
-
-func TestAllInt(t *testing.T) {
-	goodArr := []int{2, 4, 6, 8, 10}
-	badArr := []int{2, 3, 6, 8, 10}
-
-	t.Run("Returns true for good array", func(t *testing.T) {
-		res := All(goodArr, func(elt int) bool {
-			return elt%2 == 0
-		})
-
-		if !res {
-			t.Error("Unexpected result!")
-		}
-	})
-
-	t.Run("Returns false for bad array", func(t *testing.T) {
-		res := All(badArr, func(elt int) bool {
-			return elt%2 == 0
-		})
-
-		if res {
-			t.Error("Unexpected result!")
-		}
-	})
+type Numeric interface {
+	~int | ~int64 | ~float64
 }
 
-func TestAllFloat(t *testing.T) {
-	goodArr := []float64{2.0, 4.0, 6.0, 8.0, 10.0}
-	badArr := []float64{2.0, 3.0, 6.0, 8.0, 10.0}
-
-	t.Run("Returns true for good array", func(t *testing.T) {
-		res := All(goodArr, func(elt float64) bool {
-			return math.Mod(elt, 2) == 0
-		})
-
-		if !res {
-			t.Error("Unexpected result!")
-		}
-	})
-
-	t.Run("Returns false for bad array", func(t *testing.T) {
-		res := All(badArr, func(elt float64) bool {
-			return math.Mod(elt, 2) == 0
-		})
-
-		if res {
-			t.Error("Unexpected result!")
-		}
-	})
-}
-
-/* all_test.go ends here. */
+/* types.go ends here. */

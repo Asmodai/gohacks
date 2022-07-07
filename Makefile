@@ -39,15 +39,22 @@ PACKAGE = gohack
 
 DIR = $(PWD)
 
-MODULES = app             \
+MODULES = apiclient       \
+	  apiserver       \
+	  app             \
 	  config          \
+	  crypto          \
 	  database        \
 	  di              \
-	  process         \
+	  logger          \
 	  math/conversion \
-	  sysinfo         \
+	  process         \
 	  rfc3339         \
-	  types
+	  rlhttp          \
+	  semver          \
+	  sysinfo         \
+	  types           \
+	  utils
 
 all: deps
 

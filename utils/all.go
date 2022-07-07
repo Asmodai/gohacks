@@ -29,9 +29,11 @@
 
 package utils
 
-func IntAll(vs []int, f func(int) bool) bool {
+// Run predicate `fn` on all elems of `vs` and return true if all
+// elems of `vs` match the predicate.
+func All[T Numeric](vs []T, fn func(T) bool) bool {
 	for _, v := range vs {
-		if !f(v) {
+		if !fn(v) {
 			return false
 		}
 	}

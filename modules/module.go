@@ -1,5 +1,5 @@
 /*
- * all_test.go --- `All` tests.
+ * module.go --- Golang plugin/module support.
  *
  * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
@@ -27,61 +27,48 @@
  * SOFTWARE.
  */
 
-package utils
+package modules
 
 import (
-	"math"
-	"testing"
+	"context"
+	"errors"
+
+	"github.com/Asmodai/gohacks/logger"
+	"github.com/Asmodai/gohacks/semver"
 )
 
-func TestAllInt(t *testing.T) {
-	goodArr := []int{2, 4, 6, 8, 10}
-	badArr := []int{2, 3, 6, 8, 10}
+type StartFn func(context.Context, logger.ILogger) (bool, error)
 
-	t.Run("Returns true for good array", func(t *testing.T) {
-		res := All(goodArr, func(elt int) bool {
-			return elt%2 == 0
-		})
-
-		if !res {
-			t.Error("Unexpected result!")
-		}
-	})
-
-	t.Run("Returns false for bad array", func(t *testing.T) {
-		res := All(badArr, func(elt int) bool {
-			return elt%2 == 0
-		})
-
-		if res {
-			t.Error("Unexpected result!")
-		}
-	})
+type Module struct {
+	name    string
+	version *semver.SemVer
+	startfn StartFn
 }
 
-func TestAllFloat(t *testing.T) {
-	goodArr := []float64{2.0, 4.0, 6.0, 8.0, 10.0}
-	badArr := []float64{2.0, 3.0, 6.0, 8.0, 10.0}
-
-	t.Run("Returns true for good array", func(t *testing.T) {
-		res := All(goodArr, func(elt float64) bool {
-			return math.Mod(elt, 2) == 0
-		})
-
-		if !res {
-			t.Error("Unexpected result!")
-		}
-	})
-
-	t.Run("Returns false for bad array", func(t *testing.T) {
-		res := All(badArr, func(elt float64) bool {
-			return math.Mod(elt, 2) == 0
-		})
-
-		if res {
-			t.Error("Unexpected result!")
-		}
-	})
+func defaultStartFn(_ context.Context, _ logger.ILogger) (bool, error) {
+	return false, errors.New("Module does not have a 'start' function!")
 }
 
-/* all_test.go ends here. */
+func NewModule(name string, version *semver.SemVer) *Module {
+	return &Module{
+		name:    name,
+		version: version,
+		startfn: defaultStartFn,
+	}
+}
+
+func (m *Module) Name() string            { return m.name }
+func (m *Module) Version() *semver.SemVer { return m.version }
+func (m *Module) StartFn() StartFn        { return m.startfn }
+
+func (m *Module) SetStartFn(fn StartFn) { m.startfn = fn }
+
+func (m *Module) Start(ctx context.Context, lgr logger.ILogger) (bool, error) {
+	if m.StartFn() == nil {
+		return false, errors.New("Module start function is nil.")
+	}
+
+	return m.StartFn()(ctx, lgr)
+}
+
+/* module.go ends here. */

@@ -169,7 +169,7 @@ func NewMailbox() *Mailbox
 ```
 Create and return a new empty mailbox.
 
-Note: this acquires the `preventRead` semaphore. nolint:errcheck
+Note: this acquires the `preventRead` semaphore.
 
 #### func (*Mailbox) Full
 

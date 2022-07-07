@@ -52,13 +52,17 @@ To use,
 
 1) Create a logger:
 
-    lgr := logger.NewLogger("/path/to/log")
+```go
+    lgr := logger.NewLogger()
+```
 
 2) Do things with it:
 
+```go
     lgr.Warn("Not enough coffee!")
     lgr.Info("Water is heating up.")
     // and so on.
+```
 
 If an empty string is passed to `NewLogger`, then the log facility will
 display messages on standard output.

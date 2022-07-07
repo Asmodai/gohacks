@@ -29,14 +29,17 @@
 
 package utils
 
-import "testing"
+import (
+	"math"
+	"testing"
+)
 
-func TestIntAny(t *testing.T) {
+func TestAnyInt(t *testing.T) {
 	goodArr := []int{1, 2, 5, 7, 9}
 	badArr := []int{1, 3, 5, 7, 9}
 
 	t.Run("Returns true for good array", func(t *testing.T) {
-		res := IntAny(goodArr, func(elt int) bool {
+		res := Any(goodArr, func(elt int) bool {
 			return elt%2 == 0
 		})
 
@@ -46,8 +49,33 @@ func TestIntAny(t *testing.T) {
 	})
 
 	t.Run("Returns false for bad array", func(t *testing.T) {
-		res := IntAny(badArr, func(elt int) bool {
+		res := Any(badArr, func(elt int) bool {
 			return elt%2 == 0
+		})
+
+		if res {
+			t.Error("Unexpected result!")
+		}
+	})
+}
+
+func TestAnyFloat(t *testing.T) {
+	goodArr := []float64{1.0, 2.0, 5.0, 7.0, 9.0}
+	badArr := []float64{1.0, 3.0, 5.0, 7.0, 9.0}
+
+	t.Run("Returns true for good array", func(t *testing.T) {
+		res := Any(goodArr, func(elt float64) bool {
+			return math.Mod(elt, 2) == 0
+		})
+
+		if !res {
+			t.Error("Unexpected result!")
+		}
+	})
+
+	t.Run("Returns false for bad array", func(t *testing.T) {
+		res := Any(badArr, func(elt float64) bool {
+			return math.Mod(elt, 2) == 0
 		})
 
 		if res {
