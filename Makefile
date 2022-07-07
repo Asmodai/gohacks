@@ -51,6 +51,7 @@ MODULES = apiclient       \
 	  process         \
 	  rfc3339         \
 	  rlhttp          \
+	  rpc             \
 	  semver          \
 	  sysinfo         \
 	  types           \
