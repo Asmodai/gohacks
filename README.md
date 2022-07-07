@@ -10,3 +10,5 @@ Hi, Emacs.  This is -*- mode: gfm -*-
 # gohacks
 
 Gnarly hacks for my Go code.
+
+Documentation is available [here](doc/).
