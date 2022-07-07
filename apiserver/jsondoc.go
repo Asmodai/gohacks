@@ -44,7 +44,7 @@ type Document struct {
 
 	Data    interface{}    `json:"data"`
 	Error   *ErrorDocument `json:"error"`
-	Elapsed string         `json:"elapsed_time",omitempty`
+	Elapsed string         `json:"elapsed_time,omitempty"`
 }
 
 func NewDocument(status int, data interface{}) *Document {

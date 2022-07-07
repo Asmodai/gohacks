@@ -122,7 +122,7 @@ func (p *DispatcherProc) Action(state **process.State)
 type Document struct {
 	Data    interface{}    `json:"data"`
 	Error   *ErrorDocument `json:"error"`
-	Elapsed string         `json:"elapsed_time",omitempty`
+	Elapsed string         `json:"elapsed_time,omitempty"`
 }
 ```
 
