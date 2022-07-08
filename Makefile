@@ -46,6 +46,7 @@ MODULES = apiclient       \
 	  crypto          \
 	  database        \
 	  di              \
+	  exec            \
 	  logger          \
 	  math/conversion \
 	  process         \
