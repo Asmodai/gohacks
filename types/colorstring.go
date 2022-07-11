@@ -70,6 +70,17 @@ func MakeColorString() *ColorString {
 	}
 }
 
+func MakeColorStringWithAttrs(data string, attr, fg, bg int) *ColorString {
+	str := MakeColorString()
+
+	str.SetString(data)
+	str.SetAttr(attr)
+	str.SetFG(fg)
+	str.SetBG(bg)
+
+	return str
+}
+
 func (cs *ColorString) SetString(val string) {
 	cs.data = val
 }
