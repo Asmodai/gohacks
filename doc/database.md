@@ -12,16 +12,18 @@
 
 ```go
 type Config struct {
-	Driver        string `json:"driver"`
-	Username      string `json:"username"`
-	Password      string `json:"password" config_obscure:"true"`
-	Hostname      string `json:"hostname"`
-	Port          int    `json:"port"`
-	Database      string `json:"database"`
-	BatchSize     int    `json:"batch_size"`
-	SetPoolLimits bool   `json:"set_pool_limits"`
-	MaxIdleConns  int    `json:"max_idle_conns"`
-	MaxOpenConns  int    `json:"max_open_conns"`
+	Driver         string `json:"driver"`
+	Username       string `json:"username"`
+	UsernameSecret string `json:"username_secret"`
+	Password       string `json:"password" config_obscure:"true"`
+	PasswordSecret string `json:"password_secret"`
+	Hostname       string `json:"hostname"`
+	Port           int    `json:"port"`
+	Database       string `json:"database"`
+	BatchSize      int    `json:"batch_size"`
+	SetPoolLimits  bool   `json:"set_pool_limits"`
+	MaxIdleConns   int    `json:"max_idle_conns"`
+	MaxOpenConns   int    `json:"max_open_conns"`
 }
 ```
 
@@ -40,6 +42,12 @@ Create a new configuration object.
 func (c *Config) ToDSN() string
 ```
 Return the DSN for this database configuration.
+
+#### func (*Config) Validate
+
+```go
+func (c *Config) Validate() error
+```
 
 #### type Database
 
@@ -272,6 +280,126 @@ type ITx interface {
 }
 ```
 
+
+#### type NullBool
+
+```go
+type NullBool struct {
+	sql.NullBool
+}
+```
+
+
+#### func (NullBool) MarshalJSON
+
+```go
+func (x NullBool) MarshalJSON() ([]byte, error)
+```
+
+#### type NullByte
+
+```go
+type NullByte struct {
+	sql.NullByte
+}
+```
+
+
+#### func (NullByte) MarshalJSON
+
+```go
+func (x NullByte) MarshalJSON() ([]byte, error)
+```
+
+#### type NullFloat64
+
+```go
+type NullFloat64 struct {
+	sql.NullFloat64
+}
+```
+
+
+#### func (NullFloat64) MarshalJSON
+
+```go
+func (x NullFloat64) MarshalJSON() ([]byte, error)
+```
+
+#### type NullInt16
+
+```go
+type NullInt16 struct {
+	sql.NullInt16
+}
+```
+
+
+#### func (NullInt16) MarshalJSON
+
+```go
+func (x NullInt16) MarshalJSON() ([]byte, error)
+```
+
+#### type NullInt32
+
+```go
+type NullInt32 struct {
+	sql.NullInt32
+}
+```
+
+
+#### func (NullInt32) MarshalJSON
+
+```go
+func (x NullInt32) MarshalJSON() ([]byte, error)
+```
+
+#### type NullInt64
+
+```go
+type NullInt64 struct {
+	sql.NullInt64
+}
+```
+
+
+#### func (NullInt64) MarshalJSON
+
+```go
+func (x NullInt64) MarshalJSON() ([]byte, error)
+```
+
+#### type NullString
+
+```go
+type NullString struct {
+	sql.NullString
+}
+```
+
+
+#### func (NullString) MarshalJSON
+
+```go
+func (x NullString) MarshalJSON() ([]byte, error)
+```
+
+#### type NullTime
+
+```go
+type NullTime struct {
+	sql.NullTime
+}
+```
+
+
+#### func (NullTime) MarshalJSON
+
+```go
+func (x NullTime) MarshalJSON() ([]byte, error)
+```
 
 #### type Tx
 

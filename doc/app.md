@@ -15,21 +15,10 @@ const (
 )
 ```
 
-#### type AppConfig
-
-```go
-type AppConfig struct {
-}
-```
-
-
 #### type Application
 
 ```go
 type Application struct {
-	Name    string         // Application name.
-	Version *semver.SemVer // Version string.
-
 	OnStart  OnSignalFn // Function called on app startup.
 	OnExit   OnSignalFn // Function called on app exit.
 	OnHUP    OnSignalFn // Function called when SIGHUP received.
@@ -45,16 +34,15 @@ type Application struct {
 #### func  NewApplication
 
 ```go
-func NewApplication(
-	name string,
-	version *semver.SemVer,
-	alogger logger.ILogger,
-	aprocmgr process.IManager,
-	aconfig interface{},
-	acnffns config.ValidatorsMap,
-) *Application
+func NewApplication(cnf *Config) *Application
 ```
 Create a new application.
+
+#### func (*Application) Commit
+
+```go
+func (app *Application) Commit() string
+```
 
 #### func (*Application) Configuration
 
@@ -93,6 +81,12 @@ Is the application running?
 
 ```go
 func (app *Application) Logger() logger.ILogger
+```
+
+#### func (*Application) Name
+
+```go
+func (app *Application) Name() string
 ```
 
 #### func (*Application) ProcessManager
@@ -170,6 +164,32 @@ Set the `OnWINCH` callback.
 func (app *Application) Terminate()
 ```
 Stop the application.
+
+#### func (*Application) Version
+
+```go
+func (app *Application) Version() *semver.SemVer
+```
+
+#### type Config
+
+```go
+type Config struct {
+	Name           string
+	Version        *semver.SemVer
+	Logger         logger.ILogger
+	ProcessManager process.IManager
+	AppConfig      any
+	Validators     config.ValidatorsMap
+}
+```
+
+
+#### func  NewConfig
+
+```go
+func NewConfig() *Config
+```
 
 #### type MainLoopFn
 

@@ -34,7 +34,7 @@ import (
 	"github.com/Asmodai/gohacks/rlhttp"
 
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptrace"
 	"time"
@@ -43,7 +43,6 @@ import (
 )
 
 /*
-
 API Client
 
 Like a finely-crafted sword, it can be wielded with skill if instructions
@@ -51,10 +50,10 @@ are followed.
 
 1) Create your config:
 
-	conf := &apiclient.Config{
-    RequestsPerSecond: 5,    // 5 requests per second.
-		Timeout:           5,    // 5 seconds.
-	}
+		conf := &apiclient.Config{
+	    RequestsPerSecond: 5,    // 5 requests per second.
+			Timeout:           5,    // 5 seconds.
+		}
 
 2) Create your client
 
@@ -71,7 +70,6 @@ are followed.
 	data, code, err := api.Get(params)
 	// check `err` and `code` here.
 	// `data` will need to be converted from `[]byte`.
-
 */
 type Client struct {
 	Client  IHTTPClient
@@ -197,7 +195,7 @@ func (c *Client) httpAction(verb string, data *Params) ([]byte, int, error) {
 	}
 
 	// Decode the body.
-	bytes, err := ioutil.ReadAll(resp.Body)
+	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		resp.Body.Close()
 

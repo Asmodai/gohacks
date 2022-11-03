@@ -1,7 +1,7 @@
 /*
- * config.go --- Dispatcher configuration.
+ * interface_test.go --- Event tests.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,63 +27,29 @@
  * SOFTWARE.
  */
 
-package apiserver
+package events
 
 import (
-	"net"
-	"strconv"
+	"reflect"
+	"testing"
 )
 
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
+func TestEventInterface(t *testing.T) {
+	evt1 := NewTime()
+	evt2 := NewMessage(12, "nope")
 
-	cachedHost string
-	cachedPort int
-}
+	t.Run("EventType", func(t *testing.T) {
+		t1 := EventType(evt1)
+		t2 := EventType(evt2)
 
-func NewDefaultConfig() *Config {
-	return &Config{}
-}
-
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
-	}
-}
-
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
+		if t1 != reflect.TypeOf(&Time{}) {
+			t.Errorf("t1 is wrong type: %s", t1.String())
 		}
 
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
+		if t2 != reflect.TypeOf(&Message{}) {
+			t.Errorf("t2 is wrong type: %s", t2.String())
 		}
-	}
-
-	return c.cachedHost, nil
+	})
 }
 
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
-	}
-
-	return c.cachedPort, nil
-}
-
-/* config.go ends here. */
+/* interface_test.go ends here. */

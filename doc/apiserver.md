@@ -57,6 +57,18 @@ func NewConfig(addr, log, cert, key string, tls bool) *Config
 func NewDefaultConfig() *Config
 ```
 
+#### func (*Config) Host
+
+```go
+func (c *Config) Host() (string, error)
+```
+
+#### func (*Config) Port
+
+```go
+func (c *Config) Port() (int, error)
+```
+
 #### type Dispatcher
 
 ```go
@@ -120,8 +132,9 @@ func (p *DispatcherProc) Action(state **process.State)
 
 ```go
 type Document struct {
-	Data    interface{}    `json:"data"`
-	Error   *ErrorDocument `json:"error"`
+	Data    interface{}    `json:"data,omitempty"`
+	Count   int64          `json:"count"`
+	Error   *ErrorDocument `json:"error,omitempty"`
 	Elapsed string         `json:"elapsed_time,omitempty"`
 }
 ```

@@ -36,7 +36,9 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -243,18 +245,23 @@ func TestFormatter(t *testing.T) {
 	inst.srv = srv
 
 	t.Run("Outputs things", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/vmunix", nil)
+		req.Header.Add("User-Agent", "derp")
+
 		params := gin.LogFormatterParams{
+			Method:     "GET",
 			TimeStamp:  time.Time{},
 			StatusCode: 200,
 			Latency:    0,
 			ClientIP:   "127.0.0.1",
 			Path:       "/vmunix",
+			Request:    req,
 		}
 
-		// *sigh*
-		err := "0001/01/01 00:00:00 | 200 |            0s |       127.0.0.1 |          \"/vmunix\"\n"
+		// *sigh* keep the space at the end for the error message component.
+		err := "127.0.0.1 - [Mon, 01 Jan 0001 00:00:00 UTC] \"GET /vmunix HTTP/1.1\" 200 0s \"derp\" "
 
-		stuff := inst.logFormatter(params)
+		stuff := strings.TrimSuffix(inst.logFormatter(params), "\n")
 
 		if stuff != err {
 			t.Errorf("No, '%v'", stuff)

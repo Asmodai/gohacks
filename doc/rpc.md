@@ -8,6 +8,18 @@
 
 ## Usage
 
+#### func  Add
+
+```go
+func Add(mgr process.IManager, t reflect.Type) (bool, error)
+```
+
+#### func  Spawn
+
+```go
+func Spawn(mgr process.IManager, lgr logger.ILogger, ctx context.Context, cnf *Config) (*process.Process, error)
+```
+
 #### type Client
 
 ```go
@@ -61,6 +73,19 @@ func NewConfig(proto, addr string) *Config
 ```go
 func NewDefaultConfig() *Config
 ```
+
+#### type IManager
+
+```go
+type IManager interface {
+	SetContext(context.Context)
+	SetLogger(logger.ILogger)
+	Add(reflect.Type) bool
+	Start()
+	Shutdown()
+}
+```
+
 
 #### type IRPCAble
 
@@ -119,6 +144,18 @@ func NewManager(cnf *Config, ctx context.Context, lgr logger.ILogger) *Manager
 func (m *Manager) Add(t reflect.Type) bool
 ```
 
+#### func (*Manager) SetContext
+
+```go
+func (m *Manager) SetContext(parent context.Context)
+```
+
+#### func (*Manager) SetLogger
+
+```go
+func (m *Manager) SetLogger(lgr logger.ILogger)
+```
+
 #### func (*Manager) Shutdown
 
 ```go
@@ -129,6 +166,27 @@ func (m *Manager) Shutdown()
 
 ```go
 func (m *Manager) Start()
+```
+
+#### type ManagerProc
+
+```go
+type ManagerProc struct {
+	sync.Mutex
+}
+```
+
+
+#### func  NewManagerProc
+
+```go
+func NewManagerProc(lgr logger.ILogger, ctx context.Context, config *Config) *ManagerProc
+```
+
+#### func (*ManagerProc) Action
+
+```go
+func (p *ManagerProc) Action(state **process.State)
 ```
 
 #### type NoArgs

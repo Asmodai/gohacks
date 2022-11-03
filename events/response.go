@@ -1,7 +1,7 @@
 /*
- * config.go --- Dispatcher configuration.
+ * response.go --- Response event.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,63 +27,46 @@
  * SOFTWARE.
  */
 
-package apiserver
+package events
 
 import (
-	"net"
-	"strconv"
+	"fmt"
+	"time"
 )
 
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
+type Response struct {
+	Time
 
-	cachedHost string
-	cachedPort int
+	received time.Time
+	index    uint64
+	command  int
+	response any
 }
 
-func NewDefaultConfig() *Config {
-	return &Config{}
-}
+func NewResponse(msg *Message, rsp any) *Response {
+	return &Response{
+		Time: Time{
+			TStamp: time.Now(),
+		},
 
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
+		received: msg.When(),
+		index:    msg.Index(),
+		command:  msg.Command(),
+		response: rsp,
 	}
 }
 
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
-		}
+func (e *Response) Received() time.Time { return e.received }
+func (e *Response) Index() uint64       { return e.index }
+func (e *Response) Command() int        { return e.command }
+func (e *Response) Response() any       { return e.response }
 
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return c.cachedHost, nil
+func (e *Response) String() string {
+	return fmt.Sprintf(
+		"Response Event: index:%d duration:%s",
+		e.index,
+		e.When().Sub(e.Received()).String(),
+	)
 }
 
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
-	}
-
-	return c.cachedPort, nil
-}
-
-/* config.go ends here. */
+/* response.go ends here. */

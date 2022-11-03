@@ -46,6 +46,7 @@ MODULES = apiclient       \
 	  crypto          \
 	  database        \
 	  di              \
+	  events          \
 	  exec            \
 	  logger          \
 	  math/conversion \
@@ -53,6 +54,7 @@ MODULES = apiclient       \
 	  rfc3339         \
 	  rlhttp          \
 	  rpc             \
+	  secrets         \
 	  semver          \
 	  sysinfo         \
 	  types           \

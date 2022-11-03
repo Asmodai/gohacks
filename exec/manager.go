@@ -55,7 +55,7 @@ type Manager struct {
 func NewManager(lgr logger.ILogger, count, base int) *Manager {
 	return &Manager{
 		path:   "",
-		args:   Args{},
+		args:   Args{base: base},
 		logger: lgr,
 		procs:  make([]*goexec.Cmd, count),
 		number: count,
@@ -104,6 +104,7 @@ func (m *Manager) KillAll() {
 				"index", idx,
 				"pid", m.procs[idx].Process.Pid,
 				"path", m.procs[idx].Path,
+				"err", err.Error(),
 			)
 		}
 	}
@@ -146,6 +147,7 @@ func (m *Manager) Check() {
 					"Error while starting process.",
 					"index", idx,
 					"path", m.procs[idx].Path,
+					"args", m.procs[idx].Args,
 					"err", err.Error(),
 				)
 			}

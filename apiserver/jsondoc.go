@@ -33,6 +33,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"fmt"
+	"reflect"
 	"time"
 )
 
@@ -42,12 +43,23 @@ type Document struct {
 	headers map[string]string `json:"-"`
 	start   time.Time         `json:"-"`
 
-	Data    interface{}    `json:"data"`
-	Error   *ErrorDocument `json:"error"`
+	Data    interface{}    `json:"data,omitempty"`
+	Count   int64          `json:"count"`
+	Error   *ErrorDocument `json:"error,omitempty"`
 	Elapsed string         `json:"elapsed_time,omitempty"`
 }
 
 func NewDocument(status int, data interface{}) *Document {
+	var length int64 = 0
+
+	if data != nil {
+		switch reflect.TypeOf(data).Kind() {
+		case reflect.Slice, reflect.Map:
+			s := reflect.ValueOf(data)
+			length = int64(s.Len())
+		}
+	}
+
 	return &Document{
 		status: status,
 		headers: map[string]string{
@@ -55,6 +67,7 @@ func NewDocument(status int, data interface{}) *Document {
 		},
 		start: time.Now(),
 		Data:  data,
+		Count: length,
 		Error: nil,
 	}
 }

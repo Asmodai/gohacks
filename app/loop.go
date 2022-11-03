@@ -59,8 +59,12 @@ func (app *Application) loop() {
 
 	// No longer running, so shut things down.
 	app.OnExit(app)
-	app.procmgr.StopAll()
-	app.logger.Info(
+
+	if app.ProcessManager() != nil {
+		app.ProcessManager().StopAll()
+	}
+
+	app.Logger().Info(
 		"Application is terminating.",
 		"type", "stop",
 	)

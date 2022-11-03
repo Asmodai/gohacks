@@ -1,7 +1,7 @@
 /*
- * config.go --- Dispatcher configuration.
+ * response_test.go --- Response event tests.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,63 +27,50 @@
  * SOFTWARE.
  */
 
-package apiserver
+package events
 
 import (
-	"net"
-	"strconv"
+	"fmt"
+	"testing"
+	"time"
 )
 
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
+func TestResponseEvent(t *testing.T) {
+	command := 42
+	data := "Test"
+	reply := "Reply"
 
-	cachedHost string
-	cachedPort int
-}
+	msg := NewMessage(command, data)
+	time.Sleep(1 * time.Second)
+	rsp := NewResponse(msg, reply)
 
-func NewDefaultConfig() *Config {
-	return &Config{}
-}
+	t.Logf("Message:  %s\n", msg)
+	t.Logf("Response: %s\n", rsp)
 
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
-	}
-}
-
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
+	t.Run("Accessors", func(t *testing.T) {
+		if rsp.Index() != msg.Index() {
+			t.Errorf("Index is wrong:  %d != %d", rsp.Index(), msg.Index())
 		}
 
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
+		if rsp.Command() != command {
+			t.Error("Command is wrong.")
 		}
-	}
 
-	return c.cachedHost, nil
+		if rsp.Response().(string) != reply {
+			t.Error("Response is wrong.")
+		}
+
+		dur := rsp.When().Sub(rsp.Received())
+		str := fmt.Sprintf(
+			"Response Event: index:%d duration:%s",
+			rsp.Index(),
+			dur.String(),
+		)
+
+		if rsp.String() != str {
+			t.Errorf("String is wrong: '%s' != '%s'", rsp.String(), str)
+		}
+	})
 }
 
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
-	}
-
-	return c.cachedPort, nil
-}
-
-/* config.go ends here. */
+/* response_test.go ends here. */

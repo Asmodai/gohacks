@@ -54,6 +54,12 @@ type ColorString struct {
 func MakeColorString() *ColorString
 ```
 
+#### func  MakeColorStringWithAttrs
+
+```go
+func MakeColorStringWithAttrs(data string, attr, fg, bg int) *ColorString
+```
+
 #### func (*ColorString) SetAttr
 
 ```go

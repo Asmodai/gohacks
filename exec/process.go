@@ -127,9 +127,9 @@ func Spawn(mgr process.IManager, lgr logger.ILogger, cnf *Config) (*process.Proc
 }
 
 func sendSimple(mgr process.IManager, arg *types.Pair) error {
-	inst, found := mgr.Find("ChildManager")
+	inst, found := mgr.Find("ExecManager")
 	if !found {
-		return errors.New("Could not find dispatcher process!")
+		return errors.New("Could not find exec manager process!")
 	}
 
 	inst.Send(arg)

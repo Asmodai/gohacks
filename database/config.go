@@ -30,25 +30,27 @@
 package database
 
 import (
+	"github.com/Asmodai/gohacks/secrets"
+
 	"fmt"
 )
 
 /*
-
 SQL configuration structure.
-
 */
 type Config struct {
-	Driver        string `json:"driver"`
-	Username      string `json:"username"`
-	Password      string `json:"password" config_obscure:"true"`
-	Hostname      string `json:"hostname"`
-	Port          int    `json:"port"`
-	Database      string `json:"database"`
-	BatchSize     int    `json:"batch_size"`
-	SetPoolLimits bool   `json:"set_pool_limits"`
-	MaxIdleConns  int    `json:"max_idle_conns"`
-	MaxOpenConns  int    `json:"max_open_conns"`
+	Driver         string `json:"driver"`
+	Username       string `json:"username"`
+	UsernameSecret string `json:"username_secret"`
+	Password       string `json:"password" config_obscure:"true"`
+	PasswordSecret string `json:"password_secret"`
+	Hostname       string `json:"hostname"`
+	Port           int    `json:"port"`
+	Database       string `json:"database"`
+	BatchSize      int    `json:"batch_size"`
+	SetPoolLimits  bool   `json:"set_pool_limits"`
+	MaxIdleConns   int    `json:"max_idle_conns"`
+	MaxOpenConns   int    `json:"max_open_conns"`
 
 	cachedDsn string `json:"-" config_hide:"true"`
 }
@@ -56,18 +58,53 @@ type Config struct {
 // Create a new configuration object.
 func NewConfig() *Config {
 	return &Config{
-		Driver:        "mysql",
-		Username:      "",
-		Password:      "",
-		Hostname:      "",
-		Port:          0,
-		Database:      "",
-		cachedDsn:     "",
-		BatchSize:     0,
-		SetPoolLimits: true,
-		MaxIdleConns:  20,
-		MaxOpenConns:  20,
+		Driver:         "mysql",
+		Username:       "",
+		UsernameSecret: "",
+		Password:       "",
+		PasswordSecret: "",
+		Hostname:       "",
+		Port:           0,
+		Database:       "",
+		cachedDsn:      "",
+		BatchSize:      0,
+		SetPoolLimits:  true,
+		MaxIdleConns:   20,
+		MaxOpenConns:   20,
 	}
+}
+
+// Check if we should use secrets files.
+func (c *Config) checkSecrets() error {
+	if c.UsernameSecret != "" {
+		secret := secrets.Make(c.UsernameSecret)
+
+		if err := secret.Probe(); err != nil {
+			return err
+		}
+
+		c.Username = secret.Value()
+	}
+
+	if c.PasswordSecret != "" {
+		secret := secrets.Make(c.PasswordSecret)
+
+		if err := secret.Probe(); err != nil {
+			return err
+		}
+
+		c.Password = secret.Value()
+	}
+
+	return nil
+}
+
+func (c *Config) Validate() error {
+	if err := c.checkSecrets(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Return the DSN for this database configuration.

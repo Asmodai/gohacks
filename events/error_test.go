@@ -1,7 +1,7 @@
 /*
- * config.go --- Dispatcher configuration.
+ * error_test.go --- Error event tests.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,63 +27,31 @@
  * SOFTWARE.
  */
 
-package apiserver
+package events
 
 import (
-	"net"
-	"strconv"
+	"github.com/Asmodai/gohacks/types"
+
+	"errors"
+	"testing"
 )
 
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
+func TestErrorEvent(t *testing.T) {
+	fac := "CoffeeMachine"
+	msg := "Out of beans!"
 
-	cachedHost string
-	cachedPort int
-}
+	e1 := errors.New(msg)
+	e2 := types.NewError(fac, msg)
 
-func NewDefaultConfig() *Config {
-	return &Config{}
-}
-
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
-	}
-}
-
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
+	t.Run("Accessors", func(t *testing.T) {
+		if e1.Error() != msg {
+			t.Errorf("e1 is wrong: '%s'", e1.Error())
 		}
 
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
+		if e2.Error() != fac+": "+msg {
+			t.Errorf("e2 is wrong: '%s'", e2.Error())
 		}
-	}
-
-	return c.cachedHost, nil
+	})
 }
 
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
-	}
-
-	return c.cachedPort, nil
-}
-
-/* config.go ends here. */
+/* error_test.go ends here. */

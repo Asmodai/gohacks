@@ -1,7 +1,7 @@
 /*
- * config.go --- Dispatcher configuration.
+ * time.go --- Time events.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,63 +27,27 @@
  * SOFTWARE.
  */
 
-package apiserver
+package events
 
-import (
-	"net"
-	"strconv"
-)
+import "time"
 
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
-
-	cachedHost string
-	cachedPort int
+type Time struct {
+	TStamp time.Time
 }
 
-func NewDefaultConfig() *Config {
-	return &Config{}
-}
-
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
+func NewTime() *Time {
+	return &Time{
+		// This needs to be exported.
+		TStamp: time.Time{},
 	}
 }
 
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
-		}
+func (e *Time) When() time.Time       { return e.TStamp }
+func (e *Time) SetWhen(val time.Time) { e.TStamp = val }
+func (e *Time) SetNow()               { e.TStamp = time.Now() }
 
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return c.cachedHost, nil
+func (e *Time) String() string {
+	return "Time Event: " + e.When().Format(time.RFC3339)
 }
 
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
-	}
-
-	return c.cachedPort, nil
-}
-
-/* config.go ends here. */
+/* time.go ends here. */

@@ -1,7 +1,7 @@
 /*
- * config.go --- Dispatcher configuration.
+ * message.go --- Message events.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,63 +27,52 @@
  * SOFTWARE.
  */
 
-package apiserver
+package events
 
 import (
-	"net"
-	"strconv"
+	"fmt"
+	"math"
+	"sync/atomic"
+	"time"
 )
 
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
+var counter uint64 = 0
 
-	cachedHost string
-	cachedPort int
+type Message struct {
+	Time
+
+	index   uint64
+	command int
+	data    any
 }
 
-func NewDefaultConfig() *Config {
-	return &Config{}
+func updateCounter() {
+	if atomic.LoadUint64(&counter) == math.MaxUint64 {
+		atomic.StoreUint64(&counter, 0)
+	}
+
+	atomic.AddUint64(&counter, 1)
 }
 
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
+func NewMessage(cmd int, data any) *Message {
+	updateCounter()
+
+	return &Message{
+		Time: Time{
+			TStamp: time.Now(),
+		},
+		index:   atomic.LoadUint64(&counter),
+		command: cmd,
+		data:    data,
 	}
 }
 
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
-		}
+func (e *Message) Index() uint64 { return e.index }
+func (e *Message) Command() int  { return e.command }
+func (e *Message) Data() any     { return e.data }
 
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return c.cachedHost, nil
+func (e *Message) String() string {
+	return fmt.Sprintf("Message Event: index:%d", e.index)
 }
 
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
-	}
-
-	return c.cachedPort, nil
-}
-
-/* config.go ends here. */
+/* message.go ends here. */

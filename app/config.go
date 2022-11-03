@@ -29,7 +29,48 @@
 
 package app
 
-type AppConfig struct {
+import (
+	"github.com/Asmodai/gohacks/config"
+	"github.com/Asmodai/gohacks/logger"
+	"github.com/Asmodai/gohacks/process"
+	"github.com/Asmodai/gohacks/semver"
+)
+
+type Config struct {
+	Name           string
+	Version        *semver.SemVer
+	Logger         logger.ILogger
+	ProcessManager process.IManager
+	AppConfig      any
+	Validators     config.ValidatorsMap
+
+	//nolint:staticcheck
+	options struct {
+		enableRPC bool
+	}
+}
+
+func NewConfig() *Config {
+	return &Config{}
+}
+
+func (c *Config) validate() {
+	if c.Name == "" {
+		c.Name = "Unnamed Application"
+	}
+
+	if c.AppConfig == nil {
+		c.AppConfig = &defaultAppConfig{}
+	}
+
+	if c.Logger == nil {
+		c.Logger = logger.NewDefaultLogger()
+	}
+}
+
+// Empty struct that gets passed as an application configuration when
+// no actual configuration is passed to the constructor.
+type defaultAppConfig struct {
 }
 
 /* config.go ends here. */

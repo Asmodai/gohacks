@@ -49,6 +49,12 @@ func HasFraction(num float64) bool
 ```
 Does the given float have a faction?
 
+#### func  Member
+
+```go
+func Member[T constraints.Ordered](vs []T, elt T) bool
+```
+
 #### func  Number
 
 ```go

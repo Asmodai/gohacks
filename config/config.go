@@ -37,7 +37,7 @@ import (
 
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"reflect"
 )
@@ -45,7 +45,6 @@ import (
 type ValidatorsMap map[string]interface{}
 
 /*
-
 Config structure.
 
 User-defined configuration options are placed into `App`, with any
@@ -56,10 +55,12 @@ The magic happens like this.
 1) Define the structure you want your options to live in:
 
 ```go
-    type Options struct {
-        Option1 string `json:"option1" config_validator:"ValidateOption1"
-        // ...
-    }
+
+	type Options struct {
+	    Option1 string `json:"option1" config_validator:"ValidateOption1"
+	    // ...
+	}
+
 ```
 
 The `config_validator` tag informs the Config module that you wish to validate
@@ -68,13 +69,15 @@ the `Option1` field using the `ValidateOption1` function.
 2) Define your validators:
 
 ```go
-    func ValidateOption1(value string) error {
-        if value == "" {
-            return fmt.Errorf("Noooooooooooo!")
-        }
 
-        return nil
-    }
+	func ValidateOption1(value string) error {
+	    if value == "" {
+	        return fmt.Errorf("Noooooooooooo!")
+	    }
+
+	    return nil
+	}
+
 ```
 
 The validator *must* return an `error` or `nil`.
@@ -82,23 +85,25 @@ The validator *must* return an `error` or `nil`.
 3) Set it all up:
 
 ```go
-    func main() {
-        // ...
 
-        opts := &Options{
-            // ...
-        }
+	func main() {
+	    // ...
 
-        fns := map[string]interface{}{
-            "ValidateOption1": ValidateOption1,
-        }
+	    opts := &Options{
+	        // ...
+	    }
 
-        vers := &semver.SemVer{1, 2, 3, "herpderp"}
-        conf := config.Init("App Name", vers, opts, fns)
-        conf.Parse()
+	    fns := map[string]interface{}{
+	        "ValidateOption1": ValidateOption1,
+	    }
 
-        // ...
-    }
+	    vers := &semver.SemVer{1, 2, 3, "herpderp"}
+	    conf := config.Init("App Name", vers, opts, fns)
+	    conf.Parse()
+
+	    // ...
+	}
+
 ```
 
 Options will be parsed during `init`.  Any validation or JSON errors will
@@ -111,7 +116,6 @@ It is worth noting that there are three special structure tags:
 * `config_obscure`:   Field is obscured with asterisks when dumped,
 
 * `config_validator`: The validation function for the field.
-
 */
 type Config struct {
 	// Application information.
@@ -480,7 +484,7 @@ func (c *Config) load() {
 	}
 	defer file.Close()
 
-	bytes, _ := ioutil.ReadAll(file)
+	bytes, _ := io.ReadAll(file)
 
 	if len(bytes) == 0 {
 		return

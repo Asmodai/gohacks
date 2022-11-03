@@ -1,7 +1,7 @@
 /*
- * config.go --- Dispatcher configuration.
+ * signal_test.go --- Signal event tests.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,63 +27,27 @@
  * SOFTWARE.
  */
 
-package apiserver
+package events
 
 import (
-	"net"
-	"strconv"
+	"syscall"
+	"testing"
 )
 
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
+func TestSignalEvent(t *testing.T) {
+	sig := syscall.SIGUSR1
+	e := NewSignal(sig)
+	s := "Signal Event: " + sig.String()
 
-	cachedHost string
-	cachedPort int
-}
-
-func NewDefaultConfig() *Config {
-	return &Config{}
-}
-
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
-	}
-}
-
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
+	t.Run("Accessors", func(t *testing.T) {
+		if e.Signal() != sig {
+			t.Error("Signal is wrong.")
 		}
 
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
+		if e.String() != s {
+			t.Errorf("Unexpected string: '%s'", e.String())
 		}
-	}
-
-	return c.cachedHost, nil
+	})
 }
 
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
-	}
-
-	return c.cachedPort, nil
-}
-
-/* config.go ends here. */
+/* signal_test.go ends here. */

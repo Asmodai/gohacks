@@ -39,7 +39,7 @@ func defaultMainLoop(*Application) {
 
 // Special case for HUP support.
 func defaultOnHUP(app *Application) {
-	app.logger.Info(
+	app.Logger().Info(
 		"Default SIGHUP handler invoked.",
 	)
 }

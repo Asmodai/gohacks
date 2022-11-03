@@ -34,7 +34,7 @@ import (
 
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 )
@@ -51,7 +51,7 @@ type FakeHttp struct {
 func (c *FakeHttp) Do(req *http.Request) (*http.Response, error) {
 	data, code, err := c.Payload(req)
 
-	body := ioutil.NopCloser(bytes.NewReader(data))
+	body := io.NopCloser(bytes.NewReader(data))
 	resp := &http.Response{
 		StatusCode: code,
 		Body:       body,

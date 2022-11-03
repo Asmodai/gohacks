@@ -1,7 +1,7 @@
 /*
- * config.go --- Dispatcher configuration.
+ * queue.go --- Event queue structure.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,63 +27,69 @@
  * SOFTWARE.
  */
 
-package apiserver
+package events
 
 import (
-	"net"
-	"strconv"
+	"sync"
 )
 
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
+const (
+	eventQueueInitialCapacity int = 256
+	eventQueueIncrement       int = 128
+)
 
-	cachedHost string
-	cachedPort int
+type EventList []Event
+
+type Queue struct {
+	sync.Mutex
+
+	queue EventList
 }
 
-func NewDefaultConfig() *Config {
-	return &Config{}
-}
-
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
+func NewQueue() *Queue {
+	return &Queue{
+		queue: make(EventList, 0, eventQueueInitialCapacity),
 	}
 }
 
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
-		}
+func (e *Queue) Events() int   { return len(e.queue) }
+func (e *Queue) Capacity() int { return cap(e.queue) }
 
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
-		}
+func (e *Queue) Pop() Event {
+	e.Lock()
+	defer e.Unlock()
+
+	switch e.Events() {
+	case 0:
+		return nil
+
+	case 1:
+		ret := e.queue[0]
+		e.queue = make(EventList, 0, eventQueueInitialCapacity)
+		return ret
+
+	default:
+		ret := e.queue[0]
+		e.queue = e.queue[1:]
+		return ret
 	}
-
-	return c.cachedHost, nil
 }
 
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
+func (e *Queue) Push(evt Event) {
+	e.Lock()
+	defer e.Unlock()
+
+	if len(e.queue) == cap(e.queue) {
+		n := make(
+			EventList,
+			len(e.queue),
+			cap(e.queue)+eventQueueIncrement,
+		)
+		copy(n, e.queue)
+		e.queue = n
 	}
 
-	return c.cachedPort, nil
+	e.queue = append(e.queue, evt)
 }
 
-/* config.go ends here. */
+/* queue.go ends here. */

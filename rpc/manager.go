@@ -61,6 +61,14 @@ func NewManager(cnf *Config, ctx context.Context, lgr logger.ILogger) *Manager {
 	}
 }
 
+func (m *Manager) SetContext(parent context.Context) {
+	m.ctx = parent
+}
+
+func (m *Manager) SetLogger(lgr logger.ILogger) {
+	m.logger = lgr
+}
+
 func (m *Manager) Add(t reflect.Type) bool {
 	if _, ok := m.entities[t]; ok {
 		return false

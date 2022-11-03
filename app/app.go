@@ -48,8 +48,8 @@ type OnSignalFn func(*Application) // Signal callback function.
 type MainLoopFn func(*Application) // Main loop callback function.
 
 type Application struct {
-	Name    string         // Application name.
-	Version *semver.SemVer // Version string.
+	config    *Config        // App object configuration.
+	appconfig *config.Config // User's app configuration.
 
 	OnStart  OnSignalFn // Function called on app startup.
 	OnExit   OnSignalFn // Function called on app exit.
@@ -63,41 +63,17 @@ type Application struct {
 	running bool               // Is the app running?
 	ctx     context.Context    // Main context.
 	cancel  context.CancelFunc // Context cancellation function.
-
-	config  *config.Config   // Application configuration.
-	procmgr process.IManager // Process manager.
-	logger  logger.ILogger
 }
 
 // Create a new application.
-func NewApplication(
-	name string,
-	version *semver.SemVer,
-	alogger logger.ILogger,
-	aprocmgr process.IManager,
-	aconfig interface{},
-	acnffns config.ValidatorsMap,
-) *Application {
-	if name == "" {
-		name = "<anonymous>"
-	}
-
-	// Do we not have a config?
-	if aconfig == nil {
-		aconfig = &AppConfig{}
-	}
-
-	// If we don't have a logger, set up a default one.
-	if alogger == nil {
-		alogger = logger.NewDefaultLogger()
-	}
+func NewApplication(cnf *Config) *Application {
+	cnf.validate()
 
 	// Set up a new parent context for the whole application.
 	ctx, cancelFn := context.WithCancel(context.Background())
 
 	a := &Application{
-		Name:     name,
-		Version:  version,
+		config:   cnf,
 		OnStart:  defaultHandler,
 		OnExit:   defaultHandler,
 		OnHUP:    defaultOnHUP,
@@ -108,12 +84,15 @@ func NewApplication(
 		MainLoop: defaultMainLoop,
 		ctx:      ctx,
 		cancel:   cancelFn,
-		procmgr:  aprocmgr,
-		logger:   alogger,
 	}
 
-	if aconfig != nil {
-		a.config = config.Init(name, version, aconfig, acnffns)
+	if cnf.AppConfig != nil {
+		a.appconfig = config.Init(
+			cnf.Name,
+			cnf.Version,
+			cnf.AppConfig,
+			cnf.Validators,
+		)
 	}
 
 	return a
@@ -121,22 +100,38 @@ func NewApplication(
 
 func (app *Application) Init() {
 	if app.config != nil {
-		app.config.Parse()
-		app.logger.SetLogFile(app.config.LogFile())
-		app.logger.SetDebug(app.config.IsDebug())
+		app.appconfig.Parse()
+		app.config.Logger.SetLogFile(app.appconfig.LogFile())
+		app.config.Logger.SetDebug(app.appconfig.IsDebug())
 	}
 
-	app.procmgr.SetLogger(app.logger)
-	app.procmgr.SetContext(app.ctx)
+	pm := app.ProcessManager()
+	if pm != nil {
+		app.ProcessManager().SetLogger(app.Logger())
+		app.ProcessManager().SetContext(app.Context())
+	}
+
 	app.installSignals()
 
-	app.logger.Info(
+	app.Logger().Info(
 		"Application initialised.",
 		"type", "init",
-		"name", app.Name,
-		"version", app.Version,
-		"commit", app.Version.Commit,
+		"name", app.config.Name,
+		"version", app.config.Version,
+		"commit", app.config.Version.Commit,
 	)
+}
+
+func (app *Application) Name() string {
+	return app.config.Name
+}
+
+func (app *Application) Version() *semver.SemVer {
+	return app.config.Version
+}
+
+func (app *Application) Commit() string {
+	return app.config.Version.Commit
 }
 
 // Return the application's context.
@@ -145,15 +140,15 @@ func (app *Application) Context() context.Context {
 }
 
 func (app *Application) ProcessManager() process.IManager {
-	return app.procmgr
+	return app.config.ProcessManager
 }
 
 func (app *Application) Logger() logger.ILogger {
-	return app.logger
+	return app.config.Logger
 }
 
 func (app *Application) Configuration() *config.Config {
-	return app.config
+	return app.appconfig
 }
 
 // Set the `OnStart` callback.
@@ -203,7 +198,7 @@ func (app *Application) IsRunning() bool {
 
 // Is the application using debug mode?
 func (app *Application) IsDebug() bool {
-	return app.config.IsDebug()
+	return app.appconfig.IsDebug()
 }
 
 // Start the application.
@@ -212,7 +207,7 @@ func (app *Application) Run() {
 		return
 	}
 
-	app.logger.Info(
+	app.Logger().Info(
 		"Application is running.",
 		"type", "run",
 	)

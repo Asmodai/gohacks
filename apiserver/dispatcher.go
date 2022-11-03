@@ -67,6 +67,11 @@ func NewDispatcher(lgr logger.ILogger, config *Config) *Dispatcher {
 
 	obj.srv = NewServer(obj.config.Addr, obj.router)
 
+	lgr.Info(
+		"Dispatcher initialised.",
+		"addr", config.Addr,
+	)
+
 	return obj
 }
 
@@ -122,13 +127,15 @@ func (d *Dispatcher) logFormatter(param gin.LogFormatterParams) string {
 		param.Latency = param.Latency.Truncate(time.Second)
 	}
 
-	return fmt.Sprintf("%v |%s %3d %s| %13v | %15s |%s %-7s %s %#v\n%s",
-		param.TimeStamp.Format("2006/01/02 15:04:05"),
-		statusColor, param.StatusCode, resetColor,
-		param.Latency,
+	return fmt.Sprintf("%s - [%s] \"%s%s%s %s %s\" %s%d%s %s \"%s\" %s\n",
 		param.ClientIP,
+		param.TimeStamp.Format(time.RFC1123),
 		methodColor, param.Method, resetColor,
 		param.Path,
+		param.Request.Proto,
+		statusColor, param.StatusCode, resetColor,
+		param.Latency,
+		param.Request.UserAgent(),
 		param.ErrorMessage,
 	)
 }

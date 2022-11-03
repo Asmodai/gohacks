@@ -1,7 +1,7 @@
 /*
- * config.go --- Dispatcher configuration.
+ * message_test.go --- Message event tests.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,63 +27,41 @@
  * SOFTWARE.
  */
 
-package apiserver
+package events
 
-import (
-	"net"
-	"strconv"
-)
+import "testing"
 
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
+func TestMessageEvent(t *testing.T) {
+	command := 42
+	message := "Data message"
 
-	cachedHost string
-	cachedPort int
-}
+	evt := NewMessage(command, message)
 
-func NewDefaultConfig() *Config {
-	return &Config{}
-}
-
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
-	}
-}
-
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
+	t.Run("Accessors", func(t *testing.T) {
+		if evt.Command() != command {
+			t.Errorf("Unexpected command: '%v'", evt.Command())
 		}
 
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
+		if evt.Data() != message {
+			t.Errorf("Unexpected data: '%v'", evt.Data())
 		}
-	}
 
-	return c.cachedHost, nil
+		if evt.String() != "Message Event: index:2" {
+			t.Errorf("Unexpected string: '%s'", evt.String())
+		}
+	})
+
+	t.Run("Counter", func(t *testing.T) {
+		var e *Message
+
+		for i := 1; i < 2000; i++ {
+			e = NewMessage(1, "test")
+		}
+
+		if e.Index() != uint64(2001) {
+			t.Errorf("Unexpected index: %d", e.Index())
+		}
+	})
 }
 
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
-	}
-
-	return c.cachedPort, nil
-}
-
-/* config.go ends here. */
+/* message_test.go ends here. */

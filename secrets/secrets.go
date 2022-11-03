@@ -1,10 +1,10 @@
 /*
- * config.go --- Dispatcher configuration.
+ * secrets.go --- `Secrets' file support.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul <asmodai@challenger>
  *
- * Author:     Paul Ward <asmodai@gmail.com>
- * Maintainer: Paul Ward <asmodai@gmail.com>
+ * Author:     Paul <asmodai@challenger>
+ * Maintainer: Paul <asmodai@challenger>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation files
@@ -27,63 +27,67 @@
  * SOFTWARE.
  */
 
-package apiserver
+package secrets
 
 import (
-	"net"
-	"strconv"
+	"errors"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
+const (
+	SecretsPath string = "/run/secrets"
+)
 
-	cachedHost string
-	cachedPort int
+type Secret struct {
+	path  string
+	value string
 }
 
-func NewDefaultConfig() *Config {
-	return &Config{}
+func New() *Secret {
+	return Make("")
 }
 
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
+func Make(file string) *Secret {
+	return &Secret{
+		path:  SecretsPath + "/" + filepath.Base(file),
+		value: "",
 	}
 }
 
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
-		}
+func (s *Secret) Path() string  { return s.path }
+func (s *Secret) Value() string { return s.value }
 
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
-		}
-	}
+func (s *Secret) SetPath(val string) error {
+	s.path = filepath.Base(val)
 
-	return c.cachedHost, nil
+	return s.probe()
 }
 
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
-	}
-
-	return c.cachedPort, nil
+func (s *Secret) Probe() error {
+	return s.probe()
 }
 
-/* config.go ends here. */
+func (s *Secret) probe() error {
+	if s.path == "" {
+		return errors.New("No secret path set!")
+	}
+
+	fp, err := os.Open(s.path)
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
+
+	bytes, _ := io.ReadAll(fp)
+	if len(bytes) == 0 {
+		return errors.New("Zero length secret!")
+	}
+
+	s.value = strings.TrimSuffix(string(bytes), "\n")
+	return nil
+}
+
+/* secrets.go ends here. */
