@@ -1,10 +1,10 @@
 /*
  * secrets.go --- `Secrets' file support.
  *
- * Copyright (c) 2022 Paul <asmodai@challenger>
+ * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
  *
- * Author:     Paul <asmodai@challenger>
- * Maintainer: Paul <asmodai@challenger>
+ * Author:     Paul Ward <asmodai@gmail.com>
+ * Maintainer: Paul Ward <asmodai@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation files

@@ -64,13 +64,17 @@ all: deps
 
 .PHONY: configs doc
 
-deps:
+deps: tidy
 	@echo Getting dependencies
 	@go mod vendor
 
 tidy:
 	@echo Tidying mod dependencies
 	@go mod tidy
+
+tooling:
+	@go install github.com/google/go-licenses@latest
+	@go get github.com/go-critic/go-critic@latest
 
 listdeps:
 	@echo Listing dependencies:
