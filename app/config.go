@@ -44,7 +44,7 @@ type Config struct {
 	AppConfig      any
 	Validators     config.ValidatorsMap
 
-	//nolint:staticcheck
+	//nolint:staticcheck,unused
 	options struct {
 		enableRPC bool
 	}
