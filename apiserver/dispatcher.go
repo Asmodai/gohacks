@@ -31,14 +31,14 @@ package apiserver
 
 import (
 	"github.com/Asmodai/gohacks/logger"
+	"github.com/Asmodai/gohacks/utils"
+
 	"github.com/gin-gonic/gin"
 
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -46,18 +46,23 @@ type Dispatcher struct {
 	config *Config
 	srv    IServer
 	router *gin.Engine
-	logger logger.ILogger
+	lgr    logger.ILogger
 }
 
 func NewDispatcher(lgr logger.ILogger, config *Config) *Dispatcher {
 	obj := &Dispatcher{
 		config: config,
 		router: gin.New(),
-		logger: lgr,
+		lgr:    lgr,
+	}
+
+	ginlogger := utils.GetEnv("GIN_LOGGER", "file")
+	switch ginlogger {
+	case "file":
+		obj.router.Use(gin.LoggerWithConfig(obj.initLog()))
 	}
 
 	obj.router.NoRoute(obj.notFound)
-	obj.router.Use(gin.LoggerWithConfig(obj.initLog()))
 	obj.router.Use(gin.Recovery())
 	obj.router.Use(CORSMiddleware())
 	obj.router.Use(func(c *gin.Context) {
@@ -85,61 +90,6 @@ func NewDefaultDispatcher() *Dispatcher {
 	)
 }
 
-func (d *Dispatcher) initLog() gin.LoggerConfig {
-	return gin.LoggerConfig{
-		Formatter: d.logFormatter,
-		Output:    d.logWriter(),
-	}
-}
-
-func (d *Dispatcher) logWriter() io.Writer {
-	if d.config.LogFile == "" || gin.Mode() == "debug" {
-		return gin.DefaultWriter
-	}
-
-	f, err := os.OpenFile(d.config.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		d.logger.Fatal(
-			"Could not open file for writing.",
-			"file", d.config.LogFile,
-			"err", err.Error(),
-		)
-	}
-
-	d.logger.Info(
-		"API server logging initialised.",
-		"file", d.config.LogFile,
-	)
-
-	return f
-}
-
-func (d *Dispatcher) logFormatter(param gin.LogFormatterParams) string {
-	var statusColor, methodColor, resetColor string
-
-	if param.IsOutputColor() {
-		statusColor = param.StatusCodeColor()
-		methodColor = param.MethodColor()
-		resetColor = param.ResetColor()
-	}
-
-	if param.Latency > time.Minute {
-		param.Latency = param.Latency.Truncate(time.Second)
-	}
-
-	return fmt.Sprintf("%s - [%s] \"%s%s%s %s %s\" %s%d%s %s \"%s\" %s\n",
-		param.ClientIP,
-		param.TimeStamp.Format(time.RFC1123),
-		methodColor, param.Method, resetColor,
-		param.Path,
-		param.Request.Proto,
-		statusColor, param.StatusCode, resetColor,
-		param.Latency,
-		param.Request.UserAgent(),
-		param.ErrorMessage,
-	)
-}
-
 func (d *Dispatcher) GetRouter() *gin.Engine {
 	return d.router
 }
@@ -161,7 +111,7 @@ func (d *Dispatcher) Start() {
 		}
 
 		if err != nil && err != http.ErrServerClosed {
-			d.logger.Fatal(
+			d.lgr.Fatal(
 				"listen() failed.",
 				"err", err.Error(),
 			)
@@ -176,7 +126,7 @@ func (d *Dispatcher) Stop() {
 	}()
 
 	if err := d.srv.Shutdown(ctx); err != nil {
-		d.logger.Fatal(
+		d.lgr.Fatal(
 			"API dispatcher server shutdown failure.",
 			"err", err.Error(),
 		)

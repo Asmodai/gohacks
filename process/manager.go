@@ -111,6 +111,11 @@ func (pm *Manager) SetLogger(lgr logger.ILogger) {
 	pm.logger = lgr
 }
 
+// Return the manager's logger.
+func (pm *Manager) Logger() logger.ILogger {
+	return pm.logger
+}
+
 // Set the process manager's context.
 func (pm *Manager) SetContext(parent context.Context) {
 	ctx, cancel := context.WithCancel(parent)

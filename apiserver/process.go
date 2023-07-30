@@ -71,7 +71,7 @@ func (p *DispatcherProc) Action(state **process.State) {
 	p.Lock()
 	switch cmd.(*types.Pair).First {
 	case getRouter:
-		ps.Send(p.inst.GetRouter())
+		ps.Send(process.NewActionResult(p.inst.GetRouter(), nil))
 	}
 	p.Unlock()
 }
@@ -114,9 +114,9 @@ func GetRouter(mgr process.IManager) (*gin.Engine, error) {
 	}
 
 	inst.Send(types.NewPair(getRouter, nil))
-	result := inst.Receive()
+	result := inst.Receive().(*process.ActionResult)
 
-	return result.(*gin.Engine), nil
+	return result.Value.(*gin.Engine), nil
 }
 
 /* process.go ends here. */

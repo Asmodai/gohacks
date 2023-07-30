@@ -40,6 +40,7 @@ Process manager interface.
 */
 type IManager interface {
 	SetLogger(logger.ILogger)
+	Logger() logger.ILogger
 	SetContext(context.Context)
 	Context() context.Context
 	Create(*Config) *Process

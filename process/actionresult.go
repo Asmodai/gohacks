@@ -1,7 +1,7 @@
 /*
- * config.go --- Dispatcher configuration.
+ * actionresult.go --- Action result structure.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2023 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,63 +27,30 @@
  * SOFTWARE.
  */
 
-package apiserver
+package process
 
-import (
-	"net"
-	"strconv"
-)
-
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
-
-	cachedHost string `config_hide:"true"`
-	cachedPort int    `config_hide:"true"`
+type ActionResult struct {
+	Value   any
+	Error   error
+	Success bool
 }
 
-func NewDefaultConfig() *Config {
-	return &Config{}
-}
-
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
+func NewEmptyActionResult() *ActionResult {
+	return &ActionResult{
+		Success: false,
 	}
 }
 
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
-		}
-
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
-		}
+func NewActionResult(val any, err error) *ActionResult {
+	return &ActionResult{
+		Value:   val,
+		Error:   err,
+		Success: false,
 	}
-
-	return c.cachedHost, nil
 }
 
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
-	}
-
-	return c.cachedPort, nil
+func (ar *ActionResult) IsError() bool {
+	return ar.Error != nil
 }
 
-/* config.go ends here. */
+/* actionresult.go ends here. */

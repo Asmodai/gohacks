@@ -1,7 +1,7 @@
 /*
- * config.go --- Dispatcher configuration.
+ * cursor.go --- Pagination cursor type.
  *
- * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,63 +27,26 @@
  * SOFTWARE.
  */
 
-package apiserver
+package database
 
-import (
-	"net"
-	"strconv"
+type Cursor struct {
+	Offset int64 `json:"offset"`
+	Limit  int64 `json:"limit"`
+}
+
+var (
+	EmptyCursor *Cursor = &Cursor{Offset: 0, Limit: 0}
 )
 
-type Config struct {
-	Addr    string `json:"address"`
-	Cert    string `json:"cert_file"`
-	Key     string `json:"key_file"`
-	UseTLS  bool   `json:"use_tls"`
-	LogFile string `json:"log_file"`
-
-	cachedHost string `config_hide:"true"`
-	cachedPort int    `config_hide:"true"`
+func (c Cursor) Valid() bool {
+	return c.Limit > 0
 }
 
-func NewDefaultConfig() *Config {
-	return &Config{}
-}
-
-func NewConfig(addr, log, cert, key string, tls bool) *Config {
-	return &Config{
-		Addr:    addr,
-		Cert:    cert,
-		Key:     key,
-		UseTLS:  tls,
-		LogFile: log,
+func NewCursor(offset, limit int64) *Cursor {
+	return &Cursor{
+		Offset: offset,
+		Limit:  limit,
 	}
 }
 
-func (c *Config) Host() (string, error) {
-	if c.cachedHost == "" {
-		host, port, err := net.SplitHostPort(c.Addr)
-		if err != nil {
-			return "", err
-		}
-
-		c.cachedHost = host
-		c.cachedPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return c.cachedHost, nil
-}
-
-func (c *Config) Port() (int, error) {
-	if c.cachedHost == "" {
-		if _, err := c.Host(); err != nil {
-			return 0, err
-		}
-	}
-
-	return c.cachedPort, nil
-}
-
-/* config.go ends here. */
+/* cursor.go ends here. */
