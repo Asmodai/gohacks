@@ -14,6 +14,35 @@ const (
 )
 ```
 
+#### type ActionResult
+
+```go
+type ActionResult struct {
+	Value   any
+	Error   error
+	Success bool
+}
+```
+
+
+#### func  NewActionResult
+
+```go
+func NewActionResult(val any, err error) *ActionResult
+```
+
+#### func  NewEmptyActionResult
+
+```go
+func NewEmptyActionResult() *ActionResult
+```
+
+#### func (*ActionResult) IsError
+
+```go
+func (ar *ActionResult) IsError() bool
+```
+
 #### type CallbackFn
 
 ```go
@@ -50,6 +79,7 @@ Create a default process configuration.
 ```go
 type IManager interface {
 	SetLogger(logger.ILogger)
+	Logger() logger.ILogger
 	SetContext(context.Context)
 	Context() context.Context
 	Create(*Config) *Process
@@ -170,6 +200,13 @@ Create a new process with the given configuration.
 func (pm *Manager) Find(name string) (*Process, bool)
 ```
 Find and return the given process, or nil if not found.
+
+#### func (*Manager) Logger
+
+```go
+func (pm *Manager) Logger() logger.ILogger
+```
+Return the manager's logger.
 
 #### func (*Manager) Processes
 

@@ -49,6 +49,34 @@ Return the DSN for this database configuration.
 func (c *Config) Validate() error
 ```
 
+#### type Cursor
+
+```go
+type Cursor struct {
+	Offset int64 `json:"offset"`
+	Limit  int64 `json:"limit"`
+}
+```
+
+
+```go
+var (
+	EmptyCursor *Cursor = &Cursor{Offset: 0, Limit: 0}
+)
+```
+
+#### func  NewCursor
+
+```go
+func NewCursor(offset, limit int64) *Cursor
+```
+
+#### func (Cursor) Valid
+
+```go
+func (c Cursor) Valid() bool
+```
+
 #### type Database
 
 ```go

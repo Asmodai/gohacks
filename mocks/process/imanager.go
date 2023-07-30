@@ -106,6 +106,20 @@ func (mr *MockIManagerMockRecorder) Find(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockIManager)(nil).Find), arg0)
 }
 
+// Logger mocks base method.
+func (m *MockIManager) Logger() logger.ILogger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Logger")
+	ret0, _ := ret[0].(logger.ILogger)
+	return ret0
+}
+
+// Logger indicates an expected call of Logger.
+func (mr *MockIManagerMockRecorder) Logger() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logger", reflect.TypeOf((*MockIManager)(nil).Logger))
+}
+
 // Processes mocks base method.
 func (m *MockIManager) Processes() *[]*process.Process {
 	m.ctrl.T.Helper()

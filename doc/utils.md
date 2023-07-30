@@ -42,6 +42,12 @@ match the predicate.
 func FormatDuration(d time.Duration) string
 ```
 
+#### func  GetEnv
+
+```go
+func GetEnv(key, def string) string
+```
+
 #### func  HasFraction
 
 ```go
