@@ -1,5 +1,5 @@
 /*
- * service.go --- Cheap nasty dependency injection.
+ * service.go --- Cheap nasty service management.
  *
  * Copyright (c) 2021-2022 Paul Ward <asmodai@gmail.com>
  *
@@ -27,7 +27,7 @@
  * SOFTWARE.
  */
 
-package di
+package service
 
 import (
 	"sync"
@@ -42,10 +42,10 @@ Service structure.
 
 To use:
 
-1) Invoke `di.GetInstance` to access the singleton:
+1) Invoke `service.GetInstance` to access the singleton:
 
 ```go
-  svc := di.GetInstance
+  svc := service.GetInstance
 ```
 
 2a) Add your required service:

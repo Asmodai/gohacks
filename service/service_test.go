@@ -27,7 +27,7 @@
  * SOFTWARE.
  */
 
-package di
+package service
 
 import (
 	"testing"
