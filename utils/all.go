@@ -1,7 +1,7 @@
 /*
  * all.go --- Implementation of an `All` mapping function.
  *
- * Copyright (c) 2022 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>

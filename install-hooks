@@ -3,7 +3,7 @@
 #
 # install-hooks --- Install git hooks.
 #
-# Copyright (c) 2017 Paul Ward <asmodai@gmail.com>
+# Copyright (c) 2017-2024 Paul Ward <asmodai@gmail.com>
 #
 # Author:     Paul Ward <asmodai@gmail.com>
 # Maintainer: Paul Ward <asmodai@gmail.com>
