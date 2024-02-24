@@ -91,7 +91,7 @@ func BenchmarkConfig(b *testing.B) {
 	var str string
 
 	for i := 0; i < 100; i++ {
-		cnf := Init("Test", version, &DummyConfig{}, nil)
+		cnf := Init("Test", version, &DummyConfig{}, nil, false)
 		str = cnf.String()
 	}
 	fmt.Printf("Config: %s\n", str)
@@ -111,7 +111,7 @@ func TestSimple(t *testing.T) {
 	os.Args = []string{"wibble", "-config", path + "/../testing/conf.json"}
 
 	opts := &DummyConfig{}
-	conf := Init("Test", version, opts, MakeFns())
+	conf := Init("Test", version, opts, MakeFns(), false)
 	if conf == nil {
 		t.Error("No, nil config object!")
 	}
@@ -171,7 +171,7 @@ func TestCLIFlags(t *testing.T) {
 	}
 
 	o := &DummyConfig{}
-	c := Init("Test", version, o, MakeFns())
+	c := Init("Test", version, o, MakeFns(), false)
 
 	c.AddBoolFlag(&o.Flags.BoolFlag, "bool", false, "bool")
 	c.AddFloat64Flag(&o.Flags.F64Flag, "float64", 0.0, "float64")
