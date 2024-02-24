@@ -87,6 +87,16 @@ func MakeFns() map[string]interface{} {
 	}
 }
 
+func BenchmarkConfig(b *testing.B) {
+	var str string
+
+	for i := 0; i < 100; i++ {
+		cnf := Init("Test", version, &DummyConfig{}, nil)
+		str = cnf.String()
+	}
+	fmt.Printf("Config: %s\n", str)
+}
+
 func TestSimple(t *testing.T) {
 	t.Log("Can we construct a simple config object?")
 
@@ -127,7 +137,7 @@ func TestSimple(t *testing.T) {
 func TestValidators(t *testing.T) {
 	t.Log("Can we add new validators on the fly?")
 
-	c := NewConfig()
+	c := NewConfig(false)
 	f := func() {}
 	c.AddValidator("test", f)
 

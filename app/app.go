@@ -92,6 +92,7 @@ func NewApplication(cnf *Config) *Application {
 			cnf.Version,
 			cnf.AppConfig,
 			cnf.Validators,
+			true,
 		)
 	}
 

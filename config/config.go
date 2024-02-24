@@ -137,12 +137,14 @@ type Config struct {
 	Validators ValidatorsMap `config_hide:"true"`
 
 	flags *flag.FlagSet `config_hide:"true"`
+	must_have_cli bool `config_hide:"true"`
 }
 
 // Create a new empty `Config` instance.
-func NewConfig() *Config {
+func NewConfig(required bool) *Config {
 	return &Config{
 		Validators: make(ValidatorsMap),
+		must_have_cli: required,
 	}
 }
 
@@ -473,9 +475,11 @@ func (c *Config) handleCLI() {
 // Load JSON config file.
 func (c *Config) load() {
 	if c.ConfigCLI.ConfFile == "" {
-		fmt.Println("Not loading a configuration file.")
+		if c.must_have_cli {
+			fmt.Printf("A configuration file must be provided via `-config`.\n")
+			os.Exit(1)
+		}
 		return
-		//log.Fatal("A configuration file must be provided via `-config`.")
 	}
 
 	file, err := os.Open(c.ConfigCLI.ConfFile)
@@ -498,15 +502,19 @@ func (c *Config) load() {
 }
 
 // Init a new configuration instance.
-func Init(name string, version *semver.SemVer, data interface{}, fns ValidatorsMap) *Config {
-	inst := NewConfig()
+func Init(
+	name string,
+	version *semver.SemVer,
+	data interface{},
+	fns ValidatorsMap,
+	required bool,
+) *Config {
+	inst := NewConfig(required)
 
 	inst.ConfigApp.Name = name
 	inst.ConfigApp.Version = version
-
 	inst.App = data
 	inst.Validators = fns
-
 	inst.flags = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	inst.addFlags()
 
