@@ -107,14 +107,20 @@ It is worth noting that there are three special structure tags:
 #### func  Init
 
 ```go
-func Init(name string, version *semver.SemVer, data interface{}, fns ValidatorsMap) *Config
+func Init(
+	name string,
+	version *semver.SemVer,
+	data interface{},
+	fns ValidatorsMap,
+	required bool,
+) *Config
 ```
 Init a new configuration instance.
 
 #### func  NewConfig
 
 ```go
-func NewConfig() *Config
+func NewConfig(required bool) *Config
 ```
 Create a new empty `Config` instance.
 
