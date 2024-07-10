@@ -41,7 +41,7 @@ func TestValueMap(t *testing.T) {
 
 	t.Run("Constructs properly", func(t *testing.T) {
 		vmap = NewValueMap()
-		tnam := reflect.TypeOf(vmap).Elem().Name()
+		tnam := reflect.TypeOf(vmap).Name()
 
 		// Remember, this wants the internal type.
 		if tnam != "valueMap" {
@@ -79,6 +79,13 @@ func TestValueMapDefaultKey(t *testing.T) {
 	t.Run("Returns existing value", func(t *testing.T) {
 		if res := GetValueMap(ctx); res == nil {
 			t.Error("No value map key was found!")
+		}
+	})
+
+	t.Run("Returns nil for non-existent value", func(t *testing.T) {
+		ctx := TODO()
+		if res := GetValueMap(ctx); res != nil {
+			t.Errorf("Unexpected value returned: %#v", res)
 		}
 	})
 
@@ -128,6 +135,72 @@ func TestValueMapCustomKey(t *testing.T) {
 		if _, ok := res.Get("nope"); ok {
 			t.Error("Somehow a value for a non-existent key was found.")
 		}
+	})
+}
+
+func TestChildCopy(t *testing.T) {
+
+	vmap := NewValueMap()
+	vmap.Set("test1", "One")
+	vmap.Set("test2", 2)
+
+	parent := WithValueMap(TODO(), vmap)
+	child, _ := WithCancel(parent)
+
+	// Test the parent here, just to be sure.
+	t.Run("Parent has values", func(t *testing.T) {
+		vals := GetValueMap(parent)
+		if vals == nil {
+			t.Error("Parent has no value map.")
+		}
+
+		t.Run("test1 is ok", func(t *testing.T) {
+			val, ok := vals.Get("test1")
+			if !ok {
+				t.Error("Parent does not have 'test1'.")
+			}
+			if val != "One" {
+				t.Errorf(`Unexpected value, val = #%v != "One"`, val)
+			}
+		})
+
+		t.Run("test2 is ok", func(t *testing.T) {
+			val, ok := vals.Get("test2")
+			if !ok {
+				t.Error("Parent does not have 'test2'.")
+			}
+			if val != 2 {
+				t.Errorf(`Unexpected value, val = #%v != 2`, val)
+			}
+		})
+	})
+
+	// Now test the child.
+	t.Run("Child has values", func(t *testing.T) {
+		vals := GetValueMap(child)
+		if vals == nil {
+			t.Error("Child has no value map.")
+		}
+
+		t.Run("test1 is ok", func(t *testing.T) {
+			val, ok := vals.Get("test1")
+			if !ok {
+				t.Error("Child does not have 'test1'.")
+			}
+			if val != "One" {
+				t.Errorf(`Unexpected value, val = #%v != "One"`, val)
+			}
+		})
+
+		t.Run("test2 is ok", func(t *testing.T) {
+			val, ok := vals.Get("test2")
+			if !ok {
+				t.Error("Child does not have 'test2'.")
+			}
+			if val != 2 {
+				t.Errorf(`Unexpected value, val = #%v != 2`, val)
+			}
+		})
 	})
 }
 

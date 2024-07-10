@@ -1,3 +1,4 @@
+/* mock:yes */
 /*
  * valuemap.go --- Value map structure.
  *
@@ -32,6 +33,15 @@ package context
 // A map-based storage structure to pass multiple values via contexts
 // rather than many invocations of `context.WithValue` and their respective
 // copy operations.
+//
+// The main caveat with this approach is that as contexts are copied by the
+// various `With` functions we have no means of passing changes to child
+// contexts once the context with the value map is copied.
+//
+// This is not the main aim of this type, so such functionality should not
+// be considered.  The main usage is to provide a means of passing a lot of
+// values to some top-level context in order to avoid a lot of `WithValue`
+// calls and a somewhat slow lookup.
 type ValueMap interface {
 	Get(string) (key any, ok bool)
 	Set(key string, value any)
@@ -44,7 +54,7 @@ type valueMap struct {
 
 // Create a new value map with no data.
 func NewValueMap() ValueMap {
-	return &valueMap{
+	return valueMap{
 		data: map[string]any{},
 	}
 }
@@ -69,7 +79,7 @@ func (obj valueMap) Get(key string) (value any, ok bool) {
 // will not be affected and only children that inherit from the context
 // *after* any `set` operation will see the changes.  This is due to
 // the context's value field being copied.
-func (obj *valueMap) Set(key string, value any) {
+func (obj valueMap) Set(key string, value any) {
 	obj.data[key] = value
 }
 
