@@ -43,6 +43,7 @@ MODULES = apiclient       \
 	  apiserver       \
 	  app             \
 	  config          \
+	  context         \
 	  crypto          \
 	  database        \
 	  events          \
@@ -66,7 +67,7 @@ all: deps
 
 deps: tidy
 	@echo Getting dependencies
-	@go mod vendor
+	@go work vendor
 
 tidy:
 	@echo Tidying mod dependencies

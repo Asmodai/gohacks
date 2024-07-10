@@ -1,6 +1,6 @@
 module github.com/Asmodai/gohacks
 
-go 1.18
+go 1.20
 
 require (
 	github.com/btubbs/datetime v0.1.1
@@ -8,11 +8,10 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/goccy/go-json v0.10.2
 	github.com/golang/mock v1.6.0
-	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
 	github.com/jmoiron/sqlx v1.3.5
 	go.uber.org/zap v1.23.0
 	golang.org/x/exp v0.0.0-20221031165847-c99f073a8326
-	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde
+	golang.org/x/sync v0.7.0
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858
 )
 
@@ -24,7 +23,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect

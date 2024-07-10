@@ -95,12 +95,6 @@ func NewDispatcher(lgr logger.ILogger, config *Config) *Dispatcher
 func (d *Dispatcher) GetRouter() *gin.Engine
 ```
 
-#### func (*Dispatcher) LoggerToInfluxDB
-
-```go
-func (d *Dispatcher) LoggerToInfluxDB() gin.HandlerFunc
-```
-
 #### func (*Dispatcher) Start
 
 ```go
