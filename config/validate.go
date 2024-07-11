@@ -1,7 +1,7 @@
 /*
- * iconfig.go --- Config interface.
+ * validate.go --- Validators.
  *
- * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2024 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -30,27 +30,24 @@
 package config
 
 import (
-	"flag"
+	"reflect"
 )
 
-/*
-Config interface.
-*/
-type IConfig interface {
-	IsDebug() bool
-	AddValidator(name string, fn interface{})
-	String() string
-	Validate() []error
-	AddBoolFlag(p *bool, name string, value bool, usage string)
-	AddFloat64Flag(p *float64, name string, value float64, usage string)
-	AddIntFlag(p *int, name string, value int, usage string)
-	AddInt64Flag(p *int64, name string, value int64, usage string)
-	AddStringFlag(p *string, name string, value string, usage string)
-	AddUintFlag(p *uint, name string, value uint, usage string)
-	AddUint64Flag(p *uint64, name string, value uint64, usage string)
-	LookupFlag(name string) *flag.Flag
-	Parse()
-	LogFile() string
+// Add a validator function for a tag value.
+//
+// This is so one can add validators after instance creation.
+func (obj *config) AddValidator(name string, fn any) {
+	obj.Validators[name] = fn
 }
 
-/* iconfig.go ends here. */
+// Validate configuration.
+//
+// Should validation fail, then a list of errors is returned.
+// Should validation pass, an empty list is returned.
+func (obj *config) Validate() []error {
+	sref := reflect.ValueOf(obj.App).Elem()
+
+	return obj.recurseValidate(sref)
+}
+
+/* validate.go ends here. */

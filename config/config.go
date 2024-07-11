@@ -1,3 +1,4 @@
+/* mock:yes */
 /*
  * config.go --- Configuration.
  *
@@ -31,7 +32,6 @@ package config
 
 import (
 	"github.com/Asmodai/gohacks/semver"
-	"github.com/Asmodai/gohacks/types"
 
 	"github.com/goccy/go-json"
 
@@ -117,7 +117,66 @@ It is worth noting that there are three special structure tags:
 
 * `config_validator`: The validation function for the field.
 */
-type Config struct {
+type Config interface {
+	// Have we detected `-debug` in the CLI arguments?
+	IsDebug() bool
+
+	// Returns the application name.
+	Name() string
+
+	// Returns the application's version.
+	Version() *semver.SemVer
+
+	// Return the pathname to a logfile passed via the `-log` CLI argument.
+	// Will be empty if no log file has been specified.
+	LogFile() string
+
+	// Return the pathname to the configuration file passed via the '-config'
+	// CLI argument.
+	// Will be empty if no configuration file has been specified.
+	ConfFile() string
+
+	// Add a validator function for an option named `name`.  `fn` must be a
+	// function that can be funcalled and must return either `nil` or an error.
+	AddValidator(name string, fn any)
+
+	// Return the string representation of this object.
+	String() string
+
+	// Perform validation on the application configuration structure that is
+	// parsed from the config file.
+	Validate() []error
+
+	// Add a Boolean CLI flag.
+	AddBoolFlag(p *bool, name string, value bool, usage string)
+
+	// Add a 64-bit floating point CLI flag.
+	AddFloat64Flag(p *float64, name string, value float64, usage string)
+
+	// Add a 32-bit signed integer CLI flag.
+	AddIntFlag(p *int, name string, value int, usage string)
+
+	// Add a 64-bit signed integer CLI flag.
+	AddInt64Flag(p *int64, name string, value int64, usage string)
+
+	// Add a string CLI flag.
+	AddStringFlag(p *string, name string, value string, usage string)
+
+	// Add a 32-bit unsigned integer CLI flag.
+	AddUintFlag(p *uint, name string, value uint, usage string)
+
+	// Add a 64-bit unsigned integer CLI flag.
+	AddUint64Flag(p *uint64, name string, value uint64, usage string)
+
+	// Look up a given flag value.  Looks for a flag called `name`.
+	LookupFlag(name string) *flag.Flag
+
+	// Parse CLI arguments.
+	Parse()
+}
+
+// Internal structure.
+type config struct {
 	// Application information.
 	ConfigApp struct {
 		Name    string
@@ -133,347 +192,79 @@ type Config struct {
 		LogFile  string `config_hide:"true"`
 	} `config_hide:"true"`
 
-	App        interface{}   `config_hide:"true"`
+	App        any           `config_hide:"true"`
 	Validators ValidatorsMap `config_hide:"true"`
 
-	flags *flag.FlagSet `config_hide:"true"`
-	must_have_cli bool `config_hide:"true"`
+	flags         *flag.FlagSet `config_hide:"true"`
+	must_have_cli bool          `config_hide:"true"`
 }
 
 // Create a new empty `Config` instance.
-func NewConfig(required bool) *Config {
-	return &Config{
-		Validators: make(ValidatorsMap),
+func NewDefaultConfig(required bool) Config {
+	return &config{
+		Validators:    make(ValidatorsMap),
 		must_have_cli: required,
 	}
 }
 
+func NewConfig(
+	name string,
+	version *semver.SemVer,
+	data any,
+	fns ValidatorsMap,
+	required bool,
+) Config {
+	obj := NewDefaultConfig(required).(*config)
+
+	obj.ConfigApp.Name = name
+	obj.ConfigApp.Version = version
+	obj.App = data
+	obj.Validators = fns
+	obj.flags = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	obj.addFlags()
+
+	return obj
+}
+
+// Return the application's name.
+func (c *config) Name() string {
+	return c.ConfigApp.Name
+}
+
+// Return the application's version.
+func (c *config) Version() *semver.SemVer {
+	return c.ConfigApp.Version
+}
+
 // Is debug mode enabled?
-func (c *Config) IsDebug() bool {
+func (c *config) IsDebug() bool {
 	return c.ConfigCLI.Debug
 }
 
-// Add a validator function for a tag value.
-//
-// This is so one can add validators after instance creation.
-func (c *Config) AddValidator(name string, fn interface{}) {
-	c.Validators[name] = fn
+// Return the path to the specified logging file.
+func (c *config) LogFile() string {
+	return c.ConfigCLI.LogFile
+}
+
+// Return the path to the configuration file.
+func (c *config) ConfFile() string {
+	return c.ConfigCLI.ConfFile
 }
 
 // Pretty-print the configuration.
-func (c *Config) String() string {
+func (c *config) String() string {
 	// Attempt to initialise the user config.
 	c.checkCanInit(reflect.ValueOf(c.App))
 
 	s := "Configuration:"
-	s += c.recursePrint("    ", reflect.ValueOf(c), make(map[interface{}]bool))
-	s += c.recursePrint("    ", reflect.ValueOf(c.App), make(map[interface{}]bool))
+	s += c.recursePrint("    ", reflect.ValueOf(c), make(map[any]bool))
+	s += c.recursePrint("    ", reflect.ValueOf(c.App), make(map[any]bool))
 
 	return s
-}
-
-// Validate configuration.
-//
-// Should validation fail, then a list of errors is returned.
-// Should validation pass, an empty list is returned.
-func (c *Config) Validate() []error {
-	sref := reflect.ValueOf(c.App).Elem()
-
-	return c.recurseValidate(sref)
-}
-
-// Add a boolean flag.
-func (c *Config) AddBoolFlag(p *bool, name string, value bool, usage string) {
-	c.flags.BoolVar(p, name, value, usage)
-}
-
-// Add a float64 flag.
-func (c *Config) AddFloat64Flag(p *float64, name string, value float64, usage string) {
-	c.flags.Float64Var(p, name, value, usage)
-}
-
-// Add a integer flag.
-func (c *Config) AddIntFlag(p *int, name string, value int, usage string) {
-	c.flags.IntVar(p, name, value, usage)
-}
-
-// Add a 64-bit integer flag.
-func (c *Config) AddInt64Flag(p *int64, name string, value int64, usage string) {
-	c.flags.Int64Var(p, name, value, usage)
-}
-
-// Add a string flag.
-func (c *Config) AddStringFlag(p *string, name string, value string, usage string) {
-	c.flags.StringVar(p, name, value, usage)
-}
-
-// Add a unsigned integer flag.
-func (c *Config) AddUintFlag(p *uint, name string, value uint, usage string) {
-	c.flags.UintVar(p, name, value, usage)
-}
-
-// Add a unsigned 64-bit integer flag.
-func (c *Config) AddUint64Flag(p *uint64, name string, value uint64, usage string) {
-	c.flags.Uint64Var(p, name, value, usage)
-}
-
-// Look up a flag by its name.
-func (c *Config) LookupFlag(name string) *flag.Flag {
-	return c.flags.Lookup(name)
-}
-
-// Parse config and CLI flags.
-func (c *Config) Parse() {
-	var err []error
-
-	//nolint:errcheck
-	c.flags.Parse(os.Args[1:])
-
-	// Check if we're something that should just print and exit here.
-	if c.ConfigCLI.Version {
-		goto only_handle
-	}
-
-	c.load()
-
-	err = c.Validate()
-	if len(err) > 0 {
-		fmt.Printf("Error(s) when parsing %s:\n\n", c.ConfigCLI.ConfFile)
-
-		for i, e := range err {
-			fmt.Printf("%5d) %s\n", (i + 1), e.Error())
-		}
-		fmt.Printf("\n")
-
-		os.Exit(1)
-	}
-
-only_handle:
-	c.handleCLI()
-}
-
-// Return the path to the specified logging file.
-func (c *Config) LogFile() string {
-	return c.ConfigCLI.LogFile
-}
-
-// Call a given function with arguments, and return any error.
-func (c *Config) call(field string, name string, params ...interface{}) error {
-	if _, ok := c.Validators[name]; !ok {
-		return types.NewError(
-			"CONFIG",
-			"Validator '%s' was not found.",
-			name,
-		)
-	}
-	fn := reflect.ValueOf(c.Validators[name])
-
-	if len(params) != fn.Type().NumIn() {
-		return types.NewError(
-			"CONFIG",
-			"Validator '%s' expects %d arguments but only %d given.",
-			name,
-			fn.Type().NumIn(),
-			len(params),
-		)
-	}
-
-	in := make([]reflect.Value, len(params))
-	for k, param := range params {
-		in[k] = reflect.ValueOf(param)
-	}
-
-	result := fn.Call(in)
-	if result[0].Interface() == nil {
-		return nil
-	}
-
-	err := result[0].Interface().(error)
-	return types.NewError(
-		"CONFIG",
-		"[%s] Validation failed on `%s`: %v",
-		name,
-		field,
-		err,
-	)
-}
-
-// Sometimes I think Go is fail.  I mean, even C# does reflection better.
-func (c *Config) callMethod(value reflect.Value, method string) (interface{}, bool) {
-	var final reflect.Value
-	var ptr reflect.Value
-
-	// If we're a pointer, then use the value of the pointee.
-	if value.Kind() == reflect.Ptr {
-		ptr = value
-		value = ptr.Elem()
-	}
-
-	// Are we valid?
-	if value.IsValid() {
-		meth := value.MethodByName(method)
-
-		// Better check the method is valid too
-		if meth.IsValid() {
-			final = meth
-		}
-	}
-
-	// Are we a valid pointer?
-	if ptr.IsValid() {
-		meth := ptr.MethodByName(method)
-
-		// Check the method too
-		if meth.IsValid() {
-			final = meth
-		}
-	}
-
-	// Finally, double-check the method and invoke.
-	if final.IsValid() {
-		return final.Call([]reflect.Value{})[0].Interface(), true
-	}
-
-	return nil, false
-}
-
-// Attempt to call an `Init` method on a specific thing.
-func (c *Config) checkCanInit(val reflect.Value) bool {
-	_, ok := c.callMethod(val, "Init")
-
-	return ok
-}
-
-// Ugly recursive nasty pretty printing.
-func (c *Config) recursePrint(prefix string, val reflect.Value, visited map[interface{}]bool) string {
-	var s string = ""
-
-	toString, toStringFound := c.callMethod(val, "ToString")
-
-	// Reflect over pointers and interfaces.
-	for val.Kind() == reflect.Ptr || val.Kind() == reflect.Interface {
-		if val.Kind() == reflect.Ptr {
-			// If we're a pointer, check if we've visited the pointee.
-			if visited[val.Interface()] {
-				return s
-			}
-
-			// Tag it as visited.
-			visited[val.Interface()] = true
-		}
-
-		// We want the pointee.
-		val = val.Elem()
-	}
-
-	switch val.Kind() {
-	case reflect.Struct:
-		if toStringFound {
-			// Thing has a `toString` method, so we use its output.
-			s += fmt.Sprintf("%s%s", prefix, toString.(string))
-		} else {
-			// Sigh.
-			t := val.Type()
-
-			// Iterate over fields.
-			for i := 0; i < val.NumField(); i++ {
-				if t.Field(i).Tag.Get("config_hide") == "true" {
-					// Ignore fields with the `config_hide` tag.
-					continue
-				}
-
-				s += fmt.Sprintf("\n%s%s:", prefix, t.Field(i).Name)
-
-				// Is the field exported?
-				if !val.Field(i).CanSet() {
-					// No, mark it so and ignore it.
-					s += " <unexported>"
-					continue
-				}
-
-				// Should we obscure the field's value?
-				if t.Field(i).Tag.Get("config_obscure") == "true" {
-					s += " [**********]"
-				} else {
-					// Not obscuring, recurse-print.
-					s += c.recursePrint(prefix+"    ", val.Field(i), visited)
-				}
-			}
-		}
-
-	case reflect.Slice, reflect.Array:
-		for i := 0; i < val.Len(); i++ {
-			s += c.recursePrint("\n"+prefix, val.Index(i), visited)
-		}
-
-	case reflect.Invalid:
-		s += " nil"
-
-	default:
-		s += fmt.Sprintf(" [%v]", val.Interface())
-	}
-
-	return s
-}
-
-// Recursive ugly reflective validation.
-func (c *Config) recurseValidate(v reflect.Value) []error {
-	sref := v
-	errs := []error{}
-
-	for i := 0; i < sref.NumField(); i++ {
-		field := sref.Field(i)
-		ftype := sref.Type().Field(i)
-		validate := ftype.Tag.Get("config_validator")
-
-		// Nested structure?
-		if field.Kind() == reflect.Struct {
-			// Yep, recurse.
-			nested := reflect.ValueOf(field.Interface())
-			errs = append(errs, c.recurseValidate(nested)...)
-		}
-
-		// Is validation function valid?
-		if validate != "" {
-			result := c.call(ftype.Name, validate, field.Interface())
-			if result != nil {
-				errs = append(errs, []error{result}...)
-			}
-		}
-	}
-
-	return errs
-}
-
-// Parse CLI options.
-func (c *Config) addFlags() {
-	c.flags.BoolVar(&c.ConfigCLI.Debug, "debug", false, "Debug mode")
-	c.flags.BoolVar(&c.ConfigCLI.Version, "version", false, "Print version and exit")
-	c.flags.BoolVar(&c.ConfigCLI.Dump, "dump", false, "Dump config to stdout and exit")
-	c.flags.StringVar(&c.ConfigCLI.ConfFile, "config", "", "Configuration file")
-	c.flags.StringVar(&c.ConfigCLI.LogFile, "log", "", "Log file")
-}
-
-// Perform ations for specific CLI options.
-func (c *Config) handleCLI() {
-	if c.ConfigCLI.Version {
-		fmt.Printf(
-			"This is %s, version %s (%s)\n",
-			c.ConfigApp.Name,
-			c.ConfigApp.Version,
-			c.ConfigApp.Version.Commit,
-		)
-		os.Exit(0)
-	}
-
-	if c.ConfigCLI.Dump {
-		fmt.Printf("%s\n", c.String())
-		os.Exit(0)
-	}
 }
 
 // Load JSON config file.
-func (c *Config) load() {
+func (c *config) load() {
 	if c.ConfigCLI.ConfFile == "" {
 		if c.must_have_cli {
 			fmt.Printf("A configuration file must be provided via `-config`.\n")
@@ -505,20 +296,11 @@ func (c *Config) load() {
 func Init(
 	name string,
 	version *semver.SemVer,
-	data interface{},
+	data any,
 	fns ValidatorsMap,
 	required bool,
-) *Config {
-	inst := NewConfig(required)
-
-	inst.ConfigApp.Name = name
-	inst.ConfigApp.Version = version
-	inst.App = data
-	inst.Validators = fns
-	inst.flags = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	inst.addFlags()
-
-	return inst
+) Config {
+	return NewConfig(name, version, data, fns, required)
 }
 
 /* config.go ends here. */

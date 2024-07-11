@@ -73,6 +73,9 @@ type DummyConfig struct {
 	}
 }
 
+type AccessorConfig struct {
+}
+
 func ValidOpt2(value int) error {
 	if value != 42 {
 		return fmt.Errorf("Not 42")
@@ -98,8 +101,6 @@ func BenchmarkConfig(b *testing.B) {
 }
 
 func TestSimple(t *testing.T) {
-	t.Log("Can we construct a simple config object?")
-
 	path, err := os.Getwd()
 	if err != nil {
 		t.Errorf("getwd: %s", err.Error())
@@ -112,45 +113,40 @@ func TestSimple(t *testing.T) {
 
 	opts := &DummyConfig{}
 	conf := Init("Test", version, opts, MakeFns(), false)
-	if conf == nil {
-		t.Error("No, nil config object!")
-	}
+
+	t.Run("Construct config object", func(t *testing.T) {
+		if conf == nil {
+			t.Error("Could not build config object!")
+		}
+	})
 	conf.Parse()
 
-	t.Log("Check debug is false")
-	if conf.IsDebug() == false {
-		t.Log("Yes.")
-	} else {
-		t.Error("No, debug is true!")
-		return
-	}
+	t.Run("Check debug is false", func(t *testing.T) {
+		if conf.IsDebug() != false {
+			t.Error("Debug is true!")
+		}
+	})
 
-	t.Log("Is string representation as expected?")
-	if conf.String() == StringRep {
-		t.Log("Yes.")
-	} else {
-		t.Errorf("No, got:\n%v\bWanted:\n%v\n", conf.String(), StringRep)
-		return
-	}
+	t.Run("String representation is as expected", func(t *testing.T) {
+		if conf.String() != StringRep {
+			t.Errorf("No, got:\n%v\bWanted:\n%v\n", conf.String(), StringRep)
+		}
+	})
 }
 
 func TestValidators(t *testing.T) {
-	t.Log("Can we add new validators on the fly?")
+	t.Run("Add validators on the fly", func(t *testing.T) {
+		c := NewDefaultConfig(false)
+		f := func() {}
+		c.AddValidator("test", f)
 
-	c := NewConfig(false)
-	f := func() {}
-	c.AddValidator("test", f)
-
-	if c.Validators["test"] != nil {
-		t.Log("Yes.")
-	} else {
-		t.Error("No.")
-	}
+		if c.(*config).Validators["test"] == nil {
+			t.Error("Could not add validators at runtime.")
+		}
+	})
 }
 
 func TestCLIFlags(t *testing.T) {
-	t.Log("Can we manipulate CLI flags?")
-
 	path, err := os.Getwd()
 	if err != nil {
 		t.Errorf("getwd: %s", err.Error())
@@ -184,52 +180,116 @@ func TestCLIFlags(t *testing.T) {
 	c.Parse()
 	os.Args = oldArgs
 
-	flag := c.LookupFlag("uint")
-	if flag == nil {
-		t.Error("`LookupFlag` did not work.")
+	t.Run("Look up uint value", func(t *testing.T) {
+		flag := c.LookupFlag("uint")
+		if flag == nil {
+			t.Error("`LookupFlag` did not work.")
+		}
+	})
+
+	t.Run("Look up bool value", func(t *testing.T) {
+		if o.Flags.BoolFlag != true {
+			t.Errorf("Unexpected boolean value %#v", o.Flags.BoolFlag)
+		}
+	})
+
+	t.Run("Look up 64-bit float value", func(t *testing.T) {
+		if o.Flags.F64Flag != 1.23 {
+			t.Errorf("Unexpected float64 value %#v", o.Flags.F64Flag)
+		}
+	})
+
+	t.Run("Look up 32-bit integer value", func(t *testing.T) {
+		if o.Flags.IntFlag != -2 {
+			t.Errorf("Unexpected int value %#v", o.Flags.IntFlag)
+		}
+	})
+
+	t.Run("Look up 64-bit integer value", func(t *testing.T) {
+		if o.Flags.I64Flag != 3456 {
+			t.Errorf("Unexpected int64 value %#v", o.Flags.I64Flag)
+		}
+	})
+
+	t.Run("Look up string value", func(t *testing.T) {
+		if o.Flags.StringFlag != "seven" {
+			t.Errorf("Unexpected string value %#v", o.Flags.StringFlag)
+		}
+	})
+
+	t.Run("Look up 32-bit unsigned value", func(t *testing.T) {
+		if o.Flags.UIntFlag != 8 {
+			t.Errorf("Unexpected uint32 value %#v", o.Flags.UIntFlag)
+		}
+	})
+
+	t.Run("Look up 64-bit unsigned value", func(t *testing.T) {
+		if o.Flags.UI64Flag != 90210 {
+			t.Errorf("Unexpected uint64 value %#v", o.Flags.UI64Flag)
+		}
+	})
+}
+
+func TestAccessors(t *testing.T) {
+	var name string = "TestApp"
+	var vers *semver.SemVer
+	var path string
+	var file string = "/../testing/conf.json"
+	var log string = "/../logs/test.log"
+	var err error
+
+	path, err = os.Getwd()
+	if err != nil {
+		t.Errorf("getwd: %s", err.Error())
 	}
 
-	if o.Flags.BoolFlag == true {
-		t.Log("Bool yes.")
-	} else {
-		t.Error("Bool no!")
+	vers, err = semver.MakeSemVer("10020003:derpy")
+	if err != nil {
+		t.Errorf("Could not compose semantic version: %s", err.Error())
 	}
 
-	if o.Flags.F64Flag == 1.23 {
-		t.Log("Float64 yes.")
-	} else {
-		t.Error("Float64 no!")
+	oldArgs := os.Args
+	os.Args = []string{
+		"wibble",
+		"-config", path + file,
+		"-log", path + log,
+		"-debug",
 	}
 
-	if o.Flags.IntFlag == -2 {
-		t.Log("Int yes.")
-	} else {
-		t.Error("Int no!")
-	}
+	acnf := &AccessorConfig{}
+	conf := NewConfig(name, vers, acnf, nil, false)
+	conf.Parse()
+	os.Args = oldArgs
 
-	if o.Flags.I64Flag == 3456 {
-		t.Log("Int64 yes.")
-	} else {
-		t.Error("Int64 no!")
-	}
+	t.Run("IsDebug", func(t *testing.T) {
+		if conf.IsDebug() != true {
+			t.Errorf("Unexpected debug value: %#v", conf.IsDebug())
+		}
+	})
 
-	if o.Flags.StringFlag == "seven" {
-		t.Log("String yes.")
-	} else {
-		t.Error("String no!")
-	}
+	t.Run("Name", func(t *testing.T) {
+		if conf.Name() != name {
+			t.Errorf("Unexpected name value: %#v", conf.Name())
+		}
+	})
 
-	if o.Flags.UIntFlag == 8 {
-		t.Log("UInt yes.")
-	} else {
-		t.Error("UInt no!")
-	}
+	t.Run("Version", func(t *testing.T) {
+		if conf.Version() != vers {
+			t.Errorf("Unexpected version value: %#v", conf.Version())
+		}
+	})
 
-	if o.Flags.UI64Flag == 90210 {
-		t.Log("UInt64 yes.")
-	} else {
-		t.Error("UInt64 no!")
-	}
+	t.Run("ConfFile", func(t *testing.T) {
+		if conf.ConfFile() != path+file {
+			t.Errorf("Unexpected config file value: %#v", conf.ConfFile())
+		}
+	})
+
+	t.Run("LogFile", func(t *testing.T) {
+		if conf.LogFile() != path+log {
+			t.Errorf("Unexpected log file value: %#v", conf.LogFile())
+		}
+	})
 }
 
 /* config_test.go ends here. */

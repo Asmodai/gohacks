@@ -48,8 +48,8 @@ type OnSignalFn func(*Application) // Signal callback function.
 type MainLoopFn func(*Application) // Main loop callback function.
 
 type Application struct {
-	config    *Config        // App object configuration.
-	appconfig *config.Config // User's app configuration.
+	config    *Config       // App object configuration.
+	appconfig config.Config // User's app configuration.
 
 	OnStart  OnSignalFn // Function called on app startup.
 	OnExit   OnSignalFn // Function called on app exit.
@@ -148,7 +148,7 @@ func (app *Application) Logger() logger.ILogger {
 	return app.config.Logger
 }
 
-func (app *Application) Configuration() *config.Config {
+func (app *Application) Configuration() config.Config {
 	return app.appconfig
 }
 

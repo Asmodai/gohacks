@@ -47,7 +47,7 @@ func (app *Application) Commit() string
 #### func (*Application) Configuration
 
 ```go
-func (app *Application) Configuration() *config.Config
+func (app *Application) Configuration() config.Config
 ```
 
 #### func (*Application) Context
