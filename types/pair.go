@@ -39,12 +39,10 @@ Pair structure.
 
 This is a cheap implementation of a pair (aka two-value tuple).
 
-I wish generics were a thing.
-
 */
 type Pair struct {
-	First  interface{}
-	Second interface{}
+	First  any
+	Second any
 }
 
 // Create a new empty pair.
@@ -56,7 +54,7 @@ func NewEmptyPair() *Pair {
 }
 
 // Create a new pair.
-func NewPair(first interface{}, second interface{}) *Pair {
+func NewPair(first any, second any) *Pair {
 	return &Pair{
 		First:  first,
 		Second: second,
@@ -65,7 +63,7 @@ func NewPair(first interface{}, second interface{}) *Pair {
 
 // Return a string representation of the pair.
 func (p *Pair) String() string {
-	return fmt.Sprintf("%v : %v", p.First, p.Second)
+	return fmt.Sprintf("(%#v %#v)", p.First, p.Second)
 }
 
 /* pair.go ends here. */

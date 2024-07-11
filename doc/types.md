@@ -209,16 +209,14 @@ Put an element into the mailbox.
 
 ```go
 type Pair struct {
-	First  interface{}
-	Second interface{}
+	First  any
+	Second any
 }
 ```
 
 Pair structure.
 
 This is a cheap implementation of a pair (aka two-value tuple).
-
-I wish generics were a thing.
 
 #### func  NewEmptyPair
 
@@ -230,7 +228,7 @@ Create a new empty pair.
 #### func  NewPair
 
 ```go
-func NewPair(first interface{}, second interface{}) *Pair
+func NewPair(first any, second any) *Pair
 ```
 Create a new pair.
 

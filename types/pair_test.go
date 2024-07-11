@@ -34,39 +34,39 @@ import (
 )
 
 func TestPairType(t *testing.T) {
-	var fail bool = false
-
 	car := "The Car"
 	cdr := 42
 
-	p1 := NewEmptyPair()
-	p2 := NewPair(car, nil)
-	p3 := NewPair(car, cdr)
+	t.Run("NewEmptyPair", func(t *testing.T) {
+		pair := NewEmptyPair()
 
-	if p1.First == nil && p1.Second == nil {
-		t.Log("`NewEmptyPair` works.")
-	} else {
-		t.Error("`NewEmptyPair` does not work.")
-		fail = true
-	}
+		if pair.First != nil || pair.Second != nil {
+			t.Errorf("Unexpected pair contents: %v", pair)
+		}
+	})
 
-	if p2.First == car && p2.Second == nil {
-		t.Log("`NewPair(value, nil)` works.")
-	} else {
-		t.Error("`NewPair(value, nil)` does not work.")
-		fail = true
-	}
+	t.Run("NewPair(value, nil)", func(t *testing.T) {
+		pair := NewPair(car, nil)
 
-	if p3.First == car && p3.Second == cdr {
-		t.Log("`NewPair(value, value)` works.")
-	} else {
-		t.Error("`NewPair(value, value)` does not work.")
-		fail = true
-	}
+		if pair.First != car || pair.Second != nil {
+			t.Errorf("Unexpected pair contents: %v", pair)
+		}
+	})
 
-	if fail {
-		t.Error("Test(s) failed.")
-	}
+	t.Run("NewPair(value, value)", func(t *testing.T) {
+		pair := NewPair(car, cdr)
+		if pair.First != car || pair.Second != cdr {
+			t.Errorf("Unexpected pair contents: %v", pair)
+		}
+	})
+
+	t.Run("String", func(t *testing.T) {
+		pair := NewPair(car, cdr)
+
+		if pair.String() != `("The Car" 42)` {
+			t.Errorf("Unexpected string representation: %s", pair.String())
+		}
+	})
 }
 
 /* pair_test.go ends here. */
