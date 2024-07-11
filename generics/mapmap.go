@@ -1,7 +1,7 @@
 /*
- * any.go --- Implementation of the `Any` array map function.
+ * mapmap.go --- Map mapping.
  *
- * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+ * Copyright (c) 2024 Paul Ward <asmodai@gmail.com>
  *
  * Author:     Paul Ward <asmodai@gmail.com>
  * Maintainer: Paul Ward <asmodai@gmail.com>
@@ -27,18 +27,21 @@
  * SOFTWARE.
  */
 
-package utils
+package generics
 
-// Run predicate `fn` on all elems of `vs` and return true if any
-// elems of `vs` match the predicate.
-func Any[T Numeric](vs []T, fn func(T) bool) bool {
-	for _, v := range vs {
-		if fn(v) {
-			return true
+// Apply a function on all key/value pairs in a map and return a new map of
+// key/value pairs containing all elements for which the provided function
+// returns `true`.
+func MapMap[K comparable, V any](m map[K]V, fn func(K, V) bool) map[K]V {
+	res := map[K]V{}
+
+	for key, val := range m {
+		if fn(key, val) {
+			res[key] = val
 		}
 	}
 
-	return false
+	return res
 }
 
-/* any.go ends here. */
+/* mapmap.go ends here. */

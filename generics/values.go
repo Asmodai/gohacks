@@ -27,7 +27,7 @@
  * SOFTWARE.
  */
 
-package utils
+package generics
 
 import (
 	"math"
@@ -44,30 +44,57 @@ func HasFraction(num float64) bool {
 	return true
 }
 
+// Coerce a numeric to an integer value of appropriate signage and size.
+func CoerceInt[N Numeric](val N) any {
+	if val < 0 {
+		// Must be signed.
+		switch {
+		case int64(val) < math.MinInt32:
+			return int64(val)
+		case int64(val) < math.MinInt16:
+			return int32(val)
+		case int64(val) < math.MinInt8:
+			return int16(val)
+		default:
+			return int8(val)
+		}
+	}
+
+	// Can be unsigned.
+	switch {
+	case uint64(val) < math.MaxUint8:
+		return uint8(val)
+	case uint64(val) < math.MaxUint16:
+		return uint16(val)
+	case uint64(val) < math.MaxUint32:
+		return uint32(val)
+	default:
+		return uint64(val)
+	}
+}
+
 // If the given thing does not have a fraction, convert it to an int.
-func Number[V Numeric](val V) interface{} {
+func Number[V Numeric](val V) any {
 	if HasFraction(float64(val)) {
 		return val
 	}
 
-	return int64(val)
+	return CoerceInt(val)
 }
 
-// Return the value of an interface.
-func ValueOf(thing interface{}) interface{} {
-	/*
-	 * This pretty much only exists because, as far as Go's JSON parser is
-	 * concerned, all numbers are floats.
-	 *
-	 * This will check if the thing passed to it is `float64`.  If it is, then
-	 * the float will be passed off to `Number`, and converted to an int if
-	 * there is no fraction.
-	 *
-	 * This could be used for other things too, I guess.
-	 */
-
+// Attempt to ascertain the numeric value (if any) for a given thing.
+//
+// If the type of `thing` is a floating-point number, then the value will be
+// converted via `Number` to either an explicit float or to an integer type if
+// there is no fraction.
+//
+// If the type of `thing` is any other type, then it will be returned with no
+// conversion.
+func ValueOf(thing any) any {
 	//nolint:gosimple
 	switch thing.(type) {
+	case float32:
+		return Number(thing.(float32))
 	case float64:
 		return Number(thing.(float64))
 	}

@@ -1,5 +1,5 @@
 /*
- * all.go --- Implementation of an `All` mapping function.
+ * types.go --- Type definitions.
  *
  * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
  *
@@ -27,18 +27,13 @@
  * SOFTWARE.
  */
 
-package utils
+package generics
 
-// Run predicate `fn` on all elems of `vs` and return true if all
-// elems of `vs` match the predicate.
-func All[T Numeric](vs []T, fn func(T) bool) bool {
-	for _, v := range vs {
-		if !fn(v) {
-			return false
-		}
-	}
-
-	return true
+// Generic "numeric" type constraint.
+type Numeric interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
+		~float32 | ~float64
 }
 
-/* all.go ends here. */
+/* types.go ends here. */

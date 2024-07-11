@@ -1,5 +1,5 @@
 /*
- * all_test.go --- `All` tests.
+ * all.go --- Implementation of an `All` mapping function.
  *
  * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
  *
@@ -27,61 +27,18 @@
  * SOFTWARE.
  */
 
-package utils
+package generics
 
-import (
-	"math"
-	"testing"
-)
-
-func TestAllInt(t *testing.T) {
-	goodArr := []int{2, 4, 6, 8, 10}
-	badArr := []int{2, 3, 6, 8, 10}
-
-	t.Run("Returns true for good array", func(t *testing.T) {
-		res := All(goodArr, func(elt int) bool {
-			return elt%2 == 0
-		})
-
-		if !res {
-			t.Error("Unexpected result!")
+// Run predicate `fn` on all elems of `vs` and return true if all
+// elems of `vs` match the predicate.
+func All[T any](vs []T, fn func(T) bool) bool {
+	for _, v := range vs {
+		if !fn(v) {
+			return false
 		}
-	})
+	}
 
-	t.Run("Returns false for bad array", func(t *testing.T) {
-		res := All(badArr, func(elt int) bool {
-			return elt%2 == 0
-		})
-
-		if res {
-			t.Error("Unexpected result!")
-		}
-	})
+	return true
 }
 
-func TestAllFloat(t *testing.T) {
-	goodArr := []float64{2.0, 4.0, 6.0, 8.0, 10.0}
-	badArr := []float64{2.0, 3.0, 6.0, 8.0, 10.0}
-
-	t.Run("Returns true for good array", func(t *testing.T) {
-		res := All(goodArr, func(elt float64) bool {
-			return math.Mod(elt, 2) == 0
-		})
-
-		if !res {
-			t.Error("Unexpected result!")
-		}
-	})
-
-	t.Run("Returns false for bad array", func(t *testing.T) {
-		res := All(badArr, func(elt float64) bool {
-			return math.Mod(elt, 2) == 0
-		})
-
-		if res {
-			t.Error("Unexpected result!")
-		}
-	})
-}
-
-/* all_test.go ends here. */
+/* all.go ends here. */

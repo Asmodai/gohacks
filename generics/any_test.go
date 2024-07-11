@@ -27,12 +27,37 @@
  * SOFTWARE.
  */
 
-package utils
+package generics
 
 import (
 	"math"
 	"testing"
 )
+
+func TestAnyString(t *testing.T) {
+	goodArr := []string{"yes", "ja", "yes", "yes"}
+	badArr := []string{"yes", "nein", "yes", "yes"}
+
+	t.Run("Returns true for good array", func(t *testing.T) {
+		res := Any(goodArr, func(elt string) bool {
+			return elt == "ja"
+		})
+
+		if !res {
+			t.Error("Unexpected result!")
+		}
+	})
+
+	t.Run("Returns false for bad array", func(t *testing.T) {
+		res := Any(badArr, func(elt string) bool {
+			return elt == "ja"
+		})
+
+		if res {
+			t.Error("Unexpected result!")
+		}
+	})
+}
 
 func TestAnyInt(t *testing.T) {
 	goodArr := []int{1, 2, 5, 7, 9}

@@ -1,5 +1,5 @@
 /*
- * types.go --- Type definitions.
+ * any.go --- Implementation of the `Any` array map function.
  *
  * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
  *
@@ -27,10 +27,18 @@
  * SOFTWARE.
  */
 
-package utils
+package generics
 
-type Numeric interface {
-	~int | ~int64 | ~float64
+// Run predicate `fn` on all elems of `vs` and return true if any
+// elems of `vs` match the predicate.
+func Any[T any](vs []T, fn func(T) bool) bool {
+	for _, v := range vs {
+		if fn(v) {
+			return true
+		}
+	}
+
+	return false
 }
 
-/* types.go ends here. */
+/* any.go ends here. */

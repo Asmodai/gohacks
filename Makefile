@@ -48,6 +48,7 @@ MODULES = apiclient       \
 	  database        \
 	  events          \
 	  exec            \
+	  generics        \
 	  logger          \
 	  math/conversion \
 	  process         \
