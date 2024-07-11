@@ -30,18 +30,17 @@ package utils
 
 const (
 	ElideSuffix string = "..."
+	ElideSuffixLen int = 3
 )
 
-type Elidable string
+func Elide(str string, max int) string {
+	runes := []rune(str)
 
-func (s Elidable) Elide(max int) string {
-	runes := []rune(s)
-
-	if len(s) < max {
-		return string(s)
+	if len(str) < max {
+		return string(str)
 	}
 
-	return string(runes[0:max-3]) + ElideSuffix
+	return string(runes[0:max-ElideSuffixLen]) + ElideSuffix
 }
 
 /* elide.go ends here. */

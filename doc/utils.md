@@ -10,7 +10,8 @@
 
 ```go
 const (
-	ElideSuffix string = "..."
+	ElideSuffix    string = "..."
+	ElideSuffixLen int    = 3
 )
 ```
 
@@ -18,6 +19,12 @@ const (
 const (
 	PadPadding string = " "
 )
+```
+
+#### func  Elide
+
+```go
+func Elide(str string, max int) string
 ```
 
 #### func  FormatDuration
@@ -32,6 +39,12 @@ func FormatDuration(d time.Duration) string
 func GetEnv(key, def string) string
 ```
 
+#### func  Pad
+
+```go
+func Pad(str string, padding int) string
+```
+
 #### func  Pop
 
 ```go
@@ -42,30 +55,4 @@ func Pop(array []string) (string, []string)
 
 ```go
 func Substr(input string, start int, length int) string
-```
-
-#### type Elidable
-
-```go
-type Elidable string
-```
-
-
-#### func (Elidable) Elide
-
-```go
-func (s Elidable) Elide(max int) string
-```
-
-#### type Padable
-
-```go
-type Padable string
-```
-
-
-#### func (Padable) Pad
-
-```go
-func (p Padable) Pad(padding int) string
 ```

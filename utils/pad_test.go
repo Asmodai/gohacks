@@ -31,13 +31,13 @@ package utils
 
 import "testing"
 
-func PadTest(t *testing.T) {
+func TestPad(t *testing.T) {
 	length := 8
 	one := "1234"
 	two := "123456789ABC"
 
 	t.Run("Pads when string is within limit", func(t *testing.T) {
-		res := Padable(one).Pad(length)
+		res := Pad(one, length)
 
 		if res != "1234    " {
 			t.Errorf("Unexpected result '%s'", res)
@@ -45,7 +45,7 @@ func PadTest(t *testing.T) {
 	})
 
 	t.Run("Truncates when string is outside the limit", func(t *testing.T) {
-		res := Elidable(two).Elide(length)
+		res := Pad(two, length)
 
 		if res != "12345678" {
 			t.Errorf("Unexpected result '%s'", res)

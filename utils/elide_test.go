@@ -37,7 +37,7 @@ func ElideTest(t *testing.T) {
 	two := "123456789ABCD"
 
 	t.Run("Does not elide when string is within limit", func(t *testing.T) {
-		res := Elidable(one).Elide(length)
+		res := Elide(one, length)
 
 		if res != "1234" {
 			t.Errorf("Unexpected result '%s'", res)
@@ -45,7 +45,7 @@ func ElideTest(t *testing.T) {
 	})
 
 	t.Run("Elide when string is longer than limit", func(t *testing.T) {
-		res := Elidable(two).Elide(length)
+		res := Elide(two, length)
 
 		if res != "12345..." {
 			t.Errorf("Unexpected result '%s'", res)

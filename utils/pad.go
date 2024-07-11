@@ -33,20 +33,20 @@ const (
 	PadPadding string = " "
 )
 
-type Padable string
+func Pad(str string, padding int) string {
+	length := len(str)
 
-func (p Padable) Pad(padding int) string {
-	if len(p) > padding {
-		return string([]rune(p)[0:padding])
+	if length > padding {
+		return string([]rune(str)[0:padding])
 	}
 
 	var buf string
-	var spaces int = padding - len(p)
+	var spaces int = padding - length
 	for i := 0; i < spaces; i++ {
 		buf += PadPadding
 	}
 
-	return string(p) + buf
+	return string(str) + buf
 }
 
 /* pad.go ends here. */
