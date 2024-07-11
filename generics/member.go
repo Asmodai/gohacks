@@ -1,5 +1,5 @@
 /*
- * member.go --- Member?
+ * member.go --- Member
  *
  * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
  *
@@ -27,14 +27,16 @@
  * SOFTWARE.
  */
 
-package utils
+package generics
 
 import (
 	"golang.org/x/exp/constraints"
 )
 
-func Member[T constraints.Ordered](vs []T, elt T) bool {
-	for _, e := range vs {
+// Returns true if the container specified by `ordered` contains the member
+// specified by `elt`.
+func Member[T constraints.Ordered](ordered []T, elt T) bool {
+	for _, e := range ordered {
 		if e == elt {
 			return true
 		}

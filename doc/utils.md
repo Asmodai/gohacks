@@ -32,12 +32,6 @@ func FormatDuration(d time.Duration) string
 func GetEnv(key, def string) string
 ```
 
-#### func  Member
-
-```go
-func Member[T constraints.Ordered](vs []T, elt T) bool
-```
-
 #### func  Pop
 
 ```go

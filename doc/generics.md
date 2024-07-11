@@ -55,6 +55,14 @@ Apply a function on all key/value pairs in a map and return a new map of
 key/value pairs containing all elements for which the provided function returns
 `true`.
 
+#### func  Member
+
+```go
+func Member[T constraints.Ordered](ordered []T, elt T) bool
+```
+Returns true if the container specified by `ordered` contains the member
+specified by `elt`.
+
 #### func  Number
 
 ```go
