@@ -75,11 +75,11 @@ type Client struct {
 	Client  IHTTPClient
 	Limiter *rate.Limiter
 	Trace   *httptrace.ClientTrace
-	logger  logger.ILogger
+	logger  logger.Logger
 }
 
 // Create a new API client with the given configuration.
-func NewClient(config *Config, logger logger.ILogger) *Client {
+func NewClient(config *Config, logger logger.Logger) *Client {
 	trace := &httptrace.ClientTrace{}
 
 	limiter := rate.NewLimiter(

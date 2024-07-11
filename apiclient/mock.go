@@ -36,12 +36,12 @@ import (
 type MockCallbackFn func(data *Params) ([]byte, int, error)
 
 type MockClient struct {
-	logger logger.ILogger
+	logger logger.Logger
 	GetFn  MockCallbackFn
 	PostFn MockCallbackFn
 }
 
-func NewMockClient(config *Config, lgr logger.ILogger) *MockClient {
+func NewMockClient(config *Config, lgr logger.Logger) *MockClient {
 	return &MockClient{
 		logger: lgr,
 	}

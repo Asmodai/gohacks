@@ -69,7 +69,7 @@ followed.
 #### func  NewClient
 
 ```go
-func NewClient(config *Config, logger logger.ILogger) *Client
+func NewClient(config *Config, logger logger.Logger) *Client
 ```
 Create a new API client with the given configuration.
 
@@ -180,7 +180,7 @@ type MockClient struct {
 #### func  NewMockClient
 
 ```go
-func NewMockClient(config *Config, lgr logger.ILogger) *MockClient
+func NewMockClient(config *Config, lgr logger.Logger) *MockClient
 ```
 
 #### func (*MockClient) Get

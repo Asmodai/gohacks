@@ -50,7 +50,7 @@ type DispatcherProc struct {
 	inst *Dispatcher
 }
 
-func NewDispatcherProc(lgr logger.ILogger, config *Config) *DispatcherProc {
+func NewDispatcherProc(lgr logger.Logger, config *Config) *DispatcherProc {
 	return &DispatcherProc{
 		inst: NewDispatcher(lgr, config),
 	}
@@ -80,7 +80,7 @@ func (p *DispatcherProc) stop(state **process.State) {
 	p.inst.Stop()
 }
 
-func Spawn(mgr process.IManager, lgr logger.ILogger, config *Config) (*process.Process, error) {
+func Spawn(mgr process.IManager, lgr logger.Logger, config *Config) (*process.Process, error) {
 	name := "Dispatcher"
 
 	if mgr == nil {

@@ -45,14 +45,14 @@ var (
 type Manager struct {
 	path   string
 	args   Args
-	logger logger.ILogger
+	logger logger.Logger
 	procs  []*goexec.Cmd
 	number int
 	base   int
 	ctx    context.Context
 }
 
-func NewManager(lgr logger.ILogger, count, base int) *Manager {
+func NewManager(lgr logger.Logger, count, base int) *Manager {
 	return &Manager{
 		path:   "",
 		args:   Args{base: base},

@@ -47,10 +47,10 @@ type Manager struct {
 
 	conf     *Config
 	listener net.Listener
-	logger   logger.ILogger
+	logger   logger.Logger
 }
 
-func NewManager(cnf *Config, ctx context.Context, lgr logger.ILogger) *Manager {
+func NewManager(cnf *Config, ctx context.Context, lgr logger.Logger) *Manager {
 	return &Manager{
 		ctx:      ctx,
 		started:  false,
@@ -65,7 +65,7 @@ func (m *Manager) SetContext(parent context.Context) {
 	m.ctx = parent
 }
 
-func (m *Manager) SetLogger(lgr logger.ILogger) {
+func (m *Manager) SetLogger(lgr logger.Logger) {
 	m.logger = lgr
 }
 

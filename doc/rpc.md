@@ -17,7 +17,7 @@ func Add(mgr process.IManager, t reflect.Type) (bool, error)
 #### func  Spawn
 
 ```go
-func Spawn(mgr process.IManager, lgr logger.ILogger, ctx context.Context, cnf *Config) (*process.Process, error)
+func Spawn(mgr process.IManager, lgr logger.Logger, ctx context.Context, cnf *Config) (*process.Process, error)
 ```
 
 #### type Client
@@ -31,7 +31,7 @@ type Client struct {
 #### func  NewClient
 
 ```go
-func NewClient(cnf *Config, lgr logger.ILogger) *Client
+func NewClient(cnf *Config, lgr logger.Logger) *Client
 ```
 
 #### func (*Client) Call
@@ -79,7 +79,7 @@ func NewDefaultConfig() *Config
 ```go
 type IManager interface {
 	SetContext(context.Context)
-	SetLogger(logger.ILogger)
+	SetLogger(logger.Logger)
 	Add(reflect.Type) bool
 	Start()
 	Shutdown()
@@ -135,7 +135,7 @@ type Manager struct {
 #### func  NewManager
 
 ```go
-func NewManager(cnf *Config, ctx context.Context, lgr logger.ILogger) *Manager
+func NewManager(cnf *Config, ctx context.Context, lgr logger.Logger) *Manager
 ```
 
 #### func (*Manager) Add
@@ -153,7 +153,7 @@ func (m *Manager) SetContext(parent context.Context)
 #### func (*Manager) SetLogger
 
 ```go
-func (m *Manager) SetLogger(lgr logger.ILogger)
+func (m *Manager) SetLogger(lgr logger.Logger)
 ```
 
 #### func (*Manager) Shutdown
@@ -180,7 +180,7 @@ type ManagerProc struct {
 #### func  NewManagerProc
 
 ```go
-func NewManagerProc(lgr logger.ILogger, ctx context.Context, config *Config) *ManagerProc
+func NewManagerProc(lgr logger.Logger, ctx context.Context, config *Config) *ManagerProc
 ```
 
 #### func (*ManagerProc) Action

@@ -32,6 +32,7 @@ package apiserver
 import (
 	"github.com/Asmodai/gohacks/logger"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/mock/gomock"
 
 	"context"
 	"crypto/tls"
@@ -76,13 +77,15 @@ func (ms *MockServer) Shutdown(ctx context.Context) error {
 func (ms *MockServer) SetTLSConfig(_ *tls.Config) {
 }
 
-func TestShit(t *testing.T) {
+func TestDispatch(t *testing.T) {
+	mocked := gomock.NewController(t)
+	defer mocked.Finish()
+
 	gin.SetMode(gin.ReleaseMode)
 
 	srv := &MockServer{}
-
-	lgr := logger.NewMockLogger("")
-	lgr.Test = t
+	lgr := logger.NewMockLogger(mocked)
+	lgr.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
 	inst := NewDispatcher(
 		lgr,
@@ -104,64 +107,93 @@ func TestShit(t *testing.T) {
 	})
 
 	t.Run("Errors when startup fails", func(t *testing.T) {
+		errmsg := "Forced startup failure"
+
 		inst.config.UseTLS = false
 		srv.SDFn = nil
 		srv.LSTLSFn = nil
 		srv.LSFn = func() error {
-			return fmt.Errorf("Synthetic error")
+			return fmt.Errorf(errmsg)
 		}
+
+		lgr.EXPECT().
+			Fatal("listen() failed.", gomock.Any()).
+			Do(func(msg string, rest ...any) {
+				got := fmt.Sprintf("%s %v", msg, rest)
+				want := fmt.Sprintf("listen() failed. [err %s]", errmsg)
+
+				if got != want {
+					t.Errorf("Unexpected error: %s", got)
+				}
+			})
 
 		inst.Start()
 		time.Sleep(2 * time.Second)
 		inst.Stop()
-
-		if lgr.LastFatal != "FATAL: listen() failed.  [err Synthetic error]" {
-			t.Errorf("No, '%v'", lgr.LastFatal)
-		}
 	})
 
 	t.Run("Errors with invalid TLS config", func(t *testing.T) {
+		errmsg := "Forced TLS failure"
+
 		inst.config.UseTLS = true
 		srv.SDFn = nil
 		srv.LSFn = nil
 		srv.LSTLSFn = func(_, _ string) error {
-			return fmt.Errorf("Synthetic error")
+			return fmt.Errorf(errmsg)
 		}
+
+		lgr.EXPECT().
+			Fatal(gomock.Any(), gomock.Any()).
+			Do(func(msg string, rest ...any) {
+				got := fmt.Sprintf("%s %v", msg, rest)
+				want := fmt.Sprintf("listen() failed. [err %s]", errmsg)
+
+				if got != want {
+					t.Errorf("Unexpected error: %s", got)
+				}
+			})
 
 		inst.Start()
 		time.Sleep(2 * time.Second)
 		inst.Stop()
-
-		if lgr.LastFatal != "FATAL: listen() failed.  [err Synthetic error]" {
-			t.Errorf("No, '%v'", lgr.LastFatal)
-		}
 	})
 
 	t.Run("Errors when shutdown fails", func(t *testing.T) {
+		errmsg := "Forced shutdown failure"
+
 		inst.config.UseTLS = false
 		srv.LSFn = nil
 		srv.LSTLSFn = nil
 		srv.SDFn = func(_ context.Context) error {
-			return fmt.Errorf("OH NO")
+			return fmt.Errorf(errmsg)
 		}
+
+		lgr.EXPECT().
+			Fatal(gomock.Any(), gomock.Any()).
+			Do(func(msg string, rest ...any) {
+				got := fmt.Sprintf("%s %v", msg, rest)
+				want := fmt.Sprintf("API dispatcher server shutdown failure. [err %s]", errmsg)
+
+				if got != want {
+					t.Errorf("Unexpected error: %s", got)
+				}
+			})
 
 		inst.Start()
 		time.Sleep(1 * time.Second)
 		inst.Stop()
-
-		if lgr.LastFatal != "FATAL: API dispatcher server shutdown failure.  [err OH NO]" {
-			t.Errorf("No, '%v'", lgr.LastFatal)
-		}
 	})
 }
 
 func TestLogWriter(t *testing.T) {
+	mocked := gomock.NewController(t)
+	defer mocked.Finish()
+
 	gin.SetMode(gin.ReleaseMode)
 
 	srv := &MockServer{}
-
-	lgr := logger.NewMockLogger("")
-	lgr.Test = t
+	lgr := logger.NewMockLogger(mocked)
+	lgr.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
 	inst := NewDispatcher(
 		lgr,
@@ -175,15 +207,10 @@ func TestLogWriter(t *testing.T) {
 	inst.srv = srv
 
 	t.Run("Can open valid files", func(t *testing.T) {
-		lgr.LastFatal = ""
 		inst.config.LogFile = "/dev/null"
 
 		f := inst.logWriter()
 		time.Sleep(1 * time.Second)
-
-		if lgr.LastFatal != "" {
-			t.Errorf("No, '%v'", lgr.LastFatal)
-		}
 
 		if f == nil {
 			t.Error("No, io.Writer was not returned")
@@ -195,25 +222,30 @@ func TestLogWriter(t *testing.T) {
 	})
 
 	t.Run("Errors with invalid files", func(t *testing.T) {
-		lgr.LastFatal = ""
+		lgr.EXPECT().
+			Fatal(gomock.Any(), gomock.Any()).
+			Do(func(msg string, rest ...any) {
+				got := fmt.Sprintf("%s %v", msg, rest)
+
+				switch got {
+				case "Could not open file for writing. [file /NOPE err open /NOPE: permission denied]":
+					// The root filesystem is not read-only (macOS), but cannot open /NOPE for writing.
+					break
+
+				case "Could not open file for writing. [file /NOPE err open /NOPE: read-only file system]":
+					// The root file system is read-only (macOS)
+					break
+
+				default:
+					t.Errorf("Unexpected error: %s", got)
+				}
+			}).
+			AnyTimes()
+
 		inst.config.LogFile = "/NOPE"
 
 		f := inst.logWriter()
 		time.Sleep(1 * time.Second)
-
-		// Need to make sure we handle the little snowflake called Apple.
-		switch lgr.LastFatal {
-		case "FATAL: Could not open file for writing.  [file /NOPE err open /NOPE: permission denied]":
-			// The root filesystem is not read-only (macOS), but cannot open /NOPE for writing.
-			break
-
-		case "FATAL: Could not open file for writing.  [file /NOPE err open /NOPE: read-only file system]":
-			// The root file system is read-only (macOS)
-			break
-
-		default:
-			t.Errorf("No, '%v'", lgr.LastFatal)
-		}
 
 		if f == nil {
 			t.Error("No, io.Writer was not returned")
@@ -226,12 +258,14 @@ func TestLogWriter(t *testing.T) {
 }
 
 func TestFormatter(t *testing.T) {
+	mocked := gomock.NewController(t)
+	defer mocked.Finish()
+
 	gin.SetMode(gin.ReleaseMode)
 
 	srv := &MockServer{}
-
-	lgr := logger.NewMockLogger("")
-	lgr.Test = t
+	lgr := logger.NewMockLogger(mocked)
+	lgr.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
 	inst := NewDispatcher(
 		lgr,

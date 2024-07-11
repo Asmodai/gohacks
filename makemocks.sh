@@ -39,48 +39,45 @@
 test -d "mocks" && rm -rf "mocks"
 
 ROOT=$(pwd)
-FILES=$(find . -iname "i*.go" | grep -v "/vendor/")
-
+FILES=$(find . -iname "*.go" | grep -v "/vendor/")
 MOCK_PATH="mocks"
 
 for file in ${FILES}
 do
-    # Do we define any interfaces?
-    egrep -e "type\s\w.+\sinterface\s{" $file >/dev/null 2>&1
-    if [ $? -eq 1 ]
-    then
-        # No, move on to next file.
-        continue
-    fi
+  # Build mocks from the file?
+  grep "mock:yes" $file >/dev/null 2>&1
+  if [ $? -eq 1 ]
+  then
+    # Nope.
+    continue
+  fi
 
-    fname=$(basename ${file})
-    pname=$(basename $(dirname ${file}))
-    output="${ROOT}/${MOCK_PATH}/${pname}/${fname}"
+  fname=$(basename ${file})
+  pname=$(basename $(dirname ${file}))
+  output="${pname}/$(echo ${fname} | cut -d. -f1)_mock.go"
 
-    # Interfaces defined, let's run mockgen
-    echo "Processing ${fname} (${pname}) => ${output}"
+  echo "Processing ${pname}/${fname} => ${output}"
 
-    mockgen                             \
-        -package="${pname}" \
-        -source=${file}                 \
-        -destination="${output}"
-    case $? in
-        0)
-          echo "hacking ${output}"
-            sed                                           \
-                -i ''                                     \
-                -e "2s/^//p; 2s/^.*/\/\/ +build testing/" \
-                "${output}"
-            ;;
-        127)
-            echo "mockgen not installed."
-            exit 1
-            ;;
-        *)
-            echo "mockgen failed, exit code $?"
-            exit $?
-            ;;
-    esac
+  mockgen               \
+    -package="${pname}" \
+    -source="${file}"   \
+    -destination="${output}"
+  case $? in
+    0)
+      sed                                         \
+        -i ''                                     \
+        -e "2s/^//p; 2s/^.*/\/\/ +build testing/" \
+        "${output}" 2>/dev/null
+      ;;
+    127)
+      echo "mockgen not installed."
+      exit 1
+      ;;
+    *)
+      echo "mockgen failed, exit code $?"
+      exit $?
+      ;;
+  esac
 done
 
 # makemocks.sh ends here.

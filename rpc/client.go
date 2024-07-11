@@ -39,10 +39,10 @@ import (
 type Client struct {
 	conf   *Config
 	client *gorpc.Client
-	logger logger.ILogger
+	logger logger.Logger
 }
 
-func NewClient(cnf *Config, lgr logger.ILogger) *Client {
+func NewClient(cnf *Config, lgr logger.Logger) *Client {
 	return &Client{
 		conf:   cnf,
 		client: nil,

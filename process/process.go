@@ -105,7 +105,7 @@ type Process struct {
 	Running  bool          // Is the process running?
 	Interval time.Duration // `RunEvery` time interval.
 
-	logger logger.ILogger
+	logger logger.Logger
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -159,7 +159,7 @@ func NewProcess(config *Config) *Process {
 }
 
 // Set the process's logger.
-func (p *Process) SetLogger(lgr logger.ILogger) {
+func (p *Process) SetLogger(lgr logger.Logger) {
 	p.logger = lgr
 }
 

@@ -80,7 +80,7 @@ Is the application running?
 #### func (*Application) Logger
 
 ```go
-func (app *Application) Logger() logger.ILogger
+func (app *Application) Logger() logger.Logger
 ```
 
 #### func (*Application) Name
@@ -177,7 +177,7 @@ func (app *Application) Version() *semver.SemVer
 type Config struct {
 	Name           string
 	Version        *semver.SemVer
-	Logger         logger.ILogger
+	Logger         logger.Logger
 	ProcessManager process.IManager
 	AppConfig      any
 	Validators     config.ValidatorsMap

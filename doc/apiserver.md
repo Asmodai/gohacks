@@ -29,7 +29,7 @@ func SetDebugMode(debug bool)
 #### func  Spawn
 
 ```go
-func Spawn(mgr process.IManager, lgr logger.ILogger, config *Config) (*process.Process, error)
+func Spawn(mgr process.IManager, lgr logger.Logger, config *Config) (*process.Process, error)
 ```
 
 #### type Config
@@ -86,7 +86,7 @@ func NewDefaultDispatcher() *Dispatcher
 #### func  NewDispatcher
 
 ```go
-func NewDispatcher(lgr logger.ILogger, config *Config) *Dispatcher
+func NewDispatcher(lgr logger.Logger, config *Config) *Dispatcher
 ```
 
 #### func (*Dispatcher) GetRouter
@@ -119,7 +119,7 @@ type DispatcherProc struct {
 #### func  NewDispatcherProc
 
 ```go
-func NewDispatcherProc(lgr logger.ILogger, config *Config) *DispatcherProc
+func NewDispatcherProc(lgr logger.Logger, config *Config) *DispatcherProc
 ```
 
 #### func (*DispatcherProc) Action

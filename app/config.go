@@ -39,7 +39,7 @@ import (
 type Config struct {
 	Name           string
 	Version        *semver.SemVer
-	Logger         logger.ILogger
+	Logger         logger.Logger
 	ProcessManager process.IManager
 	AppConfig      any
 	Validators     config.ValidatorsMap

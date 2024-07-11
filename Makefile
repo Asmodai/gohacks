@@ -75,6 +75,7 @@ tidy:
 
 tooling:
 	@go install github.com/google/go-licenses@latest
+	@go install go.uber.org/mock/mockgen@latest
 	@go get github.com/go-critic/go-critic@latest
 
 listdeps:
@@ -94,7 +95,7 @@ build:
 
 test: deps
 	@echo Running tests
-	@go test $$(go list ./...) -coverprofile=tests.out
+	@go test $$(go list ./...) -coverprofile=tests.out --tags testing
 	@go tool cover -html=tests.out -o coverage.html
 
 run:

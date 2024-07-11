@@ -71,14 +71,14 @@ MockValueMapMockRecorder is the mock recorder for MockValueMap.
 #### func (*MockValueMapMockRecorder) Get
 
 ```go
-func (mr *MockValueMapMockRecorder) Get(arg0 interface{}) *gomock.Call
+func (mr *MockValueMapMockRecorder) Get(arg0 any) *gomock.Call
 ```
 Get indicates an expected call of Get.
 
 #### func (*MockValueMapMockRecorder) Set
 
 ```go
-func (mr *MockValueMapMockRecorder) Set(key, value interface{}) *gomock.Call
+func (mr *MockValueMapMockRecorder) Set(key, value any) *gomock.Call
 ```
 Set indicates an expected call of Set.
 

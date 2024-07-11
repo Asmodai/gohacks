@@ -8,160 +8,35 @@
 
 ## Usage
 
-#### type DefaultLogger
-
-```go
-type DefaultLogger struct {
-}
-```
-
-Default logging structure.
-
-This is a simple implementation of the `ILogger` interface that simply redirects
-messages to `log.Printf`.
-
-It is used in the same way as the main `Logger` implementation.
-
-#### func  NewDefaultLogger
-
-```go
-func NewDefaultLogger() *DefaultLogger
-```
-Create a new default logger.
-
-#### func (*DefaultLogger) Debug
-
-```go
-func (l *DefaultLogger) Debug(msg string, rest ...interface{})
-```
-Write a debug message to the log.
-
-#### func (*DefaultLogger) Debugf
-
-```go
-func (l *DefaultLogger) Debugf(format string, args ...interface{})
-```
-Write a debug message to the log.
-
-#### func (*DefaultLogger) Error
-
-```go
-func (l *DefaultLogger) Error(msg string, rest ...interface{})
-```
-Write an error message to the log.
-
-#### func (*DefaultLogger) Errorf
-
-```go
-func (l *DefaultLogger) Errorf(msg string, args ...interface{})
-```
-Write an error message to the log and then exit.
-
-#### func (*DefaultLogger) Fatal
-
-```go
-func (l *DefaultLogger) Fatal(msg string, rest ...interface{})
-```
-Write a fatal message to the log and then exit.
-
-#### func (*DefaultLogger) Fatalf
-
-```go
-func (l *DefaultLogger) Fatalf(msg string, args ...interface{})
-```
-Write a fatal message to the log and then exit.
-
-#### func (*DefaultLogger) Info
-
-```go
-func (l *DefaultLogger) Info(msg string, rest ...interface{})
-```
-Write an information message to the log.
-
-#### func (*DefaultLogger) Infof
-
-```go
-func (l *DefaultLogger) Infof(msg string, args ...interface{})
-```
-Write an information message to the log.
-
-#### func (*DefaultLogger) Panicf
-
-```go
-func (l *DefaultLogger) Panicf(msg string, args ...interface{})
-```
-Write a fatal message to the log and then exit.
-
-#### func (*DefaultLogger) SetDebug
-
-```go
-func (l *DefaultLogger) SetDebug(junk bool)
-```
-Set debug mode.
-
-#### func (*DefaultLogger) SetLogFile
-
-```go
-func (l *DefaultLogger) SetLogFile(junk string)
-```
-Set the log file to use.
-
-#### func (*DefaultLogger) Warn
-
-```go
-func (l *DefaultLogger) Warn(msg string, rest ...interface{})
-```
-Write a warning message to the log.
-
-#### func (*DefaultLogger) Warnf
-
-```go
-func (l *DefaultLogger) Warnf(msg string, args ...interface{})
-```
-Write a warning message to the log.
-
-#### func (*DefaultLogger) WithFields
-
-```go
-func (l *DefaultLogger) WithFields(_ Fields) ILogger
-```
-
 #### type Fields
 
 ```go
-type Fields map[string]interface{}
-```
-
-
-#### type ILogger
-
-```go
-type ILogger interface {
-	SetDebug(bool)
-	SetLogFile(string)
-
-	Debug(string, ...interface{})
-	Error(string, ...interface{})
-	Warn(string, ...interface{})
-	Info(string, ...interface{})
-	Fatal(string, ...interface{})
-
-	Debugf(string, ...interface{})
-	Warnf(string, ...interface{})
-	Infof(string, ...interface{})
-	Fatalf(string, ...interface{})
-	Errorf(string, ...interface{})
-	Panicf(string, ...interface{})
-
-	WithFields(Fields) ILogger
-}
+type Fields map[string]any
 ```
 
 
 #### type Logger
 
 ```go
-type Logger struct {
+type Logger interface {
+	SetDebug(bool)
+	SetLogFile(string)
+
+	Debug(string, ...any)
+	Error(string, ...any)
+	Warn(string, ...any)
+	Info(string, ...any)
+	Fatal(string, ...any)
+	Panic(string, ...any)
+
+	Debugf(string, ...any)
+	Errorf(string, ...any)
+	Warnf(string, ...any)
+	Infof(string, ...any)
+	Fatalf(string, ...any)
+	Panicf(string, ...any)
+
+	WithFields(Fields) Logger
 }
 ```
 
@@ -190,233 +65,265 @@ To use,
 If an empty string is passed to `NewLogger`, then the log facility will display
 messages on standard output.
 
-#### func  NewLogger
+#### func  NewDefaultLogger
 
 ```go
-func NewLogger() *Logger
+func NewDefaultLogger() Logger
+```
+Create a new default logger.
+
+#### func  NewZapLogger
+
+```go
+func NewZapLogger() Logger
 ```
 Create a new logger.
 
-#### func  NewLoggerWithFile
+#### func  NewZapLoggerWithFile
 
 ```go
-func NewLoggerWithFile(logfile string) *Logger
+func NewZapLoggerWithFile(logfile string) Logger
 ```
 Create a new logger with the given log file.
-
-#### func (*Logger) Debug
-
-```go
-func (l *Logger) Debug(msg string, rest ...interface{})
-```
-Write a debug message to the log.
-
-#### func (*Logger) Debugf
-
-```go
-func (l *Logger) Debugf(format string, args ...interface{})
-```
-Compatibility method.
-
-#### func (*Logger) Error
-
-```go
-func (l *Logger) Error(msg string, rest ...interface{})
-```
-Write an error message to the log.
-
-#### func (*Logger) Errorf
-
-```go
-func (l *Logger) Errorf(format string, args ...interface{})
-```
-Compatibility method.
-
-#### func (*Logger) Fatal
-
-```go
-func (l *Logger) Fatal(msg string, rest ...interface{})
-```
-Write a fatal message to the log and then exit.
-
-#### func (*Logger) Fatalf
-
-```go
-func (l *Logger) Fatalf(format string, args ...interface{})
-```
-Compatibility method.
-
-#### func (*Logger) Info
-
-```go
-func (l *Logger) Info(msg string, rest ...interface{})
-```
-Write an information message to the log.
-
-#### func (*Logger) Infof
-
-```go
-func (l *Logger) Infof(format string, args ...interface{})
-```
-Compatibility method.
-
-#### func (*Logger) Panicf
-
-```go
-func (l *Logger) Panicf(format string, args ...interface{})
-```
-Compatibility method.
-
-#### func (*Logger) SetDebug
-
-```go
-func (l *Logger) SetDebug(flag bool)
-```
-Set debug mode.
-
-Debug mode is a production-friendly runtime mode that will print human-readable
-messages to standard output instead of the defined log file.
-
-#### func (*Logger) SetLogFile
-
-```go
-func (l *Logger) SetLogFile(file string)
-```
-Set the log file to use.
-
-#### func (*Logger) Warn
-
-```go
-func (l *Logger) Warn(msg string, rest ...interface{})
-```
-Write a warning message to the log.
-
-#### func (*Logger) Warnf
-
-```go
-func (l *Logger) Warnf(format string, args ...interface{})
-```
-Compatibility method.
-
-#### func (*Logger) WithFields
-
-```go
-func (l *Logger) WithFields(fields Fields) ILogger
-```
 
 #### type MockLogger
 
 ```go
 type MockLogger struct {
-	Test      *testing.T
-	LastFatal string
 }
 ```
 
-Mock logger for Go testing framework.
-
-To use, be sure to set `Test` to your test's `testing.T` instance.
+MockLogger is a mock of Logger interface.
 
 #### func  NewMockLogger
 
 ```go
-func NewMockLogger(_ string) *MockLogger
+func NewMockLogger(ctrl *gomock.Controller) *MockLogger
 ```
-Create a new mock logger.
+NewMockLogger creates a new mock instance.
 
 #### func (*MockLogger) Debug
 
 ```go
-func (l *MockLogger) Debug(msg string, rest ...interface{})
+func (m *MockLogger) Debug(arg0 string, arg1 ...any)
 ```
-Write a debug message to the log.
+Debug mocks base method.
 
 #### func (*MockLogger) Debugf
 
 ```go
-func (l *MockLogger) Debugf(msg string, rest ...interface{})
+func (m *MockLogger) Debugf(arg0 string, arg1 ...any)
 ```
-Write a debug message to the log.
+Debugf mocks base method.
+
+#### func (*MockLogger) EXPECT
+
+```go
+func (m *MockLogger) EXPECT() *MockLoggerMockRecorder
+```
+EXPECT returns an object that allows the caller to indicate expected use.
 
 #### func (*MockLogger) Error
 
 ```go
-func (l *MockLogger) Error(msg string, rest ...interface{})
+func (m *MockLogger) Error(arg0 string, arg1 ...any)
 ```
-Write an error message to the log.
+Error mocks base method.
 
 #### func (*MockLogger) Errorf
 
 ```go
-func (l *MockLogger) Errorf(msg string, rest ...interface{})
+func (m *MockLogger) Errorf(arg0 string, arg1 ...any)
 ```
-Write a fatal message to the log and then exit.
+Errorf mocks base method.
 
 #### func (*MockLogger) Fatal
 
 ```go
-func (l *MockLogger) Fatal(msg string, rest ...interface{})
+func (m *MockLogger) Fatal(arg0 string, arg1 ...any)
 ```
-Write a fatal message to the log and then exit.
+Fatal mocks base method.
 
 #### func (*MockLogger) Fatalf
 
 ```go
-func (l *MockLogger) Fatalf(msg string, rest ...interface{})
+func (m *MockLogger) Fatalf(arg0 string, arg1 ...any)
 ```
-Write a fatal message to the log and then exit.
+Fatalf mocks base method.
 
 #### func (*MockLogger) Info
 
 ```go
-func (l *MockLogger) Info(msg string, rest ...interface{})
+func (m *MockLogger) Info(arg0 string, arg1 ...any)
 ```
-Write an information message to the log.
+Info mocks base method.
 
 #### func (*MockLogger) Infof
 
 ```go
-func (l *MockLogger) Infof(msg string, rest ...interface{})
+func (m *MockLogger) Infof(arg0 string, arg1 ...any)
 ```
-Write an information message to the log.
+Infof mocks base method.
+
+#### func (*MockLogger) Panic
+
+```go
+func (m *MockLogger) Panic(arg0 string, arg1 ...any)
+```
+Panic mocks base method.
 
 #### func (*MockLogger) Panicf
 
 ```go
-func (l *MockLogger) Panicf(msg string, rest ...interface{})
+func (m *MockLogger) Panicf(arg0 string, arg1 ...any)
 ```
-Write a fatal message to the log and then exit.
+Panicf mocks base method.
 
 #### func (*MockLogger) SetDebug
 
 ```go
-func (l *MockLogger) SetDebug(junk bool)
+func (m *MockLogger) SetDebug(arg0 bool)
 ```
-Set debug mode.
+SetDebug mocks base method.
 
 #### func (*MockLogger) SetLogFile
 
 ```go
-func (l *MockLogger) SetLogFile(junk string)
+func (m *MockLogger) SetLogFile(arg0 string)
 ```
-Set the log file to use.
+SetLogFile mocks base method.
 
 #### func (*MockLogger) Warn
 
 ```go
-func (l *MockLogger) Warn(msg string, rest ...interface{})
+func (m *MockLogger) Warn(arg0 string, arg1 ...any)
 ```
-Write a warning message to the log.
+Warn mocks base method.
 
 #### func (*MockLogger) Warnf
 
 ```go
-func (l *MockLogger) Warnf(msg string, rest ...interface{})
+func (m *MockLogger) Warnf(arg0 string, arg1 ...any)
 ```
-Write a warning message to the log.
+Warnf mocks base method.
 
 #### func (*MockLogger) WithFields
 
 ```go
-func (l *MockLogger) WithFields(_ Fields) ILogger
+func (m *MockLogger) WithFields(arg0 Fields) Logger
 ```
+WithFields mocks base method.
+
+#### type MockLoggerMockRecorder
+
+```go
+type MockLoggerMockRecorder struct {
+}
+```
+
+MockLoggerMockRecorder is the mock recorder for MockLogger.
+
+#### func (*MockLoggerMockRecorder) Debug
+
+```go
+func (mr *MockLoggerMockRecorder) Debug(arg0 any, arg1 ...any) *gomock.Call
+```
+Debug indicates an expected call of Debug.
+
+#### func (*MockLoggerMockRecorder) Debugf
+
+```go
+func (mr *MockLoggerMockRecorder) Debugf(arg0 any, arg1 ...any) *gomock.Call
+```
+Debugf indicates an expected call of Debugf.
+
+#### func (*MockLoggerMockRecorder) Error
+
+```go
+func (mr *MockLoggerMockRecorder) Error(arg0 any, arg1 ...any) *gomock.Call
+```
+Error indicates an expected call of Error.
+
+#### func (*MockLoggerMockRecorder) Errorf
+
+```go
+func (mr *MockLoggerMockRecorder) Errorf(arg0 any, arg1 ...any) *gomock.Call
+```
+Errorf indicates an expected call of Errorf.
+
+#### func (*MockLoggerMockRecorder) Fatal
+
+```go
+func (mr *MockLoggerMockRecorder) Fatal(arg0 any, arg1 ...any) *gomock.Call
+```
+Fatal indicates an expected call of Fatal.
+
+#### func (*MockLoggerMockRecorder) Fatalf
+
+```go
+func (mr *MockLoggerMockRecorder) Fatalf(arg0 any, arg1 ...any) *gomock.Call
+```
+Fatalf indicates an expected call of Fatalf.
+
+#### func (*MockLoggerMockRecorder) Info
+
+```go
+func (mr *MockLoggerMockRecorder) Info(arg0 any, arg1 ...any) *gomock.Call
+```
+Info indicates an expected call of Info.
+
+#### func (*MockLoggerMockRecorder) Infof
+
+```go
+func (mr *MockLoggerMockRecorder) Infof(arg0 any, arg1 ...any) *gomock.Call
+```
+Infof indicates an expected call of Infof.
+
+#### func (*MockLoggerMockRecorder) Panic
+
+```go
+func (mr *MockLoggerMockRecorder) Panic(arg0 any, arg1 ...any) *gomock.Call
+```
+Panic indicates an expected call of Panic.
+
+#### func (*MockLoggerMockRecorder) Panicf
+
+```go
+func (mr *MockLoggerMockRecorder) Panicf(arg0 any, arg1 ...any) *gomock.Call
+```
+Panicf indicates an expected call of Panicf.
+
+#### func (*MockLoggerMockRecorder) SetDebug
+
+```go
+func (mr *MockLoggerMockRecorder) SetDebug(arg0 any) *gomock.Call
+```
+SetDebug indicates an expected call of SetDebug.
+
+#### func (*MockLoggerMockRecorder) SetLogFile
+
+```go
+func (mr *MockLoggerMockRecorder) SetLogFile(arg0 any) *gomock.Call
+```
+SetLogFile indicates an expected call of SetLogFile.
+
+#### func (*MockLoggerMockRecorder) Warn
+
+```go
+func (mr *MockLoggerMockRecorder) Warn(arg0 any, arg1 ...any) *gomock.Call
+```
+Warn indicates an expected call of Warn.
+
+#### func (*MockLoggerMockRecorder) Warnf
+
+```go
+func (mr *MockLoggerMockRecorder) Warnf(arg0 any, arg1 ...any) *gomock.Call
+```
+Warnf indicates an expected call of Warnf.
+
+#### func (*MockLoggerMockRecorder) WithFields
+
+```go
+func (mr *MockLoggerMockRecorder) WithFields(arg0 any) *gomock.Call
+```
+WithFields indicates an expected call of WithFields.

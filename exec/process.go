@@ -49,11 +49,11 @@ const (
 
 type Process struct {
 	manager *Manager
-	logger  logger.ILogger
+	logger  logger.Logger
 	conf    *Config
 }
 
-func NewProcess(lgr logger.ILogger, cnf *Config) *Process {
+func NewProcess(lgr logger.Logger, cnf *Config) *Process {
 	return &Process{
 		manager: NewManager(lgr, cnf.Count, cnf.Base),
 		logger:  lgr,
@@ -106,7 +106,7 @@ func (p *Process) SetContext(val context.Context) {
 	p.manager.SetContext(val)
 }
 
-func Spawn(mgr process.IManager, lgr logger.ILogger, cnf *Config) (*process.Process, error) {
+func Spawn(mgr process.IManager, lgr logger.Logger, cnf *Config) (*process.Process, error) {
 	name := "ExecManager"
 
 	inst, found := mgr.Find(name)

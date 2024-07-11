@@ -7,8 +7,8 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/goccy/go-json v0.10.2
-	github.com/golang/mock v1.6.0
 	github.com/jmoiron/sqlx v1.3.5
+	go.uber.org/mock v0.4.0
 	go.uber.org/zap v1.23.0
 	golang.org/x/exp v0.0.0-20221031165847-c99f073a8326
 	golang.org/x/sync v0.7.0

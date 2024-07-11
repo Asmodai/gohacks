@@ -144,7 +144,7 @@ func (app *Application) ProcessManager() process.IManager {
 	return app.config.ProcessManager
 }
 
-func (app *Application) Logger() logger.ILogger {
+func (app *Application) Logger() logger.Logger {
 	return app.config.Logger
 }
 

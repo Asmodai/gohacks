@@ -83,7 +83,7 @@ func (ps *State) ReceiveBlocking() interface{} {
 	return <-ps.parent.chanToState
 }
 
-func (ps *State) Logger() logger.ILogger {
+func (ps *State) Logger() logger.Logger {
 	return ps.parent.logger
 }
 

@@ -37,7 +37,7 @@ import (
 	"github.com/Asmodai/gohacks/semver"
 )
 
-type StartFn func(context.Context, logger.ILogger) (bool, error)
+type StartFn func(context.Context, logger.Logger) (bool, error)
 
 type Module struct {
 	name    string
@@ -45,7 +45,7 @@ type Module struct {
 	startfn StartFn
 }
 
-func defaultStartFn(_ context.Context, _ logger.ILogger) (bool, error) {
+func defaultStartFn(_ context.Context, _ logger.Logger) (bool, error) {
 	return false, errors.New("Module does not have a 'start' function!")
 }
 
@@ -63,7 +63,7 @@ func (m *Module) StartFn() StartFn        { return m.startfn }
 
 func (m *Module) SetStartFn(fn StartFn) { m.startfn = fn }
 
-func (m *Module) Start(ctx context.Context, lgr logger.ILogger) (bool, error) {
+func (m *Module) Start(ctx context.Context, lgr logger.Logger) (bool, error) {
 	if m.StartFn() == nil {
 		return false, errors.New("Module start function is nil.")
 	}

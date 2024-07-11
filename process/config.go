@@ -35,13 +35,13 @@ import (
 
 // Process configuration structure.
 type Config struct {
-	Name     string         // Pretty name.
-	Interval int            // `RunEvery` time interval.
-	Function CallbackFn     // `Action` callback.
-	OnStart  CallbackFn     // `Start` callback.
-	OnStop   CallbackFn     // `Stop` callback.
-	OnQuery  QueryFn        // `Query` callback.
-	Logger   logger.ILogger // Logger.
+	Name     string        // Pretty name.
+	Interval int           // `RunEvery` time interval.
+	Function CallbackFn    // `Action` callback.
+	OnStart  CallbackFn    // `Start` callback.
+	OnStop   CallbackFn    // `Stop` callback.
+	OnQuery  QueryFn       // `Query` callback.
+	Logger   logger.Logger // Logger.
 }
 
 // Create a default process configuration.

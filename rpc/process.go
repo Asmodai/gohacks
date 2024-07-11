@@ -50,7 +50,7 @@ type ManagerProc struct {
 	inst *Manager
 }
 
-func NewManagerProc(lgr logger.ILogger, ctx context.Context, config *Config) *ManagerProc {
+func NewManagerProc(lgr logger.Logger, ctx context.Context, config *Config) *ManagerProc {
 	return &ManagerProc{
 		inst: NewManager(config, ctx, lgr),
 	}
@@ -85,7 +85,7 @@ func (p *ManagerProc) Action(state **process.State) {
 	p.Unlock()
 }
 
-func Spawn(mgr process.IManager, lgr logger.ILogger, ctx context.Context, cnf *Config) (*process.Process, error) {
+func Spawn(mgr process.IManager, lgr logger.Logger, ctx context.Context, cnf *Config) (*process.Process, error) {
 	name := "RPC Manager"
 
 	if mgr == nil {

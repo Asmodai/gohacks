@@ -44,78 +44,83 @@ messages to `log.Printf`.
 It is used in the same way as the main `Logger` implementation.
 
 */
-type DefaultLogger struct {
+type defaultLogger struct {
 }
 
 // Create a new default logger.
-func NewDefaultLogger() *DefaultLogger {
-	return &DefaultLogger{}
+func NewDefaultLogger() Logger {
+	return &defaultLogger{}
 }
 
 // Set debug mode.
-func (l *DefaultLogger) SetDebug(junk bool) {
+func (l *defaultLogger) SetDebug(_ bool) {
 }
 
 // Set the log file to use.
-func (l *DefaultLogger) SetLogFile(junk string) {
+func (l *defaultLogger) SetLogFile(_ string) {
 }
 
 // Write a debug message to the log.
-func (l *DefaultLogger) Debug(msg string, rest ...interface{}) {
+func (l *defaultLogger) Debug(msg string, rest ...any) {
 	log.Printf("DEBUG: %s  %v", msg, rest)
 }
 
 // Write an error message to the log.
-func (l *DefaultLogger) Error(msg string, rest ...interface{}) {
+func (l *defaultLogger) Error(msg string, rest ...any) {
 	log.Printf("ERROR:  %s  %v", msg, rest)
 }
 
 // Write a warning message to the log.
-func (l *DefaultLogger) Warn(msg string, rest ...interface{}) {
+func (l *defaultLogger) Warn(msg string, rest ...any) {
 	log.Printf("WARN:  %s  %v", msg, rest)
 }
 
 // Write an information message to the log.
-func (l *DefaultLogger) Info(msg string, rest ...interface{}) {
+func (l *defaultLogger) Info(msg string, rest ...any) {
 	log.Printf("INFO:  %s  %v", msg, rest)
 }
 
 // Write a fatal message to the log and then exit.
-func (l *DefaultLogger) Fatal(msg string, rest ...interface{}) {
+func (l *defaultLogger) Fatal(msg string, rest ...any) {
 	log.Fatalf("FATAL: %s  %v", msg, rest)
 }
 
+// Write a Panic message to the log and then exit.
+func (l *defaultLogger) Panic(msg string, rest ...any) {
+	log.Fatalf("PANIC: %s  %v", msg, rest)
+}
+
 // Write a debug message to the log.
-func (l *DefaultLogger) Debugf(format string, args ...interface{}) {
+func (l *defaultLogger) Debugf(format string, args ...any) {
 	log.Printf("DEBUG: %s", fmt.Sprintf(format, args...))
 }
 
+// Write an error message to the log and then exit.
+func (l *defaultLogger) Errorf(msg string, args ...any) {
+	log.Fatalf("ERROR: %s", fmt.Sprintf(msg, args...))
+}
+
 // Write a warning message to the log.
-func (l *DefaultLogger) Warnf(msg string, args ...interface{}) {
+func (l *defaultLogger) Warnf(msg string, args ...any) {
 	log.Printf("WARN:  %s", fmt.Sprintf(msg, args...))
 }
 
 // Write an information message to the log.
-func (l *DefaultLogger) Infof(msg string, args ...interface{}) {
+func (l *defaultLogger) Infof(msg string, args ...any) {
 	log.Printf("INFO:  %s", fmt.Sprintf(msg, args...))
 }
 
 // Write a fatal message to the log and then exit.
-func (l *DefaultLogger) Fatalf(msg string, args ...interface{}) {
+func (l *defaultLogger) Fatalf(msg string, args ...any) {
 	log.Fatalf("FATAL: %s", fmt.Sprintf(msg, args...))
 }
 
-// Write an error message to the log and then exit.
-func (l *DefaultLogger) Errorf(msg string, args ...interface{}) {
-	log.Fatalf("ERROR: %s", fmt.Sprintf(msg, args...))
-}
-
 // Write a fatal message to the log and then exit.
-func (l *DefaultLogger) Panicf(msg string, args ...interface{}) {
+func (l *defaultLogger) Panicf(msg string, args ...any) {
 	log.Fatalf("PANIC: %s", fmt.Sprintf(msg, args...))
 }
 
-func (l *DefaultLogger) WithFields(_ Fields) ILogger {
+func (l *defaultLogger) WithFields(_ Fields) Logger {
 	return NewDefaultLogger()
 }
 

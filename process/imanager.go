@@ -39,8 +39,8 @@ import (
 Process manager interface.
 */
 type IManager interface {
-	SetLogger(logger.ILogger)
-	Logger() logger.ILogger
+	SetLogger(logger.Logger)
+	Logger() logger.Logger
 	SetContext(context.Context)
 	Context() context.Context
 	Create(*Config) *Process

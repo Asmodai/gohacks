@@ -55,13 +55,13 @@ Callback function.
 
 ```go
 type Config struct {
-	Name     string         // Pretty name.
-	Interval int            // `RunEvery` time interval.
-	Function CallbackFn     // `Action` callback.
-	OnStart  CallbackFn     // `Start` callback.
-	OnStop   CallbackFn     // `Stop` callback.
-	OnQuery  QueryFn        // `Query` callback.
-	Logger   logger.ILogger // Logger.
+	Name     string        // Pretty name.
+	Interval int           // `RunEvery` time interval.
+	Function CallbackFn    // `Action` callback.
+	OnStart  CallbackFn    // `Start` callback.
+	OnStop   CallbackFn    // `Stop` callback.
+	OnQuery  QueryFn       // `Query` callback.
+	Logger   logger.Logger // Logger.
 }
 ```
 
@@ -78,8 +78,8 @@ Create a default process configuration.
 
 ```go
 type IManager interface {
-	SetLogger(logger.ILogger)
-	Logger() logger.ILogger
+	SetLogger(logger.Logger)
+	Logger() logger.Logger
 	SetContext(context.Context)
 	Context() context.Context
 	Create(*Config) *Process
@@ -204,7 +204,7 @@ Find and return the given process, or nil if not found.
 #### func (*Manager) Logger
 
 ```go
-func (pm *Manager) Logger() logger.ILogger
+func (pm *Manager) Logger() logger.Logger
 ```
 Return the manager's logger.
 
@@ -235,7 +235,7 @@ Set the process manager's context.
 #### func (*Manager) SetLogger
 
 ```go
-func (pm *Manager) SetLogger(lgr logger.ILogger)
+func (pm *Manager) SetLogger(lgr logger.Logger)
 ```
 Set the process manager's logger.
 
@@ -410,7 +410,7 @@ Set the process's context.
 #### func (*Process) SetLogger
 
 ```go
-func (p *Process) SetLogger(lgr logger.ILogger)
+func (p *Process) SetLogger(lgr logger.Logger)
 ```
 Set the process's logger.
 
@@ -463,7 +463,7 @@ Return the context for the parent process.
 #### func (*State) Logger
 
 ```go
-func (ps *State) Logger() logger.ILogger
+func (ps *State) Logger() logger.Logger
 ```
 
 #### func (*State) Receive

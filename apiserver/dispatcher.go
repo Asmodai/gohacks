@@ -46,10 +46,10 @@ type Dispatcher struct {
 	config *Config
 	srv    IServer
 	router *gin.Engine
-	lgr    logger.ILogger
+	lgr    logger.Logger
 }
 
-func NewDispatcher(lgr logger.ILogger, config *Config) *Dispatcher {
+func NewDispatcher(lgr logger.Logger, config *Config) *Dispatcher {
 	obj := &Dispatcher{
 		config: config,
 		router: gin.New(),

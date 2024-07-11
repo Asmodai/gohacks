@@ -81,7 +81,7 @@ To use,
 */
 type Manager struct {
 	processes []*Process
-	logger    logger.ILogger
+	logger    logger.Logger
 	parent    context.Context
 	ctx       context.Context
 	cancel    context.CancelFunc
@@ -107,12 +107,12 @@ func NewManager() *Manager {
 }
 
 // Set the process manager's logger.
-func (pm *Manager) SetLogger(lgr logger.ILogger) {
+func (pm *Manager) SetLogger(lgr logger.Logger) {
 	pm.logger = lgr
 }
 
 // Return the manager's logger.
-func (pm *Manager) Logger() logger.ILogger {
+func (pm *Manager) Logger() logger.Logger {
 	return pm.logger
 }
 

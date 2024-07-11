@@ -65,7 +65,7 @@ func SetPath(mgr process.IManager, path string) error
 #### func  Spawn
 
 ```go
-func Spawn(mgr process.IManager, lgr logger.ILogger, cnf *Config) (*process.Process, error)
+func Spawn(mgr process.IManager, lgr logger.Logger, cnf *Config) (*process.Process, error)
 ```
 
 #### func  SpawnProcs
@@ -127,7 +127,7 @@ type Manager struct {
 #### func  NewManager
 
 ```go
-func NewManager(lgr logger.ILogger, count, base int) *Manager
+func NewManager(lgr logger.Logger, count, base int) *Manager
 ```
 
 #### func (*Manager) Check
@@ -189,7 +189,7 @@ type Process struct {
 #### func  NewProcess
 
 ```go
-func NewProcess(lgr logger.ILogger, cnf *Config) *Process
+func NewProcess(lgr logger.Logger, cnf *Config) *Process
 ```
 
 #### func (*Process) Action

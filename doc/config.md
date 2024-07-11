@@ -242,7 +242,7 @@ AddUintFlag mocks base method.
 #### func (*MockConfig) AddValidator
 
 ```go
-func (m *MockConfig) AddValidator(name string, fn interface{})
+func (m *MockConfig) AddValidator(name string, fn any)
 ```
 AddValidator mocks base method.
 
@@ -328,56 +328,56 @@ MockConfigMockRecorder is the mock recorder for MockConfig.
 #### func (*MockConfigMockRecorder) AddBoolFlag
 
 ```go
-func (mr *MockConfigMockRecorder) AddBoolFlag(p, name, value, usage interface{}) *gomock.Call
+func (mr *MockConfigMockRecorder) AddBoolFlag(p, name, value, usage any) *gomock.Call
 ```
 AddBoolFlag indicates an expected call of AddBoolFlag.
 
 #### func (*MockConfigMockRecorder) AddFloat64Flag
 
 ```go
-func (mr *MockConfigMockRecorder) AddFloat64Flag(p, name, value, usage interface{}) *gomock.Call
+func (mr *MockConfigMockRecorder) AddFloat64Flag(p, name, value, usage any) *gomock.Call
 ```
 AddFloat64Flag indicates an expected call of AddFloat64Flag.
 
 #### func (*MockConfigMockRecorder) AddInt64Flag
 
 ```go
-func (mr *MockConfigMockRecorder) AddInt64Flag(p, name, value, usage interface{}) *gomock.Call
+func (mr *MockConfigMockRecorder) AddInt64Flag(p, name, value, usage any) *gomock.Call
 ```
 AddInt64Flag indicates an expected call of AddInt64Flag.
 
 #### func (*MockConfigMockRecorder) AddIntFlag
 
 ```go
-func (mr *MockConfigMockRecorder) AddIntFlag(p, name, value, usage interface{}) *gomock.Call
+func (mr *MockConfigMockRecorder) AddIntFlag(p, name, value, usage any) *gomock.Call
 ```
 AddIntFlag indicates an expected call of AddIntFlag.
 
 #### func (*MockConfigMockRecorder) AddStringFlag
 
 ```go
-func (mr *MockConfigMockRecorder) AddStringFlag(p, name, value, usage interface{}) *gomock.Call
+func (mr *MockConfigMockRecorder) AddStringFlag(p, name, value, usage any) *gomock.Call
 ```
 AddStringFlag indicates an expected call of AddStringFlag.
 
 #### func (*MockConfigMockRecorder) AddUint64Flag
 
 ```go
-func (mr *MockConfigMockRecorder) AddUint64Flag(p, name, value, usage interface{}) *gomock.Call
+func (mr *MockConfigMockRecorder) AddUint64Flag(p, name, value, usage any) *gomock.Call
 ```
 AddUint64Flag indicates an expected call of AddUint64Flag.
 
 #### func (*MockConfigMockRecorder) AddUintFlag
 
 ```go
-func (mr *MockConfigMockRecorder) AddUintFlag(p, name, value, usage interface{}) *gomock.Call
+func (mr *MockConfigMockRecorder) AddUintFlag(p, name, value, usage any) *gomock.Call
 ```
 AddUintFlag indicates an expected call of AddUintFlag.
 
 #### func (*MockConfigMockRecorder) AddValidator
 
 ```go
-func (mr *MockConfigMockRecorder) AddValidator(name, fn interface{}) *gomock.Call
+func (mr *MockConfigMockRecorder) AddValidator(name, fn any) *gomock.Call
 ```
 AddValidator indicates an expected call of AddValidator.
 
@@ -405,7 +405,7 @@ LogFile indicates an expected call of LogFile.
 #### func (*MockConfigMockRecorder) LookupFlag
 
 ```go
-func (mr *MockConfigMockRecorder) LookupFlag(name interface{}) *gomock.Call
+func (mr *MockConfigMockRecorder) LookupFlag(name any) *gomock.Call
 ```
 LookupFlag indicates an expected call of LookupFlag.
 

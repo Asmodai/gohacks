@@ -38,7 +38,7 @@ import (
 
 type IManager interface {
 	SetContext(context.Context)
-	SetLogger(logger.ILogger)
+	SetLogger(logger.Logger)
 	Add(reflect.Type) bool
 	Start()
 	Shutdown()
