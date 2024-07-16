@@ -37,11 +37,11 @@ import (
 )
 
 var (
-	manager    *Manager
-	testProc   *Process
-	testNBProc *Process
-	testBProc  *Process
-	testEProc  *Process
+	manager_inst Manager
+	testProc     *Process
+	testNBProc   *Process
+	testBProc    *Process
+	testEProc    *Process
 
 	testBlockingSend bool
 	fromNonblocking  interface{}
@@ -121,24 +121,24 @@ func NewEveryConfig() *Config {
 func TestMain(m *testing.M) {
 	log.Println("Setting up processes.")
 
-	manager = NewManager()
-	testProc = manager.Create(NewTestConfig())
-	testNBProc = manager.Create(NewNonblockingConfig())
-	testBProc = manager.Create(NewBlockingConfig())
-	testEProc = manager.Create(NewEveryConfig())
+	manager_inst = NewManager()
+	testProc = manager_inst.Create(NewTestConfig())
+	testNBProc = manager_inst.Create(NewNonblockingConfig())
+	testBProc = manager_inst.Create(NewBlockingConfig())
+	testEProc = manager_inst.Create(NewEveryConfig())
 
 	log.Println("Starting processes.")
 
-	go manager.Run("Test")
+	go manager_inst.Run("Test")
 	defer testProc.Stop()
 
-	go manager.Run("Blocking")
+	go manager_inst.Run("Blocking")
 	defer testBProc.Stop()
 
-	go manager.Run("Nonblocking")
+	go manager_inst.Run("Nonblocking")
 	defer testNBProc.Stop()
 
-	go manager.Run("Every")
+	go manager_inst.Run("Every")
 	defer testEProc.Stop()
 
 	log.Println("Running tests.")
@@ -241,7 +241,7 @@ func TestManager(t *testing.T) {
 func TestInfalidFind(t *testing.T) {
 	t.Log("Does `Manager.Find` do the right thing when no process is found?`")
 
-	_, found := manager.Find("nope")
+	_, found := manager_inst.Find("nope")
 	if found {
 		t.Error("No, found a non-existing process!")
 		return
@@ -253,7 +253,7 @@ func TestInfalidFind(t *testing.T) {
 // Test finding processes.
 func TestFind(t *testing.T) {
 	t.Log("Can I find my instance?")
-	i, found := manager.Find("Test")
+	i, found := manager_inst.Find("Test")
 	if !found {
 		t.Error("Could not find my instance!")
 		return
@@ -297,7 +297,7 @@ func TestEveryAlreadyRunning(t *testing.T) {
 func TestDump(t *testing.T) {
 	t.Log("Can we list processes?")
 
-	res := manager.Processes()
+	res := manager_inst.Processes()
 	if res != nil {
 		if len(*res) == 4 {
 			t.Log("Yes.")
@@ -341,7 +341,7 @@ func TestStop(t *testing.T) {
 	}
 
 	t.Log("Does `Manager.StopAll` work as expected?")
-	res3 := manager.StopAll()
+	res3 := manager_inst.StopAll()
 	if res3 {
 		t.Log("Yes.")
 	} else {

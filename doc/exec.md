@@ -35,43 +35,43 @@ var (
 #### func  CheckProcs
 
 ```go
-func CheckProcs(mgr process.IManager) error
+func CheckProcs(mgr process.Manager) error
 ```
 
 #### func  KillAllProcs
 
 ```go
-func KillAllProcs(mgr process.IManager) error
+func KillAllProcs(mgr process.Manager) error
 ```
 
 #### func  SetArgs
 
 ```go
-func SetArgs(mgr process.IManager, args ...string) error
+func SetArgs(mgr process.Manager, args ...string) error
 ```
 
 #### func  SetContext
 
 ```go
-func SetContext(mgr process.IManager, ctx context.Context) error
+func SetContext(mgr process.Manager, ctx context.Context) error
 ```
 
 #### func  SetPath
 
 ```go
-func SetPath(mgr process.IManager, path string) error
+func SetPath(mgr process.Manager, path string) error
 ```
 
 #### func  Spawn
 
 ```go
-func Spawn(mgr process.IManager, lgr logger.Logger, cnf *Config) (*process.Process, error)
+func Spawn(mgr process.Manager, lgr logger.Logger, cnf *Config) (*process.Process, error)
 ```
 
 #### func  SpawnProcs
 
 ```go
-func SpawnProcs(mgr process.IManager) error
+func SpawnProcs(mgr process.Manager) error
 ```
 
 #### type Args

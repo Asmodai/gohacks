@@ -92,7 +92,7 @@ func (app *Application) Name() string
 #### func (*Application) ProcessManager
 
 ```go
-func (app *Application) ProcessManager() process.IManager
+func (app *Application) ProcessManager() process.Manager
 ```
 
 #### func (*Application) Run
@@ -178,7 +178,7 @@ type Config struct {
 	Name           string
 	Version        *semver.SemVer
 	Logger         logger.Logger
-	ProcessManager process.IManager
+	ProcessManager process.Manager
 	AppConfig      any
 	Validators     config.ValidatorsMap
 }

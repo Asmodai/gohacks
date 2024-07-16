@@ -40,7 +40,7 @@ type Config struct {
 	Name           string
 	Version        *semver.SemVer
 	Logger         logger.Logger
-	ProcessManager process.IManager
+	ProcessManager process.Manager
 	AppConfig      any
 	Validators     config.ValidatorsMap
 

@@ -140,7 +140,7 @@ func (app *Application) Context() context.Context {
 	return app.ctx
 }
 
-func (app *Application) ProcessManager() process.IManager {
+func (app *Application) ProcessManager() process.Manager {
 	return app.config.ProcessManager
 }
 

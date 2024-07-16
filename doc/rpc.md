@@ -11,13 +11,13 @@
 #### func  Add
 
 ```go
-func Add(mgr process.IManager, t reflect.Type) (bool, error)
+func Add(mgr process.Manager, t reflect.Type) (bool, error)
 ```
 
 #### func  Spawn
 
 ```go
-func Spawn(mgr process.IManager, lgr logger.Logger, ctx context.Context, cnf *Config) (*process.Process, error)
+func Spawn(mgr process.Manager, lgr logger.Logger, ctx context.Context, cnf *Config) (*process.Process, error)
 ```
 
 #### type Client

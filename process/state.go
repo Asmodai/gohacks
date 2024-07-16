@@ -50,7 +50,7 @@ func (ps *State) Context() context.Context {
 }
 
 // Send data from a process to an external entity.
-func (ps *State) Send(data interface{}) bool {
+func (ps *State) Send(data any) bool {
 	select {
 	case ps.parent.chanFromState <- data:
 		return true
@@ -62,12 +62,12 @@ func (ps *State) Send(data interface{}) bool {
 }
 
 // Send data from a process to an external entity with blocking.
-func (ps *State) SendBlocking(data interface{}) {
+func (ps *State) SendBlocking(data any) {
 	ps.parent.chanFromState <- data
 }
 
 // Read data from an external entity.
-func (ps *State) Receive() (interface{}, bool) {
+func (ps *State) Receive() (any, bool) {
 	select {
 	case data := <-ps.parent.chanToState:
 		return data, true
@@ -79,7 +79,7 @@ func (ps *State) Receive() (interface{}, bool) {
 }
 
 // Read data from an external entity with blocking.
-func (ps *State) ReceiveBlocking() interface{} {
+func (ps *State) ReceiveBlocking() any {
 	return <-ps.parent.chanToState
 }
 

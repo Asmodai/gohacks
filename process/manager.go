@@ -1,3 +1,4 @@
+/* mock:yes */
 /*
  * manager.go --- Process manager.
  *
@@ -37,7 +38,6 @@ import (
 )
 
 /*
-
 Process manager structure.
 
 To use,
@@ -45,41 +45,65 @@ To use,
 1) Create a new process manager:
 
 ```go
-  procmgr := process.NewManager()
+
+	procmgr := process.NewManager()
+
 ```
 
 2) Create your process configuration:
 
 ```go
-  conf := &process.Config{
-    Name:     "Windows 95",
-    Interval: 10, // seconds
-    Function: func(state **State) {
-      // Crash or something.
-    }
-  }
+
+	conf := &process.Config{
+	  Name:     "Windows 95",
+	  Interval: 10, // seconds
+	  Function: func(state **State) {
+	    // Crash or something.
+	  }
+	}
+
 ```
 
 3) Create the process itself.
 
 ```go
-  proc := procmgr.Create(conf)
+
+	proc := procmgr.Create(conf)
+
 ```
 
 4) Run the process.
 
 ```go
-  procmgr.Run("Windows 95")
+
+	procmgr.Run("Windows 95")
+
 ```
 
 /or/
 
 ```go
-  proc.Run()
-```
 
+	proc.Run()
+
+```
 */
-type Manager struct {
+type Manager interface {
+	SetLogger(logger.Logger)
+	Logger() logger.Logger
+	SetContext(context.Context)
+	Context() context.Context
+	Create(*Config) *Process
+	Add(*Process)
+	Find(string) (*Process, bool)
+	Run(string) bool
+	Stop(string) bool
+	StopAll() bool
+	Processes() *[]*Process
+	Count() int
+}
+
+type manager struct {
 	processes []*Process
 	logger    logger.Logger
 	parent    context.Context
@@ -89,10 +113,10 @@ type Manager struct {
 }
 
 // Create a new process manager with a given parent context.
-func NewManagerWithContext(parent context.Context) *Manager {
+func NewManagerWithContext(parent context.Context) Manager {
 	ctx, cancel := context.WithCancel(parent)
 
-	return &Manager{
+	return &manager{
 		processes: []*Process{},
 		logger:    logger.NewDefaultLogger(),
 		ctx:       ctx,
@@ -102,22 +126,22 @@ func NewManagerWithContext(parent context.Context) *Manager {
 }
 
 // Create a new process manager.
-func NewManager() *Manager {
+func NewManager() Manager {
 	return NewManagerWithContext(context.TODO())
 }
 
 // Set the process manager's logger.
-func (pm *Manager) SetLogger(lgr logger.Logger) {
+func (pm *manager) SetLogger(lgr logger.Logger) {
 	pm.logger = lgr
 }
 
 // Return the manager's logger.
-func (pm *Manager) Logger() logger.Logger {
+func (pm *manager) Logger() logger.Logger {
 	return pm.logger
 }
 
 // Set the process manager's context.
-func (pm *Manager) SetContext(parent context.Context) {
+func (pm *manager) SetContext(parent context.Context) {
 	ctx, cancel := context.WithCancel(parent)
 
 	pm.parent = parent
@@ -126,12 +150,12 @@ func (pm *Manager) SetContext(parent context.Context) {
 }
 
 // Get the process manager's context.
-func (pm *Manager) Context() context.Context {
+func (pm *manager) Context() context.Context {
 	return pm.ctx
 }
 
 // Create a new process with the given configuration.
-func (pm *Manager) Create(config *Config) *Process {
+func (pm *manager) Create(config *Config) *Process {
 	proc := NewProcessWithContext(config, pm.ctx)
 	proc.SetLogger(pm.logger)
 	proc.SetWaitGroup(pm.cwg)
@@ -142,7 +166,7 @@ func (pm *Manager) Create(config *Config) *Process {
 }
 
 // Add an existing process to the manager.
-func (pm *Manager) Add(proc *Process) {
+func (pm *manager) Add(proc *Process) {
 	if proc == nil {
 		return
 	}
@@ -152,7 +176,7 @@ func (pm *Manager) Add(proc *Process) {
 }
 
 // Find and return the given process, or nil if not found.
-func (pm *Manager) Find(name string) (*Process, bool) {
+func (pm *manager) Find(name string) (*Process, bool) {
 	for _, p := range pm.processes {
 		if p.Name == name {
 			return p, true
@@ -166,7 +190,7 @@ func (pm *Manager) Find(name string) (*Process, bool) {
 //
 // Returns 'false' if the process is not found;  otherwise returns
 // the result of the process execution.
-func (pm *Manager) Run(name string) bool {
+func (pm *manager) Run(name string) bool {
 	proc, found := pm.Find(name)
 	if !found {
 		return false
@@ -180,7 +204,7 @@ func (pm *Manager) Run(name string) bool {
 // Stop the given process.
 //
 // Returns 'true' if the process has been stopped; otherwise 'false'.
-func (pm *Manager) Stop(name string) bool {
+func (pm *manager) Stop(name string) bool {
 	proc, found := pm.Find(name)
 	if !found {
 		return false
@@ -194,7 +218,7 @@ func (pm *Manager) Stop(name string) bool {
 //
 // Returns 'true' if *all* processes have been stopped; otherwise
 // 'false' is returned.
-func (pm *Manager) StopAll() bool {
+func (pm *manager) StopAll() bool {
 	res := true
 
 	pm.logger.Info(
@@ -225,12 +249,12 @@ func (pm *Manager) StopAll() bool {
 }
 
 // Return a list of all processes
-func (pm *Manager) Processes() *[]*Process {
+func (pm *manager) Processes() *[]*Process {
 	return &pm.processes
 }
 
 // Return the number of processes that we are managing.
-func (pm *Manager) Count() int {
+func (pm *manager) Count() int {
 	return len(pm.processes)
 }
 

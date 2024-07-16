@@ -61,7 +61,7 @@ func (sip *SysInfoProc) Action(state **process.State) {
 	)
 }
 
-func Spawn(mgr process.IManager, interval int) (*process.Process, error) {
+func Spawn(mgr process.Manager, interval int) (*process.Process, error) {
 	name := "SysInfo"
 
 	inst, found := mgr.Find(name)

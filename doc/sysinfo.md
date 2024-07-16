@@ -11,7 +11,7 @@
 #### func  Spawn
 
 ```go
-func Spawn(mgr process.IManager, interval int) (*process.Process, error)
+func Spawn(mgr process.Manager, interval int) (*process.Process, error)
 ```
 
 #### type SysInfo

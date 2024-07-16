@@ -74,10 +74,10 @@ func NewDefaultConfig() *Config
 ```
 Create a default process configuration.
 
-#### type IManager
+#### type Manager
 
 ```go
-type IManager interface {
+type Manager interface {
 	SetLogger(logger.Logger)
 	Logger() logger.Logger
 	SetContext(context.Context)
@@ -90,15 +90,6 @@ type IManager interface {
 	StopAll() bool
 	Processes() *[]*Process
 	Count() int
-}
-```
-
-Process manager interface.
-
-#### type Manager
-
-```go
-type Manager struct {
 }
 ```
 
@@ -155,108 +146,216 @@ To use,
 #### func  NewManager
 
 ```go
-func NewManager() *Manager
+func NewManager() Manager
 ```
 Create a new process manager.
 
 #### func  NewManagerWithContext
 
 ```go
-func NewManagerWithContext(parent context.Context) *Manager
+func NewManagerWithContext(parent context.Context) Manager
 ```
 Create a new process manager with a given parent context.
 
-#### func (*Manager) Add
+#### type MockManager
 
 ```go
-func (pm *Manager) Add(proc *Process)
+type MockManager struct {
+}
 ```
-Add an existing process to the manager.
 
-#### func (*Manager) Context
+MockManager is a mock of Manager interface.
+
+#### func  NewMockManager
 
 ```go
-func (pm *Manager) Context() context.Context
+func NewMockManager(ctrl *gomock.Controller) *MockManager
 ```
-Get the process manager's context.
+NewMockManager creates a new mock instance.
 
-#### func (*Manager) Count
+#### func (*MockManager) Add
 
 ```go
-func (pm *Manager) Count() int
+func (m *MockManager) Add(arg0 *Process)
 ```
-Return the number of processes that we are managing.
+Add mocks base method.
 
-#### func (*Manager) Create
+#### func (*MockManager) Context
 
 ```go
-func (pm *Manager) Create(config *Config) *Process
+func (m *MockManager) Context() context.Context
 ```
-Create a new process with the given configuration.
+Context mocks base method.
 
-#### func (*Manager) Find
+#### func (*MockManager) Count
 
 ```go
-func (pm *Manager) Find(name string) (*Process, bool)
+func (m *MockManager) Count() int
 ```
-Find and return the given process, or nil if not found.
+Count mocks base method.
 
-#### func (*Manager) Logger
+#### func (*MockManager) Create
 
 ```go
-func (pm *Manager) Logger() logger.Logger
+func (m *MockManager) Create(arg0 *Config) *Process
 ```
-Return the manager's logger.
+Create mocks base method.
 
-#### func (*Manager) Processes
+#### func (*MockManager) EXPECT
 
 ```go
-func (pm *Manager) Processes() *[]*Process
+func (m *MockManager) EXPECT() *MockManagerMockRecorder
 ```
-Return a list of all processes
+EXPECT returns an object that allows the caller to indicate expected use.
 
-#### func (*Manager) Run
+#### func (*MockManager) Find
 
 ```go
-func (pm *Manager) Run(name string) bool
+func (m *MockManager) Find(arg0 string) (*Process, bool)
 ```
-Run the named process.
+Find mocks base method.
 
-Returns 'false' if the process is not found; otherwise returns the result of the
-process execution.
-
-#### func (*Manager) SetContext
+#### func (*MockManager) Logger
 
 ```go
-func (pm *Manager) SetContext(parent context.Context)
+func (m *MockManager) Logger() logger.Logger
 ```
-Set the process manager's context.
+Logger mocks base method.
 
-#### func (*Manager) SetLogger
+#### func (*MockManager) Processes
 
 ```go
-func (pm *Manager) SetLogger(lgr logger.Logger)
+func (m *MockManager) Processes() *[]*Process
 ```
-Set the process manager's logger.
+Processes mocks base method.
 
-#### func (*Manager) Stop
+#### func (*MockManager) Run
 
 ```go
-func (pm *Manager) Stop(name string) bool
+func (m *MockManager) Run(arg0 string) bool
 ```
-Stop the given process.
+Run mocks base method.
 
-Returns 'true' if the process has been stopped; otherwise 'false'.
-
-#### func (*Manager) StopAll
+#### func (*MockManager) SetContext
 
 ```go
-func (pm *Manager) StopAll() bool
+func (m *MockManager) SetContext(arg0 context.Context)
 ```
-Stop all processes.
+SetContext mocks base method.
 
-Returns 'true' if *all* processes have been stopped; otherwise 'false' is
-returned.
+#### func (*MockManager) SetLogger
+
+```go
+func (m *MockManager) SetLogger(arg0 logger.Logger)
+```
+SetLogger mocks base method.
+
+#### func (*MockManager) Stop
+
+```go
+func (m *MockManager) Stop(arg0 string) bool
+```
+Stop mocks base method.
+
+#### func (*MockManager) StopAll
+
+```go
+func (m *MockManager) StopAll() bool
+```
+StopAll mocks base method.
+
+#### type MockManagerMockRecorder
+
+```go
+type MockManagerMockRecorder struct {
+}
+```
+
+MockManagerMockRecorder is the mock recorder for MockManager.
+
+#### func (*MockManagerMockRecorder) Add
+
+```go
+func (mr *MockManagerMockRecorder) Add(arg0 any) *gomock.Call
+```
+Add indicates an expected call of Add.
+
+#### func (*MockManagerMockRecorder) Context
+
+```go
+func (mr *MockManagerMockRecorder) Context() *gomock.Call
+```
+Context indicates an expected call of Context.
+
+#### func (*MockManagerMockRecorder) Count
+
+```go
+func (mr *MockManagerMockRecorder) Count() *gomock.Call
+```
+Count indicates an expected call of Count.
+
+#### func (*MockManagerMockRecorder) Create
+
+```go
+func (mr *MockManagerMockRecorder) Create(arg0 any) *gomock.Call
+```
+Create indicates an expected call of Create.
+
+#### func (*MockManagerMockRecorder) Find
+
+```go
+func (mr *MockManagerMockRecorder) Find(arg0 any) *gomock.Call
+```
+Find indicates an expected call of Find.
+
+#### func (*MockManagerMockRecorder) Logger
+
+```go
+func (mr *MockManagerMockRecorder) Logger() *gomock.Call
+```
+Logger indicates an expected call of Logger.
+
+#### func (*MockManagerMockRecorder) Processes
+
+```go
+func (mr *MockManagerMockRecorder) Processes() *gomock.Call
+```
+Processes indicates an expected call of Processes.
+
+#### func (*MockManagerMockRecorder) Run
+
+```go
+func (mr *MockManagerMockRecorder) Run(arg0 any) *gomock.Call
+```
+Run indicates an expected call of Run.
+
+#### func (*MockManagerMockRecorder) SetContext
+
+```go
+func (mr *MockManagerMockRecorder) SetContext(arg0 any) *gomock.Call
+```
+SetContext indicates an expected call of SetContext.
+
+#### func (*MockManagerMockRecorder) SetLogger
+
+```go
+func (mr *MockManagerMockRecorder) SetLogger(arg0 any) *gomock.Call
+```
+SetLogger indicates an expected call of SetLogger.
+
+#### func (*MockManagerMockRecorder) Stop
+
+```go
+func (mr *MockManagerMockRecorder) Stop(arg0 any) *gomock.Call
+```
+Stop indicates an expected call of Stop.
+
+#### func (*MockManagerMockRecorder) StopAll
+
+```go
+func (mr *MockManagerMockRecorder) StopAll() *gomock.Call
+```
+StopAll indicates an expected call of StopAll.
 
 #### type Process
 
@@ -469,27 +568,27 @@ func (ps *State) Logger() logger.Logger
 #### func (*State) Receive
 
 ```go
-func (ps *State) Receive() (interface{}, bool)
+func (ps *State) Receive() (any, bool)
 ```
 Read data from an external entity.
 
 #### func (*State) ReceiveBlocking
 
 ```go
-func (ps *State) ReceiveBlocking() interface{}
+func (ps *State) ReceiveBlocking() any
 ```
 Read data from an external entity with blocking.
 
 #### func (*State) Send
 
 ```go
-func (ps *State) Send(data interface{}) bool
+func (ps *State) Send(data any) bool
 ```
 Send data from a process to an external entity.
 
 #### func (*State) SendBlocking
 
 ```go
-func (ps *State) SendBlocking(data interface{})
+func (ps *State) SendBlocking(data any)
 ```
 Send data from a process to an external entity with blocking.

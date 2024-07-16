@@ -17,7 +17,7 @@ func CORSMiddleware() gin.HandlerFunc
 #### func  GetRouter
 
 ```go
-func GetRouter(mgr process.IManager) (*gin.Engine, error)
+func GetRouter(mgr process.Manager) (*gin.Engine, error)
 ```
 
 #### func  SetDebugMode
@@ -29,7 +29,7 @@ func SetDebugMode(debug bool)
 #### func  Spawn
 
 ```go
-func Spawn(mgr process.IManager, lgr logger.Logger, config *Config) (*process.Process, error)
+func Spawn(mgr process.Manager, lgr logger.Logger, config *Config) (*process.Process, error)
 ```
 
 #### type Config

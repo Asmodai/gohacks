@@ -85,7 +85,7 @@ func (p *ManagerProc) Action(state **process.State) {
 	p.Unlock()
 }
 
-func Spawn(mgr process.IManager, lgr logger.Logger, ctx context.Context, cnf *Config) (*process.Process, error) {
+func Spawn(mgr process.Manager, lgr logger.Logger, ctx context.Context, cnf *Config) (*process.Process, error) {
 	name := "RPC Manager"
 
 	if mgr == nil {
@@ -111,7 +111,7 @@ func Spawn(mgr process.IManager, lgr logger.Logger, ctx context.Context, cnf *Co
 	return pr, nil
 }
 
-func Add(mgr process.IManager, t reflect.Type) (bool, error) {
+func Add(mgr process.Manager, t reflect.Type) (bool, error) {
 	inst, found := mgr.Find("RPC Manager")
 	if !found {
 		return false, errors.New("Could not find RPC Manager process!")

@@ -106,7 +106,7 @@ func (p *Process) SetContext(val context.Context) {
 	p.manager.SetContext(val)
 }
 
-func Spawn(mgr process.IManager, lgr logger.Logger, cnf *Config) (*process.Process, error) {
+func Spawn(mgr process.Manager, lgr logger.Logger, cnf *Config) (*process.Process, error) {
 	name := "ExecManager"
 
 	inst, found := mgr.Find(name)
@@ -126,7 +126,7 @@ func Spawn(mgr process.IManager, lgr logger.Logger, cnf *Config) (*process.Proce
 	return pr, nil
 }
 
-func sendSimple(mgr process.IManager, arg *types.Pair) error {
+func sendSimple(mgr process.Manager, arg *types.Pair) error {
 	inst, found := mgr.Find("ExecManager")
 	if !found {
 		return errors.New("Could not find exec manager process!")
@@ -137,27 +137,27 @@ func sendSimple(mgr process.IManager, arg *types.Pair) error {
 	return nil
 }
 
-func SetContext(mgr process.IManager, ctx context.Context) error {
+func SetContext(mgr process.Manager, ctx context.Context) error {
 	return sendSimple(mgr, types.NewPair(CMD_SET_CTX, ctx))
 }
 
-func SetPath(mgr process.IManager, path string) error {
+func SetPath(mgr process.Manager, path string) error {
 	return sendSimple(mgr, types.NewPair(CMD_SET_PATH, path))
 }
 
-func SetArgs(mgr process.IManager, args ...string) error {
+func SetArgs(mgr process.Manager, args ...string) error {
 	return sendSimple(mgr, types.NewPair(CMD_SET_ARGS, args))
 }
 
-func SpawnProcs(mgr process.IManager) error {
+func SpawnProcs(mgr process.Manager) error {
 	return sendSimple(mgr, types.NewPair(CMD_SPAWN, nil))
 }
 
-func CheckProcs(mgr process.IManager) error {
+func CheckProcs(mgr process.Manager) error {
 	return sendSimple(mgr, types.NewPair(CMD_CHECK, nil))
 }
 
-func KillAllProcs(mgr process.IManager) error {
+func KillAllProcs(mgr process.Manager) error {
 	return sendSimple(mgr, types.NewPair(CMD_KILL_ALL, nil))
 }
 

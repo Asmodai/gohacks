@@ -80,7 +80,7 @@ func (p *DispatcherProc) stop(state **process.State) {
 	p.inst.Stop()
 }
 
-func Spawn(mgr process.IManager, lgr logger.Logger, config *Config) (*process.Process, error) {
+func Spawn(mgr process.Manager, lgr logger.Logger, config *Config) (*process.Process, error) {
 	name := "Dispatcher"
 
 	if mgr == nil {
@@ -107,7 +107,7 @@ func Spawn(mgr process.IManager, lgr logger.Logger, config *Config) (*process.Pr
 	return pr, nil
 }
 
-func GetRouter(mgr process.IManager) (*gin.Engine, error) {
+func GetRouter(mgr process.Manager) (*gin.Engine, error) {
 	inst, found := mgr.Find("Dispatcher")
 	if !found {
 		return nil, fmt.Errorf("Could not find Dispatcher process!")
