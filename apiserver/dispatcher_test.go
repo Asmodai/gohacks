@@ -45,13 +45,13 @@ import (
 	"time"
 )
 
-type MockServer struct {
+type FakeServer struct {
 	LSTLSFn func(cert, key string) error
 	LSFn    func() error
 	SDFn    func(context.Context) error
 }
 
-func (ms *MockServer) ListenAndServeTLS(cert, key string) error {
+func (ms *FakeServer) ListenAndServeTLS(cert, key string) error {
 	if ms.LSTLSFn == nil {
 		return nil
 	}
@@ -59,7 +59,7 @@ func (ms *MockServer) ListenAndServeTLS(cert, key string) error {
 	return ms.LSTLSFn(cert, key)
 }
 
-func (ms *MockServer) ListenAndServe() error {
+func (ms *FakeServer) ListenAndServe() error {
 	if ms.LSFn == nil {
 		return nil
 	}
@@ -67,7 +67,7 @@ func (ms *MockServer) ListenAndServe() error {
 	return ms.LSFn()
 }
 
-func (ms *MockServer) Shutdown(ctx context.Context) error {
+func (ms *FakeServer) Shutdown(ctx context.Context) error {
 	if ms.SDFn == nil {
 		return nil
 	}
@@ -75,7 +75,7 @@ func (ms *MockServer) Shutdown(ctx context.Context) error {
 	return ms.SDFn(ctx)
 }
 
-func (ms *MockServer) SetTLSConfig(_ *tls.Config) {
+func (ms *FakeServer) SetTLSConfig(_ *tls.Config) {
 }
 
 func TestDispatch(t *testing.T) {
@@ -84,7 +84,7 @@ func TestDispatch(t *testing.T) {
 
 	gin.SetMode(gin.ReleaseMode)
 
-	srv := &MockServer{}
+	srv := &FakeServer{}
 	lgr := logger.NewMockLogger(mocked)
 	lgr.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -192,7 +192,7 @@ func TestLogWriter(t *testing.T) {
 
 	gin.SetMode(gin.ReleaseMode)
 
-	srv := &MockServer{}
+	srv := &FakeServer{}
 	lgr := logger.NewMockLogger(mocked)
 	lgr.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -264,7 +264,7 @@ func TestFormatter(t *testing.T) {
 
 	gin.SetMode(gin.ReleaseMode)
 
-	srv := &MockServer{}
+	srv := &FakeServer{}
 	lgr := logger.NewMockLogger(mocked)
 	lgr.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
