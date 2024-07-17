@@ -93,68 +93,6 @@ func (cs *ColorString) SetString(val string)
 func (cs *ColorString) String() string
 ```
 
-#### type Error
-
-```go
-type Error struct {
-	Module  string
-	Message string
-}
-```
-
-Custom error structure.
-
-This is compatible with the `error` interface and provides `Unwrap` support.
-
-#### func  NewError
-
-```go
-func NewError(module string, format string, args ...interface{}) *Error
-```
-Create a new error object.
-
-#### func  NewErrorAndLog
-
-```go
-func NewErrorAndLog(module string, format string, args ...interface{}) *Error
-```
-Create a new error object and immediately log it.
-
-#### func (*Error) Error
-
-```go
-func (e *Error) Error() string
-```
-Return a human-readable string representation of the error.
-
-#### func (*Error) Log
-
-```go
-func (e *Error) Log()
-```
-Log the error.
-
-#### func (*Error) MarshalJSON
-
-```go
-func (e *Error) MarshalJSON() ([]byte, error)
-```
-Convert the error to a JSON string.
-
-#### func (*Error) String
-
-```go
-func (e *Error) String() string
-```
-Return a human-readable string representation of the error.
-
-#### func (*Error) Unwrap
-
-```go
-func (e *Error) Unwrap() error
-```
-Unwrap the error.
-
 #### type Mailbox
 
 ```go

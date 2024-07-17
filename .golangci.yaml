@@ -50,7 +50,7 @@ linters:
     - exhaustruct
     - exhaustivestruct
     # This one should be re-enabled at some point
-    - goerr113
+    #- goerr113
     - tagliatelle
     - gofumpt
     - gci

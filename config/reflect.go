@@ -30,10 +30,16 @@
 package config
 
 import (
-	"github.com/Asmodai/gohacks/types"
+	"gitlab.com/tozd/go/errors"
 
 	"fmt"
 	"reflect"
+)
+
+var (
+	ErrValidatorNotFound  = errors.Base("validator not found")
+	ErrIncorrectArguments = errors.Base("incorrect arguments")
+	ErrValidationFailed   = errors.Base("validation failed")
 )
 
 // Call a given function with arguments and return nil or an error.
@@ -41,21 +47,16 @@ import (
 // This is hairy reflection.
 func (c *config) call(field string, name string, params ...any) error {
 	if _, ok := c.Validators[name]; !ok {
-		return types.NewError(
-			"CONFIG",
-			"Validator '%s' was not found.",
-			name,
-		)
+		return errors.WithMessage(ErrValidatorNotFound, name)
 	}
 
 	fun := reflect.ValueOf(c.Validators[name])
 
 	// Check function arity.
 	if len(params) != fun.Type().NumIn() {
-		return types.NewError(
-			"CONFIG",
-			"Validator '%s' expects %d arguments, but only %d were given.",
-			name,
+		return errors.WithMessagef(
+			ErrIncorrectArguments,
+			"%d expected, %d given",
 			fun.Type().NumIn(),
 			len(params),
 		)
@@ -75,9 +76,9 @@ func (c *config) call(field string, name string, params ...any) error {
 	}
 
 	// Fallthrough... we got an error.
-	return types.NewError(
-		"CONFIG",
-		"[%s] Validation failed on '%s': %v",
+	return errors.Wrapf(
+		ErrValidationFailed,
+		"%s failed on %s: %s",
 		name,
 		field,
 		result[0].Interface().(error).Error(), //nolint:forcetypeassert

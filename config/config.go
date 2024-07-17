@@ -34,12 +34,17 @@ import (
 	"github.com/Asmodai/gohacks/semver"
 
 	"github.com/goccy/go-json"
+	"gitlab.com/tozd/go/errors"
 
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"reflect"
+)
+
+var (
+	ErrInvalidObject = errors.Base("invalid configuration object")
 )
 
 type ValidatorsMap map[string]interface{}
@@ -216,7 +221,7 @@ func NewConfig(
 ) Config {
 	obj, ok := NewDefaultConfig(required).(*config)
 	if !ok {
-		panic(fmt.Errorf("invalid configuration object"))
+		panic(ErrInvalidObject)
 	}
 
 	obj.ConfigApp.Name = name
@@ -281,7 +286,7 @@ func (c *config) load() {
 
 	file, err := os.Open(c.ConfigCLI.ConfFile)
 	if err != nil {
-		panic(fmt.Errorf("error loading config file: %s", err.Error()))
+		panic(err)
 	}
 	defer file.Close()
 

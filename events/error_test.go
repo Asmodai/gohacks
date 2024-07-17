@@ -30,26 +30,18 @@
 package events
 
 import (
-	"github.com/Asmodai/gohacks/types"
-
 	"errors"
 	"testing"
 )
 
 func TestErrorEvent(t *testing.T) {
-	fac := "CoffeeMachine"
 	msg := "Out of beans!"
 
 	e1 := errors.New(msg)
-	e2 := types.NewError(fac, msg)
 
 	t.Run("Accessors", func(t *testing.T) {
 		if e1.Error() != msg {
 			t.Errorf("e1 is wrong: '%s'", e1.Error())
-		}
-
-		if e2.Error() != fac+": "+msg {
-			t.Errorf("e2 is wrong: '%s'", e2.Error())
 		}
 	})
 }

@@ -8,6 +8,12 @@
 
 ## Usage
 
+```go
+var (
+	ErrInvalidObject = errors.Base("invalid configuration object")
+)
+```
+
 #### type Config
 
 ```go
