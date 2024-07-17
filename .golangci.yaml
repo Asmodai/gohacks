@@ -1,0 +1,74 @@
+run:
+  concurrency: 4
+  timeout: 5m
+  issues-exit-code: 2
+  tests: false
+  build-tags:
+    - testing
+  modules-download-mode: readonly
+  allow-parallel-runners: true
+  allow-serial-runners: true
+  go: '1.19'
+  
+output:
+  formats:
+    - format: json
+      path: stderr
+    - format: checkstyle
+      path: report.xml
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: false
+  path-prefix: ""
+  sort-results: true
+  sort-order:
+    - linter
+    - severity
+    - file
+  show-stats: true
+
+linger-settings:
+  godox:
+    keywords:
+      - OPTIMIZE
+      - HACK
+      - FIXME
+      - BUG
+  gofmt:
+    simplify: false
+    rewrite-rules:
+      - pattern:     'interface{}'
+        replacement: 'any'
+      - pattern:     'a[b:len(a)]'
+        replacement: 'a[b:]'
+
+linters:
+  enable-all: true
+  disable:
+    - depguard
+    - exhaustruct
+    - exhaustivestruct
+    # This one should be re-enabled at some point
+    - goerr113
+    - tagliatelle
+    - gofumpt
+    - gci
+    - ireturn
+    - interfacebloat
+    - inamedparam
+    - goimports
+    - gofmt
+    - godox
+    - containedctx
+    #
+    # Deprecated linters
+    - golint            # replaced by 'revive'
+    - deadcode          # replaced by 'unused'
+    - structcheck       # replaced by 'unused'
+    - scopelint         # replaced by 'exportloopref
+    - maligned          # replaced by 'fieldalignment'
+    - varcheck          # replaced by 'unused'
+    - ifshort           # deprecated
+    - interfacer        # deprecated
+    - nosnakecase       # replaced by 'revive'

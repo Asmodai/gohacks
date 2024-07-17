@@ -39,11 +39,12 @@ func Pop(array []string) (string, []string) {
 	case 1:
 		return array[0], []string{}
 
-	case 2:
+	case 2: //nolint:gomnd
 		return array[1], []string{array[0]}
 
 	default:
 		last := length - 1
+
 		return array[last], array[:last]
 	}
 }

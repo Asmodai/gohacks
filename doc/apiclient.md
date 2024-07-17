@@ -8,6 +8,14 @@
 
 ## Usage
 
+```go
+var (
+	ErrInvalidAuthMethod = errors.Base("invalid authentication method")
+	ErrMissingArgument   = errors.Base("missing argument")
+	ErrNotOk             = errors.Base("not ok")
+)
+```
+
 #### type AuthBasic
 
 ```go
@@ -31,10 +39,9 @@ type AuthToken struct {
 #### type Client
 
 ```go
-type Client struct {
-	Client  IHTTPClient
-	Limiter *rate.Limiter
-	Trace   *httptrace.ClientTrace
+type Client interface {
+	Get(*Params) ([]byte, int, error)
+	Post(*Params) ([]byte, int, error)
 }
 ```
 
@@ -57,7 +64,7 @@ followed.
 3) ???
 
     params := &Params{
-    	Url: "http://www.example.com/underpants",
+    	URL: "http://www.example.com/underpants",
     }
 
 4) Profit
@@ -69,33 +76,9 @@ followed.
 #### func  NewClient
 
 ```go
-func NewClient(config *Config, logger logger.Logger) *Client
+func NewClient(config *Config, logger logger.Logger) Client
 ```
 Create a new API client with the given configuration.
-
-#### func (*Client) Get
-
-```go
-func (c *Client) Get(data *Params) ([]byte, int, error)
-```
-Perform a HTTP GET using the given API parameters.
-
-Returns the response body as an array of bytes, the HTTP status code, and an
-error if one is triggered.
-
-You will need to remember to check the error *and* the status code.
-
-#### func (*Client) Post
-
-```go
-func (c *Client) Post(data *Params) ([]byte, int, error)
-```
-Perform a HTTP POST using the given API parameters.
-
-Returns the response body as an array of bytes, the HTTP status code, and an
-error if one is triggered.
-
-You will need to remember to check the error *and* the status code.
 
 #### type Config
 
@@ -114,7 +97,7 @@ is obvious.
 #### func  NewConfig
 
 ```go
-func NewConfig(ReqsPerSec, Timeout int) *Config
+func NewConfig(reqsPerSec, timeout int) *Config
 ```
 Create a new API client configuration.
 
@@ -135,35 +118,12 @@ type ContentType struct {
 ```
 
 
-#### type IApiClient
+#### type HTTPClient
 
 ```go
-type IApiClient interface {
-	Get(data *Params) ([]byte, int, error)
-	Post(data *Params) ([]byte, int, error)
+type HTTPClient interface {
+	Do(*http.Request) (*http.Response, error)
 }
-```
-
-API client interface.
-
-#### type IHTTPClient
-
-```go
-type IHTTPClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-```
-
-HTTP client interface.
-
-This is to allow mocking of `net/http`'s `http.Client` in unit tests. You could
-also, if drunk enough, provide your own HTTP client, as long as it conforms to
-the interface. But you wouldn't want to do that, would you.
-
-#### type MockCallbackFn
-
-```go
-type MockCallbackFn func(data *Params) ([]byte, int, error)
 ```
 
 
@@ -171,35 +131,113 @@ type MockCallbackFn func(data *Params) ([]byte, int, error)
 
 ```go
 type MockClient struct {
-	GetFn  MockCallbackFn
-	PostFn MockCallbackFn
 }
 ```
 
+MockClient is a mock of Client interface.
 
 #### func  NewMockClient
 
 ```go
-func NewMockClient(config *Config, lgr logger.Logger) *MockClient
+func NewMockClient(ctrl *gomock.Controller) *MockClient
 ```
+NewMockClient creates a new mock instance.
+
+#### func (*MockClient) EXPECT
+
+```go
+func (m *MockClient) EXPECT() *MockClientMockRecorder
+```
+EXPECT returns an object that allows the caller to indicate expected use.
 
 #### func (*MockClient) Get
 
 ```go
-func (c *MockClient) Get(data *Params) ([]byte, int, error)
+func (m *MockClient) Get(arg0 *Params) ([]byte, int, error)
 ```
+Get mocks base method.
 
 #### func (*MockClient) Post
 
 ```go
-func (c *MockClient) Post(data *Params) ([]byte, int, error)
+func (m *MockClient) Post(arg0 *Params) ([]byte, int, error)
 ```
+Post mocks base method.
+
+#### type MockClientMockRecorder
+
+```go
+type MockClientMockRecorder struct {
+}
+```
+
+MockClientMockRecorder is the mock recorder for MockClient.
+
+#### func (*MockClientMockRecorder) Get
+
+```go
+func (mr *MockClientMockRecorder) Get(arg0 any) *gomock.Call
+```
+Get indicates an expected call of Get.
+
+#### func (*MockClientMockRecorder) Post
+
+```go
+func (mr *MockClientMockRecorder) Post(arg0 any) *gomock.Call
+```
+Post indicates an expected call of Post.
+
+#### type MockHTTPClient
+
+```go
+type MockHTTPClient struct {
+}
+```
+
+MockHTTPClient is a mock of HTTPClient interface.
+
+#### func  NewMockHTTPClient
+
+```go
+func NewMockHTTPClient(ctrl *gomock.Controller) *MockHTTPClient
+```
+NewMockHTTPClient creates a new mock instance.
+
+#### func (*MockHTTPClient) Do
+
+```go
+func (m *MockHTTPClient) Do(arg0 *http.Request) (*http.Response, error)
+```
+Do mocks base method.
+
+#### func (*MockHTTPClient) EXPECT
+
+```go
+func (m *MockHTTPClient) EXPECT() *MockHTTPClientMockRecorder
+```
+EXPECT returns an object that allows the caller to indicate expected use.
+
+#### type MockHTTPClientMockRecorder
+
+```go
+type MockHTTPClientMockRecorder struct {
+}
+```
+
+MockHTTPClientMockRecorder is the mock recorder for MockHTTPClient.
+
+#### func (*MockHTTPClientMockRecorder) Do
+
+```go
+func (mr *MockHTTPClientMockRecorder) Do(arg0 any) *gomock.Call
+```
+Do indicates an expected call of Do.
 
 #### type Params
 
 ```go
 type Params struct {
-	Url string // API URL.
+	URL string // API URL.
 
 	UseBasic bool
 	UseToken bool
@@ -212,14 +250,14 @@ type Params struct {
 }
 ```
 
-API client request parameters
+API client request parameters.
 
 #### func  NewParams
 
 ```go
 func NewParams() *Params
 ```
-Create a new API parameters object,
+Create a new API parameters object.
 
 #### func (*Params) AddQueryParam
 

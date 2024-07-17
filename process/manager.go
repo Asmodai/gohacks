@@ -87,6 +87,8 @@ To use,
 	proc.Run()
 
 ```
+
+Manager is optional, as you can create processes directly.
 */
 type Manager interface {
 	SetLogger(logger.Logger)
@@ -234,6 +236,7 @@ func (pm *manager) StopAll() bool {
 			"type", "stop",
 			"name", proc.Name,
 		)
+
 		res = proc.Stop()
 	}
 
@@ -248,7 +251,7 @@ func (pm *manager) StopAll() bool {
 	return res
 }
 
-// Return a list of all processes
+// Return a list of all processes.
 func (pm *manager) Processes() *[]*Process {
 	return &pm.processes
 }

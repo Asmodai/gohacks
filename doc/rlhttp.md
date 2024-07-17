@@ -8,10 +8,10 @@
 
 ## Usage
 
-#### type RLHTTPClient
+#### type Client
 
 ```go
-type RLHTTPClient struct {
+type Client struct {
 }
 ```
 
@@ -19,11 +19,11 @@ type RLHTTPClient struct {
 #### func  NewClient
 
 ```go
-func NewClient(rl *rate.Limiter, timeout time.Duration) *RLHTTPClient
+func NewClient(rlimiter *rate.Limiter, timeout time.Duration) *Client
 ```
 
-#### func (*RLHTTPClient) Do
+#### func (*Client) Do
 
 ```go
-func (c *RLHTTPClient) Do(req *http.Request) (*http.Response, error)
+func (c *Client) Do(req *http.Request) (*http.Response, error)
 ```

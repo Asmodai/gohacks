@@ -30,7 +30,8 @@
 package secrets
 
 import (
-	"errors"
+	"gitlab.com/tozd/go/errors"
+
 	"io"
 	"os"
 	"path/filepath"
@@ -39,6 +40,11 @@ import (
 
 const (
 	SecretsPath string = "/run/secrets"
+)
+
+var (
+	ErrNoPathSet      = errors.Base("no secrets path set")
+	ErrZeroLengthFile = errors.Base("file has zero length")
 )
 
 type Secret struct {
@@ -72,21 +78,22 @@ func (s *Secret) Probe() error {
 
 func (s *Secret) probe() error {
 	if s.path == "" {
-		return errors.New("No secret path set!")
+		return errors.WithStack(ErrNoPathSet)
 	}
 
-	fp, err := os.Open(s.path)
+	file, err := os.Open(s.path)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
-	defer fp.Close()
+	defer file.Close()
 
-	bytes, _ := io.ReadAll(fp)
+	bytes, _ := io.ReadAll(file)
 	if len(bytes) == 0 {
-		return errors.New("Zero length secret!")
+		return errors.WithMessage(ErrZeroLengthFile, s.path)
 	}
 
 	s.value = strings.TrimSuffix(string(bytes), "\n")
+
 	return nil
 }
 

@@ -14,6 +14,13 @@ const (
 )
 ```
 
+```go
+var (
+	ErrNoPathSet      = errors.Base("no secrets path set")
+	ErrZeroLengthFile = errors.Base("file has zero length")
+)
+```
+
 #### type Secret
 
 ```go

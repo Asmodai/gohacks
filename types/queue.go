@@ -34,11 +34,9 @@ import (
 )
 
 /*
-
 Queue structure.
 
 This is a cheap implementation of a LIFO queue.
-
 */
 type Queue struct {
 	sync.Mutex
@@ -54,21 +52,21 @@ func NewQueue() *Queue {
 }
 
 func NewBoundedQueue(bounds int) *Queue {
-	n := &Queue{
+	queue := &Queue{
 		queue:  make([]interface{}, 0),
 		bounds: 0,
 	}
 
 	if bounds == 0 {
-		n.bounded = false
+		queue.bounded = false
 
-		return n
+		return queue
 	}
 
-	n.bounded = true
-	n.bounds = bounds
+	queue.bounded = true
+	queue.bounds = bounds
 
-	return n
+	return queue
 }
 
 // Append an element to the queue.  Returns `false` if there is no

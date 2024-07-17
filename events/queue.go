@@ -34,8 +34,8 @@ import (
 )
 
 const (
-	eventQueueInitialCapacity int = 256
-	eventQueueIncrement       int = 128
+	eventQueueInitialCapacity = 256
+	eventQueueIncrement       = 128
 )
 
 type EventList []Event
@@ -66,11 +66,13 @@ func (e *Queue) Pop() Event {
 	case 1:
 		ret := e.queue[0]
 		e.queue = make(EventList, 0, eventQueueInitialCapacity)
+
 		return ret
 
 	default:
 		ret := e.queue[0]
 		e.queue = e.queue[1:]
+
 		return ret
 	}
 }
@@ -80,13 +82,13 @@ func (e *Queue) Push(evt Event) {
 	defer e.Unlock()
 
 	if len(e.queue) == cap(e.queue) {
-		n := make(
+		nqueue := make(
 			EventList,
 			len(e.queue),
 			cap(e.queue)+eventQueueIncrement,
 		)
-		copy(n, e.queue)
-		e.queue = n
+		copy(nqueue, e.queue)
+		e.queue = nqueue
 	}
 
 	e.queue = append(e.queue, evt)

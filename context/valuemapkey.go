@@ -30,7 +30,9 @@
 package context
 
 import (
-	. "context"
+	"gitlab.com/tozd/go/errors"
+
+	"context"
 )
 
 // ValueMap key type for `WithValue`.
@@ -40,35 +42,48 @@ const (
 	mapKey ValueMapKey = ValueMapKey("_CTXVALMAP")
 )
 
+var (
+	ErrInvalidValueMap  = errors.Base("invalid value map")
+	ErrValueMapNotFound = errors.Base("value map not found")
+)
+
+func extractValueMap(thing any) (ValueMap, error) {
+	if vmap, ok := thing.(ValueMap); ok {
+		return vmap, nil
+	}
+
+	return nil, errors.WithStack(ErrInvalidValueMap)
+}
+
 // Get the value map (if any) from the context.
 //
 // Returns nil if there is no value map.
-func GetValueMap(ctx Context) ValueMap {
+func GetValueMap(ctx context.Context) (ValueMap, error) {
 	if v := ctx.Value(mapKey); v != nil {
-		return v.(ValueMap)
+		return extractValueMap(v)
 	}
 
-	return nil
+	return nil, errors.WithStack(ErrValueMapNotFound)
 }
 
 // Get the value map (if any) from the context with the specified value
 // key.
-func GetValueMapWithKey(ctx Context, key string) ValueMap {
+func GetValueMapWithKey(ctx context.Context, key string) (ValueMap, error) {
 	if v := ctx.Value(ValueMapKey(key)); v != nil {
-		return v.(ValueMap)
+		return extractValueMap(v)
 	}
 
-	return nil
+	return nil, errors.WithStack(ErrInvalidValueMap)
 }
 
 // Create a context with the value map using a default key.
-func WithValueMap(ctx Context, valuemap ValueMap) Context {
-	return WithValue(ctx, mapKey, valuemap)
+func WithValueMap(ctx context.Context, valuemap ValueMap) context.Context {
+	return context.WithValue(ctx, mapKey, valuemap)
 }
 
 // Create a context with the value map using the specified key.
-func WithValueMapWithKey(ctx Context, key string, valuemap ValueMap) Context {
-	return WithValue(ctx, ValueMapKey(key), valuemap)
+func WithValueMapWithKey(ctx context.Context, key string, valuemap ValueMap) context.Context {
+	return context.WithValue(ctx, ValueMapKey(key), valuemap)
 }
 
 /* valuemapkey.go ends here. */

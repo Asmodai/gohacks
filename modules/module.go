@@ -30,11 +30,17 @@
 package modules
 
 import (
-	"context"
-	"errors"
-
 	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/semver"
+
+	"gitlab.com/tozd/go/errors"
+
+	"context"
+)
+
+var (
+	ErrStartFuncMissing = errors.Base("module has no start function")
+	ErrStartFuncNil     = errors.Base("module start function is nil")
 )
 
 type StartFn func(context.Context, logger.Logger) (bool, error)
@@ -46,7 +52,7 @@ type Module struct {
 }
 
 func defaultStartFn(_ context.Context, _ logger.Logger) (bool, error) {
-	return false, errors.New("Module does not have a 'start' function!")
+	return false, errors.WithStack(ErrStartFuncMissing)
 }
 
 func NewModule(name string, version *semver.SemVer) *Module {
@@ -65,10 +71,12 @@ func (m *Module) SetStartFn(fn StartFn) { m.startfn = fn }
 
 func (m *Module) Start(ctx context.Context, lgr logger.Logger) (bool, error) {
 	if m.StartFn() == nil {
-		return false, errors.New("Module start function is nil.")
+		return false, errors.WithStack(ErrStartFuncNil)
 	}
 
-	return m.StartFn()(ctx, lgr)
+	rval, err := m.StartFn()(ctx, lgr)
+
+	return rval, errors.WithStack(err)
 }
 
 /* module.go ends here. */

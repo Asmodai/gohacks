@@ -53,6 +53,9 @@ const (
 	CYAN    = 6
 	WHITE   = 7
 	DEFAULT = 9
+
+	FGOFFSET = 30
+	BGOFFSET = 40
 )
 
 type ColorString struct {
@@ -64,19 +67,19 @@ type ColorString struct {
 
 func MakeColorString() *ColorString {
 	return &ColorString{
-		attr: 0,
-		fg:   9,
-		bg:   9,
+		attr: NORMAL,
+		fg:   DEFAULT,
+		bg:   DEFAULT,
 	}
 }
 
-func MakeColorStringWithAttrs(data string, attr, fg, bg int) *ColorString {
+func MakeColorStringWithAttrs(data string, attr, foreg, backg int) *ColorString {
 	str := MakeColorString()
 
 	str.SetString(data)
 	str.SetAttr(attr)
-	str.SetFG(fg)
-	str.SetBG(bg)
+	str.SetFG(foreg)
+	str.SetBG(backg)
 
 	return str
 }
@@ -98,7 +101,13 @@ func (cs *ColorString) SetBG(col int) {
 }
 
 func (cs *ColorString) String() string {
-	return fmt.Sprintf("\x1b[%d;%d;%dm%s\x1b[0m", cs.attr, 30+cs.fg, 40+cs.bg, cs.data)
+	return fmt.Sprintf(
+		"\x1b[%d;%d;%dm%s\x1b[0m",
+		cs.attr,
+		FGOFFSET+cs.fg,
+		BGOFFSET+cs.bg,
+		cs.data,
+	)
 }
 
 /* colorstring.go ends here. */

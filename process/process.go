@@ -46,7 +46,6 @@ type CallbackFn func(**State)
 type QueryFn func(interface{}) interface{}
 
 /*
-
 Process structure.
 
 To use:
@@ -54,45 +53,58 @@ To use:
 1) Create a config:
 
 ```go
-  conf := &process.Config{
-    Name:     "Windows 95",
-    Interval: 10,        // 10 seconds.
-    Function: func(state **State) {
-      // Crash or something.
-    },
-  }
+
+	conf := &process.Config{
+	  Name:     "Windows 95",
+	  Interval: 10,        // 10 seconds.
+	  Function: func(state **State) {
+	    // Crash or something.
+	  },
+	}
+
 ```
 
 2) Create a process:
 
 ```go
-  proc := process.NewProcess(conf)
+
+	proc := process.NewProcess(conf)
+
 ```
 
 3) Run the process:
 
 ```go
-  go proc.Run()
+
+	go proc.Run()
+
 ```
 
 4) Send data to the process:
 
 ```go
-  proc.Send("Blue Screen of Death")
+
+	proc.Send("Blue Screen of Death")
+
 ```
 
 5) Read data from the process:
 
 ```go
-  data := proc.Receive()
+
+	data := proc.Receive()
+
 ```
 
 6) Stop the process
 
 ```go
-  proc.Stop()
+
+	proc.Stop()
+
 ```
 
+	will stop the process.
 */
 type Process struct {
 	sync.Mutex
@@ -119,6 +131,8 @@ type Process struct {
 }
 
 // Create a new process with the given configuration and parent context.
+//
+//nolint:revive,durationcheck
 func NewProcessWithContext(config *Config, parent context.Context) *Process {
 	if config.Logger == nil {
 		config.Logger = logger.NewDefaultLogger()
@@ -126,7 +140,7 @@ func NewProcessWithContext(config *Config, parent context.Context) *Process {
 
 	ctx, cancel := context.WithCancel(parent)
 
-	p := &Process{
+	proc := &Process{
 		Name:          config.Name,
 		Function:      config.Function,
 		OnStart:       config.OnStart,
@@ -145,12 +159,12 @@ func NewProcessWithContext(config *Config, parent context.Context) *Process {
 	}
 
 	if config.Function == nil {
-		p.Function = p.nilFunction
+		proc.Function = proc.nilFunction
 	}
 
-	p.state.parent = p
+	proc.state.parent = proc
 
-	return p
+	return proc
 }
 
 // Create a new process with the given configuration.
@@ -209,6 +223,7 @@ func (p *Process) Run() bool {
 			"interval", p.Interval.Round(time.Second),
 		)
 		p.everyAction()
+
 		return true
 	}
 
@@ -282,7 +297,7 @@ func (p *Process) ReceiveNonBlocking() (interface{}, bool) {
 }
 
 // Default action callback.
-func (p *Process) nilFunction(state **State) {
+func (p *Process) nilFunction(_ **State) {
 }
 
 // Internal callback invoked upon process stop.
@@ -308,7 +323,9 @@ func (p *Process) runAction() {
 			if p.OnStop != nil {
 				p.OnStop(&p.state)
 			}
+
 			p.internalStop()
+
 			return
 
 		default:
@@ -336,7 +353,9 @@ func (p *Process) everyAction() {
 			if p.OnStop != nil {
 				p.OnStop(&p.state)
 			}
+
 			p.internalStop()
+
 			return
 
 		case <-time.After(p.period):
@@ -344,11 +363,12 @@ func (p *Process) everyAction() {
 		}
 
 		started := time.Now()
+
 		if p.Function != nil {
 			p.Function(&p.state)
 		}
-		finished := time.Now()
 
+		finished := time.Now()
 		duration := finished.Sub(started)
 		p.period = p.Interval - duration
 	}

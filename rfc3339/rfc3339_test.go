@@ -40,11 +40,11 @@ var (
 	TextObj3 string       = "2020-01-02T01:02:03"
 	SqlObj   string       = "2020-01-02 01:02:03"
 	UnixTime int64        = 1577926923
-	JsonObj  *JsonRFC3339 = nil
+	JsonObj  *JSONRFC3339 = nil
 )
 
 func TestMarshal(t *testing.T) {
-	JsonObj = &JsonRFC3339{}
+	JsonObj = &JSONRFC3339{}
 
 	t.Log("Can we unmarshal from a JSON string?")
 	err := JsonObj.UnmarshalJSON([]byte(TextObj1))
@@ -71,7 +71,7 @@ func TestMarshal(t *testing.T) {
 }
 
 func TestInvalidMarshal(t *testing.T) {
-	JsonObj = &JsonRFC3339{}
+	JsonObj = &JSONRFC3339{}
 
 	t.Log("Do we get an error from invalid input?")
 	err := JsonObj.UnmarshalJSON([]byte("This is not json"))
@@ -86,7 +86,7 @@ func TestInvalidMarshal(t *testing.T) {
 func TestTimeFuncs(t *testing.T) {
 	t.Log("Do time functions work as expected?")
 
-	JsonObj = &JsonRFC3339{}
+	JsonObj = &JSONRFC3339{}
 
 	err := JsonObj.UnmarshalJSON([]byte(TextObj1))
 	if err != nil {
@@ -117,7 +117,7 @@ func TestFutureTime(t *testing.T) {
 
 	now := time.Now().UTC().Add(24 * time.Hour)
 
-	res, err := RFC3339Parse(now.Format("2006-01-02T15:04:05"))
+	res, err := Parse(now.Format("2006-01-02T15:04:05"))
 	if err != nil {
 		t.Errorf("No.  %s", err.Error())
 		return

@@ -47,14 +47,12 @@ MODULES = apiclient       \
 	  crypto          \
 	  database        \
 	  events          \
-	  exec            \
 	  generics        \
 	  logger          \
 	  math/conversion \
 	  process         \
 	  rfc3339         \
 	  rlhttp          \
-	  rpc             \
 	  secrets         \
 	  semver          \
 	  service         \
@@ -67,55 +65,72 @@ all: deps
 .PHONY: configs doc
 
 deps: tidy
-	@echo Getting dependencies
+	@echo "Getting dependencies"
 	@go work vendor
 
 tidy:
-	@echo Tidying mod dependencies
+	@echo "Tidying mod dependencies"
 	@go mod tidy
 
 tooling:
 	@go install github.com/google/go-licenses@latest
 	@go install go.uber.org/mock/mockgen@latest
-	@go get github.com/go-critic/go-critic@latest
+	@go install github.com/go-critic/go-critic/cmd/gocritic@latest
+	@go install github.com/google/go-licenses@latest
+	@pip install junit2html
 
 listdeps:
-	@echo Listing dependencies:
+	@echo "Listing dependencies:"
 	@go list -m all
 
 prunedeps:
-	@echo Pruning dependencies
+	@echo "Pruning dependencies"
 	@go mod tidy
 
 lint:
-	@echo Running linter
-	@golangci-lint run
+	@echo "Running linter"
+	@if [ -f "$$HOME/.local/bin/junit2html" ]; then               \
+		echo "Generating golint.html";                        \
+		golangci-lint run --out-format junit-xml >golint.xml; \
+		junit2html golint.xml golint.html;                    \
+	else                                                          \
+		golangci-lint run;                                    \
+	fi
+	@echo "Done"
 
 build:
-	@echo THIS IS A LIBRARY
+	@echo "THIS IS A LIBRARY"
 
 test: deps
-	@echo Running tests
+	@echo "Running tests"
 	@go test $$(go list ./...) -coverprofile=tests.out --tags testing
 	@go tool cover -html=tests.out -o coverage.html
 
 run:
-	@echo THIS IS A LIBRARY
+	@echo "THIS IS A LIBRARY"
 
 rundebug:
-	@echo THIS IS A LIBRARY
+	@echo "THIS IS A LIBRARY"
 
 clean:
-	@echo Cleaning
+	@echo "Cleaning"
 	@rm *.out
+	@rm golint.*
+	@rm coverage.html
 	@rm doc/*.md
+	@rm -rf vendor
 
 doc:
-	@echo Generating documentation
+	@echo "Generating documentation"
 	@test -d doc || mkdir doc
 	@for dir in $(MODULES); do \
-		echo "Generating $${dir}.md"                                        ;\
+		echo "... Generating $${dir}.md"                                    ;\
 		godocdown -template doc/gohacks.template ./$${dir}/ >doc/$${dir}.md ;\
 	done
+	@echo "Generating license information"
+	@test -d vendor || go work vendor -o vendor
+	@./checklic.sh >doc/dependencies.md
+	@test -d vendor && rm -rf vendor
+	@echo "Done."
 
 # Makefile ends here.

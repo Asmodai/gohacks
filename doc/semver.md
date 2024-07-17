@@ -8,6 +8,20 @@
 
 ## Usage
 
+```go
+const (
+	MAGICMAJOR        = 10000000
+	MAGICMINOR        = 10000
+	MAGICMAJORTOMINOR = 1000
+)
+```
+
+```go
+var (
+	ErrInvalidVersion = errors.Base("invalid version")
+)
+```
+
 #### type SemVer
 
 ```go
@@ -37,7 +51,7 @@ func NewSemVer() *SemVer
 ```go
 func (s *SemVer) FromString(info string) error
 ```
-Convert numeric version to components
+Convert numeric version to components.
 
 #### func (*SemVer) String
 

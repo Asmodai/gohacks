@@ -30,67 +30,112 @@
 package database
 
 import (
+
+	// This is the MySQL driver, it must be blank.
 	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/jmoiron/sqlx"
+	"gitlab.com/tozd/go/errors"
 
 	"database/sql"
 )
 
 /*
-
 SQL proxy object.
 
 This trainwreck exists so that we can make use of database interfaces.
 
 It might be 100% useless, as `sql.DB` will most likely conform to `IDatabase`,
 so this file might vanish at some point.
-
 */
 type Database struct {
 	real *sqlx.DB
 }
 
-func (db *Database) MustBegin() *sqlx.Tx { return db.real.MustBegin() }
+func (db *Database) MustBegin() *sqlx.Tx {
+	return db.real.MustBegin()
+}
 
-func (db *Database) Begin() (*sql.Tx, error)   { return db.real.Begin() }
-func (db *Database) Beginx() (*sqlx.Tx, error) { return db.real.Beginx() }
+func (db *Database) Begin() (*sql.Tx, error) {
+	rval, err := db.real.Begin()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
-func (db *Database) Ping() error  { return db.real.Ping() }
-func (db *Database) Close() error { return db.real.Close() }
+	return rval, nil
+}
+
+func (db *Database) Beginx() (*sqlx.Tx, error) {
+	rval, err := db.real.Beginx()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return rval, nil
+}
+
+func (db *Database) Ping() error  { return errors.WithStack(db.real.Ping()) }
+func (db *Database) Close() error { return errors.WithStack(db.real.Close()) }
 
 func (db *Database) SetMaxIdleConns(limit int) { db.real.SetMaxIdleConns(limit) }
 func (db *Database) SetMaxOpenConns(limit int) { db.real.SetMaxOpenConns(limit) }
 
 func (db *Database) Prepare(query string) (*sql.Stmt, error) {
-	return db.real.Prepare(query)
+	rval, err := db.real.Prepare(query)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return rval, nil
 }
 
-func (db *Database) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return db.real.Exec(query, args...)
+func (db *Database) Exec(query string, args ...any) (sql.Result, error) {
+	rval, err := db.real.Exec(query, args...)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return rval, nil
 }
 
-func (db *Database) NamedExec(query string, args interface{}) (sql.Result, error) {
-	return db.real.NamedExec(query, args)
+func (db *Database) NamedExec(query string, args any) (sql.Result, error) {
+	rval, err := db.real.NamedExec(query, args)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return rval, nil
 }
 
-func (db *Database) Query(query string, args ...interface{}) (IRows, error) {
-	return db.real.Query(query, args...)
+func (db *Database) Query(query string, args ...any) (IRows, error) {
+	//nolint:rowserrcheck
+	rval, err := db.real.Query(query, args...)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return rval, nil
 }
 
-func (db *Database) Queryx(query string, args ...interface{}) (IRowsx, error) {
-	return db.real.Queryx(query, args...)
+func (db *Database) Queryx(query string, args ...any) (IRowsx, error) {
+	rval, err := db.real.Queryx(query, args...)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return rval, nil
 }
 
-func (db *Database) QueryRowx(query string, args ...interface{}) IRow {
+func (db *Database) QueryRowx(query string, args ...any) IRow {
 	return db.real.QueryRowx(query, args...)
 }
 
-func (db *Database) Select(what interface{}, query string, args ...interface{}) error {
-	return db.real.Select(what, query, args...)
+func (db *Database) Select(what any, query string, args ...any) error {
+	return errors.WithStack(db.real.Select(what, query, args...))
 }
 
-func (db *Database) Get(what interface{}, query string, args ...interface{}) error {
-	return db.real.Get(what, query, args...)
+func (db *Database) Get(what any, query string, args ...any) error {
+	return errors.WithStack(db.real.Get(what, query, args...))
 }
 
 func Open(driver string, dsn string) (IDatabase, error) {
@@ -98,19 +143,24 @@ func Open(driver string, dsn string) (IDatabase, error) {
 
 	return &Database{
 		real: db,
-	}, err
+	}, errors.WithStack(err)
 }
 
 type Tx struct {
 	real *sqlx.Tx
 }
 
-func (tx *Tx) NamedExec(query string, arg interface{}) (sql.Result, error) {
-	return tx.real.NamedExec(query, arg)
+func (tx *Tx) NamedExec(query string, arg any) (sql.Result, error) {
+	rval, err := tx.real.NamedExec(query, arg)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return rval, nil
 }
 
 func (tx *Tx) Commit() error {
-	return tx.real.Commit()
+	return errors.WithStack(tx.real.Commit())
 }
 
 /* database.go ends here. */

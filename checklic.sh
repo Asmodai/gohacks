@@ -36,6 +36,17 @@
 #
 # }}}
 
+if [ ! -d "vendor" ]
+then
+    echo "FATAL"
+    echo
+    echo "There appears to be no vendor/ directory.  Please ensure that you "
+    echo "run 'go work vendor -o vendor' to create one and then re-run this "
+    echo "script."
+    
+    exit 255
+fi
+
 ROOT=$(pwd)
 DIRS=$(
     find ${ROOT}                      \
@@ -50,7 +61,12 @@ DIRS=$(
     uniq
 )
 
-go-licenses csv ${DIRS} 2>/dev/null | sort | uniq
-
+# Note the use of 'GOWORK=off' here... this is because 'go-licenses' does not
+# work within the Go Workspace ecosystem -- it wants to deal with packages
+# that are inside '<project_root>/vendor', not 'GOPATH/vendor'.
+GOWORK=off go-licenses                   \
+    report ${DIRS}                       \
+    --template doc/templates/license.tpl \
+    2>/dev/null
 
 # checklic.sh ends here.

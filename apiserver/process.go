@@ -35,13 +35,19 @@ import (
 	"github.com/Asmodai/gohacks/types"
 
 	"github.com/gin-gonic/gin"
+	"gitlab.com/tozd/go/errors"
 
-	"fmt"
 	"sync"
 )
 
 const (
 	getRouter int = 1
+)
+
+var (
+	ErrNoProcessManager = errors.Base("no process manager")
+	ErrNoDispatcherProc = errors.Base("no dispatcher process")
+	ErrWrongReturnType  = errors.Base("wrong return type")
 )
 
 type DispatcherProc struct {
@@ -61,22 +67,29 @@ func (p *DispatcherProc) start() {
 }
 
 func (p *DispatcherProc) Action(state **process.State) {
-	var ps *process.State = *state
+	var pst = *state
 
-	cmd := ps.ReceiveBlocking()
+	cmd, ok := pst.ReceiveBlocking().(*types.Pair)
+	if !ok {
+		pst.Logger().Fatal(
+			"Received message that is not of type types.Pair",
+		)
+	}
+
 	if cmd == nil {
 		return
 	}
 
 	p.Lock()
-	switch cmd.(*types.Pair).First {
+	//nolint:gocritic
+	switch cmd.First {
 	case getRouter:
-		ps.Send(process.NewActionResult(p.inst.GetRouter(), nil))
+		pst.Send(process.NewActionResult(p.inst.GetRouter(), nil))
 	}
 	p.Unlock()
 }
 
-func (p *DispatcherProc) stop(state **process.State) {
+func (p *DispatcherProc) stop(_ **process.State) {
 	p.inst.Stop()
 }
 
@@ -84,7 +97,7 @@ func Spawn(mgr process.Manager, lgr logger.Logger, config *Config) (*process.Pro
 	name := "Dispatcher"
 
 	if mgr == nil {
-		return nil, fmt.Errorf("Process manager not provided!")
+		return nil, errors.WithStack(ErrNoProcessManager)
 	}
 
 	inst, found := mgr.Find(name)
@@ -99,24 +112,36 @@ func Spawn(mgr process.Manager, lgr logger.Logger, config *Config) (*process.Pro
 		Function: dispatch.Action,
 		OnStop:   dispatch.stop,
 	}
-	pr := mgr.Create(conf)
+	proc := mgr.Create(conf)
 
+	// Start dispatcher.
 	dispatch.start()
-	go pr.Run()
 
-	return pr, nil
+	// Start goroutine.
+	go proc.Run()
+
+	return proc, nil
 }
 
 func GetRouter(mgr process.Manager) (*gin.Engine, error) {
 	inst, found := mgr.Find("Dispatcher")
 	if !found {
-		return nil, fmt.Errorf("Could not find Dispatcher process!")
+		return nil, errors.WithStack(ErrNoDispatcherProc)
 	}
 
 	inst.Send(types.NewPair(getRouter, nil))
-	result := inst.Receive().(*process.ActionResult)
 
-	return result.Value.(*gin.Engine), nil
+	result, okay := inst.Receive().(*process.ActionResult)
+	if !okay {
+		return nil, errors.WithStack(ErrWrongReturnType)
+	}
+
+	engine, okay := result.Value.(*gin.Engine)
+	if !okay {
+		return nil, errors.WithStack(ErrWrongReturnType)
+	}
+
+	return engine, nil
 }
 
 /* process.go ends here. */

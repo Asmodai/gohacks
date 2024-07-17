@@ -32,7 +32,6 @@ package sysinfo
 import (
 	"github.com/Asmodai/gohacks/math/conversion"
 
-	"log"
 	"os"
 	"runtime"
 	"testing"
@@ -42,87 +41,58 @@ var (
 	sinfo *SysInfo
 )
 
-// Main testing function.
-func TestMain(m *testing.M) {
-	log.Println("Setting up.")
-	sinfo = NewSysInfo()
+func TestSysInfo(t *testing.T) {
+	var (
+		stats runtime.MemStats
+		sinfo = NewSysInfo()
+	)
 
-	log.Println("Running tests.")
-	val := m.Run()
+	t.Run("`Hostname`", func(t *testing.T) {
+		this, err := os.Hostname()
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
 
-	log.Println("Shutting down.")
-	os.Exit(val)
-}
+		if this != sinfo.Hostname() {
+			t.Errorf("Hostname: %s != %s", this, sinfo.Hostname())
+		}
+	})
 
-// Test hostname resolution.
-func TestHostname(t *testing.T) {
-	t.Log("Does `Hostname` work as expected?")
+	t.Run("`MemStats`", func(t *testing.T) {
+		runtime.ReadMemStats(&stats)
+		sinfo.UpdateStats()
+		runtime.ReadMemStats(&stats)
 
-	this, err := os.Hostname()
-	if err != nil {
-		t.Errorf("os.Hostname(): %s", err.Error())
-		return
-	}
+		t.Run("Stats match", func(t *testing.T) {
+			if conversion.BToMiB(stats.Alloc) != sinfo.Allocated() {
+				t.Error("`Allocated` does NOT match.")
+			}
+		})
 
-	if this == sinfo.Hostname() {
-		t.Log("Yes.")
-		return
-	}
+		if conversion.BToMiB(stats.HeapSys) != sinfo.Heap() {
+			t.Errorf("`Heap` does NOT match.")
+		}
 
-	t.Error("No.")
-}
+		if conversion.BToMiB(stats.Sys) != sinfo.System() {
+			t.Error("`System` does NOT match.")
+		}
+	})
 
-// Test runtime statistics.
-func TestMemStats(t *testing.T) {
-	var stats runtime.MemStats
-	var fail bool = false
+	t.Run("GC matches", func(t *testing.T) {
+		if stats.NumGC != sinfo.GC() {
+			t.Error("`GC` does NOT match.")
+		}
+	})
 
-	runtime.ReadMemStats(&stats)
-	sinfo.UpdateStats()
-	runtime.ReadMemStats(&stats)
+	t.Run("GoRoutines match", func(t *testing.T) {
+		sinfo.UpdateStats()
+		rtgo := runtime.NumGoroutine()
+		sigo := sinfo.GoRoutines()
 
-	t.Log("Do our runtime stats match?")
-	if conversion.BToMiB(stats.Alloc) != sinfo.Allocated() {
-		t.Error("`Allocated` does NOT match.")
-		fail = true
-	}
-
-	if conversion.BToMiB(stats.HeapSys) != sinfo.Heap() {
-		t.Errorf("`Heap` does NOT match.")
-		fail = true
-	}
-
-	if conversion.BToMiB(stats.Sys) != sinfo.System() {
-		t.Error("`System` does NOT match.")
-		fail = true
-	}
-
-	if stats.NumGC != sinfo.GC() {
-		t.Error("`GC` does NOT match.")
-		fail = true
-	}
-
-	if fail {
-		t.Error("One or more runtime stats are incorrect.")
-	} else {
-		t.Log("Yes.")
-	}
-}
-
-// Test goroutine count.
-func TestGoRoutine(t *testing.T) {
-	t.Log("Does `GoRoutines` match?")
-
-	sinfo.UpdateStats()
-	rtgo := runtime.NumGoroutine()
-	sigo := sinfo.GoRoutines()
-
-	if rtgo == sigo {
-		t.Log("Yes.")
-		return
-	}
-
-	t.Errorf("No, runtime:%v, sysinfo:%v", rtgo, sigo)
+		if rtgo != sigo {
+			t.Errorf("No, runtime:%v, sysinfo:%v", rtgo, sigo)
+		}
+	})
 }
 
 /* sysinfo_test.go ends here. */

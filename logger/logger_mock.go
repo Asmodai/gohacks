@@ -141,6 +141,23 @@ func (mr *MockLoggerMockRecorder) Fatalf(arg0 any, arg1 ...any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatalf", reflect.TypeOf((*MockLogger)(nil).Fatalf), varargs...)
 }
 
+// GoError mocks base method.
+func (m *MockLogger) GoError(arg0 error, arg1 ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "GoError", varargs...)
+}
+
+// GoError indicates an expected call of GoError.
+func (mr *MockLoggerMockRecorder) GoError(arg0 any, arg1 ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GoError", reflect.TypeOf((*MockLogger)(nil).GoError), varargs...)
+}
+
 // Info mocks base method.
 func (m *MockLogger) Info(arg0 string, arg1 ...any) {
 	m.ctrl.T.Helper()

@@ -30,19 +30,19 @@
 package database
 
 import (
+	// This is the MySQL driver, it must be blank.
 	_ "github.com/go-sql-driver/mysql"
 
-	"github.com/Asmodai/gohacks/types"
+	"gitlab.com/tozd/go/errors"
 )
 
 /*
-
 Database management.
 
 This is a series of wrappers around Go's internal DB stuff to ensure
 that we set up max idle/open connections et al.
-
 */
+//nolint:revive
 type DatabaseMgr struct {
 }
 
@@ -53,33 +53,22 @@ func (dbm *DatabaseMgr) Open(driver string, dsn string) (IDatabase, error) {
 
 // Open and configure a database connection.
 func (dbm *DatabaseMgr) OpenConfig(conf *Config) (IDatabase, error) {
-	db, err := dbm.Open(conf.Driver, conf.ToDSN())
+	dbase, err := dbm.Open(conf.Driver, conf.ToDSN())
 	if err != nil {
-		return nil, types.NewErrorAndLog(
-			"DATABASE",
-			err.Error(),
-		)
+		return nil, errors.WithStack(err)
 	}
 
 	if conf.SetPoolLimits {
-		db.SetMaxIdleConns(conf.MaxIdleConns)
-		db.SetMaxOpenConns(conf.MaxOpenConns)
+		dbase.SetMaxIdleConns(conf.MaxIdleConns)
+		dbase.SetMaxOpenConns(conf.MaxOpenConns)
 	}
 
-	return db, nil
+	return dbase, nil
 }
 
 // Check the db connection.
 func (dbm *DatabaseMgr) CheckDB(db IDatabase) error {
-	if err := db.Ping(); err != nil {
-		return types.NewError(
-			"DATABASE",
-			"Unable to ping database: %s",
-			err.Error(),
-		)
-	}
-
-	return nil
+	return errors.WithStack(db.Ping())
 }
 
 /* databasemgr.go ends here. */

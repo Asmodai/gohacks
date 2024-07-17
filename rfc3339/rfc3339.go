@@ -31,73 +31,85 @@ package rfc3339
 
 import (
 	"github.com/btubbs/datetime"
+	"gitlab.com/tozd/go/errors"
 
 	"strings"
 	"time"
 )
 
 // An RFC3339 object.
-type JsonRFC3339 time.Time
+type JSONRFC3339 time.Time
 
 // Unmarshal an RFC3339 timestamp from JSON.
-func (j *JsonRFC3339) UnmarshalJSON(b []byte) error {
+func (j *JSONRFC3339) UnmarshalJSON(b []byte) error {
 	s := strings.Trim(string(b), "\"")
 
-	t, err := RFC3339Parse(s)
+	t, err := Parse(s)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
-	*j = JsonRFC3339(t)
+	*j = JSONRFC3339(t)
 
 	return nil
 }
 
 // Marshal an RFC3339 object to JSON.
-func (j JsonRFC3339) MarshalJSON() ([]byte, error) {
+func (j JSONRFC3339) MarshalJSON() ([]byte, error) {
 	return []byte("\"" + j.Format(time.RFC3339) + "\""), nil
 }
 
 // Format an RFC3339 object as a string.
-func (j JsonRFC3339) Format(s string) string {
+func (j JSONRFC3339) Format(s string) string {
 	return j.Time().Format(s)
 }
 
 // Convert an RFC3339 time to UTC.
-func (j JsonRFC3339) UTC() time.Time {
+func (j JSONRFC3339) UTC() time.Time {
 	return j.Time().UTC()
 }
 
 // Convert an RFC3339 time to Unix time.
-func (j JsonRFC3339) Unix() int64 {
+func (j JSONRFC3339) Unix() int64 {
 	return j.Time().Unix()
 }
 
 // convert an RFC3339 time to time.Time.
-func (j JsonRFC3339) Time() time.Time {
+func (j JSONRFC3339) Time() time.Time {
 	return time.Time(j)
 }
 
 // Convert an RFC3339 time to a MySQL timestamp.
-func (j JsonRFC3339) MySQL() string {
+func (j JSONRFC3339) MySQL() string {
 	return TimeToMySQL(j.Time())
 }
 
 // Parse a string to an RFC3339 timestamp.
-func RFC3339Parse(data string) (time.Time, error) {
+func Parse(data string) (time.Time, error) {
 	tzchar := strings.ToUpper(data[len(data)-1:])
 	tzoff := data[len(data)-5:]
 
 	if tzchar == "Z" || tzoff == "+" || tzoff == "-" {
-		return time.Parse(time.RFC3339, data)
+		rval, err := time.Parse(time.RFC3339, data)
+		if err != nil {
+			return time.Time{}, errors.WithStack(err)
+		}
+
+		return rval, nil
 	}
 
 	temp, _ := datetime.Parse(data, time.UTC)
 	if temp.After(time.Now()) {
-		return RFC3339Parse(time.Now().UTC().Format("2006-01-02T15:04:05Z"))
+		return Parse(time.Now().UTC().Format("2006-01-02T15:04:05Z"))
 	}
 
-	return datetime.Parse(data, time.Local)
+	//nolint:gosmopolitan
+	rval, err := datetime.Parse(data, time.Local)
+	if err != nil {
+		return time.Time{}, errors.WithStack(err)
+	}
+
+	return rval, nil
 }
 
 // Return the current time zone.

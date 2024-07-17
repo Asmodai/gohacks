@@ -1,3 +1,4 @@
+/* mock:yes */
 /*
  * server.go --- Wrapper around http.Server.
  *
@@ -31,44 +32,73 @@ package apiserver
 
 import (
 	"github.com/gin-gonic/gin"
+	"gitlab.com/tozd/go/errors"
 
 	"context"
 	"crypto/tls"
 	"net/http"
+	"time"
 )
 
-type Server struct {
+const (
+	defaultReadHeaderTimeout = 2 * time.Second
+)
+
+type Server interface {
+	ListenAndServeTLS(string, string) error
+	ListenAndServe() error
+	Shutdown(context.Context) error
+	SetTLSConfig(*tls.Config)
+}
+
+type server struct {
 	srv *http.Server
 }
 
-func NewServer(addr string, router *gin.Engine) *Server {
-	return &Server{
+func NewServer(addr string, router *gin.Engine) Server {
+	return &server{
 		srv: &http.Server{
-			Addr:    addr,
-			Handler: router,
+			Addr:              addr,
+			Handler:           router,
+			ReadHeaderTimeout: defaultReadHeaderTimeout,
 		},
 	}
 }
 
-func NewDefaultServer() *Server {
-	return &Server{
-		srv: &http.Server{},
+func NewDefaultServer() Server {
+	return &server{
+		srv: &http.Server{
+			// Avoid a Slowlaris issue and set a read header timeout.
+			ReadHeaderTimeout: defaultReadHeaderTimeout,
+		},
 	}
 }
 
-func (s *Server) ListenAndServeTLS(cert, key string) error {
-	return s.srv.ListenAndServeTLS(cert, key)
+func (s *server) ListenAndServeTLS(cert, key string) error {
+	if err := s.srv.ListenAndServeTLS(cert, key); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
 }
 
-func (s *Server) ListenAndServe() error {
-	return s.srv.ListenAndServe()
+func (s *server) ListenAndServe() error {
+	if err := s.srv.ListenAndServe(); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
 }
 
-func (s *Server) Shutdown(ctx context.Context) error {
-	return s.srv.Shutdown(ctx)
+func (s *server) Shutdown(ctx context.Context) error {
+	if err := s.srv.Shutdown(ctx); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
 }
 
-func (s *Server) SetTLSConfig(conf *tls.Config) {
+func (s *server) SetTLSConfig(conf *tls.Config) {
 	s.srv.TLSConfig = conf
 }
 

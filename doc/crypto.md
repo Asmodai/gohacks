@@ -17,17 +17,17 @@ func GenerateRandomBytes(n int) ([]byte, error)
 #### func  GenerateRandomSafeBytes
 
 ```go
-func GenerateRandomSafeBytes(n int) ([]byte, error)
+func GenerateRandomSafeBytes(count int) ([]byte, error)
 ```
 
 #### func  GenerateRandomSafeString
 
 ```go
-func GenerateRandomSafeString(n int) (string, error)
+func GenerateRandomSafeString(count int) (string, error)
 ```
 
 #### func  GenerateRandomString
 
 ```go
-func GenerateRandomString(n int) (string, error)
+func GenerateRandomString(count int) (string, error)
 ```

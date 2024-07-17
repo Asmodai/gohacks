@@ -30,9 +30,16 @@
 package database
 
 import (
+	"gitlab.com/tozd/go/errors"
+
 	"database/sql"
 	"encoding/json"
 	"time"
+)
+
+//nolint:gochecknoglobals
+var (
+	zeroTime = time.Time{}
 )
 
 // ==[ NullBool ]=====================================================
@@ -43,7 +50,12 @@ type NullBool struct {
 
 func (x NullBool) MarshalJSON() ([]byte, error) {
 	if x.Valid {
-		return json.Marshal(x.Bool)
+		rval, err := json.Marshal(x.Bool)
+		if err != nil {
+			return []byte{}, errors.WithStack(err)
+		}
+
+		return rval, nil
 	}
 
 	return []byte("false"), nil
@@ -57,7 +69,12 @@ type NullByte struct {
 
 func (x NullByte) MarshalJSON() ([]byte, error) {
 	if x.Valid {
-		return json.Marshal(x.Byte)
+		rval, err := json.Marshal(x.Byte)
+		if err != nil {
+			return []byte{}, errors.WithStack(err)
+		}
+
+		return rval, nil
 	}
 
 	return []byte(""), nil
@@ -71,7 +88,12 @@ type NullFloat64 struct {
 
 func (x NullFloat64) MarshalJSON() ([]byte, error) {
 	if x.Valid {
-		return json.Marshal(x.Float64)
+		rval, err := json.Marshal(x.Float64)
+		if err != nil {
+			return []byte{}, errors.WithStack(err)
+		}
+
+		return rval, nil
 	}
 
 	return []byte("0.0"), nil
@@ -85,7 +107,12 @@ type NullInt16 struct {
 
 func (x NullInt16) MarshalJSON() ([]byte, error) {
 	if x.Valid {
-		return json.Marshal(x.Int16)
+		rval, err := json.Marshal(x.Int16)
+		if err != nil {
+			return []byte{}, errors.WithStack(err)
+		}
+
+		return rval, nil
 	}
 
 	return []byte("0"), nil
@@ -99,7 +126,12 @@ type NullInt32 struct {
 
 func (x NullInt32) MarshalJSON() ([]byte, error) {
 	if x.Valid {
-		return json.Marshal(x.Int32)
+		rval, err := json.Marshal(x.Int32)
+		if err != nil {
+			return []byte{}, errors.WithStack(err)
+		}
+
+		return rval, nil
 	}
 
 	return []byte("0"), nil
@@ -113,7 +145,12 @@ type NullInt64 struct {
 
 func (x NullInt64) MarshalJSON() ([]byte, error) {
 	if x.Valid {
-		return json.Marshal(x.Int64)
+		rval, err := json.Marshal(x.Int64)
+		if err != nil {
+			return []byte{}, errors.WithStack(err)
+		}
+
+		return rval, nil
 	}
 
 	return []byte("0"), nil
@@ -127,7 +164,12 @@ type NullString struct {
 
 func (x NullString) MarshalJSON() ([]byte, error) {
 	if x.Valid {
-		return json.Marshal(x.String)
+		rval, err := json.Marshal(x.String)
+		if err != nil {
+			return []byte{}, errors.WithStack(err)
+		}
+
+		return rval, nil
 	}
 
 	return []byte("null"), nil
@@ -141,11 +183,20 @@ type NullTime struct {
 
 func (x NullTime) MarshalJSON() ([]byte, error) {
 	if x.Valid {
-		return json.Marshal(x.Time)
+		rval, err := json.Marshal(x.Time)
+		if err != nil {
+			return []byte{}, errors.WithStack(err)
+		}
+
+		return rval, nil
 	}
 
-	zero := time.Time{}
-	return json.Marshal(zero.UTC())
+	rval, err := json.Marshal(zeroTime.UTC())
+	if err != nil {
+		return []byte{}, errors.WithStack(err)
+	}
+
+	return rval, nil
 }
 
 /* types.go ends here. */

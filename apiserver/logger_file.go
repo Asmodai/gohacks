@@ -38,6 +38,10 @@ import (
 	"time"
 )
 
+const (
+	DefaultFileMode = 0644
+)
+
 func (d *Dispatcher) initLog() gin.LoggerConfig {
 	return gin.LoggerConfig{
 		Formatter: d.logFormatter,
@@ -50,7 +54,11 @@ func (d *Dispatcher) logWriter() io.Writer {
 		return gin.DefaultWriter
 	}
 
-	f, err := os.OpenFile(d.config.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(
+		d.config.LogFile,
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+		DefaultFileMode,
+	)
 	if err != nil {
 		d.lgr.Fatal(
 			"Could not open file for writing.",
@@ -64,7 +72,7 @@ func (d *Dispatcher) logWriter() io.Writer {
 		"file", d.config.LogFile,
 	)
 
-	return f
+	return file
 }
 
 func (d *Dispatcher) logFormatter(param gin.LogFormatterParams) string {

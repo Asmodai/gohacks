@@ -63,31 +63,29 @@ func (c *FakeHttp) Do(req *http.Request) (*http.Response, error) {
 // Create default parameters
 func defaultParams() *Params {
 	p := NewParams()
-	p.Url = "http://127.0.0.1/test"
+	p.URL = "http://127.0.0.1/test"
 
 	return p
 }
 
 // Invoke afake HTTP magic GET request.
 func invokeGet(params *Params, payloadfn FakeHttpFn) ([]byte, int, error) {
-	conf := NewDefaultConfig()
-	client := NewClient(conf, logger.NewDefaultLogger())
-	client.Client = &FakeHttp{
+	c := NewClient(NewDefaultConfig(), logger.NewDefaultLogger())
+	c.(*client).Client = &FakeHttp{
 		Payload: payloadfn,
 	}
 
-	return client.Get(params)
+	return c.Get(params)
 }
 
 // Invoke afake HTTP magic POST request.
 func invokePost(params *Params, payloadfn FakeHttpFn) ([]byte, int, error) {
-	conf := NewDefaultConfig()
-	client := NewClient(conf, logger.NewDefaultLogger())
-	client.Client = &FakeHttp{
+	c := NewClient(NewDefaultConfig(), logger.NewDefaultLogger())
+	c.(*client).Client = &FakeHttp{
 		Payload: payloadfn,
 	}
 
-	return client.Post(params)
+	return c.Post(params)
 }
 
 // Invoke a fake HTTP magic request with a custom HTTP method verb.
@@ -97,12 +95,12 @@ func invokeVerb(verb string, params *Params, payloadfn FakeHttpFn) ([]byte, int,
 		Timeout:           5,
 	}
 
-	client := NewClient(conf, logger.NewDefaultLogger())
-	client.Client = &FakeHttp{
+	c := NewClient(conf, logger.NewDefaultLogger())
+	c.(*client).Client = &FakeHttp{
 		Payload: payloadfn,
 	}
 
-	return client.httpAction(verb, params)
+	return c.(*client).httpAction(verb, params)
 }
 
 // Test the 'Get' method.
@@ -140,11 +138,11 @@ func TestGet(t *testing.T) {
 			data, code, err := invokeGet(
 				defaultParams(),
 				func(_ *http.Request) ([]byte, int, error) {
-					return []byte("busted"), 0, fmt.Errorf("Broken")
+					return []byte("busted"), 0, fmt.Errorf("broken")
 				},
 			)
 
-			if data != nil || code != 0 || err.Error() != "APICLIENT: Broken" {
+			if data != nil || code != 0 || err.Error() != "broken" {
 				t.Errorf("No, unexpected data='%v', code='%v', err='%v'", data, code, err.Error())
 			}
 		},
@@ -167,7 +165,7 @@ func TestGet(t *testing.T) {
 				return
 			}
 
-			if err.Error() != "APICLIENT: net/http: invalid method \"Do The Thing\"" {
+			if err.Error() != "net/http: invalid method \"Do The Thing\"" {
 				t.Errorf("No, '%v'", err.Error())
 			}
 		},
@@ -181,7 +179,7 @@ func TestGet(t *testing.T) {
 			contentType := "text/shenanigans"
 			_, code, err := invokeGet(
 				&Params{
-					Url: "http://127.0.0.1/test",
+					URL: "http://127.0.0.1/test",
 					Content: ContentType{
 						Accept: accept,
 						Type:   contentType,
@@ -216,7 +214,7 @@ func TestGet(t *testing.T) {
 				&Params{
 					UseBasic: true,
 					UseToken: true,
-					Url:      "http://127.0.0.1/test",
+					URL:      "http://127.0.0.1/test",
 				},
 				func(_ *http.Request) ([]byte, int, error) {
 					return []byte(""), 200, nil
@@ -228,7 +226,7 @@ func TestGet(t *testing.T) {
 				return
 			}
 
-			if err.Error() != "APICLIENT: Cannot use Basic Auth and token at the same time." {
+			if err.Error() != "cannot use basic auth and token at the same time" {
 				t.Errorf("No, '%v'", err.Error())
 			}
 		},
@@ -239,7 +237,7 @@ func TestGet(t *testing.T) {
 		func(t *testing.T) {
 			_, _, err := invokeGet(
 				&Params{
-					Url:      "http://127.0.0.1/test",
+					URL:      "http://127.0.0.1/test",
 					UseBasic: true,
 				},
 				func(_ *http.Request) ([]byte, int, error) {
@@ -252,7 +250,7 @@ func TestGet(t *testing.T) {
 				return
 			}
 
-			if err.Error() != "APICLIENT: No basic auth username given!" {
+			if err.Error() != "no basic auth username given" {
 				t.Errorf("No, '%v'", err.Error())
 			}
 		},
@@ -264,7 +262,7 @@ func TestGet(t *testing.T) {
 		func(t *testing.T) {
 			_, _, err := invokeGet(
 				&Params{
-					Url:      "http://127.0.0.1/test",
+					URL:      "http://127.0.0.1/test",
 					UseToken: true,
 				},
 				func(_ *http.Request) ([]byte, int, error) {
@@ -277,7 +275,7 @@ func TestGet(t *testing.T) {
 				return
 			}
 
-			if err.Error() != "APICLIENT: No auth token header given!" {
+			if err.Error() != "no auth token header given" {
 				t.Errorf("No, '%v'", err.Error())
 			}
 		},
@@ -288,7 +286,7 @@ func TestGet(t *testing.T) {
 		"Appends query parameters properly",
 		func(t *testing.T) {
 			params := &Params{
-				Url: "http://127.0.0.1/test",
+				URL: "http://127.0.0.1/test",
 			}
 			params.AddQueryParam("test", "value")
 
@@ -304,7 +302,7 @@ func TestGet(t *testing.T) {
 				return
 			}
 
-			if err.Error() != "APICLIENT: test=value" {
+			if err.Error() != "test=value" {
 				t.Errorf("No, '%v'", err.Error())
 			}
 		},
@@ -341,7 +339,7 @@ func TestTokenAuth(t *testing.T) {
 			payload := []byte("TOKEN")
 			data, code, err := invokeGet(
 				&Params{
-					Url:      "http://127.0.0.1/test",
+					URL:      "http://127.0.0.1/test",
 					UseToken: true,
 					Token: AuthToken{
 						Header: "HEADER",
@@ -371,7 +369,7 @@ func TestBasicAuth(t *testing.T) {
 			payload := []byte("user:pass")
 			data, code, err := invokeGet(
 				&Params{
-					Url:      "http://127.0.0.1/test",
+					URL:      "http://127.0.0.1/test",
 					UseBasic: true,
 					Basic: AuthBasic{
 						Username: "user",
@@ -381,7 +379,7 @@ func TestBasicAuth(t *testing.T) {
 				func(req *http.Request) ([]byte, int, error) {
 					u, p, ok := req.BasicAuth()
 					if !ok {
-						return []byte(""), 500, fmt.Errorf("Basic auth")
+						return []byte(""), 500, fmt.Errorf("basic auth")
 					}
 
 					return []byte(u + ":" + p), 200, nil
@@ -411,7 +409,7 @@ func TestStatusCode(t *testing.T) {
 				return
 			}
 
-			if err.Error() != "APICLIENT: Received status code 404 for http://127.0.0.1/test" {
+			if err.Error() != "received status code 404 for http://127.0.0.1/test" {
 				t.Errorf("No, '%v'", err.Error())
 			}
 		},

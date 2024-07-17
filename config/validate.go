@@ -36,18 +36,18 @@ import (
 // Add a validator function for a tag value.
 //
 // This is so one can add validators after instance creation.
-func (obj *config) AddValidator(name string, fn any) {
-	obj.Validators[name] = fn
+func (c *config) AddValidator(name string, fn any) {
+	c.Validators[name] = fn
 }
 
 // Validate configuration.
 //
 // Should validation fail, then a list of errors is returned.
 // Should validation pass, an empty list is returned.
-func (obj *config) Validate() []error {
-	sref := reflect.ValueOf(obj.App).Elem()
+func (c *config) Validate() []error {
+	sref := reflect.ValueOf(c.App).Elem()
 
-	return obj.recurseValidate(sref)
+	return c.recurseValidate(sref)
 }
 
 /* validate.go ends here. */

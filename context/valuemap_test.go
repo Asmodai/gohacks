@@ -77,27 +77,35 @@ func TestValueMapDefaultKey(t *testing.T) {
 	ctx := WithValueMap(TODO(), vmap)
 
 	t.Run("Returns existing value", func(t *testing.T) {
-		if res := GetValueMap(ctx); res == nil {
+		if _, err := GetValueMap(ctx); err != nil {
 			t.Error("No value map key was found!")
 		}
 	})
 
 	t.Run("Returns nil for non-existent value", func(t *testing.T) {
 		ctx := TODO()
-		if res := GetValueMap(ctx); res != nil {
+		if res, err := GetValueMap(ctx); res != nil && err != nil {
 			t.Errorf("Unexpected value returned: %#v", res)
 		}
 	})
 
 	t.Run("Returns value for key within map", func(t *testing.T) {
-		res := GetValueMap(ctx)
+		res, err := GetValueMap(ctx)
+		if err != nil {
+			t.Error("No value map was found!")
+		}
+
 		if _, ok := res.Get("test"); !ok {
 			t.Error("Value for key 'test' was not found!")
 		}
 	})
 
 	t.Run("Returns false for value without key in map", func(t *testing.T) {
-		res := GetValueMap(ctx)
+		res, err := GetValueMap(ctx)
+		if err != nil {
+			t.Error("No value map was found!")
+		}
+
 		if _, ok := res.Get("nope"); ok {
 			t.Error("Somehow a value for a non-existent key was found.")
 		}
@@ -112,26 +120,34 @@ func TestValueMapCustomKey(t *testing.T) {
 	ctx := WithValueMapWithKey(TODO(), "testing", vmap)
 
 	t.Run("Returns existing value", func(t *testing.T) {
-		if res := GetValueMapWithKey(ctx, "testing"); res == nil {
+		if _, err := GetValueMapWithKey(ctx, "testing"); err != nil {
 			t.Error("No value map key was found!")
 		}
 	})
 
 	t.Run("Returns nil for non-existent key", func(t *testing.T) {
-		if res := GetValueMapWithKey(ctx, "nope"); res != nil {
+		if res, err := GetValueMapWithKey(ctx, "nope"); res != nil && err != nil {
 			t.Error("Somehow found a key that shouldn't exist.")
 		}
 	})
 
 	t.Run("Returns value for key within map", func(t *testing.T) {
-		res := GetValueMapWithKey(ctx, "testing")
+		res, err := GetValueMapWithKey(ctx, "testing")
+		if err != nil {
+			t.Error("No value map was found!")
+		}
+
 		if _, ok := res.Get("test"); !ok {
 			t.Error("Value for key 'test' was not found!")
 		}
 	})
 
 	t.Run("Returns false for value without key in map", func(t *testing.T) {
-		res := GetValueMapWithKey(ctx, "testing")
+		res, err := GetValueMapWithKey(ctx, "testing")
+		if err != nil {
+			t.Error("No value map was found!")
+		}
+
 		if _, ok := res.Get("nope"); ok {
 			t.Error("Somehow a value for a non-existent key was found.")
 		}
@@ -149,8 +165,8 @@ func TestChildCopy(t *testing.T) {
 
 	// Test the parent here, just to be sure.
 	t.Run("Parent has values", func(t *testing.T) {
-		vals := GetValueMap(parent)
-		if vals == nil {
+		vals, err := GetValueMap(parent)
+		if vals == nil || err != nil {
 			t.Error("Parent has no value map.")
 		}
 
@@ -177,8 +193,8 @@ func TestChildCopy(t *testing.T) {
 
 	// Now test the child.
 	t.Run("Child has values", func(t *testing.T) {
-		vals := GetValueMap(child)
-		if vals == nil {
+		vals, err := GetValueMap(child)
+		if vals == nil || err != nil {
 			t.Error("Child has no value map.")
 		}
 

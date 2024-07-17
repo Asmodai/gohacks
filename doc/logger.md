@@ -22,6 +22,7 @@ type Logger interface {
 	SetDebug(bool)
 	SetLogFile(string)
 
+	GoError(error, ...any)
 	Debug(string, ...any)
 	Error(string, ...any)
 	Warn(string, ...any)
@@ -151,6 +152,13 @@ func (m *MockLogger) Fatalf(arg0 string, arg1 ...any)
 ```
 Fatalf mocks base method.
 
+#### func (*MockLogger) GoError
+
+```go
+func (m *MockLogger) GoError(arg0 error, arg1 ...any)
+```
+GoError mocks base method.
+
 #### func (*MockLogger) Info
 
 ```go
@@ -264,6 +272,13 @@ Fatal indicates an expected call of Fatal.
 func (mr *MockLoggerMockRecorder) Fatalf(arg0 any, arg1 ...any) *gomock.Call
 ```
 Fatalf indicates an expected call of Fatalf.
+
+#### func (*MockLoggerMockRecorder) GoError
+
+```go
+func (mr *MockLoggerMockRecorder) GoError(arg0 any, arg1 ...any) *gomock.Call
+```
+GoError indicates an expected call of GoError.
 
 #### func (*MockLoggerMockRecorder) Info
 

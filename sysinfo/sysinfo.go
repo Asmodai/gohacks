@@ -50,14 +50,14 @@ type SysInfo struct {
 
 // Create a new System Information instance.
 func NewSysInfo() *SysInfo {
-	si := &SysInfo{
+	siproc := &SysInfo{
 		rt:    runtime.MemStats{},
 		start: time.Now(),
 	}
 
-	si.initHostname()
+	siproc.initHostname()
 
-	return si
+	return siproc
 }
 
 // Initialize hostname field.
@@ -65,6 +65,9 @@ func (si *SysInfo) initHostname() {
 	host, err := os.Hostname()
 	if err != nil {
 		log.Printf("os.Hostname(): %s", err.Error())
+
+		// Nod to BSD systems right here.
+		host = "amnesiac"
 	}
 
 	si.Lock()

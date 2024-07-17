@@ -143,6 +143,8 @@ To use,
 
 ```
 
+Manager is optional, as you can create processes directly.
+
 #### func  NewManager
 
 ```go
@@ -430,6 +432,8 @@ To use:
     proc.Stop()
 
 ```
+
+    will stop the process.
 
 #### func  NewProcess
 

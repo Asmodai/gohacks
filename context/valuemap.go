@@ -47,7 +47,7 @@ type ValueMap interface {
 	Set(key string, value any)
 }
 
-// Internal structure
+// Internal structure.
 type valueMap struct {
 	data map[string]any // Map of string keys to any value type.
 }
@@ -65,9 +65,10 @@ func NewValueMap() ValueMap {
 // true.
 //
 // Otherwise, nil is returned with an `ok` value of false.
-func (obj valueMap) Get(key string) (value any, ok bool) {
-	value, ok = obj.data[key]
-	return
+func (obj valueMap) Get(key string) (any, bool) {
+	value, ok := obj.data[key]
+
+	return value, ok
 }
 
 // Set the value of the given key.

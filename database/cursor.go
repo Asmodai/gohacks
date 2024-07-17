@@ -34,8 +34,9 @@ type Cursor struct {
 	Limit  int64 `json:"limit"`
 }
 
+//nolint:gochecknoglobals
 var (
-	EmptyCursor *Cursor = &Cursor{Offset: 0, Limit: 0}
+	EmptyCursor = &Cursor{Offset: 0, Limit: 0}
 )
 
 func (c Cursor) Valid() bool {

@@ -30,6 +30,8 @@
 package crypto
 
 import (
+	"gitlab.com/tozd/go/errors"
+
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -52,45 +54,52 @@ func assertAvailablePRNG() {
 }
 
 func GenerateRandomBytes(n int) ([]byte, error) {
-	b := make([]byte, n)
+	buf := make([]byte, n)
 
-	_, err := rand.Read(b)
+	_, err := rand.Read(buf)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
-	return b, nil
+	return buf, nil
 }
 
-func GenerateRandomString(n int) (string, error) {
+func GenerateRandomString(count int) (string, error) {
 	const alnum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-	ret := make([]byte, n)
+	ret := make([]byte, count)
 
-	for i := 0; i < n; i++ {
+	for idx := 0; idx < count; idx++ {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(alnum))))
 		if err != nil {
-			return "", err
+			return "", errors.WithStack(err)
 		}
 
-		ret[i] = alnum[num.Int64()]
+		ret[idx] = alnum[num.Int64()]
 	}
 
 	return string(ret), nil
 }
 
-func GenerateRandomSafeString(n int) (string, error) {
-	b, err := GenerateRandomBytes(n)
+func GenerateRandomSafeString(count int) (string, error) {
+	b, err := GenerateRandomBytes(count)
+	if err != nil {
+		err = errors.WithStack(err)
+	}
 
 	return base64.URLEncoding.EncodeToString(b), err
 }
 
-func GenerateRandomSafeBytes(n int) ([]byte, error) {
-	b, err := GenerateRandomSafeString(n)
+func GenerateRandomSafeBytes(count int) ([]byte, error) {
+	b, err := GenerateRandomSafeString(count)
+	if err != nil {
+		err = errors.WithStack(err)
+	}
 
 	return []byte(b), err
 }
 
+//nolint:gochecknoinits
 func init() {
 	assertAvailablePRNG()
 }

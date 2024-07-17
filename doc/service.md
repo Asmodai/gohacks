@@ -8,6 +8,14 @@
 
 ## Usage
 
+#### type ConstructorFn
+
+```go
+type ConstructorFn func() interface{}
+```
+
+Constructor function for creating new service records.
+
 #### type Service
 
 ```go
@@ -44,6 +52,8 @@ To use:
 
 ```
 
+Profit.
+
 #### func  DumpInstance
 
 ```go
@@ -68,7 +78,7 @@ Add a new service instance with the given name.
 #### func (*Service) AddClass
 
 ```go
-func (s *Service) AddClass(name string, ctor ServiceCtorFn)
+func (s *Service) AddClass(name string, ctor ConstructorFn)
 ```
 Add a new class with the given name.
 
@@ -113,11 +123,3 @@ Get a service with the given name.
 func (s *Service) Services() []string
 ```
 Get a list of registered services.
-
-#### type ServiceCtorFn
-
-```go
-type ServiceCtorFn func() interface{}
-```
-
-Constructor function for creating new service records.

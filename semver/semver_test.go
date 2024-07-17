@@ -34,8 +34,6 @@ import (
 )
 
 func TestBuild(t *testing.T) {
-	var semver *SemVer = NewSemVer()
-
 	t.Run("Parses proper version string", func(t *testing.T) {
 		ok := true
 		str := "10020003:commit"
@@ -61,6 +59,8 @@ func TestBuild(t *testing.T) {
 	})
 
 	t.Run("Parses proper version string without commit hash", func(t *testing.T) {
+		var semver = NewSemVer()
+
 		ok := true
 		str := "10020003"
 
@@ -87,7 +87,7 @@ func TestBuild(t *testing.T) {
 	t.Run("Returns an error for invalid string", func(t *testing.T) {
 		str := "invalid"
 
-		err := semver.FromString(str)
+		_, err := MakeSemVer(str)
 		if err == nil {
 			t.Error("Expected an error, but got none.")
 		}
@@ -96,7 +96,7 @@ func TestBuild(t *testing.T) {
 	t.Run("Returns an error for string with invalid commit", func(t *testing.T) {
 		str := "1:invalid:wheee"
 
-		err := semver.FromString(str)
+		_, err := MakeSemVer(str)
 		if err == nil {
 			t.Error("Expected an error, but got none.")
 		}
@@ -104,7 +104,7 @@ func TestBuild(t *testing.T) {
 }
 
 func TestStringify(t *testing.T) {
-	var semver *SemVer = NewSemVer()
+	var semver = NewSemVer()
 
 	t.Run("Returns a version string", func(t *testing.T) {
 		str := "10020003:commit"
@@ -122,7 +122,7 @@ func TestStringify(t *testing.T) {
 }
 
 func TestVersionNumber(t *testing.T) {
-	var semver *SemVer = NewSemVer()
+	var semver = NewSemVer()
 
 	t.Run("Returns a version numeric", func(t *testing.T) {
 		str := "10020003:commit"

@@ -8,6 +8,12 @@
 
 ## Usage
 
+```go
+var (
+	EmptyCursor = &Cursor{Offset: 0, Limit: 0}
+)
+```
+
 #### type Config
 
 ```go
@@ -15,7 +21,7 @@ type Config struct {
 	Driver         string `json:"driver"`
 	Username       string `json:"username"`
 	UsernameSecret string `json:"username_secret"`
-	Password       string `json:"password" config_obscure:"true"`
+	Password       string `config_obscure:"true"  json:"password"`
 	PasswordSecret string `json:"password_secret"`
 	Hostname       string `json:"hostname"`
 	Port           int    `json:"port"`
@@ -58,12 +64,6 @@ type Cursor struct {
 }
 ```
 
-
-```go
-var (
-	EmptyCursor *Cursor = &Cursor{Offset: 0, Limit: 0}
-)
-```
 
 #### func  NewCursor
 
@@ -112,13 +112,13 @@ func (db *Database) Close() error
 #### func (*Database) Exec
 
 ```go
-func (db *Database) Exec(query string, args ...interface{}) (sql.Result, error)
+func (db *Database) Exec(query string, args ...any) (sql.Result, error)
 ```
 
 #### func (*Database) Get
 
 ```go
-func (db *Database) Get(what interface{}, query string, args ...interface{}) error
+func (db *Database) Get(what any, query string, args ...any) error
 ```
 
 #### func (*Database) MustBegin
@@ -130,7 +130,7 @@ func (db *Database) MustBegin() *sqlx.Tx
 #### func (*Database) NamedExec
 
 ```go
-func (db *Database) NamedExec(query string, args interface{}) (sql.Result, error)
+func (db *Database) NamedExec(query string, args any) (sql.Result, error)
 ```
 
 #### func (*Database) Ping
@@ -148,25 +148,25 @@ func (db *Database) Prepare(query string) (*sql.Stmt, error)
 #### func (*Database) Query
 
 ```go
-func (db *Database) Query(query string, args ...interface{}) (IRows, error)
+func (db *Database) Query(query string, args ...any) (IRows, error)
 ```
 
 #### func (*Database) QueryRowx
 
 ```go
-func (db *Database) QueryRowx(query string, args ...interface{}) IRow
+func (db *Database) QueryRowx(query string, args ...any) IRow
 ```
 
 #### func (*Database) Queryx
 
 ```go
-func (db *Database) Queryx(query string, args ...interface{}) (IRowsx, error)
+func (db *Database) Queryx(query string, args ...any) (IRowsx, error)
 ```
 
 #### func (*Database) Select
 
 ```go
-func (db *Database) Select(what interface{}, query string, args ...interface{}) error
+func (db *Database) Select(what any, query string, args ...any) error
 ```
 
 #### func (*Database) SetMaxIdleConns
@@ -446,5 +446,5 @@ func (tx *Tx) Commit() error
 #### func (*Tx) NamedExec
 
 ```go
-func (tx *Tx) NamedExec(query string, arg interface{}) (sql.Result, error)
+func (tx *Tx) NamedExec(query string, arg any) (sql.Result, error)
 ```

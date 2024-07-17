@@ -39,35 +39,36 @@ import (
 // Call a given function with arguments and return nil or an error.
 //
 // This is hairy reflection.
-func (obj *config) call(field string, name string, params ...any) error {
-	if _, ok := obj.Validators[name]; !ok {
+func (c *config) call(field string, name string, params ...any) error {
+	if _, ok := c.Validators[name]; !ok {
 		return types.NewError(
 			"CONFIG",
 			"Validator '%s' was not found.",
 			name,
 		)
 	}
-	fn := reflect.ValueOf(obj.Validators[name])
+
+	fun := reflect.ValueOf(c.Validators[name])
 
 	// Check function arity.
-	if len(params) != fn.Type().NumIn() {
+	if len(params) != fun.Type().NumIn() {
 		return types.NewError(
 			"CONFIG",
 			"Validator '%s' expects %d arguments, but only %d were given.",
 			name,
-			fn.Type().NumIn(),
+			fun.Type().NumIn(),
 			len(params),
 		)
 	}
 
 	// Build funcall params.
-	in := make([]reflect.Value, len(params))
+	inargs := make([]reflect.Value, len(params))
 	for k, param := range params {
-		in[k] = reflect.ValueOf(param)
+		inargs[k] = reflect.ValueOf(param)
 	}
 
 	// Funcall!
-	result := fn.Call(in)
+	result := fun.Call(inargs)
 	if result[0].Interface() == nil {
 		// Call was successful.
 		return nil
@@ -79,7 +80,7 @@ func (obj *config) call(field string, name string, params ...any) error {
 		"[%s] Validation failed on '%s': %v",
 		name,
 		field,
-		result[0].Interface().(error).Error(),
+		result[0].Interface().(error).Error(), //nolint:forcetypeassert
 	)
 }
 
@@ -89,9 +90,11 @@ func (obj *config) call(field string, name string, params ...any) error {
 //
 // If the method is found, the result will be returned along with `true`.
 // Otherwise nil will be returned along with `false`.
-func (obj *config) callMethod(value reflect.Value, method string) (any, bool) {
-	var final reflect.Value
-	var ptr reflect.Value
+func (c *config) callMethod(value reflect.Value, method string) (any, bool) {
+	var (
+		final reflect.Value
+		ptr   reflect.Value
+	)
 
 	// If we're a pointer then use the value of the pointee.
 	if value.Kind() == reflect.Ptr {
@@ -132,8 +135,8 @@ func (obj *config) callMethod(value reflect.Value, method string) (any, bool) {
 //
 // Returns true if the call was successful, otherwise false.
 // Discards any value returned from `Init`.
-func (obj *config) checkCanInit(val reflect.Value) bool {
-	_, ok := obj.callMethod(val, "Init")
+func (c *config) checkCanInit(val reflect.Value) bool {
+	_, ok := c.callMethod(val, "Init")
 
 	return ok
 }
@@ -148,16 +151,23 @@ func (obj *config) checkCanInit(val reflect.Value) bool {
 // `visited` is an accumulator that contains a map of pointers that we have
 // visited.  Things that are consitered 'visited' will result in no further
 // processing of that thing.
-func (obj *config) recursePrint(prefix string, val reflect.Value, visited map[any]bool) string {
-	var s string = ""
-	toString, toStringFound := obj.callMethod(val, "ToString")
+//
+//nolint:funlen,cyclop
+func (c *config) recursePrint(
+	prefix string,
+	val reflect.Value,
+	visited map[any]bool,
+) string {
+	var sbuf = ""
+
+	toString, toStringFound := c.callMethod(val, "ToString")
 
 	// Reflect over pointers and interfaces.
 	for val.Kind() == reflect.Ptr || val.Kind() == reflect.Interface {
 		if val.Kind() == reflect.Ptr {
 			// If we're a pointer, then check if we've visited the pointee.
 			if visited[val.Interface()] {
-				return s
+				return sbuf
 			}
 
 			// Tag it as visited.
@@ -169,57 +179,62 @@ func (obj *config) recursePrint(prefix string, val reflect.Value, visited map[an
 	}
 
 	// Figure out what to do now.
+	//nolint:exhaustive
 	switch val.Kind() {
 	case reflect.Struct: // Structure.
 		if toStringFound {
-			s += fmt.Sprintf("%s%s", prefix, toString.(string))
-		} else {
-			t := val.Type()
+			//nolint:forcetypeassert
+			sbuf += fmt.Sprintf("%s%s", prefix, toString.(string))
 
-			for i := 0; i < val.NumField(); i++ {
-				if t.Field(i).Tag.Get("config_hide") == "true" {
-					// Ignore fields with the `config_hide` tag set to `true`.
-					continue
-				}
+			break
+		}
 
-				s += fmt.Sprintf("\n%s%s:", prefix, t.Field(i).Name)
+		typ := val.Type()
 
-				// Is the field exported?
-				if !val.Field(i).CanSet() {
-					// No, mark it so and ignore it.
-					s += " <unexported>"
-					continue
-				}
+		for idx := 0; idx < val.NumField(); idx++ {
+			if typ.Field(idx).Tag.Get("config_hide") == "true" {
+				// Ignore fields with the `config_hide` tag set to `true`.
+				continue
+			}
 
-				// Should we obscure the field's value?
-				if t.Field(i).Tag.Get("config_obscure") == "true" {
-					s += " [**********]"
-				} else {
-					s += obj.recursePrint(prefix+"    ", val.Field(i), visited)
-				}
+			sbuf += fmt.Sprintf("\n%s%s:", prefix, typ.Field(idx).Name)
+
+			// Is the field exported?
+			if !val.Field(idx).CanSet() {
+				// No, mark it so and ignore it.
+				sbuf += " <unexported>"
+
+				continue
+			}
+
+			// Should we obscure the field's value?
+			if typ.Field(idx).Tag.Get("config_obscure") == "true" {
+				sbuf += " [**********]"
+			} else {
+				sbuf += c.recursePrint(prefix+"    ", val.Field(idx), visited)
 			}
 		}
 
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < val.Len(); i++ {
-			s += obj.recursePrint("\n"+prefix, val.Index(i), visited)
+			sbuf += c.recursePrint("\n"+prefix, val.Index(i), visited)
 		}
 
 	case reflect.Invalid:
-		s += " nil"
+		sbuf += " nil"
 
 	default:
-		s += fmt.Sprintf(" [%v]", val.Interface())
+		sbuf += fmt.Sprintf(" [%v]", val.Interface())
 	}
 
-	return s
+	return sbuf
 }
 
 // Recursive ugly reflective validation.
 //
 // Will invoke any validation function that is set via the `config_validator`
 // tag.
-func (obj *config) recurseValidate(v reflect.Value) []error {
+func (c *config) recurseValidate(v reflect.Value) []error {
 	sref := v
 	errs := []error{}
 
@@ -232,12 +247,12 @@ func (obj *config) recurseValidate(v reflect.Value) []error {
 		if field.Kind() == reflect.Struct {
 			// Yep, recurse.
 			nested := reflect.ValueOf(field.Interface())
-			errs = append(errs, obj.recurseValidate(nested)...)
+			errs = append(errs, c.recurseValidate(nested)...)
 		}
 
 		// Is validation function valid?
 		if validate != "" {
-			result := obj.call(ftype.Name, validate, field.Interface())
+			result := c.call(ftype.Name, validate, field.Interface())
 			if result != nil {
 				errs = append(errs, []error{result}...)
 			}

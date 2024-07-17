@@ -8,17 +8,24 @@
 
 ## Usage
 
+```go
+var (
+	ErrInvalidValueMap  = errors.Base("invalid value map")
+	ErrValueMapNotFound = errors.Base("value map not found")
+)
+```
+
 #### func  WithValueMap
 
 ```go
-func WithValueMap(ctx Context, valuemap ValueMap) Context
+func WithValueMap(ctx context.Context, valuemap ValueMap) context.Context
 ```
 Create a context with the value map using a default key.
 
 #### func  WithValueMapWithKey
 
 ```go
-func WithValueMapWithKey(ctx Context, key string, valuemap ValueMap) Context
+func WithValueMapWithKey(ctx context.Context, key string, valuemap ValueMap) context.Context
 ```
 Create a context with the value map using the specified key.
 
@@ -106,7 +113,7 @@ somewhat slow lookup.
 #### func  GetValueMap
 
 ```go
-func GetValueMap(ctx Context) ValueMap
+func GetValueMap(ctx context.Context) (ValueMap, error)
 ```
 Get the value map (if any) from the context.
 
@@ -115,7 +122,7 @@ Returns nil if there is no value map.
 #### func  GetValueMapWithKey
 
 ```go
-func GetValueMapWithKey(ctx Context, key string) ValueMap
+func GetValueMapWithKey(ctx context.Context, key string) (ValueMap, error)
 ```
 Get the value map (if any) from the context with the specified value key.
 

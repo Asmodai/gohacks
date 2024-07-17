@@ -36,7 +36,8 @@ import (
 	"time"
 )
 
-var counter uint64 = 0
+//nolint:gochecknoglobals
+var counter uint64
 
 type Message struct {
 	Time

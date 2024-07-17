@@ -85,6 +85,8 @@ func (c *config) addFlags() {
 }
 
 // Perform ations for specific CLI options.
+//
+//nolint:forbidigo
 func (c *config) handleCLI() {
 	if c.ConfigCLI.Version {
 		fmt.Printf(
@@ -103,6 +105,8 @@ func (c *config) handleCLI() {
 }
 
 // Parse config and CLI flags.
+//
+//nolint:forbidigo
 func (c *config) Parse() {
 	var err []error
 
@@ -123,6 +127,7 @@ func (c *config) Parse() {
 		for i, e := range err {
 			fmt.Printf("%5d) %s\n", (i + 1), e.Error())
 		}
+
 		fmt.Printf("\n")
 
 		os.Exit(1)

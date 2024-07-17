@@ -31,7 +31,6 @@
 package logger
 
 /*
-
 Logging structure.
 
 To use,
@@ -39,25 +38,29 @@ To use,
 1) Create a logger:
 
 ```go
-    lgr := logger.NewLogger()
+
+	lgr := logger.NewLogger()
+
 ```
 
 2) Do things with it:
 
 ```go
-    lgr.Warn("Not enough coffee!")
-    lgr.Info("Water is heating up.")
-    // and so on.
+
+	lgr.Warn("Not enough coffee!")
+	lgr.Info("Water is heating up.")
+	// and so on.
+
 ```
 
 If an empty string is passed to `NewLogger`, then the log facility will
 display messages on standard output.
-
 */
 type Logger interface {
 	SetDebug(bool)
 	SetLogFile(string)
 
+	GoError(error, ...any)
 	Debug(string, ...any)
 	Error(string, ...any)
 	Warn(string, ...any)

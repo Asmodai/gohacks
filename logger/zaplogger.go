@@ -33,6 +33,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"gitlab.com/tozd/go/errors"
+
 	"log"
 )
 
@@ -70,7 +72,7 @@ func NewZapLoggerWithFile(logfile string) Logger {
 // human-readable messages to standard output instead of the defined
 // log file.
 func (l *zapLogger) SetDebug(flag bool) {
-	var cfg zap.Config = zap.NewProductionConfig()
+	var cfg = zap.NewProductionConfig()
 
 	// If debug, use Zap's development config.
 	//
@@ -96,7 +98,7 @@ func (l *zapLogger) SetDebug(flag bool) {
 	l.logger = built.Sugar()
 	l.debug = flag
 
-	// nolint:errcheck
+	//nolint:errcheck
 	l.logger.Sync()
 }
 
@@ -105,6 +107,28 @@ func (l *zapLogger) SetLogFile(file string) {
 	l.logfile = file
 
 	l.SetDebug(l.debug)
+}
+
+// Write a Go error to the log.
+func (l *zapLogger) GoError(err error, rest ...any) {
+	e, ok := err.(errors.E) //nolint:errorlint,varnamelen
+	if !ok {
+		l.Error(err.Error(), rest...)
+
+		return
+	}
+
+	detail := errors.Details(e)
+	if detail == nil {
+		detail = map[string]any{}
+	}
+
+	if cause := errors.Cause(e); cause != nil {
+		detail["cause"] = cause
+	}
+
+	nl := l.WithFields(detail)
+	nl.Error(e.Error(), rest...)
 }
 
 // Write a debug message to the log.
@@ -168,14 +192,14 @@ func (l *zapLogger) Panicf(format string, args ...any) {
 }
 
 func (l *zapLogger) WithFields(fields Fields) Logger {
-	var f = make([]any, 0)
+	var flds = make([]any, 0)
 	for k, v := range fields {
-		f = append(f, k)
-		f = append(f, v)
+		flds = append(flds, k)
+		flds = append(flds, v)
 	}
 
 	return &zapLogger{
-		logger:   l.logger.With(f...),
+		logger:   l.logger.With(flds...),
 		logfile:  l.logfile,
 		debug:    l.debug,
 		facility: l.facility,

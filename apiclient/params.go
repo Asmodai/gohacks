@@ -44,9 +44,9 @@ type ContentType struct {
 	Type   string
 }
 
-// API client request parameters
+// API client request parameters.
 type Params struct {
-	Url string // API URL.
+	URL string // API URL.
 
 	UseBasic bool
 	UseToken bool
@@ -82,10 +82,10 @@ func (p *Params) SetUseToken(val bool) {
 	p.UseToken = val
 }
 
-// Create a new API parameters object,
+// Create a new API parameters object.
 func NewParams() *Params {
 	return &Params{
-		Url:      "",
+		URL:      "",
 		UseBasic: false,
 		UseToken: false,
 		Content: ContentType{

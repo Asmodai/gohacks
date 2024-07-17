@@ -8,6 +8,26 @@
 
 ## Usage
 
+```go
+const (
+	DefaultFileMode = 0644
+)
+```
+
+```go
+const (
+	MinimumTimeout = 5
+)
+```
+
+```go
+var (
+	ErrNoProcessManager = errors.Base("no process manager")
+	ErrNoDispatcherProc = errors.Base("no dispatcher process")
+	ErrWrongReturnType  = errors.Base("wrong return type")
+)
+```
+
 #### func  CORSMiddleware
 
 ```go
@@ -139,7 +159,6 @@ type Document struct {
 }
 ```
 
-nolint:govet
 
 #### func  NewDocument
 
@@ -193,10 +212,98 @@ type ErrorDocument struct {
 func NewError(status int, msg string) *ErrorDocument
 ```
 
-#### type IServer
+#### type MockServer
 
 ```go
-type IServer interface {
+type MockServer struct {
+}
+```
+
+MockServer is a mock of Server interface.
+
+#### func  NewMockServer
+
+```go
+func NewMockServer(ctrl *gomock.Controller) *MockServer
+```
+NewMockServer creates a new mock instance.
+
+#### func (*MockServer) EXPECT
+
+```go
+func (m *MockServer) EXPECT() *MockServerMockRecorder
+```
+EXPECT returns an object that allows the caller to indicate expected use.
+
+#### func (*MockServer) ListenAndServe
+
+```go
+func (m *MockServer) ListenAndServe() error
+```
+ListenAndServe mocks base method.
+
+#### func (*MockServer) ListenAndServeTLS
+
+```go
+func (m *MockServer) ListenAndServeTLS(arg0, arg1 string) error
+```
+ListenAndServeTLS mocks base method.
+
+#### func (*MockServer) SetTLSConfig
+
+```go
+func (m *MockServer) SetTLSConfig(arg0 *tls.Config)
+```
+SetTLSConfig mocks base method.
+
+#### func (*MockServer) Shutdown
+
+```go
+func (m *MockServer) Shutdown(arg0 context.Context) error
+```
+Shutdown mocks base method.
+
+#### type MockServerMockRecorder
+
+```go
+type MockServerMockRecorder struct {
+}
+```
+
+MockServerMockRecorder is the mock recorder for MockServer.
+
+#### func (*MockServerMockRecorder) ListenAndServe
+
+```go
+func (mr *MockServerMockRecorder) ListenAndServe() *gomock.Call
+```
+ListenAndServe indicates an expected call of ListenAndServe.
+
+#### func (*MockServerMockRecorder) ListenAndServeTLS
+
+```go
+func (mr *MockServerMockRecorder) ListenAndServeTLS(arg0, arg1 any) *gomock.Call
+```
+ListenAndServeTLS indicates an expected call of ListenAndServeTLS.
+
+#### func (*MockServerMockRecorder) SetTLSConfig
+
+```go
+func (mr *MockServerMockRecorder) SetTLSConfig(arg0 any) *gomock.Call
+```
+SetTLSConfig indicates an expected call of SetTLSConfig.
+
+#### func (*MockServerMockRecorder) Shutdown
+
+```go
+func (mr *MockServerMockRecorder) Shutdown(arg0 any) *gomock.Call
+```
+Shutdown indicates an expected call of Shutdown.
+
+#### type Server
+
+```go
+type Server interface {
 	ListenAndServeTLS(string, string) error
 	ListenAndServe() error
 	Shutdown(context.Context) error
@@ -205,46 +312,14 @@ type IServer interface {
 ```
 
 
-#### type Server
-
-```go
-type Server struct {
-}
-```
-
-
 #### func  NewDefaultServer
 
 ```go
-func NewDefaultServer() *Server
+func NewDefaultServer() Server
 ```
 
 #### func  NewServer
 
 ```go
-func NewServer(addr string, router *gin.Engine) *Server
-```
-
-#### func (*Server) ListenAndServe
-
-```go
-func (s *Server) ListenAndServe() error
-```
-
-#### func (*Server) ListenAndServeTLS
-
-```go
-func (s *Server) ListenAndServeTLS(cert, key string) error
-```
-
-#### func (*Server) SetTLSConfig
-
-```go
-func (s *Server) SetTLSConfig(conf *tls.Config)
-```
-
-#### func (*Server) Shutdown
-
-```go
-func (s *Server) Shutdown(ctx context.Context) error
+func NewServer(addr string, router *gin.Engine) Server
 ```

@@ -34,10 +34,9 @@ import (
 )
 
 // Constructor function for creating new service records.
-type ServiceCtorFn func() interface{}
+type ConstructorFn func() interface{}
 
 /*
-
 Service structure.
 
 To use:
@@ -45,29 +44,37 @@ To use:
 1) Invoke `service.GetInstance` to access the singleton:
 
 ```go
-  svc := service.GetInstance
+
+	svc := service.GetInstance
+
 ```
 
 2a) Add your required service:
 
 ```go
-   svc.Add("SomeName", someInstance)
+
+	svc.Add("SomeName", someInstance)
+
 ```
 
 2b) Create your required service:
 
 ```go
-   svc.Create("SomeName", func() interface{} { return NewThing() })
+
+	svc.Create("SomeName", func() interface{} { return NewThing() })
+
 ```
 
+Profit.
 */
 type Service struct {
 	sync.RWMutex
 
 	services map[string]interface{}
-	classes  map[string]ServiceCtorFn
+	classes  map[string]ConstructorFn
 }
 
+//nolint:gochecknoglobals
 var (
 	once     sync.Once
 	instance *Service
@@ -83,7 +90,7 @@ func GetInstance() *Service {
 	once.Do(func() {
 		instance = &Service{
 			services: make(map[string]interface{}),
-			classes:  make(map[string]ServiceCtorFn),
+			classes:  make(map[string]ConstructorFn),
 		}
 	})
 
@@ -98,7 +105,7 @@ func (s *Service) Add(name string, thing interface{}) {
 }
 
 // Add a new class with the given name.
-func (s *Service) AddClass(name string, ctor ServiceCtorFn) {
+func (s *Service) AddClass(name string, ctor ConstructorFn) {
 	s.Lock()
 	s.classes[name] = ctor
 	s.Unlock()
@@ -107,28 +114,28 @@ func (s *Service) AddClass(name string, ctor ServiceCtorFn) {
 // Get a service with the given name.
 func (s *Service) Get(name string) (interface{}, bool) {
 	s.Lock()
-	t := s.services[name]
+	thing := s.services[name]
 	s.Unlock()
 
-	if t == nil {
+	if thing == nil {
 		return nil, false
 	}
 
-	return t, true
+	return thing, true
 }
 
 // Create a new instance of the given class by invoking its registered
 // constructor.
 func (s *Service) CreateNew(name string) (interface{}, bool) {
 	s.Lock()
-	c := s.classes[name]
+	ctor := s.classes[name]
 	s.Unlock()
 
-	if c == nil {
+	if ctor == nil {
 		return nil, false
 	}
 
-	return c(), true
+	return ctor(), true
 }
 
 // Get a list of registered services.

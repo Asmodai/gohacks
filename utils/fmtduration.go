@@ -34,17 +34,17 @@ import (
 	"time"
 )
 
-func FormatDuration(d time.Duration) string {
-	d = d.Round(time.Minute)
+func FormatDuration(dur time.Duration) string {
+	dur = dur.Round(time.Minute)
 
 	// Compute hours, and then subtract from the duration.
-	h := d / time.Hour
-	d -= h * time.Hour
+	hour := dur / time.Hour
+	dur -= hour * time.Hour //nolint:durationcheck
 
 	// Compute minutes.
-	m := d / time.Minute
+	minute := dur / time.Minute
 
-	return fmt.Sprintf("%0d hour(s), %0d minute(s)", h, m)
+	return fmt.Sprintf("%0d hour(s), %0d minute(s)", hour, minute)
 }
 
 /* fmtduration.go ends here. */

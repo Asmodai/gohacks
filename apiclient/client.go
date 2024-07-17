@@ -1,3 +1,4 @@
+/* mock:yes */
 /*
  * client.go --- HTTP API client.
  *
@@ -33,13 +34,20 @@ import (
 	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/rlhttp"
 
+	"gitlab.com/tozd/go/errors"
+	"golang.org/x/time/rate"
+
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptrace"
 	"time"
+)
 
-	"golang.org/x/time/rate"
+var (
+	ErrInvalidAuthMethod = errors.Base("invalid authentication method")
+	ErrMissingArgument   = errors.Base("missing argument")
+	ErrNotOk             = errors.Base("not ok")
 )
 
 /*
@@ -62,7 +70,7 @@ are followed.
 3) ???
 
 	params := &Params{
-		Url: "http://www.example.com/underpants",
+		URL: "http://www.example.com/underpants",
 	}
 
 4) Profit
@@ -71,15 +79,24 @@ are followed.
 	// check `err` and `code` here.
 	// `data` will need to be converted from `[]byte`.
 */
-type Client struct {
-	Client  IHTTPClient
+type Client interface {
+	Get(*Params) ([]byte, int, error)
+	Post(*Params) ([]byte, int, error)
+}
+
+type HTTPClient interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
+type client struct {
+	Client  HTTPClient
 	Limiter *rate.Limiter
 	Trace   *httptrace.ClientTrace
 	logger  logger.Logger
 }
 
 // Create a new API client with the given configuration.
-func NewClient(config *Config, logger logger.Logger) *Client {
+func NewClient(config *Config, logger logger.Logger) Client {
 	trace := &httptrace.ClientTrace{}
 
 	limiter := rate.NewLimiter(
@@ -87,14 +104,15 @@ func NewClient(config *Config, logger logger.Logger) *Client {
 		config.RequestsPerSecond,
 	)
 
-	client := rlhttp.NewClient(
+	//nolint:durationcheck
+	rlclient := rlhttp.NewClient(
 		limiter,
 		(time.Duration)(config.Timeout)*time.Second,
 	)
 
-	return &Client{
+	return &client{
 		Limiter: limiter,
-		Client:  client,
+		Client:  rlclient,
 		Trace:   trace,
 		logger:  logger,
 	}
@@ -106,7 +124,7 @@ func NewClient(config *Config, logger logger.Logger) *Client {
 // an error if one is triggered.
 //
 // You will need to remember to check the error *and* the status code.
-func (c *Client) Get(data *Params) ([]byte, int, error) {
+func (c *client) Get(data *Params) ([]byte, int, error) {
 	return c.httpAction("GET", data)
 }
 
@@ -116,15 +134,18 @@ func (c *Client) Get(data *Params) ([]byte, int, error) {
 // an error if one is triggered.
 //
 // You will need to remember to check the error *and* the status code.
-func (c *Client) Post(data *Params) ([]byte, int, error) {
+func (c *client) Post(data *Params) ([]byte, int, error) {
 	return c.httpAction("POST", data)
 }
 
 // The actual meat of the API client.
-func (c *Client) httpAction(verb string, data *Params) ([]byte, int, error) {
-	req, err := http.NewRequest(verb, data.Url, nil)
+// TODO:Rewrite using contexts.
+//
+//nolint:cyclop,funlen,noctx
+func (c *client) httpAction(verb string, data *Params) ([]byte, int, error) {
+	req, err := http.NewRequest(verb, data.URL, nil)
 	if err != nil {
-		return nil, 0, fmt.Errorf("APICLIENT: %s", err.Error())
+		return nil, 0, errors.WithStack(err)
 	}
 
 	// Set `Accept` header if required.
@@ -139,16 +160,18 @@ func (c *Client) httpAction(verb string, data *Params) ([]byte, int, error) {
 
 	// Error if we're told to use both basic auth and an auth token.
 	if data.UseBasic && data.UseToken {
-		return nil, 0, fmt.Errorf(
-			"APICLIENT: Cannot use Basic Auth and token at the same time.",
+		return nil, 0, errors.Wrap(
+			ErrInvalidAuthMethod,
+			"cannot use basic auth and token at the same time",
 		)
 	}
 
 	// Set up basic authentication if required.
 	if data.UseBasic {
 		if data.Basic.Username == "" {
-			return nil, 0, fmt.Errorf(
-				"APICLIENT: No basic auth username given!",
+			return nil, 0, errors.Wrap(
+				ErrMissingArgument,
+				"no basic auth username given",
 			)
 		}
 
@@ -158,8 +181,9 @@ func (c *Client) httpAction(verb string, data *Params) ([]byte, int, error) {
 	// Set up authentication token if required.
 	if data.UseToken {
 		if data.Token.Header == "" {
-			return nil, 0, fmt.Errorf(
-				"APICLIENT: No auth token header given!",
+			return nil, 0, errors.Wrap(
+				ErrMissingArgument,
+				"no auth token header given",
 			)
 		}
 
@@ -168,29 +192,32 @@ func (c *Client) httpAction(verb string, data *Params) ([]byte, int, error) {
 
 	// Append URI parameters.
 	if len(data.Queries) != 0 {
-		q := req.URL.Query()
+		qry := req.URL.Query()
 
 		for idx := range data.Queries {
-			q.Add(data.Queries[idx].Name, data.Queries[idx].Content)
+			qry.Add(data.Queries[idx].Name, data.Queries[idx].Content)
 		}
 
-		req.URL.RawQuery = q.Encode()
+		req.URL.RawQuery = qry.Encode()
 	}
 
 	// Perform the request.
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return nil, 0, fmt.Errorf("APICLIENT: %s", err.Error())
+		return nil, 0, errors.WithStack(err)
 	}
 
 	// Did we get a non-200 status code?
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		resp.Body.Close()
 
-		return nil, resp.StatusCode, fmt.Errorf(
-			"APICLIENT: Received status code %d for %s",
-			resp.StatusCode,
-			req.URL,
+		return nil, resp.StatusCode, errors.Wrap(
+			ErrNotOk,
+			fmt.Sprintf(
+				"received status code %d for %s",
+				resp.StatusCode,
+				req.URL,
+			),
 		)
 	}
 
@@ -199,7 +226,7 @@ func (c *Client) httpAction(verb string, data *Params) ([]byte, int, error) {
 	if err != nil {
 		resp.Body.Close()
 
-		return nil, resp.StatusCode, fmt.Errorf("APICLIENT: %s", err.Error())
+		return nil, resp.StatusCode, errors.WithStack(err)
 	}
 
 	resp.Body.Close()

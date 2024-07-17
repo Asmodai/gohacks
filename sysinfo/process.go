@@ -35,18 +35,18 @@ import (
 	"time"
 )
 
-type SysInfoProc struct {
+type Proc struct {
 	si *SysInfo
 }
 
-func NewSysInfoProc() *SysInfoProc {
-	return &SysInfoProc{
+func NewProc() *Proc {
+	return &Proc{
 		si: NewSysInfo(),
 	}
 }
 
-func (sip *SysInfoProc) Action(state **process.State) {
-	var ps *process.State = *state
+func (sip *Proc) Action(state **process.State) {
+	ps := *state
 
 	sip.si.UpdateStats()
 
@@ -69,11 +69,11 @@ func Spawn(mgr process.Manager, interval int) (*process.Process, error) {
 		return inst, nil
 	}
 
-	si := NewSysInfoProc()
+	sip := NewProc()
 	conf := &process.Config{
 		Name:     name,
 		Interval: interval,
-		Function: si.Action,
+		Function: sip.Action,
 	}
 	pr := mgr.Create(conf)
 

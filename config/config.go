@@ -195,15 +195,15 @@ type config struct {
 	App        any           `config_hide:"true"`
 	Validators ValidatorsMap `config_hide:"true"`
 
-	flags         *flag.FlagSet `config_hide:"true"`
-	must_have_cli bool          `config_hide:"true"`
+	flags       *flag.FlagSet `config_hide:"true"`
+	mustHaveCLI bool          `config_hide:"true"`
 }
 
 // Create a new empty `Config` instance.
 func NewDefaultConfig(required bool) Config {
 	return &config{
-		Validators:    make(ValidatorsMap),
-		must_have_cli: required,
+		Validators:  make(ValidatorsMap),
+		mustHaveCLI: required,
 	}
 }
 
@@ -214,7 +214,10 @@ func NewConfig(
 	fns ValidatorsMap,
 	required bool,
 ) Config {
-	obj := NewDefaultConfig(required).(*config)
+	obj, ok := NewDefaultConfig(required).(*config)
+	if !ok {
+		panic(fmt.Errorf("invalid configuration object"))
+	}
 
 	obj.ConfigApp.Name = name
 	obj.ConfigApp.Version = version
@@ -264,18 +267,21 @@ func (c *config) String() string {
 }
 
 // Load JSON config file.
+//
+//nolint:forbidigo
 func (c *config) load() {
 	if c.ConfigCLI.ConfFile == "" {
-		if c.must_have_cli {
+		if c.mustHaveCLI {
 			fmt.Printf("A configuration file must be provided via `-config`.\n")
 			os.Exit(1)
 		}
+
 		return
 	}
 
 	file, err := os.Open(c.ConfigCLI.ConfFile)
 	if err != nil {
-		panic(fmt.Errorf("Error loading config file: %s", err.Error()))
+		panic(fmt.Errorf("error loading config file: %s", err.Error()))
 	}
 	defer file.Close()
 
@@ -288,7 +294,8 @@ func (c *config) load() {
 	err = json.Unmarshal(bytes, c.App)
 	if err != nil {
 		fmt.Printf("Error parsing configuration file: %s\n", err.Error())
-		os.Exit(1)
+		file.Close()
+		os.Exit(1) //nolint:gocritic
 	}
 }
 

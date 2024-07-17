@@ -40,13 +40,16 @@ func Pad(str string, padding int) string {
 		return string([]rune(str)[0:padding])
 	}
 
-	var buf string
-	var spaces int = padding - length
+	var (
+		buf    string
+		spaces = padding - length
+	)
+
 	for i := 0; i < spaces; i++ {
 		buf += PadPadding
 	}
 
-	return string(str) + buf
+	return str + buf
 }
 
 /* pad.go ends here. */

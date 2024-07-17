@@ -72,7 +72,7 @@ func NewApplication(cnf *Config) *Application {
 	// Set up a new parent context for the whole application.
 	ctx, cancelFn := context.WithCancel(context.Background())
 
-	a := &Application{
+	obj := &Application{
 		config:   cnf,
 		OnStart:  defaultHandler,
 		OnExit:   defaultHandler,
@@ -87,7 +87,7 @@ func NewApplication(cnf *Config) *Application {
 	}
 
 	if cnf.AppConfig != nil {
-		a.appconfig = config.Init(
+		obj.appconfig = config.Init(
 			cnf.Name,
 			cnf.Version,
 			cnf.AppConfig,
@@ -96,7 +96,7 @@ func NewApplication(cnf *Config) *Application {
 		)
 	}
 
-	return a
+	return obj
 }
 
 func (app *Application) Init() {

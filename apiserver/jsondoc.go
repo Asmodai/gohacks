@@ -37,7 +37,6 @@ import (
 	"time"
 )
 
-// nolint:govet
 type Document struct {
 	status  int               `json:"-"`
 	headers map[string]string `json:"-"`
@@ -50,9 +49,10 @@ type Document struct {
 }
 
 func NewDocument(status int, data interface{}) *Document {
-	var length int64 = 0
+	var length int64
 
 	if data != nil {
+		//nolint:exhaustive
 		switch reflect.TypeOf(data).Kind() {
 		case reflect.Slice, reflect.Map:
 			s := reflect.ValueOf(data)

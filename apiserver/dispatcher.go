@@ -37,14 +37,19 @@ import (
 
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 )
 
+const (
+	MinimumTimeout = 5
+)
+
 type Dispatcher struct {
 	config *Config
-	srv    IServer
+	srv    Server
 	router *gin.Engine
 	lgr    logger.Logger
 }
@@ -57,8 +62,7 @@ func NewDispatcher(lgr logger.Logger, config *Config) *Dispatcher {
 	}
 
 	ginlogger := utils.GetEnv("GIN_LOGGER", "file")
-	switch ginlogger {
-	case "file":
+	if ginlogger == "file" {
 		obj.router.Use(gin.LoggerWithConfig(obj.initLog()))
 	}
 
@@ -100,17 +104,21 @@ func (d *Dispatcher) Start() {
 
 		switch d.config.UseTLS {
 		case true:
+			// Configure TLS with a minimum version.
+			// Do not set a max version unless there is a specific reason.
+			// The minimum version should NEVER be below v1.2.
 			d.srv.SetTLSConfig(&tls.Config{
-				MaxVersion:               tls.VersionTLS13,
+				MinVersion:               tls.VersionTLS12,
 				PreferServerCipherSuites: true,
 			})
+
 			err = d.srv.ListenAndServeTLS(d.config.Cert, d.config.Key)
 
 		case false:
 			err = d.srv.ListenAndServe()
 		}
 
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			d.lgr.Fatal(
 				"listen() failed.",
 				"err", err.Error(),
@@ -120,7 +128,11 @@ func (d *Dispatcher) Start() {
 }
 
 func (d *Dispatcher) Stop() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		MinimumTimeout*time.Second,
+	)
+
 	defer func() {
 		cancel()
 	}()
@@ -135,7 +147,7 @@ func (d *Dispatcher) Stop() {
 
 func (d *Dispatcher) notFound(c *gin.Context) {
 	NewErrorDocument(
-		404,
+		http.StatusNotFound,
 		fmt.Sprintf("%s was not found.", c.Request.RequestURI),
 	).Write(c)
 }

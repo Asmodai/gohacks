@@ -43,7 +43,6 @@ const (
 )
 
 /*
-
 Mailbox structure.
 
 This is a cheap implementation of a mailbox.
@@ -52,7 +51,6 @@ It uses two semaphores to control read and write access, and contains
 a single datum.
 
 This is *not* a queue!
-
 */
 type Mailbox struct {
 	element interface{}
@@ -66,6 +64,7 @@ type Mailbox struct {
 // Create and return a new empty mailbox.
 //
 // Note: this acquires the `preventRead` semaphore.
+//
 //nolint:errcheck
 func NewMailbox() *Mailbox {
 	// Please note that the context given here should never be one
@@ -103,7 +102,10 @@ func (m *Mailbox) Get() (interface{}, bool) {
 		DefaultCtxDeadline,
 	)
 
+	// Blocks.
 	val, ok := m.GetWithContext(ctx)
+
+	// Cancel the context.
 	cancel()
 
 	return val, ok

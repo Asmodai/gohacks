@@ -30,7 +30,7 @@ func Elide(str string, max int) string
 #### func  FormatDuration
 
 ```go
-func FormatDuration(d time.Duration) string
+func FormatDuration(dur time.Duration) string
 ```
 
 #### func  GetEnv

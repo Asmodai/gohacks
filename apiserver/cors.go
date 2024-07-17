@@ -31,9 +31,12 @@ package apiserver
 
 import (
 	"github.com/gin-gonic/gin"
+
+	"net/http"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
+	//nolint:varnamelen,lll
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -41,11 +44,14 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 		c.Writer.Header().Set("Access-Control-Max-Age", "600")
 
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+		// If we're using the OPTIONS method, then return no content.
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(http.StatusNoContent)
+
 			return
 		}
 
+		// Invoke next handler.
 		c.Next()
 	}
 }

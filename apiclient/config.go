@@ -39,14 +39,15 @@ type Config struct {
 }
 
 // Create a new API client configuration.
-func NewConfig(ReqsPerSec, Timeout int) *Config {
+func NewConfig(reqsPerSec, timeout int) *Config {
 	return &Config{
-		RequestsPerSecond: ReqsPerSec,
-		Timeout:           Timeout,
+		RequestsPerSecond: reqsPerSec,
+		Timeout:           timeout,
 	}
 }
 
 // Return a new default API client configuration.
+//nolint:gomnd
 func NewDefaultConfig() *Config {
 	return NewConfig(5, 5)
 }

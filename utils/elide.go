@@ -26,18 +26,19 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package utils
 
 const (
-	ElideSuffix string = "..."
-	ElideSuffixLen int = 3
+	ElideSuffix    string = "..."
+	ElideSuffixLen int    = 3
 )
 
 func Elide(str string, max int) string {
 	runes := []rune(str)
 
 	if len(str) < max {
-		return string(str)
+		return str
 	}
 
 	return string(runes[0:max-ElideSuffixLen]) + ElideSuffix

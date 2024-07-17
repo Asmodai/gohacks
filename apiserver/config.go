@@ -30,6 +30,8 @@
 package apiserver
 
 import (
+	"gitlab.com/tozd/go/errors"
+
 	"net"
 	"strconv"
 )
@@ -63,13 +65,16 @@ func (c *Config) Host() (string, error) {
 	if c.cachedHost == "" {
 		host, port, err := net.SplitHostPort(c.Addr)
 		if err != nil {
-			return "", err
+			return "", errors.WithStack(err)
 		}
 
+		// Cache the host.
 		c.cachedHost = host
+
+		// Cache the port.
 		c.cachedPort, err = strconv.Atoi(port)
 		if err != nil {
-			return "", err
+			return "", errors.WithStack(err)
 		}
 	}
 
@@ -79,7 +84,7 @@ func (c *Config) Host() (string, error) {
 func (c *Config) Port() (int, error) {
 	if c.cachedHost == "" {
 		if _, err := c.Host(); err != nil {
-			return 0, err
+			return 0, errors.WithStack(err)
 		}
 	}
 

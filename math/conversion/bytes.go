@@ -29,44 +29,51 @@
 
 package conversion
 
+const (
+	bytesKiB = 1024
+	bytesMiB = 1.049e6
+	bytesGiB = 1.074e9
+	bytesTiB = 1.1e12
+)
+
 // Convert bytes to kibibytes.
 func BToKiB(b uint64) uint64 {
-	return b / 1024
+	return b / bytesKiB
 }
 
 // Convert bytes to mebibytes.
 func BToMiB(b uint64) uint64 {
-	return b / 1.049e6
+	return b / bytesMiB
 }
 
 // Convert bytes to gibibytes.
 func BToGiB(b uint64) uint64 {
-	return b / 1.074e9
+	return b / bytesGiB
 }
 
 // Convert bytes to tebibytes.
 func BToTiB(b uint64) uint64 {
-	return b / 1.1e12
+	return b / bytesTiB
 }
 
 // Convert kibibytes to bytes.
 func KiBToB(b uint64) uint64 {
-	return b * 1024
+	return b * bytesKiB
 }
 
 // Convert mebibytes to bytes.
 func MiBToB(b uint64) uint64 {
-	return b * 1.049e6
+	return b * bytesMiB
 }
 
 // Convert gibibytes to bytes.
 func GiBToB(b uint64) uint64 {
-	return b * 1.074e9
+	return b * bytesGiB
 }
 
 // Convert tebibytes to bytes.
 func TiBToB(b uint64) uint64 {
-	return b * 1.1e12
+	return b * bytesTiB
 }
 
 /* conversion.go ends here. */

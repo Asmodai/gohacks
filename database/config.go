@@ -32,7 +32,14 @@ package database
 import (
 	"github.com/Asmodai/gohacks/secrets"
 
+	"gitlab.com/tozd/go/errors"
+
 	"fmt"
+)
+
+const (
+	defaultMaxIdleConns = 20
+	defaultMaxOpenConns = 20
 )
 
 /*
@@ -42,7 +49,7 @@ type Config struct {
 	Driver         string `json:"driver"`
 	Username       string `json:"username"`
 	UsernameSecret string `json:"username_secret"`
-	Password       string `json:"password" config_obscure:"true"`
+	Password       string `config_obscure:"true"  json:"password"`
 	PasswordSecret string `json:"password_secret"`
 	Hostname       string `json:"hostname"`
 	Port           int    `json:"port"`
@@ -52,7 +59,7 @@ type Config struct {
 	MaxIdleConns   int    `json:"max_idle_conns"`
 	MaxOpenConns   int    `json:"max_open_conns"`
 
-	cachedDsn string `json:"-" config_hide:"true"`
+	cachedDsn string `config_hide:"true" json:"-"`
 }
 
 // Create a new configuration object.
@@ -69,8 +76,8 @@ func NewConfig() *Config {
 		cachedDsn:      "",
 		BatchSize:      0,
 		SetPoolLimits:  true,
-		MaxIdleConns:   20,
-		MaxOpenConns:   20,
+		MaxIdleConns:   defaultMaxIdleConns,
+		MaxOpenConns:   defaultMaxOpenConns,
 	}
 }
 
@@ -80,7 +87,7 @@ func (c *Config) checkSecrets() error {
 		secret := secrets.Make(c.UsernameSecret)
 
 		if err := secret.Probe(); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		c.Username = secret.Value()
@@ -90,7 +97,7 @@ func (c *Config) checkSecrets() error {
 		secret := secrets.Make(c.PasswordSecret)
 
 		if err := secret.Probe(); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		c.Password = secret.Value()
@@ -101,7 +108,7 @@ func (c *Config) checkSecrets() error {
 
 func (c *Config) Validate() error {
 	if err := c.checkSecrets(); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -113,30 +120,29 @@ func (c *Config) ToDSN() string {
 		return c.cachedDsn
 	}
 
-	var s string = ""
+	var buf = ""
 
 	if c.Username != "" {
-		s += c.Username
+		buf += c.Username
 
 		if c.Password != "" {
-			s += ":" + c.Password
+			buf += ":" + c.Password
 		}
 
-		s += "@"
+		buf += "@"
 	}
 
-	s += "tcp(" + c.Hostname
+	buf += "tcp(" + c.Hostname
 	if c.Port > 0 {
-		s += fmt.Sprintf(":%d", c.Port)
+		buf += fmt.Sprintf(":%d", c.Port)
 	}
-	s += ")/" + c.Database
 
-	// Set session timezone to UTC.
-	s += "?parseTime=True&loc=UTC&time_zone='-00:00'"
+	buf += ")/" + c.Database
+	buf += "?parseTime=True&loc=UTC&time_zone='-00:00'"
 
-	c.cachedDsn = s
+	c.cachedDsn = buf
 
-	return s
+	return buf
 }
 
 /* config.go ends here. */

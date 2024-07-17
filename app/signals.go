@@ -60,6 +60,7 @@ func (app *Application) installSignals() {
 			case syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM:
 				// Handle termination.
 				app.Terminate()
+
 				return
 
 			case syscall.SIGHUP:
@@ -84,7 +85,6 @@ func (app *Application) installSignals() {
 				app.OnCHLD(app)
 
 			default:
-				// No action taken.
 			}
 		}
 	}()

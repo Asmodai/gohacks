@@ -29,6 +29,9 @@ const (
 	CYAN    = 6
 	WHITE   = 7
 	DEFAULT = 9
+
+	FGOFFSET = 30
+	BGOFFSET = 40
 )
 ```
 
@@ -57,7 +60,7 @@ func MakeColorString() *ColorString
 #### func  MakeColorStringWithAttrs
 
 ```go
-func MakeColorStringWithAttrs(data string, attr, fg, bg int) *ColorString
+func MakeColorStringWithAttrs(data string, attr, foreg, backg int) *ColorString
 ```
 
 #### func (*ColorString) SetAttr

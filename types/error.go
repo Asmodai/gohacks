@@ -37,12 +37,10 @@ import (
 )
 
 /*
-
 Custom error structure.
 
 This is compatible with the `error` interface and provides `Unwrap`
 support.
-
 */
 type Error struct {
 	Module  string
@@ -90,7 +88,12 @@ func (e *Error) Log() {
 
 // Convert the error to a JSON string.
 func (e *Error) MarshalJSON() ([]byte, error) {
-	return json.Marshal(e.Error())
+	res, err := json.Marshal(e.Error())
+	if err != nil {
+		return nil, fmt.Errorf("could not marshal error to json: %v", err.Error())
+	}
+
+	return res, nil
 }
 
 /* error.go ends here. */

@@ -30,9 +30,21 @@
 package semver
 
 import (
+	"gitlab.com/tozd/go/errors"
+
 	"fmt"
 	"strconv"
 	"strings"
+)
+
+var (
+	ErrInvalidVersion = errors.Base("invalid version")
+)
+
+const (
+	MAGICMAJOR        = 10000000
+	MAGICMINOR        = 10000
+	MAGICMAJORTOMINOR = 1000
 )
 
 type SemVer struct {
@@ -44,42 +56,45 @@ type SemVer struct {
 
 func MakeSemVer(info string) (*SemVer, error) {
 	semver := &SemVer{}
-	err := semver.FromString(info)
-	if err != nil {
-		semver = nil
+
+	if err := semver.FromString(info); err != nil {
+		return nil, err
 	}
 
-	return semver, err
+	return semver, nil
 }
 
 func NewSemVer() *SemVer {
 	return &SemVer{}
 }
 
-// Convert numeric version to components
+// Convert numeric version to components.
 func (s *SemVer) FromString(info string) error {
-	var str string = info
-	var commit string = "<local>"
+	var (
+		str    = info
+		commit = "<local>"
+	)
 
 	if strings.Contains(info, ":") {
 		arr := strings.Split(info, ":")
 
+		//nolint:gomnd
 		if len(arr) != 2 {
-			return fmt.Errorf("Invalid version string '%s'", info)
+			return errors.WithMessagef(ErrInvalidVersion, "%s", info)
 		}
 
 		str = arr[0]
 		commit = arr[1]
 	}
 
-	i, err := strconv.Atoi(str)
+	iver, err := strconv.Atoi(str)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
-	nmaj := i / 10000000
-	nmin := (i / 10000) - (nmaj * 1000)
-	npatch := i - ((nmaj * 10000000) + (nmin * 10000))
+	nmaj := iver / MAGICMAJOR
+	nmin := (iver / MAGICMINOR) - (nmaj * MAGICMAJORTOMINOR)
+	npatch := iver - ((nmaj * MAGICMAJOR) + (nmin * MAGICMINOR))
 
 	s.Major = nmaj
 	s.Minor = nmin
@@ -99,8 +114,8 @@ func (s *SemVer) String() string {
 }
 
 func (s *SemVer) Version() int {
-	return ((s.Major * 10000000) +
-		(s.Minor * 10000) +
+	return ((s.Major * MAGICMAJOR) +
+		(s.Minor * MAGICMINOR) +
 		s.Patch)
 }
 

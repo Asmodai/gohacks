@@ -30,19 +30,19 @@
 package logger
 
 import (
+	"gitlab.com/tozd/go/errors"
+
 	"fmt"
 	"log"
 )
 
 /*
-
 Default logging structure.
 
 This is a simple implementation of the `ILogger` interface that simply redirects
 messages to `log.Printf`.
 
 It is used in the same way as the main `Logger` implementation.
-
 */
 type defaultLogger struct {
 }
@@ -58,6 +58,25 @@ func (l *defaultLogger) SetDebug(_ bool) {
 
 // Set the log file to use.
 func (l *defaultLogger) SetLogFile(_ string) {
+}
+
+// Write a Go error to the log.
+func (l *defaultLogger) GoError(err error, rest ...any) {
+	nerr, ok := err.(errors.E) //nolint:errorlint
+	if !ok {
+		goto done
+	}
+
+	if cause := errors.Cause(nerr); cause != nil {
+		args := []any{"cause", cause}
+		args = append(args, rest...)
+		l.Error(err.Error(), args...)
+
+		return
+	}
+
+done:
+	l.Error(err.Error(), rest...)
 }
 
 // Write a debug message to the log.

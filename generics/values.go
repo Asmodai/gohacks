@@ -91,7 +91,7 @@ func Number[V Numeric](val V) any {
 // If the type of `thing` is any other type, then it will be returned with no
 // conversion.
 func ValueOf(thing any) any {
-	//nolint:gosimple
+	//nolint:gosimple,gocritic,forcetypeassert
 	switch thing.(type) {
 	case float32:
 		return Number(thing.(float32))

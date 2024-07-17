@@ -34,35 +34,36 @@ import (
 	"net/http"
 	"time"
 
+	"gitlab.com/tozd/go/errors"
 	"golang.org/x/time/rate"
 )
 
-type RLHTTPClient struct {
+type Client struct {
 	client  *http.Client
 	limiter *rate.Limiter
 }
 
-func (c *RLHTTPClient) Do(req *http.Request) (*http.Response, error) {
+func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if err := c.limiter.Wait(context.Background()); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return resp, nil
 }
 
-func NewClient(rl *rate.Limiter, timeout time.Duration) *RLHTTPClient {
+func NewClient(rlimiter *rate.Limiter, timeout time.Duration) *Client {
 	client := &http.Client{
 		Timeout: timeout,
 	}
 
-	return &RLHTTPClient{
+	return &Client{
 		client:  client,
-		limiter: rl,
+		limiter: rlimiter,
 	}
 }
 

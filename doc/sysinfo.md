@@ -14,6 +14,26 @@
 func Spawn(mgr process.Manager, interval int) (*process.Process, error)
 ```
 
+#### type Proc
+
+```go
+type Proc struct {
+}
+```
+
+
+#### func  NewProc
+
+```go
+func NewProc() *Proc
+```
+
+#### func (*Proc) Action
+
+```go
+func (sip *Proc) Action(state **process.State)
+```
+
 #### type SysInfo
 
 ```go
@@ -85,23 +105,3 @@ Return number of MiB allocated from the system.
 func (si *SysInfo) UpdateStats()
 ```
 Update runtime statistics.
-
-#### type SysInfoProc
-
-```go
-type SysInfoProc struct {
-}
-```
-
-
-#### func  NewSysInfoProc
-
-```go
-func NewSysInfoProc() *SysInfoProc
-```
-
-#### func (*SysInfoProc) Action
-
-```go
-func (sip *SysInfoProc) Action(state **process.State)
-```
