@@ -30,6 +30,8 @@
 package secrets
 
 import (
+	"github.com/Asmodai/gohacks/utils"
+
 	"gitlab.com/tozd/go/errors"
 
 	"io"
@@ -45,6 +47,8 @@ const (
 var (
 	ErrNoPathSet      = errors.Base("no secrets path set")
 	ErrZeroLengthFile = errors.Base("file has zero length")
+	ErrFileNotFound   = errors.Base("file not found")
+	ErrNotAFile       = errors.Base("not a file")
 )
 
 type Secret struct {
@@ -66,10 +70,9 @@ func Make(file string) *Secret {
 func (s *Secret) Path() string  { return s.path }
 func (s *Secret) Value() string { return s.value }
 
-func (s *Secret) SetPath(val string) error {
-	s.path = filepath.Base(val)
-
-	return s.probe()
+//nolint:unused
+func (s *Secret) setPath(val string) {
+	s.path = val
 }
 
 func (s *Secret) Probe() error {
@@ -79,6 +82,16 @@ func (s *Secret) Probe() error {
 func (s *Secret) probe() error {
 	if s.path == "" {
 		return errors.WithStack(ErrNoPathSet)
+	}
+
+	fsys := utils.NewFilesystem(s.path)
+
+	if !fsys.Exists() {
+		return errors.WithStack(ErrFileNotFound)
+	}
+
+	if !fsys.IsFile() {
+		return errors.WithStack(ErrNotAFile)
 	}
 
 	file, err := os.Open(s.path)
