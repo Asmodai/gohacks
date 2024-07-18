@@ -1,31 +1,29 @@
-/*
- * dispatcher.go --- Route dispatch wrapper.
- *
- * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
- *
- * Author:     Paul Ward <asmodai@gmail.com>
- * Maintainer: Paul Ward <asmodai@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation files
- * (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+// dispatcher.go --- Route dispatch wrapper.
+//
+// Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+//
+// Author:     Paul Ward <asmodai@gmail.com>
+// Maintainer: Paul Ward <asmodai@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation files
+// (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 package apiserver
 
@@ -47,6 +45,7 @@ const (
 	MinimumTimeout = 5
 )
 
+// API route dispatcher.
 type Dispatcher struct {
 	config *Config
 	srv    Server
@@ -54,6 +53,7 @@ type Dispatcher struct {
 	lgr    logger.Logger
 }
 
+// Create a new API route dispatcher.
 func NewDispatcher(lgr logger.Logger, config *Config) *Dispatcher {
 	obj := &Dispatcher{
 		config: config,
@@ -84,6 +84,10 @@ func NewDispatcher(lgr logger.Logger, config *Config) *Dispatcher {
 	return obj
 }
 
+// Create a new API route dispatcher with default values.
+//
+// The dispatcher returned by this function will listen on port 8080 and
+// bind to all available addresses on the host machine.
 func NewDefaultDispatcher() *Dispatcher {
 	return NewDispatcher(
 		logger.NewDefaultLogger(),
@@ -94,10 +98,12 @@ func NewDefaultDispatcher() *Dispatcher {
 	)
 }
 
+// Return the router used by this dispatcher.
 func (d *Dispatcher) GetRouter() *gin.Engine {
 	return d.router
 }
 
+// Start the API route dispatcher.
 func (d *Dispatcher) Start() {
 	go func() {
 		var err error
@@ -127,6 +133,7 @@ func (d *Dispatcher) Start() {
 	}()
 }
 
+// Stop the API route dispatcher.
 func (d *Dispatcher) Stop() {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
@@ -145,6 +152,8 @@ func (d *Dispatcher) Stop() {
 	}
 }
 
+// Default function invoked when the API dispatcher does not have a handler
+// available for a route.
 func (d *Dispatcher) notFound(c *gin.Context) {
 	NewErrorDocument(
 		http.StatusNotFound,
@@ -152,4 +161,4 @@ func (d *Dispatcher) notFound(c *gin.Context) {
 	).Write(c)
 }
 
-/* dispatcher.go ends here. */
+// dispatcher.go ends here.
