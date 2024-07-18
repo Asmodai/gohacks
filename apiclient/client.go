@@ -1,32 +1,31 @@
-/* mock:yes */
-/*
- * client.go --- HTTP API client.
- *
- * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
- *
- * Author:     Paul Ward <asmodai@gmail.com>
- * Maintainer: Paul Ward <asmodai@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation files
- * (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+// client.go --- HTTP API client.
+//
+// Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+//
+// Author:     Paul Ward <asmodai@gmail.com>
+// Maintainer: Paul Ward <asmodai@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation files
+// (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+// mock:yes
 
 package apiclient
 
@@ -45,9 +44,18 @@ import (
 )
 
 var (
+	// Triggered when an invalid authentication method is passed via the API
+	// parameters.  Will also be triggered if both basic auth and auth token
+	// methods are specified in the same parameters.
 	ErrInvalidAuthMethod = errors.Base("invalid authentication method")
-	ErrMissingArgument   = errors.Base("missing argument")
-	ErrNotOk             = errors.Base("not ok")
+
+	// Triggered if a required authentication method argument is not provided in
+	// the API parameters.
+	ErrMissingArgument = errors.Base("missing argument")
+
+	// Triggered if the result of an API call via the client does not have a
+	// `200` HTTP status code.
+	ErrNotOk = errors.Base("not ok")
 )
 
 /*
@@ -58,29 +66,58 @@ are followed.
 
 1) Create your config:
 
-		conf := &apiclient.Config{
-	    RequestsPerSecond: 5,    // 5 requests per second.
-			Timeout:           5,    // 5 seconds.
-		}
+	```go
+	conf := &apiclient.Config{
+		RequestsPerSecond: 5,    // 5 requests per second.
+		Timeout:           5,    // 5 seconds.
+	}
+	```
 
 2) Create your client
 
+	```go
 	api := apiclient.NewClient(conf)
+	```
 
 3) ???
 
+	```go
 	params := &Params{
 		URL: "http://www.example.com/underpants",
 	}
+	```
 
 4) Profit
 
+	```go
 	data, code, err := api.Get(params)
 	// check `err` and `code` here.
 	// `data` will need to be converted from `[]byte`.
+	```
+
+The client supports both the "Auth Basic" schema and authentication tokens
+passed via HTTP headers.  You need to ensure you pick either one or the other,
+not both.  Attempting to use both will generate an `invalid authentication
+method` error.
+
+For full information about the API client parameters, please see the
+documentation for the `Params` type.
 */
 type Client interface {
+	// Perform a HTTP GET using the given API parameters.
+	//
+	// Returns the response body as an array of bytes, the HTTP status code, and
+	// an error if one is triggered.
+	//
+	// You will need to remember to check both the error and status code.
 	Get(*Params) ([]byte, int, error)
+
+	// Perform a HTTP POST using the given API parameters.
+	//
+	// Returns the response body as an array of bytes, the HTTP status code, and
+	// an error if one is triggered.
+	//
+	// You will need to remember to check both the error and status code.
 	Post(*Params) ([]byte, int, error)
 }
 
@@ -88,6 +125,7 @@ type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
+// Implementation structure.
 type client struct {
 	Client  HTTPClient
 	Limiter *rate.Limiter
@@ -119,27 +157,18 @@ func NewClient(config *Config, logger logger.Logger) Client {
 }
 
 // Perform a HTTP GET using the given API parameters.
-//
-// Returns the response body as an array of bytes, the HTTP status code, and
-// an error if one is triggered.
-//
-// You will need to remember to check the error *and* the status code.
 func (c *client) Get(data *Params) ([]byte, int, error) {
 	return c.httpAction("GET", data)
 }
 
 // Perform a HTTP POST using the given API parameters.
-//
-// Returns the response body as an array of bytes, the HTTP status code, and
-// an error if one is triggered.
-//
-// You will need to remember to check the error *and* the status code.
 func (c *client) Post(data *Params) ([]byte, int, error) {
 	return c.httpAction("POST", data)
 }
 
 // The actual meat of the API client.
-// TODO:Rewrite using contexts.
+// TODO: Rewrite using contexts.
+// TODO: This function is way to complex.
 //
 //nolint:cyclop,funlen,noctx
 func (c *client) httpAction(verb string, data *Params) ([]byte, int, error) {
@@ -234,4 +263,4 @@ func (c *client) httpAction(verb string, data *Params) ([]byte, int, error) {
 	return bytes, resp.StatusCode, nil
 }
 
-/* client.go ends here. */
+// client.go ends here.

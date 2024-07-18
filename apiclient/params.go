@@ -1,60 +1,86 @@
-/*
- * params.go --- API client parameters.
- *
- * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
- *
- * Author:     Paul Ward <asmodai@gmail.com>
- * Maintainer: Paul Ward <asmodai@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation files
- * (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+// params.go --- API client parameters.
+//
+// Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+//
+// Author:     Paul Ward <asmodai@gmail.com>
+// Maintainer: Paul Ward <asmodai@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation files
+// (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 package apiclient
 
+// Basic authentication configuration.
 type AuthBasic struct {
 	Username string
 	Password string
 }
 
+// Authentication token configuration.
+//
+// This type does not care about the token type.  If you intend to make use of
+// token types such as JWTs then you must implement that code yourself.
 type AuthToken struct {
+	// The HTTP header added to the request that contains the token data.
 	Header string
-	Data   string
+
+	// The authentication token.
+	Data string
 }
 
+// Content types configuration.
 type ContentType struct {
+	// The MIME type that we wish to accept.  Sent in the request via the `Accept`
+	// header.
 	Accept string
-	Type   string
+
+	// The MIME type of the data we are sending.  Sent in the request via the
+	// `Content-Type` header.
+	Type string
 }
 
 // API client request parameters.
+//
+// Although we support both Basic Auth and authentication tokens, only one
+// should be used.  If both are specified, an error will be triggered.
 type Params struct {
-	URL string // API URL.
+	// Request URL.
+	URL string
 
+	// Use the Basic Auth schema to authenticate to the remote server.
 	UseBasic bool
+
+	// Use an 'authentication token' to authenticate to the remote server.
 	UseToken bool
 
+	// MIME content type of the data we are sending and wish to accept from the
+	// remote server.
 	Content ContentType
-	Token   AuthToken
-	Basic   AuthBasic
 
+	// Authentication token configuration.
+	Token AuthToken
+
+	// Basic Auth configuration.
+	Basic AuthBasic
+
+	// Queries that are sent via the HTTP request.
 	Queries []*QueryParam
 }
 
@@ -104,4 +130,4 @@ func NewParams() *Params {
 	}
 }
 
-/* params.go ends here. */
+// params.go ends here.
