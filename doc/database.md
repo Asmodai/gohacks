@@ -10,6 +10,7 @@
 
 ```go
 var (
+	// The empty cursor.
 	EmptyCursor = &Cursor{Offset: 0, Limit: 0}
 )
 ```
@@ -64,18 +65,22 @@ type Cursor struct {
 }
 ```
 
+TODO: Look, this sucks... offset/limit cursors are just fail. TODO: Rework this
+to be a proper cursor!
 
 #### func  NewCursor
 
 ```go
 func NewCursor(offset, limit int64) *Cursor
 ```
+Create a new cursor.
 
 #### func (Cursor) Valid
 
 ```go
 func (c Cursor) Valid() bool
 ```
+Is the cursor valid?
 
 #### type Database
 

@@ -1,31 +1,31 @@
-/*
- * mailbox.go --- Cheap mailbox data type.
- *
- * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
- *
- * Author:     Paul Ward <asmodai@gmail.com>
- * Maintainer: Paul Ward <asmodai@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation files
- * (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+// -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
+//
+// mailbox.go --- Cheap mailbox data type.
+//
+// Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+//
+// Author:     Paul Ward <asmodai@gmail.com>
+// Maintainer: Paul Ward <asmodai@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation files
+// (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 package types
 
@@ -38,7 +38,9 @@ import (
 
 const (
 	// Amount of time to delay semaphore acquisition loops.
-	MailboxDelaySleep  time.Duration = 50 * time.Millisecond
+	MailboxDelaySleep time.Duration = 50 * time.Millisecond
+
+	// Default deadline for context timeouts.
 	DefaultCtxDeadline time.Duration = 5 * time.Second
 )
 
@@ -53,12 +55,13 @@ a single datum.
 This is *not* a queue!
 */
 type Mailbox struct {
-	element interface{}
+	element any
 
 	// The `preventWrite` semaphore, when acquired, will prevent writes.
-	// The `preventRead` semaphore, when acquired, will prevent reads.
 	preventWrite *semaphore.Weighted
-	preventRead  *semaphore.Weighted
+
+	// The `preventRead` semaphore, when acquired, will prevent reads.
+	preventRead *semaphore.Weighted
 }
 
 // Create and return a new empty mailbox.
@@ -81,7 +84,7 @@ func NewMailbox() *Mailbox {
 }
 
 // Put an element into the mailbox.
-func (m *Mailbox) Put(elem interface{}) {
+func (m *Mailbox) Put(elem any) {
 	// Attempt to acquire `preventWrite` semaphore.
 	for !m.preventWrite.TryAcquire(1) {
 		time.Sleep(MailboxDelaySleep)
@@ -96,7 +99,7 @@ func (m *Mailbox) Put(elem interface{}) {
 
 // Get an element from the mailbox.  Defaults to using a context with
 // a deadline of 5 seconds.
-func (m *Mailbox) Get() (interface{}, bool) {
+func (m *Mailbox) Get() (any, bool) {
 	ctx, cancel := context.WithTimeout(
 		context.TODO(),
 		DefaultCtxDeadline,
@@ -111,8 +114,11 @@ func (m *Mailbox) Get() (interface{}, bool) {
 	return val, ok
 }
 
-func (m *Mailbox) GetWithContext(ctx context.Context) (interface{}, bool) {
-	var result interface{}
+// Get an element from the mailbox using the provided context.
+//
+// It is recommended to use a context that has a timeout deadline.
+func (m *Mailbox) GetWithContext(ctx context.Context) (any, bool) {
+	var result any
 
 	if m.element == nil {
 		return nil, false
@@ -143,4 +149,4 @@ func (m *Mailbox) Full() bool {
 	return m.element != nil
 }
 
-/* mailbox.go ends here. */
+// mailbox.go ends here.

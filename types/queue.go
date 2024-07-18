@@ -1,31 +1,31 @@
-/*
- * queue.go --- Simple queue.
- *
- * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
- *
- * Author:     Paul Ward <asmodai@gmail.com>
- * Maintainer: Paul Ward <asmodai@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation files
- * (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+// -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
+//
+// queue.go --- Simple queue.
+//
+// Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+//
+// Author:     Paul Ward <asmodai@gmail.com>
+// Maintainer: Paul Ward <asmodai@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation files
+// (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 package types
 
@@ -41,7 +41,7 @@ This is a cheap implementation of a LIFO queue.
 type Queue struct {
 	sync.Mutex
 
-	queue   []interface{}
+	queue   []any
 	bounds  int
 	bounded bool
 }
@@ -51,9 +51,10 @@ func NewQueue() *Queue {
 	return NewBoundedQueue(0)
 }
 
+// Create a queue that is bounded to a specific size.
 func NewBoundedQueue(bounds int) *Queue {
 	queue := &Queue{
-		queue:  make([]interface{}, 0),
+		queue:  make([]any, 0),
 		bounds: 0,
 	}
 
@@ -71,7 +72,7 @@ func NewBoundedQueue(bounds int) *Queue {
 
 // Append an element to the queue.  Returns `false` if there is no
 // more room in the queue.
-func (q *Queue) Put(elem interface{}) bool {
+func (q *Queue) Put(elem any) bool {
 	if q.bounded && q.Len() == q.bounds {
 		return false
 	}
@@ -86,8 +87,8 @@ func (q *Queue) Put(elem interface{}) bool {
 }
 
 // Remove an element from the end of the queue and return it.
-func (q *Queue) Get() (interface{}, bool) {
-	var elem interface{}
+func (q *Queue) Get() (any, bool) {
+	var elem any
 
 	if q.Len() == 0 {
 		return nil, false
@@ -96,7 +97,6 @@ func (q *Queue) Get() (interface{}, bool) {
 	q.Lock()
 	{
 		elem = q.queue[0]
-
 		q.queue[0] = nil
 		q.queue = q.queue[1:]
 	}
@@ -123,4 +123,4 @@ func (q *Queue) Full() bool {
 	return q.bounded && q.Len() == q.bounds
 }
 
-/* queue.go ends here. */
+// queue.go ends here.

@@ -1,3 +1,5 @@
+// -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
+//
 // client_test.go --- API client tests.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>

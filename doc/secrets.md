@@ -18,6 +18,8 @@ const (
 var (
 	ErrNoPathSet      = errors.Base("no secrets path set")
 	ErrZeroLengthFile = errors.Base("file has zero length")
+	ErrFileNotFound   = errors.Base("file not found")
+	ErrNotAFile       = errors.Base("not a file")
 )
 ```
 
@@ -51,12 +53,6 @@ func (s *Secret) Path() string
 
 ```go
 func (s *Secret) Probe() error
-```
-
-#### func (*Secret) SetPath
-
-```go
-func (s *Secret) SetPath(val string) error
 ```
 
 #### func (*Secret) Value

@@ -1,32 +1,33 @@
-/* mock:yes */
-/*
- * config.go --- Configuration.
- *
- * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
- *
- * Author:     Paul Ward <asmodai@gmail.com>
- * Maintainer: Paul Ward <asmodai@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation files
- * (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+// -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
+//
+// config.go --- Configuration.
+//
+// Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+//
+// Author:     Paul Ward <asmodai@gmail.com>
+// Maintainer: Paul Ward <asmodai@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation files
+// (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+// mock:yes
 
 package config
 
@@ -132,24 +133,28 @@ type Config interface {
 	// Returns the application's version.
 	Version() *semver.SemVer
 
-	// Return the pathname to a logfile passed via the `-log` CLI argument.
+	// Return the pathname to a logfile passed via the `-log` CLI
+	// argument.
+	//
 	// Will be empty if no log file has been specified.
 	LogFile() string
 
-	// Return the pathname to the configuration file passed via the '-config'
-	// CLI argument.
+	// Return the pathname to the configuration file passed via the
+	// '-config' CLI argument.
+	//
 	// Will be empty if no configuration file has been specified.
 	ConfFile() string
 
-	// Add a validator function for an option named `name`.  `fn` must be a
-	// function that can be funcalled and must return either `nil` or an error.
+	// Add a validator function for an option named `name`.  `fn` must be
+	// a function that can be funcalled and must return either `nil` or an
+	// error.
 	AddValidator(name string, fn any)
 
 	// Return the string representation of this object.
 	String() string
 
-	// Perform validation on the application configuration structure that is
-	// parsed from the config file.
+	// Perform validation on the application configuration structure that
+	// is parsed from the config file.
 	Validate() []error
 
 	// Add a Boolean CLI flag.
@@ -212,6 +217,7 @@ func NewDefaultConfig(required bool) Config {
 	}
 }
 
+// Create a new configuration instance.
 func NewConfig(
 	name string,
 	version *semver.SemVer,
@@ -315,4 +321,4 @@ func Init(
 	return NewConfig(name, version, data, fns, required)
 }
 
-/* config.go ends here. */
+// config.go ends here.

@@ -1,31 +1,31 @@
-/*
- * reflect.go --- Reflection hacks.
- *
- * Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
- *
- * Author:     Paul Ward <asmodai@gmail.com>
- * Maintainer: Paul Ward <asmodai@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation files
- * (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+// -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
+//
+// reflect.go --- Reflection hacks.
+//
+// Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+//
+// Author:     Paul Ward <asmodai@gmail.com>
+// Maintainer: Paul Ward <asmodai@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation files
+// (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 package config
 
@@ -144,8 +144,8 @@ func (c *config) checkCanInit(val reflect.Value) bool {
 
 // Recursively pretty-print some value.
 //
-// `prefix` contains an arbitrary string that is printed before any element.  It
-// is intended that this value be composed of spaces.
+// `prefix` contains an arbitrary string that is printed before any element.
+// It is intended that this value be composed of spaces.
 //
 // `val` is the value (atom, list, struct, whatever) that we intend to print.
 //
@@ -166,7 +166,8 @@ func (c *config) recursePrint(
 	// Reflect over pointers and interfaces.
 	for val.Kind() == reflect.Ptr || val.Kind() == reflect.Interface {
 		if val.Kind() == reflect.Ptr {
-			// If we're a pointer, then check if we've visited the pointee.
+			// If we're a pointer, then check if we've visited the
+			// pointee.
 			if visited[val.Interface()] {
 				return sbuf
 			}
@@ -194,7 +195,8 @@ func (c *config) recursePrint(
 
 		for idx := 0; idx < val.NumField(); idx++ {
 			if typ.Field(idx).Tag.Get("config_hide") == "true" {
-				// Ignore fields with the `config_hide` tag set to `true`.
+				// Ignore fields with the `config_hide` tag
+				// set to `true`.
 				continue
 			}
 
@@ -263,4 +265,4 @@ func (c *config) recurseValidate(v reflect.Value) []error {
 	return errs
 }
 
-/* reflect.go ends here. */
+// reflect.go ends here.

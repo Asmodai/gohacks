@@ -10,6 +10,14 @@
 
 ```go
 var (
+	ErrValidatorNotFound  = errors.Base("validator not found")
+	ErrIncorrectArguments = errors.Base("incorrect arguments")
+	ErrValidationFailed   = errors.Base("validation failed")
+)
+```
+
+```go
+var (
 	ErrInvalidObject = errors.Base("invalid configuration object")
 )
 ```
@@ -27,24 +35,28 @@ type Config interface {
 	// Returns the application's version.
 	Version() *semver.SemVer
 
-	// Return the pathname to a logfile passed via the `-log` CLI argument.
+	// Return the pathname to a logfile passed via the `-log` CLI
+	// argument.
+	//
 	// Will be empty if no log file has been specified.
 	LogFile() string
 
-	// Return the pathname to the configuration file passed via the '-config'
-	// CLI argument.
+	// Return the pathname to the configuration file passed via the
+	// '-config' CLI argument.
+	//
 	// Will be empty if no configuration file has been specified.
 	ConfFile() string
 
-	// Add a validator function for an option named `name`.  `fn` must be a
-	// function that can be funcalled and must return either `nil` or an error.
+	// Add a validator function for an option named `name`.  `fn` must be
+	// a function that can be funcalled and must return either `nil` or an
+	// error.
 	AddValidator(name string, fn any)
 
 	// Return the string representation of this object.
 	String() string
 
-	// Perform validation on the application configuration structure that is
-	// parsed from the config file.
+	// Perform validation on the application configuration structure that
+	// is parsed from the config file.
 	Validate() []error
 
 	// Add a Boolean CLI flag.
@@ -172,6 +184,7 @@ func NewConfig(
 	required bool,
 ) Config
 ```
+Create a new configuration instance.
 
 #### func  NewDefaultConfig
 

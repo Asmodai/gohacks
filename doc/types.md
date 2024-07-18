@@ -10,35 +10,72 @@
 
 ```go
 const (
-	// CSI Pm m -- Character Attributes (SGR).
-	NORMAL        = 0 // Normal (default), VT100.
-	BOLD          = 1 // Bold, VT100.
-	FAINT         = 2 // Faint, decreased intensity, ECMA-48 2nd.
-	ITALICS       = 3 // Italicized, ECMA-48 2nd.
-	UNDERLINE     = 4 // Underlined, VT100.
-	BLINK         = 5 // Blink, VT100.
-	INVERSE       = 7 // Inverse, VT100.
-	STRIKETHROUGH = 9 // Crossed-out characters, ECMA-48 3rd.
+	// Normal (default) attribtues -- VT100.
+	NORMAL = 0
 
-	BLACK   = 0
-	RED     = 1
-	GREEN   = 2
-	YELLOW  = 3
-	BLUE    = 4
+	// Bold -- VT100.
+	BOLD = 1
+
+	// Faint, decreased intensity -- ECMA-48 2e.
+	FAINT = 2
+
+	// Italicizsed -- ECMA-48 2e.
+	ITALICS = 3
+
+	// Underlined -- VT100.
+	UNDERLINE = 4
+
+	// Blinking -- VT100.
+	BLINK = 5
+
+	// Inverse video -- VT100.
+	INVERSE = 7
+
+	// Crossed-out characters -- ECMA-48 3e.
+	STRIKETHROUGH = 9
+
+	// Black colour -- ANSI.
+	BLACK = 0
+
+	// Red colour -- ANSI.
+	RED = 1
+
+	// Green colour -- ANSI.
+	GREEN = 2
+
+	// Yellow colour -- ANSI.
+	YELLOW = 3
+
+	// Blue colour -- ANSI.
+	BLUE = 4
+
+	// Magenta colour -- ANSI.
 	MAGENTA = 5
-	CYAN    = 6
-	WHITE   = 7
+
+	// Cyan colour -- ANSI.
+	CYAN = 6
+
+	// White colour -- ANSI.
+	WHITE = 7
+
+	// Default colour -- ANSI.
 	DEFAULT = 9
 
+	// Offset for foreground colours.
 	FGOFFSET = 30
+
+	// Offset for background colours.
 	BGOFFSET = 40
 )
 ```
+CSI Pm [; Pm ...] m -- Character Attributes (SGR).
 
 ```go
 const (
 	// Amount of time to delay semaphore acquisition loops.
-	MailboxDelaySleep  time.Duration = 50 * time.Millisecond
+	MailboxDelaySleep time.Duration = 50 * time.Millisecond
+
+	// Default deadline for context timeouts.
 	DefaultCtxDeadline time.Duration = 5 * time.Second
 )
 ```
@@ -50,48 +87,65 @@ type ColorString struct {
 }
 ```
 
+Colour string.
+
+Generates a string that, with the right terminal type, display text using
+various character attributes.
+
+To find out more, consult your nearest DEC VT340 programmer's manual or the
+latest ECMA-48 standard.
 
 #### func  MakeColorString
 
 ```go
 func MakeColorString() *ColorString
 ```
+Make a new coloured string.
 
 #### func  MakeColorStringWithAttrs
 
 ```go
 func MakeColorStringWithAttrs(data string, attr, foreg, backg int) *ColorString
 ```
+Make a new coloured string with the given attributes.
 
 #### func (*ColorString) SetAttr
 
 ```go
 func (cs *ColorString) SetAttr(attr int)
 ```
+Set the character attribute.
 
 #### func (*ColorString) SetBG
 
 ```go
 func (cs *ColorString) SetBG(col int)
 ```
+Set the background colour.
 
 #### func (*ColorString) SetFG
 
 ```go
 func (cs *ColorString) SetFG(col int)
 ```
+Set the foreground colour.
 
 #### func (*ColorString) SetString
 
 ```go
 func (cs *ColorString) SetString(val string)
 ```
+Set the string to display.
 
 #### func (*ColorString) String
 
 ```go
 func (cs *ColorString) String() string
 ```
+Convert to a string.
+
+Warning: the resulting string will contain escape sequences for use with a
+compliant terminal or terminal emulator.
 
 #### type Mailbox
 
@@ -128,7 +182,7 @@ Does the mailbox contain a value?
 #### func (*Mailbox) Get
 
 ```go
-func (m *Mailbox) Get() (interface{}, bool)
+func (m *Mailbox) Get() (any, bool)
 ```
 Get an element from the mailbox. Defaults to using a context with a deadline of
 5 seconds.
@@ -136,13 +190,16 @@ Get an element from the mailbox. Defaults to using a context with a deadline of
 #### func (*Mailbox) GetWithContext
 
 ```go
-func (m *Mailbox) GetWithContext(ctx context.Context) (interface{}, bool)
+func (m *Mailbox) GetWithContext(ctx context.Context) (any, bool)
 ```
+Get an element from the mailbox using the provided context.
+
+It is recommended to use a context that has a timeout deadline.
 
 #### func (*Mailbox) Put
 
 ```go
-func (m *Mailbox) Put(elem interface{})
+func (m *Mailbox) Put(elem any)
 ```
 Put an element into the mailbox.
 
@@ -197,6 +254,7 @@ This is a cheap implementation of a LIFO queue.
 ```go
 func NewBoundedQueue(bounds int) *Queue
 ```
+Create a queue that is bounded to a specific size.
 
 #### func  NewQueue
 
@@ -215,7 +273,7 @@ Is the queue full?
 #### func (*Queue) Get
 
 ```go
-func (q *Queue) Get() (interface{}, bool)
+func (q *Queue) Get() (any, bool)
 ```
 Remove an element from the end of the queue and return it.
 
@@ -229,7 +287,7 @@ Return the number of elements in the queue.
 #### func (*Queue) Put
 
 ```go
-func (q *Queue) Put(elem interface{}) bool
+func (q *Queue) Put(elem any) bool
 ```
 Append an element to the queue. Returns `false` if there is no more room in the
 queue.
