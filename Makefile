@@ -50,6 +50,7 @@ MODULES = apiclient       \
 	  generics        \
 	  logger          \
 	  math/conversion \
+	  memoise         \
 	  process         \
 	  rfc3339         \
 	  rlhttp          \

@@ -118,66 +118,6 @@ func (e *Message) Index() uint64
 func (e *Message) String() string
 ```
 
-#### type MockEvent
-
-```go
-type MockEvent struct {
-}
-```
-
-MockEvent is a mock of Event interface.
-
-#### func  NewMockEvent
-
-```go
-func NewMockEvent(ctrl *gomock.Controller) *MockEvent
-```
-NewMockEvent creates a new mock instance.
-
-#### func (*MockEvent) EXPECT
-
-```go
-func (m *MockEvent) EXPECT() *MockEventMockRecorder
-```
-EXPECT returns an object that allows the caller to indicate expected use.
-
-#### func (*MockEvent) String
-
-```go
-func (m *MockEvent) String() string
-```
-String mocks base method.
-
-#### func (*MockEvent) When
-
-```go
-func (m *MockEvent) When() time.Time
-```
-When mocks base method.
-
-#### type MockEventMockRecorder
-
-```go
-type MockEventMockRecorder struct {
-}
-```
-
-MockEventMockRecorder is the mock recorder for MockEvent.
-
-#### func (*MockEventMockRecorder) String
-
-```go
-func (mr *MockEventMockRecorder) String() *gomock.Call
-```
-String indicates an expected call of String.
-
-#### func (*MockEventMockRecorder) When
-
-```go
-func (mr *MockEventMockRecorder) When() *gomock.Call
-```
-When indicates an expected call of When.
-
 #### type Queue
 
 ```go

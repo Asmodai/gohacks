@@ -30,7 +30,7 @@
 package apiserver
 
 import (
-	"github.com/Asmodai/gohacks/logger"
+	mlogger "github.com/Asmodai/gohacks/mocks/logger"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/mock/gomock"
@@ -85,7 +85,7 @@ func TestDispatch(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
 
 	srv := &FakeServer{}
-	lgr := logger.NewMockLogger(mocked)
+	lgr := mlogger.NewMockLogger(mocked)
 	lgr.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
 	inst := NewDispatcher(
@@ -193,7 +193,7 @@ func TestLogWriter(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
 
 	srv := &FakeServer{}
-	lgr := logger.NewMockLogger(mocked)
+	lgr := mlogger.NewMockLogger(mocked)
 	lgr.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
 	inst := NewDispatcher(
@@ -265,7 +265,7 @@ func TestFormatter(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
 
 	srv := &FakeServer{}
-	lgr := logger.NewMockLogger(mocked)
+	lgr := mlogger.NewMockLogger(mocked)
 	lgr.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
 	inst := NewDispatcher(

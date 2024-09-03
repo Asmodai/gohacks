@@ -1,6 +1,6 @@
 module github.com/Asmodai/gohacks
 
-go 1.20
+go 1.21
 
 require (
 	github.com/btubbs/datetime v0.1.1

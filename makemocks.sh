@@ -42,6 +42,8 @@ ROOT=$(pwd)
 FILES=$(find . -iname "*.go" | grep -v "/vendor/")
 MOCK_PATH="mocks"
 
+test -d "${MOCK_PATH}" || mkdir "${MOCK_PATH}"
+
 for file in ${FILES}
 do
   # Build mocks from the file?
@@ -54,7 +56,7 @@ do
 
   fname=$(basename ${file})
   pname=$(basename $(dirname ${file}))
-  output="${pname}/$(echo ${fname} | cut -d. -f1)_mock.go"
+  output="${MOCK_PATH}/${pname}/$(echo ${fname} | cut -d. -f1)_mock.go"
 
   echo "Processing ${pname}/${fname} => ${output}"
 

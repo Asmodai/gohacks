@@ -29,66 +29,6 @@ func WithValueMapWithKey(ctx context.Context, key string, valuemap ValueMap) con
 ```
 Create a context with the value map using the specified key.
 
-#### type MockValueMap
-
-```go
-type MockValueMap struct {
-}
-```
-
-MockValueMap is a mock of ValueMap interface.
-
-#### func  NewMockValueMap
-
-```go
-func NewMockValueMap(ctrl *gomock.Controller) *MockValueMap
-```
-NewMockValueMap creates a new mock instance.
-
-#### func (*MockValueMap) EXPECT
-
-```go
-func (m *MockValueMap) EXPECT() *MockValueMapMockRecorder
-```
-EXPECT returns an object that allows the caller to indicate expected use.
-
-#### func (*MockValueMap) Get
-
-```go
-func (m *MockValueMap) Get(arg0 string) (any, bool)
-```
-Get mocks base method.
-
-#### func (*MockValueMap) Set
-
-```go
-func (m *MockValueMap) Set(key string, value any)
-```
-Set mocks base method.
-
-#### type MockValueMapMockRecorder
-
-```go
-type MockValueMapMockRecorder struct {
-}
-```
-
-MockValueMapMockRecorder is the mock recorder for MockValueMap.
-
-#### func (*MockValueMapMockRecorder) Get
-
-```go
-func (mr *MockValueMapMockRecorder) Get(arg0 any) *gomock.Call
-```
-Get indicates an expected call of Get.
-
-#### func (*MockValueMapMockRecorder) Set
-
-```go
-func (mr *MockValueMapMockRecorder) Set(key, value any) *gomock.Call
-```
-Set indicates an expected call of Set.
-
 #### type ValueMap
 
 ```go
