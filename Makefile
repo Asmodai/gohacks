@@ -58,6 +58,7 @@ MODULES = apiclient       \
 	  semver          \
 	  service         \
 	  sysinfo         \
+	  timedcache      \
 	  types           \
 	  utils
 
