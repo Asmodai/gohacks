@@ -30,18 +30,42 @@
 package database
 
 import (
+	"gitlab.com/tozd/go/errors"
+
+	"fmt"
 	"testing"
 )
+
+const (
+	username  string = "user"
+	password  string = "pass"
+	hostname  string = "localhost"
+	dbname    string = "db"
+	portno    int    = 1337
+	batchsize int    = 10
+)
+
+func MakeDSN() string {
+	return fmt.Sprintf(
+		"%s:%s@tcp(%s:%d)/%s?parseTime=True&loc=UTC&time_zone='-00:00'",
+		username,
+		password,
+		hostname,
+		portno,
+		dbname,
+	)
+}
 
 func MakeSQL() *Config {
 	sql := NewConfig()
 
-	sql.Username = "user"
-	sql.Password = "pass"
-	sql.Hostname = "localhost"
-	sql.Port = 1337
-	sql.Database = "db"
-	sql.BatchSize = 10
+	sql.Driver = "test"
+	sql.Username = username
+	sql.Password = password
+	sql.Hostname = hostname
+	sql.Port = portno
+	sql.Database = dbname
+	sql.BatchSize = batchsize
 
 	return sql
 }
@@ -54,7 +78,7 @@ func TestSQLDSN(t *testing.T) {
 	t.Run("Does `ToDSN` work as expected?", func(t *testing.T) {
 		dsn1 = sql.ToDSN()
 
-		if dsn1 != "user:pass@tcp(localhost:1337)/db?parseTime=True&loc=UTC&time_zone='-00:00'" {
+		if dsn1 != MakeDSN() {
 			t.Errorf("No, got '%v'", dsn1)
 		}
 	})
@@ -64,6 +88,96 @@ func TestSQLDSN(t *testing.T) {
 
 		if dsn2 != dsn1 {
 			t.Errorf("No, got '%v'", dsn2)
+		}
+	})
+}
+
+func CheckError(cnf *Config) error {
+	err := cnf.Validate()
+
+	if err == nil {
+		return fmt.Errorf("no error generated")
+	}
+
+	return err
+}
+
+func TestValidate(t *testing.T) {
+	t.Run("Works as expected", func(t *testing.T) {
+		sql := MakeSQL()
+
+		err := sql.Validate()
+		if err != nil {
+			t.Errorf("Unxepected error: %v", err)
+		}
+	})
+
+	t.Run("Errors with no driver", func(t *testing.T) {
+		sql := MakeSQL()
+		sql.Driver = ""
+
+		err := CheckError(sql)
+		if !errors.Is(err, ErrNoDriver) {
+			t.Errorf("Unexpected error: %v", err)
+		}
+	})
+
+	t.Run("Errors with no username", func(t *testing.T) {
+		sql := MakeSQL()
+		sql.Username = ""
+
+		err := CheckError(sql)
+		if !errors.Is(err, ErrNoUsername) {
+			t.Errorf("Unexpected error: %v", err)
+		}
+	})
+
+	t.Run("Errors with no password", func(t *testing.T) {
+		sql := MakeSQL()
+		sql.Password = ""
+
+		err := CheckError(sql)
+		if !errors.Is(err, ErrNoPassword) {
+			t.Errorf("Unexpected error: %v", err)
+		}
+	})
+
+	t.Run("Errors with no hostname", func(t *testing.T) {
+		sql := MakeSQL()
+		sql.Hostname = ""
+
+		err := CheckError(sql)
+		if !errors.Is(err, ErrNoHostname) {
+			t.Errorf("Unexpected error: %v", err)
+		}
+	})
+
+	t.Run("Errors with no database", func(t *testing.T) {
+		sql := MakeSQL()
+		sql.Database = ""
+
+		err := CheckError(sql)
+		if !errors.Is(err, ErrNoDatabase) {
+			t.Errorf("Unexpected error: %v", err)
+		}
+	})
+
+	t.Run("Sets default port", func(t *testing.T) {
+		sql := MakeSQL()
+		sql.Port = 0
+
+		err := sql.Validate()
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+			return
+		}
+
+		if sql.Port != defaultDatabasePort {
+			t.Errorf(
+				"Unexpected port number, %d!=%d",
+				defaultDatabasePort,
+				sql.Port,
+			)
 		}
 	})
 }

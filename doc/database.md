@@ -10,27 +10,48 @@
 
 ```go
 var (
+	ErrNoDriver   error = errors.Base("no driver provided")
+	ErrNoUsername error = errors.Base("no username provided")
+	ErrNoPassword error = errors.Base("no password provided")
+	ErrNoHostname error = errors.Base("no hostname provided")
+	ErrNoDatabase error = errors.Base("no database name provided")
+)
+```
+
+```go
+var (
+	ErrNoContextKey       error = errors.Base("no context key given")
+	ErrValueIsNotDatabase error = errors.Base("not a database")
+)
+```
+
+```go
+var (
 	// The empty cursor.
 	EmptyCursor = &Cursor{Offset: 0, Limit: 0}
 )
+```
+
+#### func  ToContext
+
+```go
+func ToContext(ctx context.Context, inst Database, key string) (context.Context, error)
 ```
 
 #### type Config
 
 ```go
 type Config struct {
-	Driver         string `json:"driver"`
-	Username       string `json:"username"`
-	UsernameSecret string `json:"username_secret"`
-	Password       string `config_obscure:"true"  json:"password"`
-	PasswordSecret string `json:"password_secret"`
-	Hostname       string `json:"hostname"`
-	Port           int    `json:"port"`
-	Database       string `json:"database"`
-	BatchSize      int    `json:"batch_size"`
-	SetPoolLimits  bool   `json:"set_pool_limits"`
-	MaxIdleConns   int    `json:"max_idle_conns"`
-	MaxOpenConns   int    `json:"max_open_conns"`
+	Driver        string `json:"driver"`
+	Username      string `json:"username"`
+	Password      string `config_obscure:"true"  json:"password"`
+	Hostname      string `json:"hostname"`
+	Port          int    `json:"port"`
+	Database      string `json:"database"`
+	BatchSize     int    `json:"batch_size"`
+	SetPoolLimits bool   `json:"set_pool_limits"`
+	MaxIdleConns  int    `json:"max_idle_conns"`
+	MaxOpenConns  int    `json:"max_open_conns"`
 }
 ```
 
@@ -85,7 +106,22 @@ Is the cursor valid?
 #### type Database
 
 ```go
-type Database struct {
+type Database interface {
+	MustBegin() *sqlx.Tx
+	Begin() (*sql.Tx, error)
+	Beginx() (*sqlx.Tx, error)
+	Close() error
+	Exec(string, ...any) (sql.Result, error)
+	NamedExec(string, any) (sql.Result, error)
+	Ping() error
+	Prepare(string) (*sql.Stmt, error)
+	Query(string, ...any) (Rows, error)
+	Queryx(string, ...any) (Rowsx, error)
+	QueryRowx(string, ...any) Row
+	Select(any, string, ...any) error
+	Get(any, string, ...any) error
+	SetMaxIdleConns(int)
+	SetMaxOpenConns(int)
 }
 ```
 
@@ -93,103 +129,25 @@ SQL proxy object.
 
 This trainwreck exists so that we can make use of database interfaces.
 
-It might be 100% useless, as `sql.DB` will most likely conform to `IDatabase`,
-so this file might vanish at some point.
-
-#### func (*Database) Begin
+#### func  FromContext
 
 ```go
-func (db *Database) Begin() (*sql.Tx, error)
+func FromContext(ctx context.Context, key string) (Database, error)
 ```
 
-#### func (*Database) Beginx
+#### func  Open
 
 ```go
-func (db *Database) Beginx() (*sqlx.Tx, error)
-```
-
-#### func (*Database) Close
-
-```go
-func (db *Database) Close() error
-```
-
-#### func (*Database) Exec
-
-```go
-func (db *Database) Exec(query string, args ...any) (sql.Result, error)
-```
-
-#### func (*Database) Get
-
-```go
-func (db *Database) Get(what any, query string, args ...any) error
-```
-
-#### func (*Database) MustBegin
-
-```go
-func (db *Database) MustBegin() *sqlx.Tx
-```
-
-#### func (*Database) NamedExec
-
-```go
-func (db *Database) NamedExec(query string, args any) (sql.Result, error)
-```
-
-#### func (*Database) Ping
-
-```go
-func (db *Database) Ping() error
-```
-
-#### func (*Database) Prepare
-
-```go
-func (db *Database) Prepare(query string) (*sql.Stmt, error)
-```
-
-#### func (*Database) Query
-
-```go
-func (db *Database) Query(query string, args ...any) (IRows, error)
-```
-
-#### func (*Database) QueryRowx
-
-```go
-func (db *Database) QueryRowx(query string, args ...any) IRow
-```
-
-#### func (*Database) Queryx
-
-```go
-func (db *Database) Queryx(query string, args ...any) (IRowsx, error)
-```
-
-#### func (*Database) Select
-
-```go
-func (db *Database) Select(what any, query string, args ...any) error
-```
-
-#### func (*Database) SetMaxIdleConns
-
-```go
-func (db *Database) SetMaxIdleConns(limit int)
-```
-
-#### func (*Database) SetMaxOpenConns
-
-```go
-func (db *Database) SetMaxOpenConns(limit int)
+func Open(driver string, dsn string) (Database, error)
 ```
 
 #### type DatabaseMgr
 
 ```go
-type DatabaseMgr struct {
+type DatabaseMgr interface {
+	Open(string, string) (Database, error)
+	OpenConfig(*Config) (Database, error)
+	CheckDB(Database) error
 }
 ```
 
@@ -197,122 +155,6 @@ Database management.
 
 This is a series of wrappers around Go's internal DB stuff to ensure that we set
 up max idle/open connections et al.
-
-#### func (*DatabaseMgr) CheckDB
-
-```go
-func (dbm *DatabaseMgr) CheckDB(db IDatabase) error
-```
-Check the db connection.
-
-#### func (*DatabaseMgr) Open
-
-```go
-func (dbm *DatabaseMgr) Open(driver string, dsn string) (IDatabase, error)
-```
-Open a connection to the database specified in the DSN string.
-
-#### func (*DatabaseMgr) OpenConfig
-
-```go
-func (dbm *DatabaseMgr) OpenConfig(conf *Config) (IDatabase, error)
-```
-Open and configure a database connection.
-
-#### type IDatabase
-
-```go
-type IDatabase interface {
-	MustBegin() *sqlx.Tx
-	Begin() (*sql.Tx, error)
-	Beginx() (*sqlx.Tx, error)
-	Close() error
-	Exec(string, ...interface{}) (sql.Result, error)
-	NamedExec(string, interface{}) (sql.Result, error)
-	Ping() error
-	Prepare(string) (*sql.Stmt, error)
-	Query(string, ...interface{}) (IRows, error)
-	Queryx(string, ...interface{}) (IRowsx, error)
-	QueryRowx(string, ...interface{}) IRow
-	Select(interface{}, string, ...interface{}) error
-	Get(interface{}, string, ...interface{}) error
-	SetMaxIdleConns(int)
-	SetMaxOpenConns(int)
-}
-```
-
-Interface for `sql.DB` objects.
-
-#### func  Open
-
-```go
-func Open(driver string, dsn string) (IDatabase, error)
-```
-
-#### type IDatabaseMgr
-
-```go
-type IDatabaseMgr interface {
-	Open(string, string) (IDatabase, error)
-	OpenConfig(*Config) (IDatabase, error)
-	CheckDB(IDatabase) error
-}
-```
-
-
-#### type IRow
-
-```go
-type IRow interface {
-	Err() error
-	Scan(dest ...interface{}) error
-}
-```
-
-Interface for `sql.Row` objects.
-
-#### type IRows
-
-```go
-type IRows interface {
-	Close() error
-	ColumnTypes() ([]*sql.ColumnType, error)
-	Columns() ([]string, error)
-	Err() error
-	Next() bool
-	NextResultSet() bool
-	Scan(...interface{}) error
-}
-```
-
-Interface for `sql.Rows` objects.
-
-#### type IRowsx
-
-```go
-type IRowsx interface {
-	Close() error
-	ColumnTypes() ([]*sql.ColumnType, error)
-	Columns() ([]string, error)
-	Err() error
-	Next() bool
-	NextResultSet() bool
-	Scan(...interface{}) error
-	StructScan(interface{}) error
-}
-```
-
-Interface for `sqlx.Rows` objects.
-
-#### type ITx
-
-```go
-type ITx interface {
-	NamedExec(string, interface{}) (sql.Result, error)
-	Commit() error
-}
-```
-
 
 #### type NullBool
 
@@ -434,22 +276,59 @@ type NullTime struct {
 func (x NullTime) MarshalJSON() ([]byte, error)
 ```
 
-#### type Tx
+#### type Row
 
 ```go
-type Tx struct {
+type Row interface {
+	Err() error
+	Scan(...any) error
 }
 ```
 
 
-#### func (*Tx) Commit
+#### type Rows
 
 ```go
-func (tx *Tx) Commit() error
+type Rows interface {
+	Close() error
+	ColumnTypes() ([]*sql.ColumnType, error)
+	Columns() ([]string, error)
+	Err() error
+	Next() bool
+	NextResultSet() bool
+	Scan(...any) error
+}
 ```
 
-#### func (*Tx) NamedExec
+
+#### type Rowsx
 
 ```go
-func (tx *Tx) NamedExec(query string, arg any) (sql.Result, error)
+type Rowsx interface {
+	Close() error
+	ColumnTypes() ([]*sql.ColumnType, error)
+	Columns() ([]string, error)
+	Err() error
+	Next() bool
+	NextResultSet() bool
+	Scan(...any) error
+	StructScan(any) error
+}
+```
+
+
+#### type Tx
+
+```go
+type Tx interface {
+	NamedExec(string, any) (sql.Result, error)
+	Commit() error
+}
+```
+
+
+#### func  NewTx
+
+```go
+func NewTx() Tx
 ```

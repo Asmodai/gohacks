@@ -1,6 +1,6 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
-// idatabasemgr.go --- Database manager interface.
+// rows.go --- Rows
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
 //
@@ -26,13 +26,39 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+// mock:yes
 
 package database
 
-type IDatabaseMgr interface {
-	Open(string, string) (IDatabase, error)
-	OpenConfig(*Config) (IDatabase, error)
-	CheckDB(IDatabase) error
+import (
+	"database/sql"
+)
+
+type Row interface {
+	Err() error
+	Scan(...any) error
 }
 
-// idatabasemgr.go ends here.
+type Rows interface {
+	Close() error
+	ColumnTypes() ([]*sql.ColumnType, error)
+	Columns() ([]string, error)
+	Err() error
+	Next() bool
+	NextResultSet() bool
+	Scan(...any) error
+}
+
+type Rowsx interface {
+	Close() error
+	ColumnTypes() ([]*sql.ColumnType, error)
+	Columns() ([]string, error)
+	Err() error
+	Next() bool
+	NextResultSet() bool
+	Scan(...any) error
+	StructScan(any) error
+}
+
+// rows.go ends here.

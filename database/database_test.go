@@ -30,51 +30,89 @@
 package database
 
 import (
+	ctxvalmap "github.com/Asmodai/gohacks/context"
+	"gitlab.com/tozd/go/errors"
+
 	"context"
-	"database/sql/driver"
 	"testing"
 )
 
-// ==================================================================
-// {{{ Mock SQL driver:
-
-type MockDriver struct {
-}
-
-func (md MockDriver) Open(name string) (driver.Conn, error) {
-	return nil, nil
-}
-
-// }}}
-// ==================================================================
-
-// ==================================================================
-// {{{ Mock SQL connection:
-
-type MockConn struct {
-}
-
-func (mc MockConn) Connect(ctx context.Context) (driver.Conn, error) {
-	return nil, nil
-}
-
-func (mc MockConn) Driver() driver.Driver {
-	return MockDriver{}
-}
-
-// }}}
-// ==================================================================
-
 func TestDatabaseOpen(t *testing.T) {
-	t.Log("Does `Open` return an error if it cannot connect?")
+	t.Run("Returns error if cannot connect", func(t *testing.T) {
+		_, e1 := Open("nil", "nil")
+		if e1 == nil {
+			t.Error("Expected an error condition")
+		}
+	})
+}
 
-	_, e1 := Open("nil", "nil")
-	if e1 != nil {
-		t.Log("Yes.")
-		return
-	}
+func TestContext(t *testing.T) {
+	var nctx context.Context
 
-	t.Error("No!")
+	db1 := &database{}
+	db2 := &database{}
+	ctx := context.TODO()
+
+	t.Run("Errors when no value map", func(t *testing.T) {
+		_, err := FromContext(ctx, "testingdb")
+		if !errors.Is(err, ctxvalmap.ErrValueMapNotFound) {
+			t.Errorf("Unexpected error: %v", err.Error())
+		}
+	})
+
+	t.Run("Writes a value map", func(t *testing.T) {
+		nctx, _ = ToContext(ctx, db1, "testingdb")
+	})
+
+	t.Run("Errors when key not found", func(t *testing.T) {
+		_, err := FromContext(nctx, "derp")
+		if !errors.Is(err, ErrNoContextKey) {
+			t.Errorf("Unexpected error: %v", err.Error())
+		}
+	})
+
+	t.Run("Reads from value maps", func(t *testing.T) {
+		val, err := FromContext(nctx, "testingdb")
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err.Error())
+		}
+
+		if val == nil {
+			t.Error("Got NIL back")
+		}
+
+		if val != db1 {
+			t.Error("Did not get the right instance")
+		}
+	})
+
+	t.Run("Modifies value maps", func(t *testing.T) {
+		nctx, _ = ToContext(nctx, db2, "testingdb")
+
+		val, err := FromContext(nctx, "testingdb")
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err.Error())
+		}
+
+		if val == nil {
+			t.Error("Got NIL back")
+		}
+
+		if val != db2 {
+			t.Error("Did not get the right instance")
+		}
+	})
+
+	t.Run("Errors when a key is not a database", func(t *testing.T) {
+		vmap, _ := ctxvalmap.GetValueMap(nctx)
+		vmap.Set("notadb", 42)
+		nctx = ctxvalmap.WithValueMap(ctx, vmap)
+
+		_, err := FromContext(nctx, "notadb")
+		if !errors.Is(err, ErrValueIsNotDatabase) {
+			t.Errorf("Unexpected error: %v", err.Error())
+		}
+	})
 }
 
 // database_test.go ends here.

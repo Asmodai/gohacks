@@ -1,6 +1,6 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
-// idatabase.go --- Database interface.
+// tx.go --- Transactions.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
 //
@@ -26,66 +26,42 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+// mock:yes
 
 package database
 
 import (
 	"github.com/jmoiron/sqlx"
+	"gitlab.com/tozd/go/errors"
 
 	"database/sql"
 )
 
-type ITx interface {
-	NamedExec(string, interface{}) (sql.Result, error)
+type Tx interface {
+	NamedExec(string, any) (sql.Result, error)
 	Commit() error
 }
 
-// Interface for `sql.Row` objects.
-type IRow interface {
-	Err() error
-	Scan(dest ...interface{}) error
+type tx struct {
+	real *sqlx.Tx
 }
 
-// Interface for `sqlx.Rows` objects.
-type IRowsx interface {
-	Close() error
-	ColumnTypes() ([]*sql.ColumnType, error)
-	Columns() ([]string, error)
-	Err() error
-	Next() bool
-	NextResultSet() bool
-	Scan(...interface{}) error
-	StructScan(interface{}) error
+func NewTx() Tx {
+	return &tx{}
 }
 
-// Interface for `sql.Rows` objects.
-type IRows interface {
-	Close() error
-	ColumnTypes() ([]*sql.ColumnType, error)
-	Columns() ([]string, error)
-	Err() error
-	Next() bool
-	NextResultSet() bool
-	Scan(...interface{}) error
+func (obj *tx) NamedExec(query string, arg any) (sql.Result, error) {
+	rval, err := obj.real.NamedExec(query, arg)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return rval, nil
 }
 
-// Interface for `sql.DB` objects.
-type IDatabase interface {
-	MustBegin() *sqlx.Tx
-	Begin() (*sql.Tx, error)
-	Beginx() (*sqlx.Tx, error)
-	Close() error
-	Exec(string, ...interface{}) (sql.Result, error)
-	NamedExec(string, interface{}) (sql.Result, error)
-	Ping() error
-	Prepare(string) (*sql.Stmt, error)
-	Query(string, ...interface{}) (IRows, error)
-	Queryx(string, ...interface{}) (IRowsx, error)
-	QueryRowx(string, ...interface{}) IRow
-	Select(interface{}, string, ...interface{}) error
-	Get(interface{}, string, ...interface{}) error
-	SetMaxIdleConns(int)
-	SetMaxOpenConns(int)
+func (obj *tx) Commit() error {
+	return errors.WithStack(obj.real.Commit())
 }
 
-// idatabase.go ends here.
+// tx.go ends here.

@@ -32,8 +32,6 @@
 package database
 
 import (
-	"github.com/Asmodai/gohacks/secrets"
-
 	"gitlab.com/tozd/go/errors"
 
 	"fmt"
@@ -42,24 +40,31 @@ import (
 const (
 	defaultMaxIdleConns = 20
 	defaultMaxOpenConns = 20
+	defaultDatabasePort = 3306
+)
+
+var (
+	ErrNoDriver   error = errors.Base("no driver provided")
+	ErrNoUsername error = errors.Base("no username provided")
+	ErrNoPassword error = errors.Base("no password provided")
+	ErrNoHostname error = errors.Base("no hostname provided")
+	ErrNoDatabase error = errors.Base("no database name provided")
 )
 
 /*
 SQL configuration structure.
 */
 type Config struct {
-	Driver         string `json:"driver"`
-	Username       string `json:"username"`
-	UsernameSecret string `json:"username_secret"`
-	Password       string `config_obscure:"true"  json:"password"`
-	PasswordSecret string `json:"password_secret"`
-	Hostname       string `json:"hostname"`
-	Port           int    `json:"port"`
-	Database       string `json:"database"`
-	BatchSize      int    `json:"batch_size"`
-	SetPoolLimits  bool   `json:"set_pool_limits"`
-	MaxIdleConns   int    `json:"max_idle_conns"`
-	MaxOpenConns   int    `json:"max_open_conns"`
+	Driver        string `json:"driver"`
+	Username      string `json:"username"`
+	Password      string `config_obscure:"true"  json:"password"`
+	Hostname      string `json:"hostname"`
+	Port          int    `json:"port"`
+	Database      string `json:"database"`
+	BatchSize     int    `json:"batch_size"`
+	SetPoolLimits bool   `json:"set_pool_limits"`
+	MaxIdleConns  int    `json:"max_idle_conns"`
+	MaxOpenConns  int    `json:"max_open_conns"`
 
 	cachedDsn string `config_hide:"true" json:"-"`
 }
@@ -67,50 +72,43 @@ type Config struct {
 // Create a new configuration object.
 func NewConfig() *Config {
 	return &Config{
-		Driver:         "mysql",
-		Username:       "",
-		UsernameSecret: "",
-		Password:       "",
-		PasswordSecret: "",
-		Hostname:       "",
-		Port:           0,
-		Database:       "",
-		cachedDsn:      "",
-		BatchSize:      0,
-		SetPoolLimits:  true,
-		MaxIdleConns:   defaultMaxIdleConns,
-		MaxOpenConns:   defaultMaxOpenConns,
+		Driver:        "mysql",
+		Username:      "",
+		Password:      "",
+		Hostname:      "",
+		Port:          0,
+		Database:      "",
+		cachedDsn:     "",
+		BatchSize:     0,
+		SetPoolLimits: true,
+		MaxIdleConns:  defaultMaxIdleConns,
+		MaxOpenConns:  defaultMaxOpenConns,
 	}
-}
-
-// Check if we should use secrets files.
-func (c *Config) checkSecrets() error {
-	if c.UsernameSecret != "" {
-		secret := secrets.Make(c.UsernameSecret)
-
-		if err := secret.Probe(); err != nil {
-			return errors.WithStack(err)
-		}
-
-		c.Username = secret.Value()
-	}
-
-	if c.PasswordSecret != "" {
-		secret := secrets.Make(c.PasswordSecret)
-
-		if err := secret.Probe(); err != nil {
-			return errors.WithStack(err)
-		}
-
-		c.Password = secret.Value()
-	}
-
-	return nil
 }
 
 func (c *Config) Validate() error {
-	if err := c.checkSecrets(); err != nil {
-		return errors.WithStack(err)
+	if c.Driver == "" {
+		return errors.WithStack(ErrNoDriver)
+	}
+
+	if c.Username == "" {
+		return errors.WithStack(ErrNoUsername)
+	}
+
+	if c.Password == "" {
+		return errors.WithStack(ErrNoPassword)
+	}
+
+	if c.Hostname == "" {
+		return errors.WithStack(ErrNoHostname)
+	}
+
+	if c.Port == 0 {
+		c.Port = defaultDatabasePort
+	}
+
+	if c.Database == "" {
+		return errors.WithStack(ErrNoDatabase)
 	}
 
 	return nil

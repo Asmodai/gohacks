@@ -26,10 +26,13 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+// mock:yes
 
 package database
 
 import (
+	ctxvalmap "github.com/Asmodai/gohacks/context"
 
 	// This is the MySQL driver, it must be blank.
 	_ "github.com/go-sql-driver/mysql"
@@ -37,26 +40,47 @@ import (
 	"github.com/jmoiron/sqlx"
 	"gitlab.com/tozd/go/errors"
 
+	"context"
 	"database/sql"
+)
+
+var (
+	ErrNoContextKey       error = errors.Base("no context key given")
+	ErrValueIsNotDatabase error = errors.Base("not a database")
 )
 
 /*
 SQL proxy object.
 
 This trainwreck exists so that we can make use of database interfaces.
-
-It might be 100% useless, as `sql.DB` will most likely conform to `IDatabase`,
-so this file might vanish at some point.
 */
-type Database struct {
+type Database interface {
+	MustBegin() *sqlx.Tx
+	Begin() (*sql.Tx, error)
+	Beginx() (*sqlx.Tx, error)
+	Close() error
+	Exec(string, ...any) (sql.Result, error)
+	NamedExec(string, any) (sql.Result, error)
+	Ping() error
+	Prepare(string) (*sql.Stmt, error)
+	Query(string, ...any) (Rows, error)
+	Queryx(string, ...any) (Rowsx, error)
+	QueryRowx(string, ...any) Row
+	Select(any, string, ...any) error
+	Get(any, string, ...any) error
+	SetMaxIdleConns(int)
+	SetMaxOpenConns(int)
+}
+
+type database struct {
 	real *sqlx.DB
 }
 
-func (db *Database) MustBegin() *sqlx.Tx {
+func (db *database) MustBegin() *sqlx.Tx {
 	return db.real.MustBegin()
 }
 
-func (db *Database) Begin() (*sql.Tx, error) {
+func (db *database) Begin() (*sql.Tx, error) {
 	rval, err := db.real.Begin()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -65,7 +89,7 @@ func (db *Database) Begin() (*sql.Tx, error) {
 	return rval, nil
 }
 
-func (db *Database) Beginx() (*sqlx.Tx, error) {
+func (db *database) Beginx() (*sqlx.Tx, error) {
 	rval, err := db.real.Beginx()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -74,13 +98,13 @@ func (db *Database) Beginx() (*sqlx.Tx, error) {
 	return rval, nil
 }
 
-func (db *Database) Ping() error  { return errors.WithStack(db.real.Ping()) }
-func (db *Database) Close() error { return errors.WithStack(db.real.Close()) }
+func (db *database) Ping() error  { return errors.WithStack(db.real.Ping()) }
+func (db *database) Close() error { return errors.WithStack(db.real.Close()) }
 
-func (db *Database) SetMaxIdleConns(limit int) { db.real.SetMaxIdleConns(limit) }
-func (db *Database) SetMaxOpenConns(limit int) { db.real.SetMaxOpenConns(limit) }
+func (db *database) SetMaxIdleConns(limit int) { db.real.SetMaxIdleConns(limit) }
+func (db *database) SetMaxOpenConns(limit int) { db.real.SetMaxOpenConns(limit) }
 
-func (db *Database) Prepare(query string) (*sql.Stmt, error) {
+func (db *database) Prepare(query string) (*sql.Stmt, error) {
 	rval, err := db.real.Prepare(query)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -89,7 +113,7 @@ func (db *Database) Prepare(query string) (*sql.Stmt, error) {
 	return rval, nil
 }
 
-func (db *Database) Exec(query string, args ...any) (sql.Result, error) {
+func (db *database) Exec(query string, args ...any) (sql.Result, error) {
 	rval, err := db.real.Exec(query, args...)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -98,7 +122,7 @@ func (db *Database) Exec(query string, args ...any) (sql.Result, error) {
 	return rval, nil
 }
 
-func (db *Database) NamedExec(query string, args any) (sql.Result, error) {
+func (db *database) NamedExec(query string, args any) (sql.Result, error) {
 	rval, err := db.real.NamedExec(query, args)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -107,7 +131,7 @@ func (db *Database) NamedExec(query string, args any) (sql.Result, error) {
 	return rval, nil
 }
 
-func (db *Database) Query(query string, args ...any) (IRows, error) {
+func (db *database) Query(query string, args ...any) (Rows, error) {
 	//nolint:rowserrcheck
 	rval, err := db.real.Query(query, args...)
 	if err != nil {
@@ -117,7 +141,7 @@ func (db *Database) Query(query string, args ...any) (IRows, error) {
 	return rval, nil
 }
 
-func (db *Database) Queryx(query string, args ...any) (IRowsx, error) {
+func (db *database) Queryx(query string, args ...any) (Rowsx, error) {
 	rval, err := db.real.Queryx(query, args...)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -126,41 +150,61 @@ func (db *Database) Queryx(query string, args ...any) (IRowsx, error) {
 	return rval, nil
 }
 
-func (db *Database) QueryRowx(query string, args ...any) IRow {
+func (db *database) QueryRowx(query string, args ...any) Row {
 	return db.real.QueryRowx(query, args...)
 }
 
-func (db *Database) Select(what any, query string, args ...any) error {
+func (db *database) Select(what any, query string, args ...any) error {
 	return errors.WithStack(db.real.Select(what, query, args...))
 }
 
-func (db *Database) Get(what any, query string, args ...any) error {
+func (db *database) Get(what any, query string, args ...any) error {
 	return errors.WithStack(db.real.Get(what, query, args...))
 }
 
-func Open(driver string, dsn string) (IDatabase, error) {
-	db, err := sqlx.Open(driver, dsn)
-
-	return &Database{
-		real: db,
-	}, errors.WithStack(err)
-}
-
-type Tx struct {
-	real *sqlx.Tx
-}
-
-func (tx *Tx) NamedExec(query string, arg any) (sql.Result, error) {
-	rval, err := tx.real.NamedExec(query, arg)
+func FromContext(ctx context.Context, key string) (Database, error) {
+	vmap, err := ctxvalmap.GetValueMap(ctx)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	return rval, nil
+	rval, found := vmap.Get(key)
+	if !found {
+		return nil, errors.WithStack(ErrNoContextKey)
+	}
+
+	dbval, ok := rval.(Database)
+	if !ok {
+		return nil, errors.WithStack(ErrValueIsNotDatabase)
+	}
+
+	return dbval, nil
 }
 
-func (tx *Tx) Commit() error {
-	return errors.WithStack(tx.real.Commit())
+func ToContext(ctx context.Context, inst Database, key string) (context.Context, error) {
+	var (
+		vmap ctxvalmap.ValueMap
+		err  error
+	)
+
+	vmap, err = ctxvalmap.GetValueMap(ctx)
+	if err != nil {
+		vmap = ctxvalmap.NewValueMap()
+	}
+
+	vmap.Set(key, inst)
+
+	ctx = ctxvalmap.WithValueMap(ctx, vmap)
+
+	return ctx, nil
+}
+
+func Open(driver string, dsn string) (Database, error) {
+	db, err := sqlx.Open(driver, dsn)
+
+	return &database{
+		real: db,
+	}, errors.WithStack(err)
 }
 
 // database.go ends here.

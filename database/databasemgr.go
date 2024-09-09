@@ -26,6 +26,8 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+// mock:yes
 
 package database
 
@@ -42,17 +44,29 @@ Database management.
 This is a series of wrappers around Go's internal DB stuff to ensure
 that we set up max idle/open connections et al.
 */
-//nolint:revive
-type DatabaseMgr struct {
+type Manager interface {
+	Open(string, string) (Database, error)
+	OpenConfig(*Config) (Database, error)
+	CheckDB(Database) error
+}
+
+// Internal implementation.
+//
+//nolint:unused
+type manager struct {
 }
 
 // Open a connection to the database specified in the DSN string.
-func (dbm *DatabaseMgr) Open(driver string, dsn string) (IDatabase, error) {
+//
+//nolint:unused
+func (dbm *manager) Open(driver string, dsn string) (Database, error) {
 	return Open(driver, dsn)
 }
 
 // Open and configure a database connection.
-func (dbm *DatabaseMgr) OpenConfig(conf *Config) (IDatabase, error) {
+//
+//nolint:unused
+func (dbm *manager) OpenConfig(conf *Config) (Database, error) {
 	dbase, err := dbm.Open(conf.Driver, conf.ToDSN())
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -67,7 +81,9 @@ func (dbm *DatabaseMgr) OpenConfig(conf *Config) (IDatabase, error) {
 }
 
 // Check the db connection.
-func (dbm *DatabaseMgr) CheckDB(db IDatabase) error {
+//
+//nolint:unused
+func (dbm *manager) CheckDB(db Database) error {
 	return errors.WithStack(db.Ping())
 }
 
