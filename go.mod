@@ -3,6 +3,7 @@ module github.com/Asmodai/gohacks
 go 1.21
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/btubbs/datetime v0.1.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-sql-driver/mysql v1.6.0

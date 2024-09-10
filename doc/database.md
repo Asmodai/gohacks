@@ -107,27 +107,9 @@ Is the cursor valid?
 
 ```go
 type Database interface {
-	MustBegin() *sqlx.Tx
-	Begin() (*sql.Tx, error)
-	Beginx() (*sqlx.Tx, error)
-	Close() error
-	Exec(string, ...any) (sql.Result, error)
-	NamedExec(string, any) (sql.Result, error)
-	Ping() error
-	Prepare(string) (*sql.Stmt, error)
-	Query(string, ...any) (Rows, error)
-	Queryx(string, ...any) (Rowsx, error)
-	QueryRowx(string, ...any) Row
-	Select(any, string, ...any) error
-	Get(any, string, ...any) error
-	SetMaxIdleConns(int)
-	SetMaxOpenConns(int)
 }
 ```
 
-SQL proxy object.
-
-This trainwreck exists so that we can make use of database interfaces.
 
 #### func  FromContext
 
@@ -135,16 +117,23 @@ This trainwreck exists so that we can make use of database interfaces.
 func FromContext(ctx context.Context, key string) (Database, error)
 ```
 
+#### func  FromDB
+
+```go
+func FromDB(db *sql.DB, driver string) Database
+```
+
 #### func  Open
 
 ```go
 func Open(driver string, dsn string) (Database, error)
 ```
+Open a connection using the relevant driver to the given data source name.
 
-#### type DatabaseMgr
+#### type Manager
 
 ```go
-type DatabaseMgr interface {
+type Manager interface {
 	Open(string, string) (Database, error)
 	OpenConfig(*Config) (Database, error)
 	CheckDB(Database) error
@@ -317,18 +306,16 @@ type Rowsx interface {
 ```
 
 
-#### type Tx
+#### type SQL
 
 ```go
-type Tx interface {
-	NamedExec(string, any) (sql.Result, error)
-	Commit() error
+type SQL struct {
 }
 ```
 
 
-#### func  NewTx
+#### func  NewSQL
 
 ```go
-func NewTx() Tx
+func NewSQL(impl implementation) *SQL
 ```

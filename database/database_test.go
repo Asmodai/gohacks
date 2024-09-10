@@ -30,7 +30,8 @@
 package database
 
 import (
-	ctxvalmap "github.com/Asmodai/gohacks/context"
+	"github.com/Asmodai/gohacks/contextext"
+	"github.com/DATA-DOG/go-sqlmock"
 	"gitlab.com/tozd/go/errors"
 
 	"context"
@@ -46,73 +47,258 @@ func TestDatabaseOpen(t *testing.T) {
 	})
 }
 
+func TestBasic(t *testing.T) {
+	db, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
+	if err != nil {
+		t.Errorf("Could not mock DB: %v", err.Error())
+		return
+	}
+
+	obj := FromDB(db, "sqlmock")
+	defer obj.Close()
+
+	t.Run("Ping", func(t *testing.T) {
+		mock.ExpectPing()
+
+		obj.Ping()
+	})
+}
+
 func TestContext(t *testing.T) {
-	var nctx context.Context
+	ctx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
 
-	db1 := &database{}
-	db2 := &database{}
-	ctx := context.TODO()
+	t.Run("getTx() with bad transaction", func(t *testing.T) {
+		vmap := contextext.NewValueMap()
+		vmap.Set(KeyTransaction, 42)
+		nctx := contextext.WithValueMap(ctx, vmap)
 
-	t.Run("Errors when no value map", func(t *testing.T) {
-		_, err := FromContext(ctx, "testingdb")
-		if !errors.Is(err, ctxvalmap.ErrValueMapNotFound) {
-			t.Errorf("Unexpected error: %v", err.Error())
+		_, err := getTx(nctx)
+		if !errors.Is(err, ErrTxnKeyNotTxn) {
+			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
 		}
 	})
 
-	t.Run("Writes a value map", func(t *testing.T) {
-		nctx, _ = ToContext(ctx, db1, "testingdb")
-	})
+	t.Run("getTx() with missing key", func(t *testing.T) {
+		vmap := contextext.NewValueMap()
+		nctx := contextext.WithValueMap(ctx, vmap)
 
-	t.Run("Errors when key not found", func(t *testing.T) {
-		_, err := FromContext(nctx, "derp")
-		if !errors.Is(err, ErrNoContextKey) {
-			t.Errorf("Unexpected error: %v", err.Error())
+		_, err := getTx(nctx)
+		if !errors.Is(err, errKeyNotFound) {
+			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
 		}
 	})
+}
 
-	t.Run("Reads from value maps", func(t *testing.T) {
-		val, err := FromContext(nctx, "testingdb")
-		if err != nil {
-			t.Errorf("Unexpected error: %v", err.Error())
-		}
+func TestTransactionFailures(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Errorf("Could not mock DB: %v", err.Error())
+		return
+	}
 
-		if val == nil {
-			t.Error("Got NIL back")
-		}
+	ctx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
 
-		if val != db1 {
-			t.Error("Did not get the right instance")
-		}
-	})
+	obj := FromDB(db, "sqlmock")
+	defer obj.Close()
 
-	t.Run("Modifies value maps", func(t *testing.T) {
-		nctx, _ = ToContext(nctx, db2, "testingdb")
+	t.Run("Begin() ErrTxnStart", func(t *testing.T) {
+		mock.ExpectBegin()
 
-		val, err := FromContext(nctx, "testingdb")
-		if err != nil {
-			t.Errorf("Unexpected error: %v", err.Error())
-		}
+		txctx, err := obj.Begin(ctx)
+		_, err = obj.Begin(txctx)
 
-		if val == nil {
-			t.Error("Got NIL back")
-		}
-
-		if val != db2 {
-			t.Error("Did not get the right instance")
+		if !errors.Is(err, ErrTxnStart) {
+			t.Errorf("Unexpected error: %#v", err)
 		}
 	})
 
-	t.Run("Errors when a key is not a database", func(t *testing.T) {
-		vmap, _ := ctxvalmap.GetValueMap(nctx)
-		vmap.Set("notadb", 42)
-		nctx = ctxvalmap.WithValueMap(ctx, vmap)
+	t.Run("Begin() error from sqlx", func(t *testing.T) {
+		mock.ExpectBegin().WillReturnError(errors.Base("no cheese"))
 
-		_, err := FromContext(nctx, "notadb")
-		if !errors.Is(err, ErrValueIsNotDatabase) {
-			t.Errorf("Unexpected error: %v", err.Error())
+		_, err := obj.Begin(ctx)
+
+		if err.Error() != "no cheese" {
+			t.Errorf("Unexpected error: %#v", err)
 		}
 	})
+
+	t.Run("Commit() context error", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		_, err := obj.Begin(ctx)
+		err = obj.Commit(ctx)
+
+		if !errors.Is(err, contextext.ErrValueMapNotFound) {
+			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
+		}
+	})
+
+	t.Run("Commit() sqlx error", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectCommit().WillReturnError(errors.Base("no cheese"))
+
+		txctx, err := obj.Begin(ctx)
+		err = obj.Commit(txctx)
+
+		if err.Error() != "no cheese" {
+			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
+		}
+	})
+
+	t.Run("Rollback() context error", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		_, err := obj.Begin(ctx)
+		err = obj.Rollback(ctx)
+
+		if !errors.Is(err, contextext.ErrValueMapNotFound) {
+			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
+		}
+	})
+
+	t.Run("Rollback() sqlx error", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectRollback().WillReturnError(errors.Base("no cheese"))
+
+		txctx, err := obj.Begin(ctx)
+		err = obj.Rollback(txctx)
+
+		if err.Error() != "no cheese" {
+			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
+		}
+	})
+}
+
+func TestTransactionCommit(t *testing.T) {
+	var (
+		ctx    context.Context
+		cancel context.CancelFunc
+		txctx  context.Context
+	)
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Errorf("Could not mock DB: %v", err.Error())
+		return
+	}
+
+	ctx, cancel = context.WithCancel(context.TODO())
+	defer cancel()
+
+	obj := FromDB(db, "sqlmock")
+	defer obj.Close()
+
+	// Query, mock rows and results.
+	query := "SELECT id,name FROM foo"
+	rows := sqlmock.NewRows([]string{"id", "name"}).
+		AddRow(1, "Dave").
+		AddRow(2, "Charles")
+
+	// Mock our SQL transaction.
+	mock.ExpectBegin()
+	mock.ExpectQuery("^SELECT (.+) FROM foo").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	// Create our transaction.
+	txctx, err = obj.Begin(ctx)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err.Error())
+		return
+	}
+
+	// Is the transaction ok?
+	if txctx == nil {
+		t.Error("Transaction context is nil")
+	}
+
+	// Extract the sqlx transaction from the context.
+	txn, err := obj.Tx(txctx)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err.Error())
+		return
+	}
+
+	// Transaction ok?
+	if txn == nil {
+		t.Error("Transaction is nil")
+		return
+	}
+
+	// Run our query.
+	txn.Query(query)
+
+	// Commit our query.
+	err = obj.Commit(txctx)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err.Error())
+	}
+}
+
+func TestTransactionRollback(t *testing.T) {
+	var (
+		ctx    context.Context
+		cancel context.CancelFunc
+		txctx  context.Context
+	)
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Errorf("Could not mock DB: %v", err.Error())
+		return
+	}
+
+	ctx, cancel = context.WithCancel(context.TODO())
+	defer cancel()
+
+	obj := FromDB(db, "sqlmock")
+	defer obj.Close()
+
+	// Query, mock rows and results.
+	query := "SELECT id,name FROM foo"
+	rows := sqlmock.NewRows([]string{"id", "name"}).
+		AddRow(1, "Dave").
+		AddRow(2, "Charles")
+
+	// Mock our SQL transaction.
+	mock.ExpectBegin()
+	mock.ExpectQuery("^SELECT (.+) FROM foo").WillReturnRows(rows)
+	mock.ExpectRollback()
+
+	// Create our transaction.
+	txctx, err = obj.Begin(ctx)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err.Error())
+		return
+	}
+
+	// Is the transaction ok?
+	if txctx == nil {
+		t.Error("Transaction context is nil")
+	}
+
+	// Extract the sqlx transaction from the context.
+	txn, err := obj.Tx(txctx)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err.Error())
+		return
+	}
+
+	// Transaction ok?
+	if txn == nil {
+		t.Error("Transaction is nil")
+		return
+	}
+
+	// Run our query.
+	txn.Query(query)
+
+	// Rollback our query.
+	err = obj.Rollback(txctx)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err.Error())
+	}
 }
 
 // database_test.go ends here.

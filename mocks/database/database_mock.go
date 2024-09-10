@@ -11,10 +11,9 @@
 package database
 
 import (
-	sql "database/sql"
+	context "context"
 	reflect "reflect"
 
-	database "github.com/Asmodai/gohacks/database"
 	sqlx "github.com/jmoiron/sqlx"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -43,33 +42,18 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // Begin mocks base method.
-func (m *MockDatabase) Begin() (*sql.Tx, error) {
+func (m *MockDatabase) Begin(arg0 context.Context) (context.Context, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Begin")
-	ret0, _ := ret[0].(*sql.Tx)
+	ret := m.ctrl.Call(m, "Begin", arg0)
+	ret0, _ := ret[0].(context.Context)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Begin indicates an expected call of Begin.
-func (mr *MockDatabaseMockRecorder) Begin() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Begin(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockDatabase)(nil).Begin))
-}
-
-// Beginx mocks base method.
-func (m *MockDatabase) Beginx() (*sqlx.Tx, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Beginx")
-	ret0, _ := ret[0].(*sqlx.Tx)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Beginx indicates an expected call of Beginx.
-func (mr *MockDatabaseMockRecorder) Beginx() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Beginx", reflect.TypeOf((*MockDatabase)(nil).Beginx))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockDatabase)(nil).Begin), arg0)
 }
 
 // Close mocks base method.
@@ -86,72 +70,18 @@ func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close))
 }
 
-// Exec mocks base method.
-func (m *MockDatabase) Exec(arg0 string, arg1 ...any) (sql.Result, error) {
+// Commit mocks base method.
+func (m *MockDatabase) Commit(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Exec", varargs...)
-	ret0, _ := ret[0].(sql.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Exec indicates an expected call of Exec.
-func (mr *MockDatabaseMockRecorder) Exec(arg0 any, arg1 ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockDatabase)(nil).Exec), varargs...)
-}
-
-// Get mocks base method.
-func (m *MockDatabase) Get(arg0 any, arg1 string, arg2 ...any) error {
-	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret := m.ctrl.Call(m, "Commit", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Get indicates an expected call of Get.
-func (mr *MockDatabaseMockRecorder) Get(arg0, arg1 any, arg2 ...any) *gomock.Call {
+// Commit indicates an expected call of Commit.
+func (mr *MockDatabaseMockRecorder) Commit(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockDatabase)(nil).Get), varargs...)
-}
-
-// MustBegin mocks base method.
-func (m *MockDatabase) MustBegin() *sqlx.Tx {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MustBegin")
-	ret0, _ := ret[0].(*sqlx.Tx)
-	return ret0
-}
-
-// MustBegin indicates an expected call of MustBegin.
-func (mr *MockDatabaseMockRecorder) MustBegin() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MustBegin", reflect.TypeOf((*MockDatabase)(nil).MustBegin))
-}
-
-// NamedExec mocks base method.
-func (m *MockDatabase) NamedExec(arg0 string, arg1 any) (sql.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NamedExec", arg0, arg1)
-	ret0, _ := ret[0].(sql.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// NamedExec indicates an expected call of NamedExec.
-func (mr *MockDatabaseMockRecorder) NamedExec(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NamedExec", reflect.TypeOf((*MockDatabase)(nil).NamedExec), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockDatabase)(nil).Commit), arg0)
 }
 
 // Ping mocks base method.
@@ -168,97 +98,18 @@ func (mr *MockDatabaseMockRecorder) Ping() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockDatabase)(nil).Ping))
 }
 
-// Prepare mocks base method.
-func (m *MockDatabase) Prepare(arg0 string) (*sql.Stmt, error) {
+// Rollback mocks base method.
+func (m *MockDatabase) Rollback(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Prepare", arg0)
-	ret0, _ := ret[0].(*sql.Stmt)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Prepare indicates an expected call of Prepare.
-func (mr *MockDatabaseMockRecorder) Prepare(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Prepare", reflect.TypeOf((*MockDatabase)(nil).Prepare), arg0)
-}
-
-// Query mocks base method.
-func (m *MockDatabase) Query(arg0 string, arg1 ...any) (database.Rows, error) {
-	m.ctrl.T.Helper()
-	varargs := []any{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Query", varargs...)
-	ret0, _ := ret[0].(database.Rows)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Query indicates an expected call of Query.
-func (mr *MockDatabaseMockRecorder) Query(arg0 any, arg1 ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockDatabase)(nil).Query), varargs...)
-}
-
-// QueryRowx mocks base method.
-func (m *MockDatabase) QueryRowx(arg0 string, arg1 ...any) database.Row {
-	m.ctrl.T.Helper()
-	varargs := []any{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "QueryRowx", varargs...)
-	ret0, _ := ret[0].(database.Row)
-	return ret0
-}
-
-// QueryRowx indicates an expected call of QueryRowx.
-func (mr *MockDatabaseMockRecorder) QueryRowx(arg0 any, arg1 ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryRowx", reflect.TypeOf((*MockDatabase)(nil).QueryRowx), varargs...)
-}
-
-// Queryx mocks base method.
-func (m *MockDatabase) Queryx(arg0 string, arg1 ...any) (database.Rowsx, error) {
-	m.ctrl.T.Helper()
-	varargs := []any{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Queryx", varargs...)
-	ret0, _ := ret[0].(database.Rowsx)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Queryx indicates an expected call of Queryx.
-func (mr *MockDatabaseMockRecorder) Queryx(arg0 any, arg1 ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Queryx", reflect.TypeOf((*MockDatabase)(nil).Queryx), varargs...)
-}
-
-// Select mocks base method.
-func (m *MockDatabase) Select(arg0 any, arg1 string, arg2 ...any) error {
-	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Select", varargs...)
+	ret := m.ctrl.Call(m, "Rollback", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Select indicates an expected call of Select.
-func (mr *MockDatabaseMockRecorder) Select(arg0, arg1 any, arg2 ...any) *gomock.Call {
+// Rollback indicates an expected call of Rollback.
+func (mr *MockDatabaseMockRecorder) Rollback(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Select", reflect.TypeOf((*MockDatabase)(nil).Select), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockDatabase)(nil).Rollback), arg0)
 }
 
 // SetMaxIdleConns mocks base method.
@@ -283,4 +134,19 @@ func (m *MockDatabase) SetMaxOpenConns(arg0 int) {
 func (mr *MockDatabaseMockRecorder) SetMaxOpenConns(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxOpenConns", reflect.TypeOf((*MockDatabase)(nil).SetMaxOpenConns), arg0)
+}
+
+// Tx mocks base method.
+func (m *MockDatabase) Tx(arg0 context.Context) (*sqlx.Tx, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Tx", arg0)
+	ret0, _ := ret[0].(*sqlx.Tx)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Tx indicates an expected call of Tx.
+func (mr *MockDatabaseMockRecorder) Tx(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Tx", reflect.TypeOf((*MockDatabase)(nil).Tx), arg0)
 }
