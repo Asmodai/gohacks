@@ -43,6 +43,7 @@ const (
 )
 
 var (
+	ErrInvalidContext   = errors.Base("invalid context")
 	ErrInvalidValueMap  = errors.Base("invalid value map")
 	ErrValueMapNotFound = errors.Base("value map not found")
 )
@@ -59,6 +60,10 @@ func extractValueMap(thing any) (ValueMap, error) {
 //
 // Returns nil if there is no value map.
 func GetValueMap(ctx context.Context) (ValueMap, error) {
+	if ctx == nil {
+		return nil, errors.WithStack(ErrInvalidContext)
+	}
+
 	if v := ctx.Value(mapKey); v != nil {
 		return extractValueMap(v)
 	}
