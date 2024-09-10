@@ -29,7 +29,7 @@
 //
 // mock:yes
 
-package context
+package contextext
 
 // A map-based storage structure to pass multiple values via contexts
 // rather than many invocations of `context.WithValue` and their respective

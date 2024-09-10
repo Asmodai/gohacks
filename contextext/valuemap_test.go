@@ -13,7 +13,7 @@
 // including without limitation the rights to use, copy, modify, merge,
 // publish, distribute, sublicense, and/or sell copies of the Software,
 // and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
+// subject to the following conditions:TODO
 //
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
@@ -27,10 +27,10 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package context
+package contextext
 
 import (
-	. "context"
+	"context"
 	"reflect"
 	"testing"
 )
@@ -74,7 +74,7 @@ func TestValueMapDefaultKey(t *testing.T) {
 	vmap := NewValueMap()
 	vmap.Set("test", 42)
 
-	ctx := WithValueMap(TODO(), vmap)
+	ctx := WithValueMap(context.TODO(), vmap)
 
 	t.Run("Returns existing value", func(t *testing.T) {
 		if _, err := GetValueMap(ctx); err != nil {
@@ -83,7 +83,7 @@ func TestValueMapDefaultKey(t *testing.T) {
 	})
 
 	t.Run("Returns nil for non-existent value", func(t *testing.T) {
-		ctx := TODO()
+		ctx := context.TODO()
 		if res, err := GetValueMap(ctx); res != nil && err != nil {
 			t.Errorf("Unexpected value returned: %#v", res)
 		}
@@ -117,7 +117,7 @@ func TestValueMapCustomKey(t *testing.T) {
 	vmap := NewValueMap()
 	vmap.Set("test", 42)
 
-	ctx := WithValueMapWithKey(TODO(), "testing", vmap)
+	ctx := WithValueMapWithKey(context.TODO(), "testing", vmap)
 
 	t.Run("Returns existing value", func(t *testing.T) {
 		if _, err := GetValueMapWithKey(ctx, "testing"); err != nil {
@@ -160,8 +160,8 @@ func TestChildCopy(t *testing.T) {
 	vmap.Set("test1", "One")
 	vmap.Set("test2", 2)
 
-	parent := WithValueMap(TODO(), vmap)
-	child, _ := WithCancel(parent)
+	parent := WithValueMap(context.TODO(), vmap)
+	child, _ := context.WithCancel(parent)
 
 	// Test the parent here, just to be sure.
 	t.Run("Parent has values", func(t *testing.T) {

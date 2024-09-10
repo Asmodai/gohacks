@@ -27,7 +27,7 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package context
+package contextext
 
 import (
 	"gitlab.com/tozd/go/errors"

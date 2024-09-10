@@ -43,7 +43,7 @@ MODULES = apiclient       \
 	  apiserver       \
 	  app             \
 	  config          \
-	  context         \
+	  contextext      \
 	  crypto          \
 	  database        \
 	  events          \
