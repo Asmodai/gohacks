@@ -9,6 +9,12 @@
 ## Usage
 
 ```go
+const (
+	KeyTransaction string = "_DB_TXN"
+)
+```
+
+```go
 var (
 	ErrNoDriver   error = errors.Base("no driver provided")
 	ErrNoUsername error = errors.Base("no username provided")
@@ -20,8 +26,10 @@ var (
 
 ```go
 var (
-	ErrNoContextKey       error = errors.Base("no context key given")
-	ErrValueIsNotDatabase error = errors.Base("not a database")
+	ErrTxnKeyNotFound error = errors.Base("transaction key not found")
+	ErrTxnKeyNotTxn   error = errors.Base("key value is not a transaction")
+	ErrTxnContext     error = errors.Base("could not create transaction context")
+	ErrTxnStart       error = errors.Base("could not start transaction")
 )
 ```
 
@@ -30,12 +38,6 @@ var (
 	// The empty cursor.
 	EmptyCursor = &Cursor{Offset: 0, Limit: 0}
 )
-```
-
-#### func  ToContext
-
-```go
-func ToContext(ctx context.Context, inst Database, key string) (context.Context, error)
 ```
 
 #### type Config
@@ -107,15 +109,34 @@ Is the cursor valid?
 
 ```go
 type Database interface {
+	// Pings the database connection to ensure it is alive and connected.
+	Ping() error
+
+	// Close a database connection.  This does nothing if the connection
+	// is already closed.
+	Close() error
+
+	// Set the maximum idle connections.
+	SetMaxIdleConns(int)
+
+	// Set the maximum open connections.
+	SetMaxOpenConns(int)
+
+	// Return the transaction (if any) from the given context.
+	Tx(context.Context) (*sqlx.Tx, error)
+
+	// Initiate a transaction.  Returns a new context that contains the
+	// database transaction session as a value.
+	Begin(context.Context) (context.Context, error)
+
+	// Initiate a transaction commit.
+	Commit(context.Context) error
+
+	// Initiate a transaction rollback.
+	Rollback(context.Context) error
 }
 ```
 
-
-#### func  FromContext
-
-```go
-func FromContext(ctx context.Context, key string) (Database, error)
-```
 
 #### func  FromDB
 
@@ -263,59 +284,4 @@ type NullTime struct {
 
 ```go
 func (x NullTime) MarshalJSON() ([]byte, error)
-```
-
-#### type Row
-
-```go
-type Row interface {
-	Err() error
-	Scan(...any) error
-}
-```
-
-
-#### type Rows
-
-```go
-type Rows interface {
-	Close() error
-	ColumnTypes() ([]*sql.ColumnType, error)
-	Columns() ([]string, error)
-	Err() error
-	Next() bool
-	NextResultSet() bool
-	Scan(...any) error
-}
-```
-
-
-#### type Rowsx
-
-```go
-type Rowsx interface {
-	Close() error
-	ColumnTypes() ([]*sql.ColumnType, error)
-	Columns() ([]string, error)
-	Err() error
-	Next() bool
-	NextResultSet() bool
-	Scan(...any) error
-	StructScan(any) error
-}
-```
-
-
-#### type SQL
-
-```go
-type SQL struct {
-}
-```
-
-
-#### func  NewSQL
-
-```go
-func NewSQL(impl implementation) *SQL
 ```

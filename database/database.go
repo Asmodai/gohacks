@@ -58,15 +58,30 @@ const (
 )
 
 type Database interface {
+	// Pings the database connection to ensure it is alive and connected.
 	Ping() error
+
+	// Close a database connection.  This does nothing if the connection
+	// is already closed.
 	Close() error
 
+	// Set the maximum idle connections.
 	SetMaxIdleConns(int)
+
+	// Set the maximum open connections.
 	SetMaxOpenConns(int)
 
+	// Return the transaction (if any) from the given context.
 	Tx(context.Context) (*sqlx.Tx, error)
+
+	// Initiate a transaction.  Returns a new context that contains the
+	// database transaction session as a value.
 	Begin(context.Context) (context.Context, error)
+
+	// Initiate a transaction commit.
 	Commit(context.Context) error
+
+	// Initiate a transaction rollback.
 	Rollback(context.Context) error
 }
 
@@ -75,26 +90,34 @@ type database struct {
 	driver string
 }
 
+// Ping a database connection.
 func (obj *database) Ping() error {
 	return errors.WithStack(obj.real.Ping())
 }
 
+// Close an open database connection.
 func (obj *database) Close() error {
 	return errors.WithStack(obj.real.Close())
 }
 
+// Set the maximum number of idle connections that will be supported by the
+// database connection.
 func (obj *database) SetMaxIdleConns(limit int) {
 	obj.real.SetMaxIdleConns(limit)
 }
 
+// Set the maximum number of open connections that will be supported by the
+// database connection.
 func (obj *database) SetMaxOpenConns(limit int) {
 	obj.real.SetMaxOpenConns(limit)
 }
 
+// Obtain a transaction from a context (if any).
 func (obj *database) Tx(ctx context.Context) (*sqlx.Tx, error) {
 	return getTx(ctx)
 }
 
+// Begin a transaction.
 func (obj *database) Begin(ctx context.Context) (context.Context, error) {
 	txn, err := getTx(ctx)
 
@@ -133,6 +156,7 @@ func (obj *database) Begin(ctx context.Context) (context.Context, error) {
 	return nctx, nil
 }
 
+// Initiate a transaction commit.
 func (obj *database) Commit(ctx context.Context) error {
 	txn, err := getTx(ctx)
 
@@ -150,6 +174,7 @@ func (obj *database) Commit(ctx context.Context) error {
 	return nil
 }
 
+// Initiate a transaction rollback.
 func (obj *database) Rollback(ctx context.Context) error {
 	txn, err := getTx(ctx)
 
@@ -164,6 +189,7 @@ func (obj *database) Rollback(ctx context.Context) error {
 	return nil
 }
 
+// Helper function for obtaining a value from a context's value map.
 func fromContext(ctx context.Context, key string) (any, error) {
 	vmap, err := contextext.GetValueMap(ctx)
 	if err != nil {
@@ -178,6 +204,13 @@ func fromContext(ctx context.Context, key string) (any, error) {
 	return rval, nil
 }
 
+// Get the context's transaction value in the value map.
+//
+// If there is no value map in the context then contextext's
+// `ErrValueMapNotFound` is returned.
+//
+// If the value for the transaction key is not of type `*sql.Tx` (or cannot be
+// coerced to that type) then `ErrTxnKeyNotTxn` is returned.
 func getTx(ctx context.Context) (*sqlx.Tx, error) {
 	val, err := fromContext(ctx, KeyTransaction)
 	if err != nil {

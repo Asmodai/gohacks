@@ -1,15 +1,16 @@
 -*- Mode: gfm -*-
 
-# context -- Go Hacks Library
+# contextext -- Go Hacks Library
 
 ```go
-    import "github.com/Asmodai/gohacks/context"
+    import "github.com/Asmodai/gohacks/contextext"
 ```
 
 ## Usage
 
 ```go
 var (
+	ErrInvalidContext   = errors.Base("invalid context")
 	ErrInvalidValueMap  = errors.Base("invalid value map")
 	ErrValueMapNotFound = errors.Base("value map not found")
 )
