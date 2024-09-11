@@ -301,4 +301,31 @@ func TestTransactionRollback(t *testing.T) {
 	}
 }
 
+func TestSQLErrors(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Errorf("Could not mock DB: %v", err.Error())
+	}
+
+	ctx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
+
+	obj := FromDB(db, "sqlmock")
+	defer obj.Close()
+
+	t.Run("1213: Deadlock found", func(t *testing.T) {
+		sqlerr := "Error 1213: Deadlock found when trying to get lock; try restarting transaction"
+
+		mock.ExpectBegin()
+		mock.ExpectCommit().WillReturnError(errors.Base(sqlerr))
+
+		txctx, err := obj.Begin(ctx)
+		err = obj.Commit(txctx)
+
+		if !errors.Is(err, ErrTxnDeadlock) {
+			t.Errorf("Unexpected error: %#v", err)
+		}
+	})
+}
+
 // database_test.go ends here.

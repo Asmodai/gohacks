@@ -84,6 +84,20 @@ func (mr *MockDatabaseMockRecorder) Commit(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockDatabase)(nil).Commit), arg0)
 }
 
+// GetError mocks base method.
+func (m *MockDatabase) GetError(arg0 error) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetError", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// GetError indicates an expected call of GetError.
+func (mr *MockDatabaseMockRecorder) GetError(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetError", reflect.TypeOf((*MockDatabase)(nil).GetError), arg0)
+}
+
 // Ping mocks base method.
 func (m *MockDatabase) Ping() error {
 	m.ctrl.T.Helper()

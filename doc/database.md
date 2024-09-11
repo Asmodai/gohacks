@@ -10,7 +10,10 @@
 
 ```go
 const (
-	KeyTransaction string = "_DB_TXN"
+	KeyTransaction   string = "_DB_TXN"
+	StringDeadlock   string = "Error 1213" // Deadlock detected.
+	StringConnClosed string = "Error 2006" // MySQL server connection closed.
+	StringLostConn   string = "Error 2013" // Lost connection during query.
 )
 ```
 
@@ -30,6 +33,10 @@ var (
 	ErrTxnKeyNotTxn   error = errors.Base("key value is not a transaction")
 	ErrTxnContext     error = errors.Base("could not create transaction context")
 	ErrTxnStart       error = errors.Base("could not start transaction")
+
+	ErrTxnDeadlock      error = errors.Base("deadlock found when trying to get lock")
+	ErrServerConnClosed error = errors.Base("server connection closed")
+	ErrLostConn         error = errors.Base("lost connection during query")
 )
 ```
 
@@ -134,6 +141,15 @@ type Database interface {
 
 	// Initiate a transaction rollback.
 	Rollback(context.Context) error
+
+	// Parses the given error looking for common MySQL error conditions.
+	//
+	// If one is found, then a Golang error describing the condition is
+	// raised.
+	//
+	// If nothing interesting is found, then the original error is
+	// returned.
+	GetError(error) error
 }
 ```
 
@@ -143,6 +159,7 @@ type Database interface {
 ```go
 func FromDB(db *sql.DB, driver string) Database
 ```
+Create a new database object using an existing `sql` object.
 
 #### func  Open
 

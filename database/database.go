@@ -42,6 +42,7 @@ import (
 
 	"context"
 	"database/sql"
+	"strings"
 )
 
 var (
@@ -51,10 +52,17 @@ var (
 	ErrTxnKeyNotTxn   error = errors.Base("key value is not a transaction")
 	ErrTxnContext     error = errors.Base("could not create transaction context")
 	ErrTxnStart       error = errors.Base("could not start transaction")
+
+	ErrTxnDeadlock      error = errors.Base("deadlock found when trying to get lock")
+	ErrServerConnClosed error = errors.Base("server connection closed")
+	ErrLostConn         error = errors.Base("lost connection during query")
 )
 
 const (
-	KeyTransaction string = "_DB_TXN"
+	KeyTransaction   string = "_DB_TXN"
+	StringDeadlock   string = "Error 1213" // Deadlock detected.
+	StringConnClosed string = "Error 2006" // MySQL server connection closed.
+	StringLostConn   string = "Error 2013" // Lost connection during query.
 )
 
 type Database interface {
@@ -83,6 +91,15 @@ type Database interface {
 
 	// Initiate a transaction rollback.
 	Rollback(context.Context) error
+
+	// Parses the given error looking for common MySQL error conditions.
+	//
+	// If one is found, then a Golang error describing the condition is
+	// raised.
+	//
+	// If nothing interesting is found, then the original error is
+	// returned.
+	GetError(error) error
 }
 
 type database struct {
@@ -168,7 +185,7 @@ func (obj *database) Commit(ctx context.Context) error {
 	}
 
 	if err := txn.Commit(); err != nil {
-		return errors.WithStack(err)
+		return obj.GetError(err)
 	}
 
 	return nil
@@ -187,6 +204,24 @@ func (obj *database) Rollback(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// Translate specific MySQL errors into distinct error conditions.
+func (obj *database) GetError(err error) error {
+	var nerr = err
+
+	switch {
+	case strings.Contains(err.Error(), StringDeadlock):
+		nerr = ErrTxnDeadlock
+
+	case strings.Contains(err.Error(), StringConnClosed):
+		nerr = ErrServerConnClosed
+
+	case strings.Contains(err.Error(), StringLostConn):
+		nerr = ErrLostConn
+	}
+
+	return errors.WithStack(nerr)
 }
 
 // Helper function for obtaining a value from a context's value map.
@@ -247,6 +282,7 @@ func setTx(ctx context.Context, txn *sqlx.Tx) (context.Context, error) {
 	return contextext.WithValueMap(ctx, vmap), nil
 }
 
+// Create a new database object using an existing `sql` object.
 func FromDB(db *sql.DB, driver string) Database {
 	return &database{
 		real:   sqlx.NewDb(db, driver),
