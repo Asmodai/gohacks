@@ -183,6 +183,13 @@ Database management.
 This is a series of wrappers around Go's internal DB stuff to ensure that we set
 up max idle/open connections et al.
 
+#### func  NewManager
+
+```go
+func NewManager() Manager
+```
+Create a new manager.
+
 #### type NullBool
 
 ```go

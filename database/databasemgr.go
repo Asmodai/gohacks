@@ -51,21 +51,20 @@ type Manager interface {
 }
 
 // Internal implementation.
-//
-//nolint:unused
 type manager struct {
 }
 
+// Create a new manager.
+func NewManager() Manager {
+	return &manager{}
+}
+
 // Open a connection to the database specified in the DSN string.
-//
-//nolint:unused
 func (dbm *manager) Open(driver string, dsn string) (Database, error) {
 	return Open(driver, dsn)
 }
 
 // Open and configure a database connection.
-//
-//nolint:unused
 func (dbm *manager) OpenConfig(conf *Config) (Database, error) {
 	dbase, err := dbm.Open(conf.Driver, conf.ToDSN())
 	if err != nil {
@@ -81,8 +80,6 @@ func (dbm *manager) OpenConfig(conf *Config) (Database, error) {
 }
 
 // Check the db connection.
-//
-//nolint:unused
 func (dbm *manager) CheckDB(db Database) error {
 	return errors.WithStack(db.Ping())
 }
