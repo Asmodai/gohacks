@@ -59,19 +59,35 @@ types such as JWTs then you must implement that code yourself.
 type Client interface {
 	// Perform a HTTP GET using the given API parameters.
 	//
-	// Returns the response body as an array of bytes, the HTTP status code, and
-	// an error if one is triggered.
+	// Returns the response body as an array of bytes, the HTTP status
+	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
 	Get(*Params) ([]byte, int, error)
 
 	// Perform a HTTP POST using the given API parameters.
 	//
-	// Returns the response body as an array of bytes, the HTTP status code, and
-	// an error if one is triggered.
+	// Returns the response body as an array of bytes, the HTTP status
+	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
 	Post(*Params) ([]byte, int, error)
+
+	// Perform a HTTP get using the given API parameters and context.
+	//
+	// Returns the response body as an array of bytes, the HTTP status
+	// code, and an error if one is triggered.
+	//
+	// You will need to remember to check both the error and status code.
+	GetWithContext(context.Context, *Params) ([]byte, int, error)
+
+	// Perform a HTTP POST using the given API parameters and context.
+	//
+	// Returns the response body as an array of bytes, the HTTP status
+	// code, and an error if one is triggered.
+	//
+	// You will need to remember to check both the error and status code.
+	PostWithContext(context.Context, *Params) ([]byte, int, error)
 }
 ```
 

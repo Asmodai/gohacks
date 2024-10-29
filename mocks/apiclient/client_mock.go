@@ -11,6 +11,7 @@
 package apiclient
 
 import (
+	context "context"
 	http "net/http"
 	reflect "reflect"
 
@@ -57,6 +58,22 @@ func (mr *MockClientMockRecorder) Get(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockClient)(nil).Get), arg0)
 }
 
+// GetWithContext mocks base method.
+func (m *MockClient) GetWithContext(arg0 context.Context, arg1 *apiclient.Params) ([]byte, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetWithContext", arg0, arg1)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetWithContext indicates an expected call of GetWithContext.
+func (mr *MockClientMockRecorder) GetWithContext(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWithContext", reflect.TypeOf((*MockClient)(nil).GetWithContext), arg0, arg1)
+}
+
 // Post mocks base method.
 func (m *MockClient) Post(arg0 *apiclient.Params) ([]byte, int, error) {
 	m.ctrl.T.Helper()
@@ -71,6 +88,22 @@ func (m *MockClient) Post(arg0 *apiclient.Params) ([]byte, int, error) {
 func (mr *MockClientMockRecorder) Post(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Post", reflect.TypeOf((*MockClient)(nil).Post), arg0)
+}
+
+// PostWithContext mocks base method.
+func (m *MockClient) PostWithContext(arg0 context.Context, arg1 *apiclient.Params) ([]byte, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PostWithContext", arg0, arg1)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// PostWithContext indicates an expected call of PostWithContext.
+func (mr *MockClientMockRecorder) PostWithContext(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostWithContext", reflect.TypeOf((*MockClient)(nil).PostWithContext), arg0, arg1)
 }
 
 // MockHTTPClient is a mock of HTTPClient interface.

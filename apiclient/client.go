@@ -198,7 +198,7 @@ func (c *client) PostWithContext(ctx context.Context, data *Params) ([]byte, int
 // The actual meat of the API client.
 // TODO: This function is way to complex.
 //
-//nolint:cyclop,funlen,noctx
+//nolint:cyclop,funlen
 func (c *client) httpAction(ctx context.Context, verb string, data *Params) ([]byte, int, error) {
 	req, err := http.NewRequestWithContext(ctx, verb, data.URL, nil)
 	if err != nil {
