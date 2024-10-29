@@ -17,7 +17,7 @@
 # including without limitation the rights to use, copy, modify, merge,
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
-# subject to the following conditions: 
+# subject to the following conditions:
 #
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
@@ -46,40 +46,37 @@ test -d "${MOCK_PATH}" || mkdir "${MOCK_PATH}"
 
 for file in ${FILES}
 do
-  # Build mocks from the file?
-  grep "mock:yes" $file >/dev/null 2>&1
-  if [ $? -eq 1 ]
-  then
-    # Nope.
-    continue
-  fi
+    # Build mocks from the file?
+    grep "mock:yes" $file >/dev/null 2>&1
+    if [ $? -eq 1 ]
+    then
+        # Nope.
+        continue
+    fi
 
-  fname=$(basename ${file})
-  pname=$(basename $(dirname ${file}))
-  output="${MOCK_PATH}/${pname}/$(echo ${fname} | cut -d. -f1)_mock.go"
+    fname=$(basename ${file})
+    pname=$(basename $(dirname ${file}))
+    output="${MOCK_PATH}/${pname}/$(echo ${fname} | cut -d. -f1)_mock.go"
 
-  echo "Processing ${pname}/${fname} => ${output}"
+    echo "Processing ${pname}/${fname} => ${output}"
 
-  mockgen               \
-    -package="${pname}" \
-    -source="${file}"   \
-    -destination="${output}"
-  case $? in
-    0)
-      sed                                         \
-        -i ''                                     \
-        -e "2s/^//p; 2s/^.*/\/\/ +build testing/" \
-        "${output}" 2>/dev/null
-      ;;
-    127)
-      echo "mockgen not installed."
-      exit 1
-      ;;
-    *)
-      echo "mockgen failed, exit code $?"
-      exit $?
-      ;;
-  esac
+    mockgen                      \
+        -package="${pname}"      \
+        -source="${file}"        \
+        -destination="${output}"
+    case $? in
+        0)
+            echo "Mock generation successful."
+            ;;
+        127)
+            echo "mockgen not installed."
+            exit 1
+            ;;
+        *)
+            echo "mockgen failed, exit code $?"
+            exit $?
+            ;;
+    esac
 done
 
 # makemocks.sh ends here.
