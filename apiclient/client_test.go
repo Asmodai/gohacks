@@ -33,6 +33,7 @@ import (
 	"github.com/Asmodai/gohacks/logger"
 
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -100,7 +101,7 @@ func invokeVerb(verb string, params *Params, payloadfn FakeHttpFn) ([]byte, int,
 		Payload: payloadfn,
 	}
 
-	return c.(*client).httpAction(verb, params)
+	return c.(*client).httpAction(context.TODO(), verb, params)
 }
 
 // Test the 'Get' method.

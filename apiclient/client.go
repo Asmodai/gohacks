@@ -38,6 +38,7 @@ import (
 	"gitlab.com/tozd/go/errors"
 	"golang.org/x/time/rate"
 
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -108,19 +109,35 @@ documentation for the `Params` type.
 type Client interface {
 	// Perform a HTTP GET using the given API parameters.
 	//
-	// Returns the response body as an array of bytes, the HTTP status code, and
-	// an error if one is triggered.
+	// Returns the response body as an array of bytes, the HTTP status
+	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
 	Get(*Params) ([]byte, int, error)
 
 	// Perform a HTTP POST using the given API parameters.
 	//
-	// Returns the response body as an array of bytes, the HTTP status code, and
-	// an error if one is triggered.
+	// Returns the response body as an array of bytes, the HTTP status
+	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
 	Post(*Params) ([]byte, int, error)
+
+	// Perform a HTTP get using the given API parameters and context.
+	//
+	// Returns the response body as an array of bytes, the HTTP status
+	// code, and an error if one is triggered.
+	//
+	// You will need to remember to check both the error and status code.
+	GetWithContext(context.Context, *Params) ([]byte, int, error)
+
+	// Perform a HTTP POST using the given API parameters and context.
+	//
+	// Returns the response body as an array of bytes, the HTTP status
+	// code, and an error if one is triggered.
+	//
+	// You will need to remember to check both the error and status code.
+	PostWithContext(context.Context, *Params) ([]byte, int, error)
 }
 
 type HTTPClient interface {
@@ -160,21 +177,30 @@ func NewClient(config *Config, logger logger.Logger) Client {
 
 // Perform a HTTP GET using the given API parameters.
 func (c *client) Get(data *Params) ([]byte, int, error) {
-	return c.httpAction("GET", data)
+	return c.httpAction(context.TODO(), "GET", data)
+}
+
+// Perform a HTTP GET using the given API parameters and context.
+func (c *client) GetWithContext(ctx context.Context, data *Params) ([]byte, int, error) {
+	return c.httpAction(ctx, "GET", data)
 }
 
 // Perform a HTTP POST using the given API parameters.
 func (c *client) Post(data *Params) ([]byte, int, error) {
-	return c.httpAction("POST", data)
+	return c.httpAction(context.TODO(), "POST", data)
+}
+
+// Perform a HTTP POST using the given API parameters and context.
+func (c *client) PostWithContext(ctx context.Context, data *Params) ([]byte, int, error) {
+	return c.httpAction(ctx, "POST", data)
 }
 
 // The actual meat of the API client.
-// TODO: Rewrite using contexts.
 // TODO: This function is way to complex.
 //
 //nolint:cyclop,funlen,noctx
-func (c *client) httpAction(verb string, data *Params) ([]byte, int, error) {
-	req, err := http.NewRequest(verb, data.URL, nil)
+func (c *client) httpAction(ctx context.Context, verb string, data *Params) ([]byte, int, error) {
+	req, err := http.NewRequestWithContext(ctx, verb, data.URL, nil)
 	if err != nil {
 		return nil, 0, errors.WithStack(err)
 	}
