@@ -19,6 +19,7 @@ import (
 type MockValueMap struct {
 	ctrl     *gomock.Controller
 	recorder *MockValueMapMockRecorder
+	isgomock struct{}
 }
 
 // MockValueMapMockRecorder is the mock recorder for MockValueMap.

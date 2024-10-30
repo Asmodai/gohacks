@@ -83,7 +83,7 @@ Return the DSN for this database configuration.
 #### func (*Config) Validate
 
 ```go
-func (c *Config) Validate() error
+func (c *Config) Validate() []error
 ```
 
 #### type Cursor

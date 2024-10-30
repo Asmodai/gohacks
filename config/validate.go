@@ -47,14 +47,16 @@ func (c *config) AddValidator(name string, fn any) {
 // Should validation pass, an empty list is returned.
 func (c *config) Validate() []error {
 	sref := reflect.ValueOf(c.App).Elem()
-	styp := reflect.TypeOf(c.App)
+	sval := reflect.ValueOf(c.App)
 
+	// Deal with validators.
 	res := c.recurseValidate(sref)
 
-	if _, ok := styp.MethodByName("Validate"); ok {
-		if r1, ok := c.callMethod(sref, "Validate"); ok {
-			errs, ok := r1.([]error)
-			if ok {
+	// Now deal with `Validate` functions.
+	if mthd := sval.MethodByName("Validate"); !mthd.IsZero() {
+		rval := mthd.Call(nil)
+		if rerr := rval[0].Interface(); rerr != nil {
+			if errs, ok := rerr.([]error); ok {
 				res = slices.Concat(res, errs)
 			}
 		}

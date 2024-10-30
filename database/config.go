@@ -86,21 +86,23 @@ func NewConfig() *Config {
 	}
 }
 
-func (c *Config) Validate() error {
+func (c *Config) Validate() []error {
+	errs := []error{}
+
 	if c.Driver == "" {
-		return errors.WithStack(ErrNoDriver)
+		errs = append(errs, errors.WithStack(ErrNoDriver))
 	}
 
 	if c.Username == "" {
-		return errors.WithStack(ErrNoUsername)
+		errs = append(errs, errors.WithStack(ErrNoUsername))
 	}
 
 	if c.Password == "" {
-		return errors.WithStack(ErrNoPassword)
+		errs = append(errs, errors.WithStack(ErrNoPassword))
 	}
 
 	if c.Hostname == "" {
-		return errors.WithStack(ErrNoHostname)
+		errs = append(errs, errors.WithStack(ErrNoHostname))
 	}
 
 	if c.Port == 0 {
@@ -108,10 +110,10 @@ func (c *Config) Validate() error {
 	}
 
 	if c.Database == "" {
-		return errors.WithStack(ErrNoDatabase)
+		errs = append(errs, errors.WithStack(ErrNoDatabase))
 	}
 
-	return nil
+	return errs
 }
 
 // Return the DSN for this database configuration.
