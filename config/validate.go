@@ -31,6 +31,7 @@ package config
 
 import (
 	"reflect"
+	"slices"
 )
 
 // Add a validator function for a tag value.
@@ -46,8 +47,20 @@ func (c *config) AddValidator(name string, fn any) {
 // Should validation pass, an empty list is returned.
 func (c *config) Validate() []error {
 	sref := reflect.ValueOf(c.App).Elem()
+	styp := reflect.TypeOf(c.App)
 
-	return c.recurseValidate(sref)
+	res := c.recurseValidate(sref)
+
+	if _, ok := styp.MethodByName("Validate"); ok {
+		if r1, ok := c.callMethod(sref, "Validate"); ok {
+			errs, ok := r1.([]error)
+			if ok {
+				res = slices.Concat(res, errs)
+			}
+		}
+	}
+
+	return res
 }
 
 // validate.go ends here.

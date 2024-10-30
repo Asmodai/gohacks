@@ -66,7 +66,7 @@ all: deps
 
 .PHONY: configs doc
 
-deps: tidy
+deps:
 	@echo "Getting dependencies"
 	@go work vendor
 
