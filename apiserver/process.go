@@ -80,9 +80,10 @@ func (p *DispatcherProc) Action(state **process.State) {
 	var pst = *state
 
 	cmd, ok := pst.ReceiveBlocking().(*types.Pair)
-	if !ok {
+	if !ok && cmd != nil {
 		pst.Logger().Fatal(
 			"Received message that is not of type types.Pair",
+			"cmd", cmd,
 		)
 	}
 
