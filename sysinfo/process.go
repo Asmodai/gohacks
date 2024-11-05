@@ -50,7 +50,7 @@ func (sip *Proc) Action(state **process.State) {
 
 	sip.si.UpdateStats()
 
-	ps.Logger().Info(
+	ps.Logger().Debug(
 		"System Information.",
 		"runtime", sip.si.RunTime().Round(time.Second),
 		"allocated_mib", sip.si.Allocated(),
