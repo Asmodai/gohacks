@@ -78,7 +78,7 @@ the `Option1` field using the `ValidateOption1` function.
 
 	func ValidateOption1(value string) error {
 	    if value == "" {
-	        return fmt.Errorf("Noooooooooooo!")
+		return fmt.Errorf("Noooooooooooo!")
 	    }
 
 	    return nil
@@ -96,11 +96,11 @@ The validator *must* return an `error` or `nil`.
 	    // ...
 
 	    opts := &Options{
-	        // ...
+		// ...
 	    }
 
 	    fns := map[string]interface{}{
-	        "ValidateOption1": ValidateOption1,
+		"ValidateOption1": ValidateOption1,
 	    }
 
 	    vers := &semver.SemVer{1, 2, 3, "herpderp"}
@@ -144,6 +144,9 @@ type Config interface {
 	//
 	// Will be empty if no configuration file has been specified.
 	ConfFile() string
+
+	// Return the user-provided configuration structure.
+	AppConfig() any
 
 	// Add a validator function for an option named `name`.  `fn` must be
 	// a function that can be funcalled and must return either `nil` or an
@@ -258,6 +261,11 @@ func (c *config) IsDebug() bool {
 // Return the path to the specified logging file.
 func (c *config) LogFile() string {
 	return c.ConfigCLI.LogFile
+}
+
+// Return the user-provided configuration structure.
+func (c *config) AppConfig() any {
+	return c.App
 }
 
 // Return the path to the configuration file.
