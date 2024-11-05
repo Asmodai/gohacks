@@ -92,23 +92,23 @@ func TestSQLDSN(t *testing.T) {
 	})
 }
 
-func CheckError(cnf *Config) error {
-	err := cnf.Validate()
+func CheckError(cnf *Config) []error {
+	errs := cnf.Validate()
 
-	if err == nil {
-		return fmt.Errorf("no error generated")
+	if len(errs) == 0 {
+		errs = append(errs, fmt.Errorf("no error generated"))
 	}
 
-	return err
+	return errs
 }
 
 func TestValidate(t *testing.T) {
 	t.Run("Works as expected", func(t *testing.T) {
 		sql := MakeSQL()
 
-		err := sql.Validate()
-		if err != nil {
-			t.Errorf("Unxepected error: %v", err)
+		errs := sql.Validate()
+		if len(errs) > 0 {
+			t.Errorf("Unxepected error: %v", errs)
 		}
 	})
 
@@ -116,9 +116,11 @@ func TestValidate(t *testing.T) {
 		sql := MakeSQL()
 		sql.Driver = ""
 
-		err := CheckError(sql)
-		if !errors.Is(err, ErrNoDriver) {
-			t.Errorf("Unexpected error: %v", err)
+		errs := CheckError(sql)
+		for _, err := range errs {
+			if !errors.Is(err, ErrNoDriver) {
+				t.Errorf("Unexpected error: %v", err)
+			}
 		}
 	})
 
@@ -126,9 +128,11 @@ func TestValidate(t *testing.T) {
 		sql := MakeSQL()
 		sql.Username = ""
 
-		err := CheckError(sql)
-		if !errors.Is(err, ErrNoUsername) {
-			t.Errorf("Unexpected error: %v", err)
+		errs := CheckError(sql)
+		for _, err := range errs {
+			if !errors.Is(err, ErrNoUsername) {
+				t.Errorf("Unexpected error: %v", err)
+			}
 		}
 	})
 
@@ -136,9 +140,11 @@ func TestValidate(t *testing.T) {
 		sql := MakeSQL()
 		sql.Password = ""
 
-		err := CheckError(sql)
-		if !errors.Is(err, ErrNoPassword) {
-			t.Errorf("Unexpected error: %v", err)
+		errs := CheckError(sql)
+		for _, err := range errs {
+			if !errors.Is(err, ErrNoPassword) {
+				t.Errorf("Unexpected error: %v", err)
+			}
 		}
 	})
 
@@ -146,9 +152,11 @@ func TestValidate(t *testing.T) {
 		sql := MakeSQL()
 		sql.Hostname = ""
 
-		err := CheckError(sql)
-		if !errors.Is(err, ErrNoHostname) {
-			t.Errorf("Unexpected error: %v", err)
+		errs := CheckError(sql)
+		for _, err := range errs {
+			if !errors.Is(err, ErrNoHostname) {
+				t.Errorf("Unexpected error: %v", err)
+			}
 		}
 	})
 
@@ -156,9 +164,11 @@ func TestValidate(t *testing.T) {
 		sql := MakeSQL()
 		sql.Database = ""
 
-		err := CheckError(sql)
-		if !errors.Is(err, ErrNoDatabase) {
-			t.Errorf("Unexpected error: %v", err)
+		errs := CheckError(sql)
+		for _, err := range errs {
+			if !errors.Is(err, ErrNoDatabase) {
+				t.Errorf("Unexpected error: %v", err)
+			}
 		}
 	})
 
@@ -166,9 +176,9 @@ func TestValidate(t *testing.T) {
 		sql := MakeSQL()
 		sql.Port = 0
 
-		err := sql.Validate()
-		if err != nil {
-			t.Errorf("Unexpected error: %v", err)
+		errs := sql.Validate()
+		if len(errs) > 0 {
+			t.Errorf("Unexpected error: %v", errs)
 			return
 		}
 
