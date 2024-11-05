@@ -110,4 +110,15 @@ func (c *Config) Port() (int, error) {
 	return c.cachedPort, nil
 }
 
+// Validate the configuration.
+func (c *Config) Validate() []error {
+	var errs = []error{}
+
+	if c.Addr == "" {
+		errs = append(errs, errors.New("No hostname provided for API server"))
+	}
+
+	return errs
+}
+
 // config.go ends here.
