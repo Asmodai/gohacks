@@ -53,7 +53,7 @@ func (c *config) Validate() []error {
 	res := c.recurseValidate(sref)
 
 	// Now deal with `Validate` functions.
-	if mthd := sval.MethodByName("Validate"); !mthd.IsZero() {
+	if mthd := sval.MethodByName("Validate"); mthd.IsValid() {
 		rval := mthd.Call(nil)
 		if rerr := rval[0].Interface(); rerr != nil {
 			if errs, ok := rerr.([]error); ok {
