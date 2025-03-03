@@ -42,6 +42,7 @@ import (
 
 	"context"
 	"database/sql"
+	"fmt"
 	"strings"
 )
 
@@ -280,6 +281,14 @@ func setTx(ctx context.Context, txn *sqlx.Tx) (context.Context, error) {
 	vmap.Set(KeyTransaction, txn)
 
 	return contextext.WithValueMap(ctx, vmap), nil
+}
+
+func sqlError(err error, sql string, args ...any) error {
+	if err == nil {
+		return nil
+	}
+
+	return fmt.Errorf("error executing '%s' [%v]: %w", sql, args, err)
 }
 
 // Create a new database object using an existing `sql` object.

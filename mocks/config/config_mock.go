@@ -137,6 +137,20 @@ func (mr *MockConfigMockRecorder) AddValidator(name, fn any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddValidator", reflect.TypeOf((*MockConfig)(nil).AddValidator), name, fn)
 }
 
+// AppConfig mocks base method.
+func (m *MockConfig) AppConfig() any {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AppConfig")
+	ret0, _ := ret[0].(any)
+	return ret0
+}
+
+// AppConfig indicates an expected call of AppConfig.
+func (mr *MockConfigMockRecorder) AppConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppConfig", reflect.TypeOf((*MockConfig)(nil).AppConfig))
+}
+
 // ConfFile mocks base method.
 func (m *MockConfig) ConfFile() string {
 	m.ctrl.T.Helper()

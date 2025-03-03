@@ -105,7 +105,9 @@ build:
 
 test: deps
 	@echo "Running tests"
-	@go test $$(go list ./...) -coverprofile=tests.out --tags testing
+	@go test $$(go list ./... | grep -v "mocks/") \
+		-coverprofile=tests.out               \
+		--tags testing
 	@go tool cover -html=tests.out -o coverage.html
 
 run:
