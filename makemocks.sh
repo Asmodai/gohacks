@@ -3,7 +3,7 @@
 #
 # makemocks.sh --- Make mocks from defined interfaces.
 #
-# Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+# Copyright (c) 2021-2025 Paul Ward <asmodai@gmail.com>
 #
 # Author:     Paul Ward <asmodai@gmail.com>
 # Maintainer: Paul Ward <asmodai@gmail.com>
@@ -39,7 +39,7 @@
 test -d "mocks" && rm -rf "mocks"
 
 ROOT=$(pwd)
-FILES=$(find . -iname "*.go" | grep -v "/vendor/")
+FILES=$(find . -iname "*.go" | grep -v "/vendor/" | grep -v "\#" | grep -v "\.swp")
 MOCK_PATH="mocks"
 
 test -d "${MOCK_PATH}" || mkdir "${MOCK_PATH}"
