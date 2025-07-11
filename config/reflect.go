@@ -193,7 +193,7 @@ func (c *config) recursePrint(
 
 		typ := val.Type()
 
-		for idx := 0; idx < val.NumField(); idx++ {
+		for idx := range val.NumField() {
 			if typ.Field(idx).Tag.Get("config_hide") == "true" {
 				// Ignore fields with the `config_hide` tag
 				// set to `true`.
@@ -219,7 +219,7 @@ func (c *config) recursePrint(
 		}
 
 	case reflect.Slice, reflect.Array:
-		for i := 0; i < val.Len(); i++ {
+		for i := range val.Len() {
 			sbuf += c.recursePrint("\n"+prefix, val.Index(i), visited)
 		}
 
@@ -241,7 +241,7 @@ func (c *config) recurseValidate(v reflect.Value) []error {
 	sref := v
 	errs := []error{}
 
-	for i := 0; i < sref.NumField(); i++ {
+	for i := range sref.NumField() {
 		field := sref.Field(i)
 		ftype := sref.Type().Field(i)
 		validate := ftype.Tag.Get("config_validator")

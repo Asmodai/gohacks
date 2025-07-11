@@ -78,7 +78,7 @@ func (s *SemVer) FromString(info string) error {
 	if strings.Contains(info, ":") {
 		arr := strings.Split(info, ":")
 
-		//nolint:gomnd
+		//nolint:mnd
 		if len(arr) != 2 {
 			return errors.WithMessagef(ErrInvalidVersion, "%s", info)
 		}

@@ -38,7 +38,6 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -159,7 +158,7 @@ func (d *Dispatcher) Stop() {
 func (d *Dispatcher) notFound(c *gin.Context) {
 	NewErrorDocument(
 		http.StatusNotFound,
-		fmt.Sprintf("%s was not found.", c.Request.RequestURI),
+		c.Request.RequestURI+" was not found.",
 	).Write(c)
 }
 

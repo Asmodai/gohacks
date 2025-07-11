@@ -30,12 +30,12 @@
 package generics
 
 import (
-	"golang.org/x/exp/constraints"
+	"cmp"
 )
 
 // Returns true if the container specified by `ordered` contains the member
 // specified by `elt`.
-func Member[T constraints.Ordered](ordered []T, elt T) bool {
+func Member[T cmp.Ordered](ordered []T, elt T) bool {
 	for _, e := range ordered {
 		if e == elt {
 			return true

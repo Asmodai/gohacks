@@ -38,14 +38,14 @@ const (
 )
 
 // Return a string that has been elided to the given length.
-func Elide(str string, max int) string {
+func Elide(str string, maxima int) string {
 	runes := []rune(str)
 
-	if len(str) < max {
+	if len(str) < maxima {
 		return str
 	}
 
-	return string(runes[0:max-ElideSuffixLen]) + ElideSuffix
+	return string(runes[0:maxima-ElideSuffixLen]) + ElideSuffix
 }
 
 // elide.go ends here.

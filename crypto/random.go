@@ -67,7 +67,7 @@ func GenerateRandomString(count int) (string, error) {
 
 	ret := make([]byte, count)
 
-	for idx := 0; idx < count; idx++ {
+	for idx := range count {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(alnum))))
 		if err != nil {
 			return "", errors.WithStack(err)

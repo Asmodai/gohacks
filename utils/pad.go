@@ -47,7 +47,7 @@ func Pad(str string, padding int) string {
 		spaces = padding - length
 	)
 
-	for i := 0; i < spaces; i++ {
+	for range spaces {
 		buf += PadPadding
 	}
 

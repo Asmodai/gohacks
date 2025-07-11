@@ -13,10 +13,13 @@
 //
 // * End of Comments.
 
-// The Database queries. package.
+// * Package:
+
+// The Database queries package.
 package database
 
 // * Imports:
+
 import (
 	// This is the MySQL driver, it must be blank.
 	_ "github.com/go-sql-driver/mysql"
@@ -126,6 +129,8 @@ func Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
 // Wrapper around `Tx.Prepare`.
 //
 // The transaction should be passed via a context value.
+//
+//nolint:revive
 func Prepare(ctx context.Context, query string, args ...any) (*stmt, error) {
 	tx, err := getTx(ctx)
 	if err != nil {

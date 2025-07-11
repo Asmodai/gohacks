@@ -58,7 +58,7 @@ var (
 
 // Dispatcher process.
 type DispatcherProc struct {
-	sync.Mutex
+	mu sync.Mutex
 
 	inst *Dispatcher
 }
@@ -91,14 +91,15 @@ func (p *DispatcherProc) Action(state **process.State) {
 		return
 	}
 
-	p.Lock()
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
 	//nolint:gocritic
 	switch cmd.First {
 	// Caller wants to know what our router is.
 	case getRouter:
 		pst.Send(process.NewActionResult(p.inst.GetRouter(), nil))
 	}
-	p.Unlock()
 }
 
 // Internal method to stop the API dispatcher process.

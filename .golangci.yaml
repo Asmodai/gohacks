@@ -8,7 +8,7 @@ run:
   modules-download-mode: readonly
   allow-parallel-runners: true
   allow-serial-runners: true
-  go: '1.19'
+  go: '1.23.5'
   
 output:
   formats:
@@ -19,7 +19,6 @@ output:
     - format: colored-line-number
   print-issued-lines: true
   print-linter-name: true
-  uniq-by-line: false
   path-prefix: ""
   sort-results: true
   sort-order:
@@ -27,6 +26,13 @@ output:
     - severity
     - file
   show-stats: true
+
+issues:
+  uniq-by-line: false
+  exclude-rules:
+    - linters:
+      - godot
+      text: '^// \*+ \w+:$'
 
 linger-settings:
   godox:
@@ -48,7 +54,6 @@ linters:
   disable:
     - depguard
     - exhaustruct
-    - exhaustivestruct
     # This one should be re-enabled at some point
     #- goerr113
     - tagliatelle
@@ -63,12 +68,4 @@ linters:
     - containedctx
     #
     # Deprecated linters
-    - golint            # replaced by 'revive'
-    - deadcode          # replaced by 'unused'
-    - structcheck       # replaced by 'unused'
-    - scopelint         # replaced by 'exportloopref
-    - maligned          # replaced by 'fieldalignment'
-    - varcheck          # replaced by 'unused'
-    - ifshort           # deprecated
-    - interfacer        # deprecated
-    - nosnakecase       # replaced by 'revive'
+    - tenv

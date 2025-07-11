@@ -38,6 +38,8 @@ import (
 )
 
 // An RFC3339 object.
+//
+//nolint:recvcheck
 type JSONRFC3339 time.Time
 
 // Unmarshal an RFC3339 timestamp from JSON.

@@ -48,7 +48,7 @@ func NewConfig(reqsPerSec, timeout int) *Config {
 
 // Return a new default API client configuration.
 //
-//nolint:gomnd
+//nolint:mnd
 func NewDefaultConfig() *Config {
 	return NewConfig(5, 5)
 }
