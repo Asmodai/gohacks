@@ -16,7 +16,7 @@
 # including without limitation the rights to use, copy, modify, merge,
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
-# subject to the following conditions: 
+# subject to the following conditions:
 #
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
@@ -35,10 +35,13 @@
 #
 #}}}
 
+# Go package.
 PACKAGE = gohack
 
+# Directories.
 DIR = $(PWD)
 
+# Source modules.
 MODULES = apiclient       \
 	  apiserver       \
 	  app             \
@@ -63,9 +66,16 @@ MODULES = apiclient       \
 	  types           \
 	  utils
 
+# Binaries.
+PROTOC          ?= protoc
+
+# Settings
+LINT_REPORT ?= "golint.xml"
+HTML_REPORT ?= "golint.html"
+
 all: deps
 
-.PHONY: configs doc
+.PHONY: configs doc protobuf mocks
 
 deps:
 	@echo "Getting dependencies"
@@ -80,7 +90,7 @@ tooling:
 	@go install go.uber.org/mock/mockgen@latest
 	@go install github.com/go-critic/go-critic/cmd/gocritic@latest
 	@go install github.com/google/go-licenses@latest
-	@pip install junit2html
+	@pip install --break-system-packages junit2html
 
 listdeps:
 	@echo "Listing dependencies:"
@@ -90,16 +100,27 @@ prunedeps:
 	@echo "Pruning dependencies"
 	@go mod tidy
 
+# Please note that the below is absolutely terrible.  golangci really
+# wants structured output, so that I can say "Please to be generating junit
+# XML to this file".  Or, some other format and a HTML converter.  Either way,
+# the sed invocation is terrible.
 lint:
-	@echo "Running linter"
-	@if [ -f "$$HOME/.local/bin/junit2html" ]; then               \
-		echo "Generating golint.html";                        \
-		golangci-lint run --out-format junit-xml >golint.xml; \
-		junit2html golint.xml golint.html;                    \
-	else                                                          \
-		golangci-lint run;                                    \
+	@echo "Running linter."
+	@if [ -f "$$HOME/.local/bin/junit2html" ]; then                        \
+		echo "Generating $(LINT_REPORT) and $(HTML_REPORT)";           \
+		golangci-lint run                                              \
+			--out-format junit-xml                                 \
+			| sed -n '1h;1!H;$$ {g;s|\(</testsuites>\).*|\1|; p;}' \
+			> $(LINT_REPORT);                                      \
+		junit2html $(LINT_REPORT) $(HTML_REPORT);                      \
+	else                                                                   \
+		golangci-lint run;                                             \
 	fi
 	@echo "Done"
+
+critic:
+	@echo "Everyone is a critic..."
+	@gocritic check ./...
 
 build:
 	@echo "THIS IS A LIBRARY"
@@ -124,6 +145,12 @@ clean:
 	@rm coverage.html
 	@rm doc/*.md
 	@rm -rf vendor
+
+protobuf:
+	@PROTOC="$(PROTOC)" ./makeproto.sh
+
+mocks:
+	@./makemocks.sh
 
 doc:
 	@echo "Generating documentation"

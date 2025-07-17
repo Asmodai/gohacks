@@ -61,6 +61,8 @@ To use:
 
 ```
 
+The `Load` method returns the file content as a byte array.
+
 #### func  NewWithFile
 
 ```go

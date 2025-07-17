@@ -90,6 +90,8 @@ To use:
 	}
 
 ```
+
+The `Load` method returns the file content as a byte array.
 */
 type FileLoader interface {
 	// The file path that we wish to load.

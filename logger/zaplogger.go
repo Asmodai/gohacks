@@ -38,6 +38,7 @@ import (
 	"log"
 )
 
+// Log field map type.
 type Fields map[string]any
 
 // Logger using Zap as its implementation.

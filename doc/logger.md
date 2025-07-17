@@ -14,6 +14,14 @@
 type Fields map[string]any
 ```
 
+Log field map type.
+
+#### type LogEntry
+
+```go
+type LogEntry struct{}
+```
+
 
 #### type Logger
 
@@ -102,6 +110,18 @@ func NewDefaultLogger() Logger
 ```
 Create a new default logger.
 
+#### func  NewGRPCLogger
+
+```go
+func NewGRPCLogger() Logger
+```
+
+#### func  NewGRPCLoggerWithName
+
+```go
+func NewGRPCLoggerWithName(name string) Logger
+```
+
 #### func  NewZapLogger
 
 ```go
@@ -115,3 +135,11 @@ Create a new logger.
 func NewZapLoggerWithFile(logfile string) Logger
 ```
 Create a new logger with the given log file.
+
+#### type LoggerServiceClient
+
+```go
+type LoggerServiceClient interface {
+	Emit(context.Context, *LogEntry)
+}
+```

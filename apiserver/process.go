@@ -94,10 +94,8 @@ func (p *DispatcherProc) Action(state **process.State) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	//nolint:gocritic
-	switch cmd.First {
-	// Caller wants to know what our router is.
-	case getRouter:
+	if cmd.First == getRouter {
+		// Caller wants to know what our router is.
 		pst.Send(process.NewActionResult(p.inst.GetRouter(), nil))
 	}
 }

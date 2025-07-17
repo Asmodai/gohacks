@@ -192,4 +192,4 @@ func TestValidate(t *testing.T) {
 	})
 }
 
-//* config_test.go ends here.
+// config_test.go ends here.
