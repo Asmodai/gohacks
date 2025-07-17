@@ -47,6 +47,7 @@ MODULES = apiclient       \
 	  crypto          \
 	  database        \
 	  events          \
+	  fileloader      \
 	  generics        \
 	  logger          \
 	  math/conversion \

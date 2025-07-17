@@ -58,7 +58,7 @@ key/value pairs containing all elements for which the provided function returns
 #### func  Member
 
 ```go
-func Member[T constraints.Ordered](ordered []T, elt T) bool
+func Member[T cmp.Ordered](ordered []T, elt T) bool
 ```
 Returns true if the container specified by `ordered` contains the member
 specified by `elt`.

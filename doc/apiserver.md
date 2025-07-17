@@ -147,6 +147,13 @@ func (c *Config) Port() (int, error)
 ```
 Return the port number on which the server is listening.
 
+#### func (*Config) Validate
+
+```go
+func (c *Config) Validate() []error
+```
+Validate the configuration.
+
 #### type Dispatcher
 
 ```go
@@ -198,7 +205,6 @@ Stop the API route dispatcher.
 
 ```go
 type DispatcherProc struct {
-	sync.Mutex
 }
 ```
 

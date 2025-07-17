@@ -47,6 +47,78 @@ var (
 )
 ```
 
+#### func  Exec
+
+```go
+func Exec(ctx context.Context, query string, args ...any) (sql.Result, error)
+```
+Wrapper around `Tx.Exec`.
+
+The transaction should be passed via a context value.
+
+#### func  ExecStmt
+
+```go
+func ExecStmt(ctx context.Context, stmt *stmt, args ...any) (sql.Result, error)
+```
+Wrapper around `Tx.ExecStmt`.
+
+The transaction should be passed via a context value.
+
+#### func  Get
+
+```go
+func Get(ctx context.Context, dest any, query string, args ...any) error
+```
+Wrapper around `Tx.Get`.
+
+The transaction should be passed via a context value.
+
+#### func  NamedExec
+
+```go
+func NamedExec(ctx context.Context, query string, arg any) (sql.Result, error)
+```
+Wrapper around `Tx.NamedExec`.
+
+The transaction should be passed via a context value.
+
+#### func  Prepare
+
+```go
+func Prepare(ctx context.Context, query string, args ...any) (*stmt, error)
+```
+Wrapper around `Tx.Prepare`.
+
+The transaction should be passed via a context value.
+
+#### func  Queryx
+
+```go
+func Queryx(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
+```
+Wrapper around `Tx.Queryx`.
+
+The transaction should be passed via a context value.
+
+#### func  QueryxContext
+
+```go
+func QueryxContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
+```
+Wrapper around `Tx.QueryxContext`.
+
+The transaction should be passed via a context value.
+
+#### func  Select
+
+```go
+func Select(ctx context.Context, dest any, query string, args ...any) error
+```
+Wrapper around `Tx.Select`.
+
+The transaction should be passed via a context value.
+
 #### type Config
 
 ```go

@@ -28,7 +28,7 @@ const (
 #### func  Elide
 
 ```go
-func Elide(str string, max int) string
+func Elide(str string, maxima int) string
 ```
 Return a string that has been elided to the given length.
 
