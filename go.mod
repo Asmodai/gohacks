@@ -76,7 +76,3 @@ require (
 	k8s.io/klog/v2 v2.90.1 // indirect
 )
 
-tool (
-	github.com/google/go-licenses
-	github.com/google/go-licenses/v2
-)
