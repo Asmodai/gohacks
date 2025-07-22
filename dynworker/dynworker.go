@@ -115,7 +115,7 @@ type Task any
 // Type of functions executed by workers.
 type TaskFn func(Task) error
 
-// Worker pool interface
+// Worker pool interface.
 type WorkerPool interface {
 	// Start the worker pool.
 	Start()
