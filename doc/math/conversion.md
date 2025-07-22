@@ -63,3 +63,10 @@ Convert mebibytes to bytes.
 func TiBToB(b uint64) uint64
 ```
 Convert tebibytes to bytes.
+
+#### func  ToFloat64
+
+```go
+func ToFloat64(val any) (float64, bool)
+```
+Convert a value to a 64-bit floating-point value.

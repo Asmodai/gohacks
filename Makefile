@@ -49,6 +49,7 @@ MODULES = apiclient       \
 	  contextext      \
 	  crypto          \
 	  database        \
+	  dynworker       \
 	  events          \
 	  fileloader      \
 	  generics        \
@@ -89,6 +90,7 @@ tooling:
 	@go install github.com/google/go-licenses@latest
 	@go install go.uber.org/mock/mockgen@latest
 	@go install github.com/go-critic/go-critic/cmd/gocritic@latest
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	@go install github.com/google/go-licenses@latest
 	@pip install --break-system-packages junit2html
 
@@ -159,10 +161,10 @@ doc:
 		echo "... Generating $${dir}.md"                                    ;\
 		godocdown -template doc/gohacks.template ./$${dir}/ >doc/$${dir}.md ;\
 	done
-	@echo "Generating license information"
-	@test -d vendor || go work vendor -o vendor
-	@./checklic.sh >doc/dependencies.md
-	@test -d vendor && rm -rf vendor
+#	@echo "Generating license information"
+#	@test -d vendor || go work vendor -o vendor
+#	@./checklic.sh >doc/dependencies.md
+#	@test -d vendor && rm -rf vendor
 	@echo "Done."
 
 # Makefile ends here.
