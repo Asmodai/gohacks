@@ -106,7 +106,7 @@ type WorkerPool interface {
 }
 ```
 
-Worker pool interface
+Worker pool interface.
 
 #### func  NewWorkerPool
 

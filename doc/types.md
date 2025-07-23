@@ -80,6 +80,25 @@ const (
 )
 ```
 
+```go
+var (
+	// Error condition that signals an invalid time duration of some kind.
+	//
+	// This error is usually wrapped around a descriptive message string.
+	ErrInvalidDuration error = errors.Base("invalid time duration")
+
+	// Error condition that signals that a duration is not a string value.
+	//
+	// This error is used by `Set` as well as JSON and YAML methods.
+	ErrDurationNotString error = errors.Base("duration must be a string")
+
+	// Error condition that signals that a duration is out of bounds.
+	//
+	// This is used by `Validate`.
+	ErrOutOfBounds error = errors.Base("duration out of bounds")
+)
+```
+
 #### type ColorString
 
 ```go
@@ -146,6 +165,98 @@ Convert to a string.
 
 Warning: the resulting string will contain escape sequences for use with a
 compliant terminal or terminal emulator.
+
+#### type Duration
+
+```go
+type Duration time.Duration
+```
+
+Enhanced time duration type.
+
+#### func (Duration) Duration
+
+```go
+func (obj Duration) Duration() time.Duration
+```
+Coerce a duration to a `time.Duration` value.
+
+#### func (Duration) MarshalJSON
+
+```go
+func (obj Duration) MarshalJSON() ([]byte, error)
+```
+JSON marshalling method.
+
+#### func (Duration) MarshalYAML
+
+```go
+func (obj Duration) MarshalYAML() (any, error)
+```
+YAML marshalling method.
+
+#### func (*Duration) Set
+
+```go
+func (obj *Duration) Set(str string) error
+```
+Set the duration to that of the given string.
+
+This method uses `time.ParseDuration`, so any string that `time` understands may
+be used.
+
+If the string value fails parsing, then `ErrInvalidDuration` is returned.
+
+#### func (*Duration) SetYAML
+
+```go
+func (obj *Duration) SetYAML(value any) error
+```
+Set the duration value from a YAML value.
+
+If the passed YAML value is not a string, then `ErrDurationNotString` is
+returned.
+
+Will also return any error condition from the `Set` method.
+
+#### func (Duration) String
+
+```go
+func (obj Duration) String() string
+```
+Coerce a duration to a string value.
+
+#### func (Duration) Type
+
+```go
+func (obj Duration) Type() string
+```
+Return the data type name for CLI flag parsing purposes.
+
+#### func (*Duration) UnmarshalJSON
+
+```go
+func (obj *Duration) UnmarshalJSON(data []byte) error
+```
+JSON unmarshalling method.
+
+#### func (*Duration) UnmarshalYAML
+
+```go
+func (obj *Duration) UnmarshalYAML(value *yaml.Node) error
+```
+YAML unmarshalling method.
+
+#### func (Duration) Validate
+
+```go
+func (obj Duration) Validate(minDuration, maxDuration time.Duration) error
+```
+Validate a duration.
+
+This ensures a duration is within a given range.
+
+If validation fails, then `ErrOutOfBounds` is returned.
 
 #### type Mailbox
 
