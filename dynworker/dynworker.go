@@ -28,6 +28,7 @@
 // SOFTWARE.
 //
 //mock:yes
+//go:build amd64 || arm64 || riscv64
 
 // * Comments:
 //
@@ -40,14 +41,15 @@ package dynworker
 // * Imports:
 
 import (
-	"github.com/Asmodai/gohacks/logger"
-
-	"github.com/prometheus/client_golang/prometheus"
-
 	"context"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"gitlab.com/tozd/go/errors"
+
+	"github.com/Asmodai/gohacks/logger"
 )
 
 // * Constants:
@@ -57,7 +59,7 @@ const (
 	defaultAverageProcessTime time.Duration = 100 * time.Millisecond
 
 	// Default number of worker channels.
-	defaultWorkerChannels int = 1000
+	defaultWorkerChannels int64 = 1000
 )
 
 // * Variables:
@@ -103,17 +105,15 @@ var (
 		},
 		[]string{"pool"},
 	)
+
+	prometheusInitOnce sync.Once
+
+	ErrNotTask error = errors.Base("task pool entity is not a task")
 )
 
 // * Code:
 
-// ** Types:
-
-// Task data type.
-type Task any
-
-// Type of functions executed by workers.
-type TaskFn func(Task) error
+// ** Interfaces:
 
 // Worker pool interface.
 type WorkerPool interface {
@@ -124,38 +124,49 @@ type WorkerPool interface {
 	Stop()
 
 	// Submit a task to the worker pool.
-	Submit(Task) error
+	Submit(UserData) error
 
 	// Return the number of current workers in the pool.
-	WorkerCount() int32
+	WorkerCount() int64
 
 	// Return the minimum number of workers in the pool.
-	MinWorkers() int32
+	MinWorkers() int64
 
 	// Return the maximum number of workers in the pool.
-	MaxWorkers() int32
+	MaxWorkers() int64
+
+	// Set the minimum number of workers to the given value.
+	SetMinWorkers(int64)
+
+	// Set the maximum number of workers to the given value.
+	SetMaxWorkers(int64)
+
+	// Set the task callback function.
+	SetTaskFunction(TaskFn)
 }
 
+// ** Types:
+
 type workerPool struct {
-	name          string
-	input         chan Task
-	minWorkers    int32
-	maxWorkers    int32
-	scaleUpStep   int32
-	scaleDownStep int32
+	name       string
+	input      chan *Task
+	minWorkers int64
+	maxWorkers int64
 
 	scaleUpCh   chan struct{}
 	scaleDownCh chan struct{}
 
 	processFn TaskFn
 
-	wg     sync.WaitGroup
+	wg       sync.WaitGroup
+	taskPool *sync.Pool
+
 	ctx    context.Context
 	cancel context.CancelFunc
 	lgr    logger.Logger
 	config *Config
 
-	workerCount atomic.Int32
+	workerCount atomic.Int64
 	avgProcTime atomic.Int64
 
 	activeWorkersMetric   prometheus.Gauge
@@ -168,18 +179,33 @@ type workerPool struct {
 // ** Methods:
 
 // Return the number of current workers in the pool.
-func (obj *workerPool) WorkerCount() int32 {
+func (obj *workerPool) WorkerCount() int64 {
 	return obj.workerCount.Load()
 }
 
 // Return the minimum number of workers in the pool.
-func (obj *workerPool) MinWorkers() int32 {
+func (obj *workerPool) MinWorkers() int64 {
 	return obj.minWorkers
 }
 
+// Set the minimum number of workers to the given value.
+func (obj *workerPool) SetMinWorkers(val int64) {
+	obj.minWorkers = val
+}
+
+// Set the maximum number of workers to the given value.
+func (obj *workerPool) SetMaxWorkers(val int64) {
+	obj.maxWorkers = val
+}
+
 // Return the maximum number of workers in the pool.
-func (obj *workerPool) MaxWorkers() int32 {
+func (obj *workerPool) MaxWorkers() int64 {
 	return obj.maxWorkers
+}
+
+// Set the task callback function.
+func (obj *workerPool) SetTaskFunction(workfn TaskFn) {
+	obj.processFn = workfn
 }
 
 // Start the worker pool.
@@ -194,12 +220,24 @@ func (obj *workerPool) Start() {
 // Stop the worker pool.
 func (obj *workerPool) Stop() {
 	obj.cancel()
-	obj.wg.Wait()
 	close(obj.input)
+	obj.wg.Wait()
 }
 
 // Submit a task to the worker pool.
-func (obj *workerPool) Submit(task Task) error {
+func (obj *workerPool) Submit(userData UserData) error {
+	// Use a pool of task objects.
+	task, ok := obj.taskPool.Get().(*Task)
+	if !ok {
+		return errors.WithStack(ErrNotTask)
+	}
+
+	*task = Task{
+		parent: obj.ctx,
+		logger: obj.lgr,
+		data:   userData,
+	}
+
 	select {
 	case obj.input <- task:
 		return nil
@@ -235,9 +273,16 @@ func (obj *workerPool) spawnWorker() {
 				_ = obj.processFn(task)
 				elapsed := time.Since(start).Nanoseconds()
 
+				// Update metrics.
 				obj.updateAvgProcTime(elapsed)
 				obj.taskDurationMetric.Observe(float64(elapsed))
+
+				// Reset idle timeout.
 				idleTimer.Reset(obj.config.IdleTimeout)
+
+				// Reset and put the task back in the pool.
+				task.reset()
+				obj.taskPool.Put(task)
 
 			case <-idleTimer.C:
 				current := obj.workerCount.Load()
@@ -289,7 +334,7 @@ func (obj *workerPool) scaleCheck() {
 	}
 
 	// Rough required workers = queue * avg / interval.
-	required := int32(float64(queued)*avg.Seconds()) + 1
+	required := int64(float64(queued)*avg.Seconds()) + 1
 
 	// Clamp if lower than minimum workers.
 	if required < obj.minWorkers {
@@ -356,13 +401,17 @@ func NewWorkerPool(config *Config, workfn TaskFn) WorkerPool {
 
 	label := prometheus.Labels{"pool": config.Name}
 
+	taskPool := &sync.Pool{
+		New: func() any {
+			return &Task{}
+		},
+	}
+
 	return &workerPool{
 		name:                  config.Name,
-		input:                 make(chan Task, defaultWorkerChannels),
+		input:                 make(chan *Task, defaultWorkerChannels),
 		minWorkers:            config.MinWorkers,
 		maxWorkers:            config.MaxWorkers,
-		scaleUpStep:           1,
-		scaleDownStep:         1,
 		scaleUpCh:             make(chan struct{}, 1),
 		scaleDownCh:           make(chan struct{}, 1),
 		processFn:             workfn,
@@ -370,6 +419,7 @@ func NewWorkerPool(config *Config, workfn TaskFn) WorkerPool {
 		cancel:                cancel,
 		lgr:                   config.Logger,
 		config:                config,
+		taskPool:              taskPool,
 		activeWorkersMetric:   activeWorkers.With(label),
 		tasksTotalMetric:      tasksTotal.With(label),
 		taskDurationMetric:    taskDuration.With(label),
@@ -378,17 +428,17 @@ func NewWorkerPool(config *Config, workfn TaskFn) WorkerPool {
 	}
 }
 
-// ** Initialisation:
-
-//nolint:gochecknoinits
-func init() {
-	prometheus.MustRegister(
-		activeWorkers,
-		tasksTotal,
-		taskDuration,
-		totalScaledUp,
-		totalScaledDown,
-	)
+// Initialise Prometheus metrics for this module.
+func InitPrometheus() {
+	prometheusInitOnce.Do(func() {
+		prometheus.MustRegister(
+			activeWorkers,
+			tasksTotal,
+			taskDuration,
+			totalScaledUp,
+			totalScaledDown,
+		)
+	})
 }
 
 // * dynworker.go ends here.

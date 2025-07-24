@@ -41,10 +41,10 @@ func (m *MockWorkerPool) EXPECT() *MockWorkerPoolMockRecorder {
 }
 
 // MaxWorkers mocks base method.
-func (m *MockWorkerPool) MaxWorkers() int32 {
+func (m *MockWorkerPool) MaxWorkers() int64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MaxWorkers")
-	ret0, _ := ret[0].(int32)
+	ret0, _ := ret[0].(int64)
 	return ret0
 }
 
@@ -55,10 +55,10 @@ func (mr *MockWorkerPoolMockRecorder) MaxWorkers() *gomock.Call {
 }
 
 // MinWorkers mocks base method.
-func (m *MockWorkerPool) MinWorkers() int32 {
+func (m *MockWorkerPool) MinWorkers() int64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MinWorkers")
-	ret0, _ := ret[0].(int32)
+	ret0, _ := ret[0].(int64)
 	return ret0
 }
 
@@ -66,6 +66,42 @@ func (m *MockWorkerPool) MinWorkers() int32 {
 func (mr *MockWorkerPoolMockRecorder) MinWorkers() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MinWorkers", reflect.TypeOf((*MockWorkerPool)(nil).MinWorkers))
+}
+
+// SetMaxWorkers mocks base method.
+func (m *MockWorkerPool) SetMaxWorkers(arg0 int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMaxWorkers", arg0)
+}
+
+// SetMaxWorkers indicates an expected call of SetMaxWorkers.
+func (mr *MockWorkerPoolMockRecorder) SetMaxWorkers(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxWorkers", reflect.TypeOf((*MockWorkerPool)(nil).SetMaxWorkers), arg0)
+}
+
+// SetMinWorkers mocks base method.
+func (m *MockWorkerPool) SetMinWorkers(arg0 int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMinWorkers", arg0)
+}
+
+// SetMinWorkers indicates an expected call of SetMinWorkers.
+func (mr *MockWorkerPoolMockRecorder) SetMinWorkers(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinWorkers", reflect.TypeOf((*MockWorkerPool)(nil).SetMinWorkers), arg0)
+}
+
+// SetTaskFunction mocks base method.
+func (m *MockWorkerPool) SetTaskFunction(arg0 dynworker.TaskFn) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTaskFunction", arg0)
+}
+
+// SetTaskFunction indicates an expected call of SetTaskFunction.
+func (mr *MockWorkerPoolMockRecorder) SetTaskFunction(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTaskFunction", reflect.TypeOf((*MockWorkerPool)(nil).SetTaskFunction), arg0)
 }
 
 // Start mocks base method.
@@ -93,7 +129,7 @@ func (mr *MockWorkerPoolMockRecorder) Stop() *gomock.Call {
 }
 
 // Submit mocks base method.
-func (m *MockWorkerPool) Submit(arg0 dynworker.Task) error {
+func (m *MockWorkerPool) Submit(arg0 dynworker.UserData) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Submit", arg0)
 	ret0, _ := ret[0].(error)
@@ -107,10 +143,10 @@ func (mr *MockWorkerPoolMockRecorder) Submit(arg0 any) *gomock.Call {
 }
 
 // WorkerCount mocks base method.
-func (m *MockWorkerPool) WorkerCount() int32 {
+func (m *MockWorkerPool) WorkerCount() int64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WorkerCount")
-	ret0, _ := ret[0].(int32)
+	ret0, _ := ret[0].(int64)
 	return ret0
 }
 

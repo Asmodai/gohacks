@@ -42,7 +42,8 @@ PACKAGE = gohack
 DIR = $(PWD)
 
 # Source modules.
-MODULES = apiclient       \
+MODULES = amqp            \
+	  apiclient       \
 	  apiserver       \
 	  app             \
 	  config          \

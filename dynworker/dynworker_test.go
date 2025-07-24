@@ -52,6 +52,8 @@ import (
 // ** Tests:
 
 func TestDynworker(t *testing.T) {
+	InitPrometheus()
+
 	mocker := gomock.NewController(t)
 	defer mocker.Finish()
 
@@ -63,18 +65,23 @@ func TestDynworker(t *testing.T) {
 		Info(gomock.Any(), gomock.Any()).
 		AnyTimes()
 
+	timeout := time.Duration(5 * time.Second)
 	cfg := NewConfig(ctx, lgr, "test", 2, 5)
-	pool := NewWorkerPool(cfg, func(task Task) error {
+	cfg.IdleTimeout = timeout
+
+	t.Logf("Creating worker pool with 2 minimum and 5 maximum workers.")
+	pool := NewWorkerPool(cfg, func(task *Task) error {
+		t.Logf("Task: %#v", task.Data())
 		time.Sleep(50 * time.Millisecond)
 		return nil
 	})
 
 	pool.Start()
-	defer pool.Stop()
+	// `Stop` is invoked in the "terminate" test.
 
 	t.Run("Submit tasks", func(t *testing.T) {
-		for range 10 {
-			if err := pool.Submit(struct{}{}); err != nil {
+		for idx := range 10 {
+			if err := pool.Submit(idx + 1); err != nil {
 				t.Fatalf("Submit failed: %v", err)
 			}
 		}
@@ -93,8 +100,9 @@ func TestDynworker(t *testing.T) {
 	})
 
 	t.Run("Scale down", func(t *testing.T) {
-		t.Log("Sleeping 35 seconds")
-		time.Sleep(35 * time.Second)
+		delay := time.Duration((2 * time.Second) + timeout)
+		t.Logf("Sleeping %s", delay.String())
+		time.Sleep(delay)
 
 		current := pool.WorkerCount()
 		if current != pool.MinWorkers() {
@@ -105,6 +113,15 @@ func TestDynworker(t *testing.T) {
 			)
 
 			return
+		}
+	})
+
+	t.Run("Terminate", func(t *testing.T) {
+		pool.Stop()
+
+		current := pool.WorkerCount()
+		if current != 0 {
+			t.Errorf("Expected 0 workers, got %d", current)
 		}
 	})
 }

@@ -10,11 +10,13 @@ require (
 	github.com/goccy/go-json v0.10.2
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/prometheus/client_golang v1.22.0
+	github.com/rabbitmq/amqp091-go v1.10.0
 	gitlab.com/tozd/go/errors v0.8.1
 	go.uber.org/mock v0.4.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/sync v0.12.0
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -51,5 +53,4 @@ require (
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/protobuf v1.36.5 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

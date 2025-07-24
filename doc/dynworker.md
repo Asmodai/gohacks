@@ -9,30 +9,25 @@
 ## Usage
 
 ```go
-const (
-	// Default minimum worker count.
-	DefaultMinimumWorkerCount int32 = 1
-
-	// Default maximum worker count.
-	DefaultMaximumWorkerCount int32 = 10
-
-	// Default worker count multipler.
-	//
-	// This is used when there is an invalid maximum worker count.
-	DefaultWorkerCountMult int32 = 4
-
-	// Default worker timeout.
-	DefaultTimeout time.Duration = 30 * time.Second
+var (
+	ErrNotTask error = errors.Base("task pool entity is not a task")
 )
 ```
+
+#### func  InitPrometheus
+
+```go
+func InitPrometheus()
+```
+Initialise Prometheus metrics for this module.
 
 #### type Config
 
 ```go
 type Config struct {
 	Name        string          // Worker pool name for logger and metrics.
-	MinWorkers  int32           // Minimum number of workers.
-	MaxWorkers  int32           // Maximum number of workers.
+	MinWorkers  int64           // Minimum number of workers.
+	MaxWorkers  int64           // Maximum number of workers.
 	Logger      logger.Logger   // Logger instance.
 	Parent      context.Context // Parent context.
 	IdleTimeout time.Duration   // Idle timeout duration.
@@ -47,7 +42,7 @@ func NewConfig(
 	ctx context.Context,
 	lgr logger.Logger,
 	name string,
-	minw, maxw int32,
+	minw, maxw int64,
 ) *Config
 ```
 Create a new configuration.
@@ -69,18 +64,54 @@ Set the idle timeout value.
 #### type Task
 
 ```go
-type Task any
+type Task struct {
+}
 ```
 
-Task data type.
+Task structure.
+
+#### func  NewTask
+
+```go
+func NewTask(ctx context.Context, lgr logger.Logger, data UserData) *Task
+```
+
+#### func (*Task) Data
+
+```go
+func (obj *Task) Data() UserData
+```
+Get the user-supplied data for the task.
+
+#### func (*Task) Logger
+
+```go
+func (obj *Task) Logger() logger.Logger
+```
+Get the logger instance for the task.
+
+#### func (*Task) Parent
+
+```go
+func (obj *Task) Parent() context.Context
+```
+Get the parent context for the task.
 
 #### type TaskFn
 
 ```go
-type TaskFn func(Task) error
+type TaskFn func(*Task) error
 ```
 
-Type of functions executed by workers.
+Task callback function type.
+
+#### type UserData
+
+```go
+type UserData any
+```
+
+User-supplied data.
 
 #### type WorkerPool
 
@@ -93,16 +124,25 @@ type WorkerPool interface {
 	Stop()
 
 	// Submit a task to the worker pool.
-	Submit(Task) error
+	Submit(UserData) error
 
 	// Return the number of current workers in the pool.
-	WorkerCount() int32
+	WorkerCount() int64
 
 	// Return the minimum number of workers in the pool.
-	MinWorkers() int32
+	MinWorkers() int64
 
 	// Return the maximum number of workers in the pool.
-	MaxWorkers() int32
+	MaxWorkers() int64
+
+	// Set the minimum number of workers to the given value.
+	SetMinWorkers(int64)
+
+	// Set the maximum number of workers to the given value.
+	SetMaxWorkers(int64)
+
+	// Set the task callback function.
+	SetTaskFunction(TaskFn)
 }
 ```
 

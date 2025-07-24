@@ -26,6 +26,8 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+//go:build amd64 || arm64 || riscv64
 
 // * Comments:
 //
@@ -48,18 +50,18 @@ import (
 
 const (
 	// Default minimum worker count.
-	DefaultMinimumWorkerCount int32 = 1
+	defaultMinimumWorkerCount int64 = 1
 
 	// Default maximum worker count.
-	DefaultMaximumWorkerCount int32 = 10
+	defaultMaximumWorkerCount int64 = 10
 
 	// Default worker count multipler.
 	//
 	// This is used when there is an invalid maximum worker count.
-	DefaultWorkerCountMult int32 = 4
+	defaultWorkerCountMult int64 = 4
 
 	// Default worker timeout.
-	DefaultTimeout time.Duration = 30 * time.Second
+	defaultTimeout time.Duration = 30 * time.Second
 )
 
 // * Code:
@@ -68,8 +70,8 @@ const (
 
 type Config struct {
 	Name        string          // Worker pool name for logger and metrics.
-	MinWorkers  int32           // Minimum number of workers.
-	MaxWorkers  int32           // Maximum number of workers.
+	MinWorkers  int64           // Minimum number of workers.
+	MaxWorkers  int64           // Maximum number of workers.
 	Logger      logger.Logger   // Logger instance.
 	Parent      context.Context // Parent context.
 	IdleTimeout time.Duration   // Idle timeout duration.
@@ -90,8 +92,8 @@ func NewDefaultConfig() *Config {
 		context.Background(),
 		logger.NewDefaultLogger(),
 		"default",
-		DefaultMinimumWorkerCount,
-		DefaultMaximumWorkerCount,
+		defaultMinimumWorkerCount,
+		defaultMaximumWorkerCount,
 	)
 }
 
@@ -100,18 +102,18 @@ func NewConfig(
 	ctx context.Context,
 	lgr logger.Logger,
 	name string,
-	minw, maxw int32,
+	minw, maxw int64,
 ) *Config {
 	if minw < 0 {
-		minw = DefaultMinimumWorkerCount
+		minw = defaultMinimumWorkerCount
 	}
 
 	if maxw <= 0 {
-		maxw = DefaultMaximumWorkerCount
+		maxw = defaultMaximumWorkerCount
 	}
 
 	if maxw < minw {
-		maxw = minw * DefaultWorkerCountMult
+		maxw = minw * defaultWorkerCountMult
 	}
 
 	return &Config{
@@ -120,7 +122,7 @@ func NewConfig(
 		MaxWorkers:  maxw,
 		Logger:      lgr,
 		Parent:      ctx,
-		IdleTimeout: DefaultTimeout,
+		IdleTimeout: defaultTimeout,
 	}
 }
 
