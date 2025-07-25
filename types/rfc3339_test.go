@@ -77,97 +77,6 @@ type TestRFC3339Struct struct {
 
 // ** Tests:
 
-// ** Benchmark:
-
-func BenchmarkRFC3339Parse(b *testing.B) {
-	b.ReportAllocs()
-
-	for range b.N {
-		Parse(TestRFC3339String)
-	}
-}
-
-// *** Fuzzing:
-
-func FuzzRFC3339Parse(f *testing.F) {
-	// Valid.
-	f.Add("2023-03-01T12:34:56Z")
-	f.Add("2006-01-02T15:04:05+07:00")
-	f.Add("1999-12-31T23:59:59-08:00")
-
-	// Valid but spicy.
-	f.Add("0000-01-01T00:00:00Z")           // Year 0 (Go handles it, ISO does not).
-	f.Add("9999-12-31T23:59:59Z")           // Max time.
-	f.Add("2006-01-02T15:04:05+00:00")      // Common format.
-	f.Add("2012-02-29T12:00:00Z")           // Leap day.
-	f.Add("2012-12-12T12:12:12.999999999Z") // Max fractional second.
-
-	// Technically valid but seriously sus.
-	f.Add("2024-04-31T00:00:00Z")      // April has 30 days, but some parsers eat it.
-	f.Add("2012-13-01T00:00:00Z")      // Month 13.
-	f.Add("2012-12-32T00:00:00Z")      // Day 32.
-	f.Add("2012-12-12T24:00:00Z")      // 24:00:00 is allowed by ISO 8601 but rare.
-	f.Add("2012-12-12T12:60:00Z")      // 60 minutes.
-	f.Add("2012-12-12T12:59:60Z")      // Leap second.
-	f.Add("2012-12-12T12:12:12.")      // Trailing dot.
-	f.Add("2012-12-12T12:12:12.Z")     // Dot before Z.
-	f.Add("2012-12-12T12:12:12+14:00") // Max valid offset.
-	f.Add("2012-12-12T12:12:12-12:00") // Min valid offset.
-
-	// Cursed.
-	f.Add("ಠ_ಠ")                               // Unicode test.
-	f.Add("💣2023-01-01T00:00:00Z💥")            // Valid in middle of garbage.
-	f.Add("2001-02-03T04:05:06.7.8.9Z")        // WTF fractional nonsense.
-	f.Add("9999-99-99T99:99:99Z")              // Max jank.
-	f.Add("this-is-not-a-date")                // Random string.
-	f.Add("")                                  // Empty string.
-	f.Add(" ")                                 // Single space.
-	f.Add("    ")                              // Whitespace.
-	f.Add("\x00\x01\x02")                      // Control chars.
-	f.Add("2012-12-12t12:12:12z")              // Lowercase `t` and `z`.
-	f.Add("2012-12-12T12:12:12Z\n")            // Trailing newline.
-	f.Add("2012-12-12T12:12:12Z\x00")          // Null-terminated.
-	f.Add("2025-13-40T25:61:61Z")              // Absurd values.
-	f.Add("2025-07-25T08:00:00")               // Missing timezone.
-	f.Add("2025-07-25")                        // No time part.
-	f.Add("T08:00:00Z")                        // No date part.
-	f.Add("2025/07/25T08:00:00Z")              // Wrong separator.
-	f.Add("2025-07-25 08:00:00Z")              // Space instead of T.
-	f.Add("2025-07-25T08:00:00.000000000000Z") // Stupidly high precision.
-	f.Add("2025-07-25T08:00:00z")              // Lowercase Z.
-	f.Add("2025-07-25T08:00:00+99:99")         // Bonkers offset.
-	f.Add("20🦀25-07-25T08:00:00Z")             // Emoji in the year.
-	f.Add("2025-07-25T08:00:00\nZ")            // Newline in the middle.
-	f.Add("2025-07-25T08:00:00Z💀")             // Valid with garbage trailing.
-	f.Add("2025-07-25T08:00:00Z\000")          // Null byte.
-
-	// Aaaaaand... hold on to your pants.
-	f.Add(strings.Repeat("9", 10_000)) // 10KB of 9s — stress string handling.
-
-	f.Fuzz(func(t *testing.T, input string) {
-		_, err := time.Parse(time.RFC3339, input)
-		if err != nil {
-			// Lots of stuff should fail to parse.
-			// What we don't want, though, are panics.
-			return
-		}
-
-		// Round-trip test.
-		parsed, err := time.Parse(time.RFC3339, input)
-		if err != nil {
-			t.Fatalf("unexpected parse fail on valid input %q: %v",
-				input,
-				err)
-		}
-
-		out := parsed.Format(time.RFC3339)
-		_, err = time.Parse(time.RFC3339, out)
-		if err != nil {
-			t.Errorf("round-trip failed on %q -> %q", input, out)
-		}
-	})
-}
-
 // *** Base tests:
 
 func TestRFC3339(t *testing.T) {
@@ -419,6 +328,97 @@ func TestRFC3339YAML(t *testing.T) {
 			}
 		})
 	}) // SetYAML.
+}
+
+// ** Benchmark:
+
+func BenchmarkRFC3339Parse(b *testing.B) {
+	b.ReportAllocs()
+
+	for range b.N {
+		Parse(TestRFC3339String)
+	}
+}
+
+// ** Fuzzing:
+
+func FuzzRFC3339Parse(f *testing.F) {
+	// Valid.
+	f.Add("2023-03-01T12:34:56Z")
+	f.Add("2006-01-02T15:04:05+07:00")
+	f.Add("1999-12-31T23:59:59-08:00")
+
+	// Valid but spicy.
+	f.Add("0000-01-01T00:00:00Z")           // Year 0 (Go handles it, ISO does not).
+	f.Add("9999-12-31T23:59:59Z")           // Max time.
+	f.Add("2006-01-02T15:04:05+00:00")      // Common format.
+	f.Add("2012-02-29T12:00:00Z")           // Leap day.
+	f.Add("2012-12-12T12:12:12.999999999Z") // Max fractional second.
+
+	// Technically valid but seriously sus.
+	f.Add("2024-04-31T00:00:00Z")      // April has 30 days, but some parsers eat it.
+	f.Add("2012-13-01T00:00:00Z")      // Month 13.
+	f.Add("2012-12-32T00:00:00Z")      // Day 32.
+	f.Add("2012-12-12T24:00:00Z")      // 24:00:00 is allowed by ISO 8601 but rare.
+	f.Add("2012-12-12T12:60:00Z")      // 60 minutes.
+	f.Add("2012-12-12T12:59:60Z")      // Leap second.
+	f.Add("2012-12-12T12:12:12.")      // Trailing dot.
+	f.Add("2012-12-12T12:12:12.Z")     // Dot before Z.
+	f.Add("2012-12-12T12:12:12+14:00") // Max valid offset.
+	f.Add("2012-12-12T12:12:12-12:00") // Min valid offset.
+
+	// Cursed.
+	f.Add("ಠ_ಠ")                               // Unicode test.
+	f.Add("💣2023-01-01T00:00:00Z💥")            // Valid in middle of garbage.
+	f.Add("2001-02-03T04:05:06.7.8.9Z")        // WTF fractional nonsense.
+	f.Add("9999-99-99T99:99:99Z")              // Max jank.
+	f.Add("this-is-not-a-date")                // Random string.
+	f.Add("")                                  // Empty string.
+	f.Add(" ")                                 // Single space.
+	f.Add("    ")                              // Whitespace.
+	f.Add("\x00\x01\x02")                      // Control chars.
+	f.Add("2012-12-12t12:12:12z")              // Lowercase `t` and `z`.
+	f.Add("2012-12-12T12:12:12Z\n")            // Trailing newline.
+	f.Add("2012-12-12T12:12:12Z\x00")          // Null-terminated.
+	f.Add("2025-13-40T25:61:61Z")              // Absurd values.
+	f.Add("2025-07-25T08:00:00")               // Missing timezone.
+	f.Add("2025-07-25")                        // No time part.
+	f.Add("T08:00:00Z")                        // No date part.
+	f.Add("2025/07/25T08:00:00Z")              // Wrong separator.
+	f.Add("2025-07-25 08:00:00Z")              // Space instead of T.
+	f.Add("2025-07-25T08:00:00.000000000000Z") // Stupidly high precision.
+	f.Add("2025-07-25T08:00:00z")              // Lowercase Z.
+	f.Add("2025-07-25T08:00:00+99:99")         // Bonkers offset.
+	f.Add("20🦀25-07-25T08:00:00Z")             // Emoji in the year.
+	f.Add("2025-07-25T08:00:00\nZ")            // Newline in the middle.
+	f.Add("2025-07-25T08:00:00Z💀")             // Valid with garbage trailing.
+	f.Add("2025-07-25T08:00:00Z\000")          // Null byte.
+
+	// Aaaaaand... hold on to your pants.
+	f.Add(strings.Repeat("9", 10_000)) // 10KB of 9s — stress string handling.
+
+	f.Fuzz(func(t *testing.T, input string) {
+		_, err := time.Parse(time.RFC3339, input)
+		if err != nil {
+			// Lots of stuff should fail to parse.
+			// What we don't want, though, are panics.
+			return
+		}
+
+		// Round-trip test.
+		parsed, err := time.Parse(time.RFC3339, input)
+		if err != nil {
+			t.Fatalf("unexpected parse fail on valid input %q: %v",
+				input,
+				err)
+		}
+
+		out := parsed.Format(time.RFC3339)
+		_, err = time.Parse(time.RFC3339, out)
+		if err != nil {
+			t.Errorf("round-trip failed on %q -> %q", input, out)
+		}
+	})
 }
 
 // * rfc3339_test.go ends here.

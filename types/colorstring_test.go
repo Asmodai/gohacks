@@ -92,4 +92,19 @@ func TestColorString(t *testing.T) {
 	})
 }
 
+// ** Benchmarks:
+
+func BenchmarkColorString(b *testing.B) {
+	b.ReportAllocs()
+
+	for range b.N {
+		NewColorStringWithColors("This is a string", Red, Default).
+			SetFG(Yellow).
+			SetBG(Green).
+			SetBold().
+			String()
+
+	}
+}
+
 // * colorstring_test.go ends here.

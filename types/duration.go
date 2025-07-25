@@ -217,6 +217,17 @@ func (obj *Duration) SetYAML(value any) error {
 
 // ** Functions:
 
+func NewFromDuration(duration string) (Duration, error) {
+	obj := Duration(0)
+
+	err := obj.Set(duration)
+	if err != nil {
+		return obj, errors.WithStack(err)
+	}
+
+	return obj, nil
+}
+
 // Format a time duration in pretty format.
 //
 // Example, a duration of 72 minutes becomes "1 hour(s), 12 minute(s)".

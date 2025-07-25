@@ -358,4 +358,17 @@ func TestDurationCLI(t *testing.T) {
 	})
 } // CLI.
 
+// ** Benchmark:
+
+func BenchmarkRFC3339Set(b *testing.B) {
+	b.ReportAllocs()
+
+	for range b.N {
+		_, err := NewFromDuration("21h")
+		if err != nil {
+			b.Errorf("Unexpected error: %#v", err)
+		}
+	}
+}
+
 // * duration_test.go ends here.
