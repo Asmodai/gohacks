@@ -265,6 +265,12 @@ type Duration time.Duration
 
 Enhanced time duration type.
 
+#### func  NewFromDuration
+
+```go
+func NewFromDuration(duration string) (Duration, error)
+```
+
 #### func (Duration) Duration
 
 ```go
