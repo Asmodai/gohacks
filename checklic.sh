@@ -5,10 +5,10 @@
 #
 # checklic.sh --- Check licenses.
 #
-# Copyright (c) 2022-2024 Paul Ward <asmodai@gmail.com>
+# Copyright (c) 2022-2025 Paul Ward <paul@lisphacker.uk>
 #
-# Author:     Paul Ward <asmodai@gmail.com>
-# Maintainer: Paul Ward <asmodai@gmail.com>
+# Author:     Paul Ward <paul@lisphacker.uk>
+# Maintainer: Paul Ward <paul@lisphacker.uk>
 # Created:    06 Jul 2022 08:39:00
 #
 # {{{ License:

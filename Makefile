@@ -4,10 +4,10 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+# Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
 #
-# Author:     Paul Ward <asmodai@gmail.com>
-# Maintainer: Paul Ward <asmodai@gmail.com>
+# Author:     Paul Ward <paul@lisphacker.uk>
+# Maintainer: Paul Ward <paul@lisphacker.uk>
 # Created:    11 Aug 2021 04:28:08
 #
 #{{{ License:

@@ -5,10 +5,10 @@
 #
 # makemocks.sh --- Make mocks from defined interfaces.
 #
-# Copyright (c) 2021-2025 Paul Ward <asmodai@gmail.com>
+# Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
 #
-# Author:     Paul Ward <asmodai@gmail.com>
-# Maintainer: Paul Ward <asmodai@gmail.com>
+# Author:     Paul Ward <paul@lisphacker.uk>
+# Maintainer: Paul Ward <paul@lisphacker.uk>
 # Created:    01 Sep 2021 13:13:28
 #
 # {{{ License:

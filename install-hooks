@@ -1,12 +1,14 @@
 #!/bin/bash
 # -*- Mode: Shell-script -*-
 #
+# SPDX-License-Identifier: MIT
+#
 # install-hooks --- Install git hooks.
 #
-# Copyright (c) 2017-2024 Paul Ward <asmodai@gmail.com>
+# Copyright (c) 2017-2025 Paul Ward <paul@lisphacker.uk>
 #
-# Author:     Paul Ward <asmodai@gmail.com>
-# Maintainer: Paul Ward <asmodai@gmail.com>
+# Author:     Paul Ward <paul@lisphacker.uk>
+# Maintainer: Paul Ward <paul@lisphacker.uk>
 # Created:    25 Nov 2017 04:38:48
 #
 # {{{ License:
