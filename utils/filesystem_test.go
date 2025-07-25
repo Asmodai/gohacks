@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // filesystem_test.go --- Filesystem tests.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
@@ -27,13 +29,27 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package utils
+
+// * Imports:
 
 import (
 	"fmt"
 	"runtime"
 	"testing"
 )
+
+// * Code:
+
+// ** Functions:
 
 func InvalidTestFile() string {
 	if runtime.GOOS == "windows" {
@@ -83,6 +99,8 @@ func ValidTestFile() (string, string) {
 		panic(fmt.Sprintf("unhandled os '%s'", runtime.GOOS))
 	}
 }
+
+// ** Tests:
 
 // Test a valid file.
 //
@@ -206,4 +224,4 @@ func TestInvalidFile(t *testing.T) {
 	})
 }
 
-// filesystem_test.go ends here.
+// * filesystem_test.go ends here.

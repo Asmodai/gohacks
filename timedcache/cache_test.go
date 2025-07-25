@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // cache_test.go --- Timed cache tests.
 //
 // Copyright (c) 2024 Paul Ward <asmodai@gmail.com>

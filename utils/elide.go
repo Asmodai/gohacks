@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // elide.go --- Nasty string elide stuff.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
@@ -27,7 +29,17 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package utils
+
+// * Constants:
 
 const (
 	// Suffix used to denote elided strings.
@@ -36,6 +48,10 @@ const (
 	// Length of the elide suffix.
 	ElideSuffixLen int = 3
 )
+
+// * Code:
+
+// ** Functions:
 
 // Return a string that has been elided to the given length.
 func Elide(str string, maxima int) string {
@@ -48,4 +64,4 @@ func Elide(str string, maxima int) string {
 	return string(runes[0:maxima-ElideSuffixLen]) + ElideSuffix
 }
 
-// elide.go ends here.
+// * elide.go ends here.

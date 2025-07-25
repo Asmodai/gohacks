@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // env.go --- Environment variable hacks.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
@@ -27,11 +29,25 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package utils
+
+// * Imports:
 
 import (
 	"os"
 )
+
+// * Code:
+
+// ** Functions:
 
 // Look up the given key in the underlying operating system's environment and
 // return its value.
@@ -45,4 +61,4 @@ func GetEnv(key, def string) string {
 	return def
 }
 
-// env.go ends here.
+// * env.go ends here.

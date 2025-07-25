@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // state.go --- Internal process state.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>

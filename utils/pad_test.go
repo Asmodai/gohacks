@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // pad_test.go --- `pad` tests.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
@@ -27,9 +29,23 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package utils
 
+// * Imports:
+
 import "testing"
+
+// * Code:
+
+// ** Tests:
 
 func TestPad(t *testing.T) {
 	length := 8
@@ -53,4 +69,4 @@ func TestPad(t *testing.T) {
 	})
 }
 
-// pad_test.go ends here.
+// * pad_test.go ends here.

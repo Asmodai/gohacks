@@ -1,4 +1,6 @@
-// -*- Mode: Go -*-
+// -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
+//
+// SPDX-License-Identifier: MIT
 //
 // dynworker.go --- Dynamic worker.
 //
@@ -64,8 +66,8 @@ const (
 
 // * Variables:
 
-//nolint:gochecknoglobals
 var (
+	//nolint:gochecknoglobals
 	activeWorkers = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "dynworker_active_workers",
@@ -74,6 +76,7 @@ var (
 		[]string{"pool"},
 	)
 
+	//nolint:gochecknoglobals
 	tasksTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "dynworker_tasks_total",
@@ -82,6 +85,7 @@ var (
 		[]string{"pool"},
 	)
 
+	//nolint:gochecknoglobals
 	taskDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name: "dynworker_task_duration_seconds",
@@ -90,6 +94,7 @@ var (
 		[]string{"pool"},
 	)
 
+	//nolint:gochecknoglobals
 	totalScaledUp = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "dynworker_scaled_up_total",
@@ -98,6 +103,7 @@ var (
 		[]string{"pool"},
 	)
 
+	//nolint:gochecknoglobals
 	totalScaledDown = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "dynworker_scaled_down_total",
@@ -106,6 +112,7 @@ var (
 		[]string{"pool"},
 	)
 
+	//nolint:gochecknoglobals
 	prometheusInitOnce sync.Once
 
 	ErrNotTask error = errors.Base("task pool entity is not a task")

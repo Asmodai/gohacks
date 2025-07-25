@@ -1,6 +1,8 @@
 #!/bin/env bash
 # -*- Mode: Shell-script -*-
 #
+# SPDX-License-Identifier: MIT
+#
 # makeproto.sh --- Make protobuf.
 #
 # Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>

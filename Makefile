@@ -2,6 +2,8 @@
 #
 # Makefile --- gohacks makefile.
 #
+# SPDX-License-Identifier: MIT
+#
 # Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
 #
 # Author:     Paul Ward <asmodai@gmail.com>

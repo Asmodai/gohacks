@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // pad.go --- Incredibly bad string padding.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
@@ -27,16 +29,32 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package utils
+
+// * Imports:
 
 import (
 	"strings"
 )
 
+// * Constants:
+
 const (
 	// Character to use when padding strings.
 	PadPadding string = " "
 )
+
+// * Code:
+
+// ** Functions:
 
 // Pad the given string with the given number of spaces.
 func Pad(str string, padding int) string {
@@ -48,4 +66,4 @@ func Pad(str string, padding int) string {
 	return str + strings.Repeat(PadPadding, padding-length)
 }
 
-// pad.go ends here.
+// * pad.go ends here.

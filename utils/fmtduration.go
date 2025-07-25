@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // fmtduration.go --- Format a Time duration.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
@@ -27,12 +29,26 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package utils
+
+// * Imports:
 
 import (
 	"fmt"
 	"time"
 )
+
+// * Code:
+
+// ** Functions:
 
 // Format a time duration in pretty format.
 //
@@ -50,4 +66,4 @@ func FormatDuration(dur time.Duration) string {
 	return fmt.Sprintf("%0d hour(s), %0d minute(s)", hour, minute)
 }
 
-// fmtduration.go ends here.
+// * fmtduration.go ends here.

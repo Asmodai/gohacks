@@ -1,4 +1,6 @@
-// -*- Mode: Go -*-
+// -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
+//
+// SPDX-License-Identifier: MIT
 //
 // debug_test.go --- Debug tool tests.
 //

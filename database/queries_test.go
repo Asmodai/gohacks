@@ -1,4 +1,5 @@
-// -*- Mode: Go -*-
+// -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
+//
 // SPDX-License-Identifier: MIT
 //
 // queries_test.go --- DB query tests.

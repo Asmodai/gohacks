@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // filesystem.go --- Filesystem utilities.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
@@ -27,17 +29,33 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package utils
+
+// * Imports:
 
 import (
 	"os"
 )
+
+// * Constants:
 
 const (
 	maskOwnerExec os.FileMode = 0100
 	maskGroupExec os.FileMode = 0010
 	maskOtherExec os.FileMode = 0001
 )
+
+// * Code:
+
+// ** Types:
 
 /*
 Filesystem
@@ -62,17 +80,7 @@ type Filesystem struct {
 	exists bool
 }
 
-// Create a new filesystem object.
-func NewFilesystem(path string) *Filesystem {
-	obj := &Filesystem{
-		path:   path,
-		exists: false,
-	}
-
-	obj.probe()
-
-	return obj
-}
+// ** Methods:
 
 // Does the entity exist?
 func (fs *Filesystem) Exists() bool {
@@ -175,4 +183,18 @@ func (fs *Filesystem) probe() {
 	}
 }
 
-// filesystem.go ends here.
+// ** Functions:
+
+// Create a new filesystem object.
+func NewFilesystem(path string) *Filesystem {
+	obj := &Filesystem{
+		path:   path,
+		exists: false,
+	}
+
+	obj.probe()
+
+	return obj
+}
+
+// * filesystem.go ends here.

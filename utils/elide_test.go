@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // elide_test.go --- `elide` tests.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
@@ -27,9 +29,25 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package utils
 
-import "testing"
+// * Imports:
+
+import (
+	"testing"
+)
+
+// * Code:
+
+// ** Functions:
 
 func ElideTest(t *testing.T) {
 	length := 8
@@ -53,4 +71,4 @@ func ElideTest(t *testing.T) {
 	})
 }
 
-// elide_test.go ends here.
+// * elide_test.go ends here.

@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // pop.go --- Pop last element from array.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
@@ -27,7 +29,19 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package utils
+
+// * Code:
+
+// ** Functions:
 
 // Pop the last element from an array, returning the element and a copy of the
 // original array with the last element removed.
@@ -51,4 +65,4 @@ func Pop(array []string) (string, []string) {
 	}
 }
 
-// pop.go ends here.
+// * pop.go ends here.

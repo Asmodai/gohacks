@@ -1,6 +1,10 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // dispatcher_test.go --- Dispatcher tests.
+//
+// SPDX-License-Identifier: MIT
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
 //

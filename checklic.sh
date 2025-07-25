@@ -1,6 +1,8 @@
 #!/bin/bash
 # -*- Mode: Shell-script -*-
 #
+# SPDX-License-Identifier: MIT
+#
 # checklic.sh --- Check licenses.
 #
 # Copyright (c) 2022-2024 Paul Ward <asmodai@gmail.com>

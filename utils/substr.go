@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // substr.go --- `substr` implementation.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
@@ -27,7 +29,19 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package utils
+
+// * Code:
+
+// ** Functions:
 
 // Return a substring of the given input string that starts at the given start
 // point and has the given length.
@@ -45,4 +59,4 @@ func Substr(input string, start int, length int) (string, bool) {
 	return string(asRunes[start : start+length]), true
 }
 
-// substr.go ends here.
+// * substr.go ends here.

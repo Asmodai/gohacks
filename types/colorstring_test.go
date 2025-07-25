@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // colorstring_test.go --- Colour string tests.
 //
 // Copyright (c) 2021-2025 Paul Ward <asmodai@gmail.com>

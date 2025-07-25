@@ -1,6 +1,8 @@
 #!/bin/bash
 # -*- Mode: Shell-script -*-
 #
+# SPDX-License-Identifier: MIT
+#
 # makemocks.sh --- Make mocks from defined interfaces.
 #
 # Copyright (c) 2021-2025 Paul Ward <asmodai@gmail.com>

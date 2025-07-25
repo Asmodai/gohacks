@@ -1,5 +1,7 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
+// SPDX-License-Identifier: MIT
+//
 // semver_test.go --- SemVer test file.
 //
 // Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
