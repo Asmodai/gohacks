@@ -43,6 +43,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -212,6 +213,21 @@ func (obj *Duration) SetYAML(value any) error {
 	str = strings.TrimRight(str, "\r\n")
 
 	return obj.Set(str)
+}
+
+// ** Functions:
+
+// Format a time duration in pretty format.
+//
+// Example, a duration of 72 minutes becomes "1 hour(s), 12 minute(s)".
+func PrettyFormat(dur Duration) string {
+	val := dur.Duration().Round(time.Minute)
+
+	hour := val / time.Hour
+	val -= hour * time.Hour //nolint:durationcheck
+	minute := val / time.Minute
+
+	return fmt.Sprintf("%0d hour(s), %0d minute(s)", hour, minute)
 }
 
 // * duration.go ends here.

@@ -62,6 +62,45 @@ var (
 )
 ```
 
+```go
+var (
+	// Error condition that signals an invalid RFC3339 timestamp  of some
+	// kind.
+	//
+	// This error is usually wrapped around a descriptive message string.
+	ErrInvalidRFC3339 error = errors.Base("invalid RFC3339 timestamp")
+
+	// Error condition that signals that an RFC3339 timestamp is not a
+	// string format.
+	//
+	// This error is used by `Set` as well as JSON and YAML methods.
+	ErrRFC3339NotString error = errors.Base("RFC3339 timestamp  must be a string")
+)
+```
+
+#### func  CurrentZone
+
+```go
+func CurrentZone() (string, int)
+```
+Return the current timezone for the host.
+
+#### func  PrettyFormat
+
+```go
+func PrettyFormat(dur Duration) string
+```
+Format a time duration in pretty format.
+
+Example, a duration of 72 minutes becomes "1 hour(s), 12 minute(s)".
+
+#### func  TimeToMySQL
+
+```go
+func TimeToMySQL(val time.Time) string
+```
+Convert a `time.Time` value to a MySQL timestamp for queries.
+
 #### type ColorString
 
 ```go
@@ -454,3 +493,171 @@ func (q *Queue) Put(elem any) bool
 ```
 Append an element to the queue. Returns `false` if there is no more room in the
 queue.
+
+#### type RFC3339
+
+```go
+type RFC3339 time.Time
+```
+
+RFC 3339 time type.
+
+#### func  Parse
+
+```go
+func Parse(data string) (RFC3339, error)
+```
+Parse the given string for an RFC3339 timestamp.
+
+If the timestamp is not a valid RFC3339 timestamp, then `ErrInvalidRFC3339` is
+returned.
+
+#### func (RFC3339) Add
+
+```go
+func (obj RFC3339) Add(d time.Duration) RFC3339
+```
+Add a `time.Duration` value to the timestamp, returning a new timestamp.
+
+#### func (RFC3339) After
+
+```go
+func (obj RFC3339) After(t time.Time) bool
+```
+Is the given time after the time in the timestamp?
+
+#### func (RFC3339) Before
+
+```go
+func (obj RFC3339) Before(t time.Time) bool
+```
+Is the given time before the time in the timestamp?
+
+#### func (RFC3339) Equal
+
+```go
+func (obj RFC3339) Equal(t time.Time) bool
+```
+Is the given time equal to the time in the timestamp?
+
+#### func (RFC3339) Format
+
+```go
+func (obj RFC3339) Format(format string) string
+```
+Format the timestamp with the given format.
+
+#### func (RFC3339) IsDST
+
+```go
+func (obj RFC3339) IsDST() bool
+```
+Does the timestamp correspond to a time where DST is in effect?
+
+#### func (RFC3339) IsZero
+
+```go
+func (obj RFC3339) IsZero() bool
+```
+Is the timestamp a zero value?
+
+#### func (RFC3339) MarshalJSON
+
+```go
+func (obj RFC3339) MarshalJSON() ([]byte, error)
+```
+JSON marshalling method.
+
+#### func (RFC3339) MarshalYAML
+
+```go
+func (obj RFC3339) MarshalYAML() (any, error)
+```
+YAML marshalling method.
+
+#### func (RFC3339) MySQL
+
+```go
+func (obj RFC3339) MySQL() string
+```
+Return a string that can be used in MySQL queries.
+
+#### func (*RFC3339) Set
+
+```go
+func (obj *RFC3339) Set(str string) error
+```
+Set the RFC3339 timestamp to that of the given string.
+
+If the string value fails to parse, then `ErrInvalidRFC3339` is returned.
+
+#### func (*RFC3339) SetYAML
+
+```go
+func (obj *RFC3339) SetYAML(value any) error
+```
+Set the RFC3339 value from a YAML value.
+
+If the passed YAML value is not a string, then `ErrRFC3339NotString` is
+returned.
+
+Will also return any error condition from the `Set` method.
+
+#### func (RFC3339) String
+
+```go
+func (obj RFC3339) String() string
+```
+Coerce an RFC3339 time value to a string.
+
+#### func (RFC3339) Sub
+
+```go
+func (obj RFC3339) Sub(t time.Time) time.Duration
+```
+Subtract a `time.Time` value from the timestamp, returning a `time.Duration`.
+
+#### func (RFC3339) Time
+
+```go
+func (obj RFC3339) Time() time.Time
+```
+Coerce an RFC3339 time value to a `time.Time` value.
+
+#### func (RFC3339) Type
+
+```go
+func (obj RFC3339) Type() string
+```
+Return the data type name for CLI flag parsing purposes.
+
+#### func (RFC3339) UTC
+
+```go
+func (obj RFC3339) UTC() time.Time
+```
+Return the UTC time for the timestamp.
+
+RFC3339 timestamps are always UTC internally, so `UTC` is provided as a
+courtesy.
+
+#### func (RFC3339) Unix
+
+```go
+func (obj RFC3339) Unix() int64
+```
+Return the Unix time for the timestamp.
+
+#### func (*RFC3339) UnmarshalJSON
+
+```go
+func (obj *RFC3339) UnmarshalJSON(data []byte) error
+```
+JSON unmarshalling method.
+
+#### func (*RFC3339) UnmarshalYAML
+
+```go
+func (obj *RFC3339) UnmarshalYAML(value *yaml.Node) error
+```
+YAML unmarshalling method.

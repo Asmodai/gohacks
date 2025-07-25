@@ -109,8 +109,7 @@ func TestDuration(t *testing.T) {
 		t.Run("Valid", func(t *testing.T) {
 			err := val.Set(str)
 			if err != nil {
-				t.Errorf("Unexpected error: %#v", err)
-				return
+				t.Fatalf("Unexpected error: %#v", err)
 			}
 
 			if val.Duration() != dur {
@@ -131,24 +130,26 @@ func TestDuration(t *testing.T) {
 		})
 	}) // From string.
 
-	// Test we can coerce to a string via `String`.
-	t.Run("String coercion", func(t *testing.T) {
-		val := Duration(dur)
-		sval := val.String()
+	t.Run("Coercion", func(t *testing.T) {
+		// Test we can coerce to a string via `String`.
+		t.Run("String", func(t *testing.T) {
+			val := Duration(dur)
+			sval := val.String()
 
-		if sval != str {
-			t.Errorf("Unexpected value: %#v != %#v", sval, str)
-		}
-	})
+			if sval != str {
+				t.Errorf("Unexpected value: %#v != %#v", sval, str)
+			}
+		})
 
-	// Test we can coerce to a `time.Duration` via `Duration`.
-	t.Run("Duration coercion", func(t *testing.T) {
-		val := Duration(dur)
-		dval := val.Duration()
+		// Test we can coerce to a `time.Duration` via `Duration`.
+		t.Run("Duration", func(t *testing.T) {
+			val := Duration(dur)
+			dval := val.Duration()
 
-		if dval != dur {
-			t.Errorf("Unexpected value: %#v != %#v", dval, dur)
-		}
+			if dval != dur {
+				t.Errorf("Unexpected value: %#v != %#v", dval, dur)
+			}
+		})
 	})
 } // Base.
 
