@@ -29,7 +29,17 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package types
+
+// * Imports:
 
 import (
 	"golang.org/x/sync/semaphore"
@@ -38,6 +48,8 @@ import (
 	"time"
 )
 
+// * Constants:
+
 const (
 	// Amount of time to delay semaphore acquisition loops.
 	MailboxDelaySleep time.Duration = 50 * time.Millisecond
@@ -45,6 +57,10 @@ const (
 	// Default deadline for context timeouts.
 	DefaultCtxDeadline time.Duration = 5 * time.Second
 )
+
+// * Code:
+
+// ** Types:
 
 /*
 Mailbox structure.
@@ -66,24 +82,7 @@ type Mailbox struct {
 	preventRead *semaphore.Weighted
 }
 
-// Create and return a new empty mailbox.
-//
-// Note: this acquires the `preventRead` semaphore.
-//
-//nolint:errcheck
-func NewMailbox() *Mailbox {
-	// Please note that the context given here should never be one
-	// passed in by the user, we want a TODO context because *we* are
-	// setting up this initial context.
-	preventRead := semaphore.NewWeighted(int64(1))
-	preventRead.Acquire(context.TODO(), 1)
-
-	return &Mailbox{
-		element:      nil,
-		preventWrite: semaphore.NewWeighted(int64(1)),
-		preventRead:  preventRead,
-	}
-}
+// ** Methods:
 
 // Put an element into the mailbox.
 func (m *Mailbox) Put(elem any) {
@@ -151,4 +150,25 @@ func (m *Mailbox) Full() bool {
 	return m.element != nil
 }
 
-// mailbox.go ends here.
+// ** Functions:
+
+// Create and return a new empty mailbox.
+//
+// Note: this acquires the `preventRead` semaphore.
+//
+//nolint:errcheck
+func NewMailbox() *Mailbox {
+	// Please note that the context given here should never be one
+	// passed in by the user, we want a TODO context because *we* are
+	// setting up this initial context.
+	preventRead := semaphore.NewWeighted(int64(1))
+	preventRead.Acquire(context.TODO(), 1)
+
+	return &Mailbox{
+		element:      nil,
+		preventWrite: semaphore.NewWeighted(int64(1)),
+		preventRead:  preventRead,
+	}
+}
+
+// * mailbox.go ends here.

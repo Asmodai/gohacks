@@ -29,11 +29,25 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package types
+
+// * Imports:
 
 import (
 	"sync"
 )
+
+// * Code:
+
+// ** Types:
 
 /*
 Queue structure.
@@ -48,29 +62,7 @@ type Queue struct {
 	bounded bool
 }
 
-// Create a new empty queue.
-func NewQueue() *Queue {
-	return NewBoundedQueue(0)
-}
-
-// Create a queue that is bounded to a specific size.
-func NewBoundedQueue(bounds int) *Queue {
-	queue := &Queue{
-		queue:  make([]any, 0),
-		bounds: 0,
-	}
-
-	if bounds == 0 {
-		queue.bounded = false
-
-		return queue
-	}
-
-	queue.bounded = true
-	queue.bounds = bounds
-
-	return queue
-}
+// ** Methods:
 
 // Append an element to the queue.  Returns `false` if there is no
 // more room in the queue.
@@ -125,4 +117,30 @@ func (q *Queue) Full() bool {
 	return q.bounded && q.Len() == q.bounds
 }
 
-// queue.go ends here.
+// ** Functions:
+
+// Create a new empty queue.
+func NewQueue() *Queue {
+	return NewBoundedQueue(0)
+}
+
+// Create a queue that is bounded to a specific size.
+func NewBoundedQueue(bounds int) *Queue {
+	queue := &Queue{
+		queue:  make([]any, 0),
+		bounds: 0,
+	}
+
+	if bounds == 0 {
+		queue.bounded = false
+
+		return queue
+	}
+
+	queue.bounded = true
+	queue.bounds = bounds
+
+	return queue
+}
+
+// * queue.go ends here.

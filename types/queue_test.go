@@ -29,11 +29,25 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package types
+
+// * Imports:
 
 import (
 	"testing"
 )
+
+// * Code:
+
+// ** Tests:
 
 // Unbounded queue tests.
 func TestUnboundedQueue(t *testing.T) {
@@ -221,4 +235,4 @@ func TestBoundedQueue(t *testing.T) {
 	})
 }
 
-// queue_test.go ends here.
+// * queue_test.go ends here.

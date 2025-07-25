@@ -29,12 +29,26 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package types
+
+// * Imports:
 
 import (
 	"testing"
 	"time"
 )
+
+// * Code:
+
+// ** Tests:
 
 func TestMailboxNoContext(t *testing.T) {
 	var mbox *Mailbox = nil
@@ -111,4 +125,4 @@ func TestMailboxNoContext(t *testing.T) {
 	})
 }
 
-// mailbox_test.go ends here.
+// * mailbox_test.go ends here.

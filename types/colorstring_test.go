@@ -29,9 +29,25 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package types
 
-import "testing"
+// * Imports:
+
+import (
+	"testing"
+)
+
+// * Code:
+
+// ** Tests:
 
 func TestColorString(t *testing.T) {
 	onlyFG := "\x1b[0;31;49mTest\x1b[0m"
@@ -76,4 +92,4 @@ func TestColorString(t *testing.T) {
 	})
 }
 
-// colorstring_test.go ends here.
+// * colorstring_test.go ends here.

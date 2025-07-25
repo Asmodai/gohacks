@@ -29,11 +29,25 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package types
+
+// * Imports:
 
 import (
 	"fmt"
 )
+
+// * Code:
+
+// ** Types:
 
 /*
 Pair structure.
@@ -44,6 +58,15 @@ type Pair struct {
 	First  any
 	Second any
 }
+
+// ** Methods:
+
+// Return a string representation of the pair.
+func (p *Pair) String() string {
+	return fmt.Sprintf("(%#v %#v)", p.First, p.Second)
+}
+
+// ** Functions:
 
 // Create a new empty pair.
 func NewEmptyPair() *Pair {
@@ -61,9 +84,4 @@ func NewPair(first any, second any) *Pair {
 	}
 }
 
-// Return a string representation of the pair.
-func (p *Pair) String() string {
-	return fmt.Sprintf("(%#v %#v)", p.First, p.Second)
-}
-
-// pair.go ends here.
+// * pair.go ends here.

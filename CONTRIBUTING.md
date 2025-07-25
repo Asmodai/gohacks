@@ -34,8 +34,7 @@
 This project and everyone participating in it is coverned by
 the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).  By
 participating, you are expected to uphold this code.  Please report
-unacceptable behaviour
-to [asmodai@gmail.com](mailto:asmodai@gmail.com).
+unacceptable behaviour to [paul@lisphacker.uk](mailto:paul@lisphacker.uk).
 
 ## Do I have to read this?
 
@@ -99,9 +98,9 @@ Please ensure to consider the following when opening a pull request:
  * Follow the [documentation style guide](#documentation-style-guide).
  * Ensure you have written tests.
  * End **all** files with a newline.
- 
+
 ## Style guides
- 
+
 ### Git commit messages
 
  * Use the present tense ("Add feature", not "Added feature")
@@ -110,7 +109,7 @@ Please ensure to consider the following when opening a pull request:
  * Reference issues and pull requests *after* the first line.
  * Install the git hooks in `git-hooks` (if present).
  * Do **not** use emoji in either the title or message.
- 
+
 ### Go style guide
 
 Please ensure you have formatted your code with `gofmt -s` before submitting.

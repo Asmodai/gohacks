@@ -29,11 +29,25 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package types
+
+// * Imports:
 
 import (
 	"testing"
 )
+
+// * Code:
+
+// ** Tests:
 
 func TestPairType(t *testing.T) {
 	car := "The Car"
@@ -71,4 +85,4 @@ func TestPairType(t *testing.T) {
 	})
 }
 
-// pair_test.go ends here.
+// * pair_test.go ends here.
