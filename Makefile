@@ -50,6 +50,7 @@ MODULES = amqp            \
 	  contextext      \
 	  crypto          \
 	  database        \
+	  debug           \
 	  dynworker       \
 	  events          \
 	  fileloader      \
