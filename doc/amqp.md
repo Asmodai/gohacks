@@ -14,6 +14,13 @@ var (
 )
 ```
 
+#### func  InitPrometheus
+
+```go
+func InitPrometheus()
+```
+Initialise Prometheus metrics for this module.
+
 #### type Client
 
 ```go

@@ -478,6 +478,7 @@ func NewClient(cfg *Config, pool dynworker.WorkerPool) Client {
 	}
 }
 
+// Initialise Prometheus metrics for this module.
 func InitPrometheus() {
 	prometheusInitOnce.Do(func() {
 		prometheus.MustRegister(
