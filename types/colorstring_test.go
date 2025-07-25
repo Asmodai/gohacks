@@ -2,7 +2,7 @@
 //
 // colorstring_test.go --- Colour string tests.
 //
-// Copyright (c) 2021-2024 Paul Ward <asmodai@gmail.com>
+// Copyright (c) 2021-2025 Paul Ward <asmodai@gmail.com>
 //
 // Author:     Paul Ward <asmodai@gmail.com>
 // Maintainer: Paul Ward <asmodai@gmail.com>
@@ -37,35 +37,39 @@ func TestColorString(t *testing.T) {
 	onlyAttr := "\x1b[1;39;49mTest\x1b[0m"
 
 	t.Run("Sets FG properly", func(t *testing.T) {
-		cl := MakeColorString()
+		cl := NewColorString()
 
 		cl.SetString("Test")
-		cl.SetFG(RED)
+		cl.SetFG(Red)
 
 		if cl.String() != onlyFG {
-			t.Errorf("Unexpected '%s'", cl.String())
+			t.Errorf("Unexpected: %#v != %#v",
+				cl.String(),
+				onlyFG)
 		}
 	})
 
 	t.Run("Sets BG properly", func(t *testing.T) {
-		cl := MakeColorString()
+		cl := NewColorString()
 
 		cl.SetString("Test")
-		cl.SetBG(RED)
+		cl.SetBG(Red)
 
 		if cl.String() != onlyBG {
-			t.Errorf("Unexpected '%s'", cl.String())
+			t.Errorf("Unexpected: %#v != %#v",
+				cl.String(),
+				onlyBG)
 		}
 	})
 
 	t.Run("Sets attribute properly", func(t *testing.T) {
-		cl := MakeColorString()
+		cl := NewColorString()
 
 		cl.SetString("Test")
-		cl.SetAttr(BOLD)
+		cl.SetBold()
 
 		if cl.String() != onlyAttr {
-			t.Errorf("Unexpected '%s'", cl.String())
+			t.Errorf("Unexpected '%#v'", cl.String())
 		}
 	})
 }

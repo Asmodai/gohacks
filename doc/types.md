@@ -10,62 +10,25 @@
 
 ```go
 const (
-	// Normal (default) attribtues -- VT100.
-	NORMAL = 0
+	Black   Colour = '0' // Black colour -- ANSI.
+	Red     Colour = '1' // Red colour -- ANSI.
+	Green   Colour = '2' // Green colour -- ANSI.
+	Yellow  Colour = '3' // Yellow colour -- ANSI.
+	Blue    Colour = '4' // Blue colour -- ANSI.
+	Magenta Colour = '5' // Magenta colour -- ANSI.
+	Cyan    Colour = '6' // Cyan colour -- ANSI.
+	White   Colour = '7' // White colour -- ANSI.
+	Default Colour = '9' // Default colour -- ANSI.
 
-	// Bold -- VT100.
-	BOLD = 1
+	Normal     int = 0 // Reset all attributes.
+	Bold       int = 1 // Bold -- VT100.
+	Faint      int = 2 // Faint, decreased intensity -- ECMA-48 2e.
+	Italic     int = 3 // Italicizsed -- ECMA-48 2e.
+	Underline  int = 4 // Underlined -- VT100.
+	Blink      int = 5 // Blinking -- VT100.
+	Inverse    int = 6 // Inverse video -- VT100.
+	Strikethru int = 7 // Crossed-out characters -- ECMA-48 3e.
 
-	// Faint, decreased intensity -- ECMA-48 2e.
-	FAINT = 2
-
-	// Italicizsed -- ECMA-48 2e.
-	ITALICS = 3
-
-	// Underlined -- VT100.
-	UNDERLINE = 4
-
-	// Blinking -- VT100.
-	BLINK = 5
-
-	// Inverse video -- VT100.
-	INVERSE = 7
-
-	// Crossed-out characters -- ECMA-48 3e.
-	STRIKETHROUGH = 9
-
-	// Black colour -- ANSI.
-	BLACK = 0
-
-	// Red colour -- ANSI.
-	RED = 1
-
-	// Green colour -- ANSI.
-	GREEN = 2
-
-	// Yellow colour -- ANSI.
-	YELLOW = 3
-
-	// Blue colour -- ANSI.
-	BLUE = 4
-
-	// Magenta colour -- ANSI.
-	MAGENTA = 5
-
-	// Cyan colour -- ANSI.
-	CYAN = 6
-
-	// White colour -- ANSI.
-	WHITE = 7
-
-	// Default colour -- ANSI.
-	DEFAULT = 9
-
-	// Offset for foreground colours.
-	FGOFFSET = 30
-
-	// Offset for background colours.
-	BGOFFSET = 40
 )
 ```
 CSI Pm [; Pm ...] m -- Character Attributes (SGR).
@@ -114,47 +77,128 @@ various character attributes.
 To find out more, consult your nearest DEC VT340 programmer's manual or the
 latest ECMA-48 standard.
 
-#### func  MakeColorString
+#### func  NewColorString
 
 ```go
-func MakeColorString() *ColorString
+func NewColorString() *ColorString
 ```
 Make a new coloured string.
 
-#### func  MakeColorStringWithAttrs
+#### func  NewColorStringWithColors
 
 ```go
-func MakeColorStringWithAttrs(data string, attr, foreg, backg int) *ColorString
+func NewColorStringWithColors(
+	data string,
+	foreg, backg Colour,
+) *ColorString
 ```
 Make a new coloured string with the given attributes.
 
-#### func (*ColorString) SetAttr
+#### func (*ColorString) AddAttr
 
 ```go
-func (cs *ColorString) SetAttr(attr int)
+func (cs *ColorString) AddAttr(index int) *ColorString
 ```
-Set the character attribute.
+Add a specific attribute.
+
+This ignores the "Normal" attribute. To clear attributes, use `SetNormal` or
+`Clear`.
+
+#### func (*ColorString) Clear
+
+```go
+func (cs *ColorString) Clear() *ColorString
+```
+Reset all attributes.
+
+#### func (*ColorString) RemoveAttr
+
+```go
+func (cs *ColorString) RemoveAttr(index int) *ColorString
+```
+Remove a specific attribute.
+
+This ignores the "Normal" attribute. To clear attributes, use `SetNormal` or
+`Clear`.
 
 #### func (*ColorString) SetBG
 
 ```go
-func (cs *ColorString) SetBG(col int)
+func (cs *ColorString) SetBG(col Colour) *ColorString
 ```
 Set the background colour.
+
+#### func (*ColorString) SetBlink
+
+```go
+func (cs *ColorString) SetBlink() *ColorString
+```
+Set the blink attribute.
+
+#### func (*ColorString) SetBold
+
+```go
+func (cs *ColorString) SetBold() *ColorString
+```
+Set the bold attribute.
 
 #### func (*ColorString) SetFG
 
 ```go
-func (cs *ColorString) SetFG(col int)
+func (cs *ColorString) SetFG(col Colour) *ColorString
 ```
 Set the foreground colour.
+
+#### func (*ColorString) SetFaint
+
+```go
+func (cs *ColorString) SetFaint() *ColorString
+```
+Set the faint attribute.
+
+#### func (*ColorString) SetInverse
+
+```go
+func (cs *ColorString) SetInverse() *ColorString
+```
+Set the inverse video attribute.
+
+#### func (*ColorString) SetItalic
+
+```go
+func (cs *ColorString) SetItalic() *ColorString
+```
+Set the italic attribute.
+
+#### func (*ColorString) SetNormal
+
+```go
+func (cs *ColorString) SetNormal() *ColorString
+```
+Set the attribute to normal.
+
+This removes all other attributes.
+
+#### func (*ColorString) SetStrikethru
+
+```go
+func (cs *ColorString) SetStrikethru() *ColorString
+```
+Set the strikethrough attribute.
 
 #### func (*ColorString) SetString
 
 ```go
-func (cs *ColorString) SetString(val string)
+func (cs *ColorString) SetString(val string) *ColorString
 ```
 Set the string to display.
+
+#### func (*ColorString) SetUnderline
+
+```go
+func (cs *ColorString) SetUnderline() *ColorString
+```
+Set the underline attribute.
 
 #### func (*ColorString) String
 
@@ -165,6 +209,14 @@ Convert to a string.
 
 Warning: the resulting string will contain escape sequences for use with a
 compliant terminal or terminal emulator.
+
+#### type Colour
+
+```go
+type Colour rune
+```
+
+ECMA-48 colour descriptor type.
 
 #### type Duration
 
