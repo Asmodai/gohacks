@@ -1,4 +1,4 @@
-Hi Emacs, this is -*- mode: gfm -*-
+<!-- -*- mode: gfm;auto-fill: t; fill-column: 78; -*- -->
 
 # Contributing to gohacks
 

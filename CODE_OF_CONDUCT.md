@@ -1,4 +1,4 @@
-Hi, Emacs.  This is -*- mode: gfm -*-
+<!-- -*- mode: gfm;auto-fill: t; fill-column: 78; -*- -->
 
 # Contributor Covenant Code of Conduct
 

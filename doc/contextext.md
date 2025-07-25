@@ -1,4 +1,4 @@
--*- Mode: gfm -*-
+<!-- -*- Mode: gfm; auto-fill: t; fill-column: 78; -*- -->
 
 # contextext -- Go Hacks Library
 

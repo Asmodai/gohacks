@@ -1,4 +1,4 @@
--*- Mode: gfm -*-
+<!-- -*- Mode: gfm; auto-fill: t; fill-column: 78; -*- -->
 
 # utils -- Go Hacks Library
 
