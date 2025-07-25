@@ -35,19 +35,19 @@ func TestSubstr(t *testing.T) {
 	var input string = "One two three"
 
 	t.Run("Works with sane arguments", func(t *testing.T) {
-		if output := Substr(input, 4, 3); output != "two" {
+		if output, ok := Substr(input, 4, 3); !ok || output != "two" {
 			t.Errorf("Unexpected '%v'", output)
 		}
 	})
 
 	t.Run("Works when length is longer than input", func(t *testing.T) {
-		if output := Substr(input, 4, 100); output != "two three" {
+		if output, ok := Substr(input, 4, 100); !ok || output != "two three" {
 			t.Errorf("Unexpected '%v'", output)
 		}
 	})
 
 	t.Run("Returns empty string with insane args", func(t *testing.T) {
-		if output := Substr(input, 100, 24); output != "" {
+		if output, ok := Substr(input, 100, 24); ok || output != "" {
 			t.Errorf("Unexpected '%v'", output)
 		}
 	})

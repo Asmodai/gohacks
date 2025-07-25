@@ -31,18 +31,18 @@ package utils
 
 // Return a substring of the given input string that starts at the given start
 // point and has the given length.
-func Substr(input string, start int, length int) string {
+func Substr(input string, start int, length int) (string, bool) {
 	asRunes := []rune(input)
 
 	if start >= len(asRunes) {
-		return ""
+		return "", false
 	}
 
 	if start+length > len(asRunes) {
 		length = len(asRunes) - start
 	}
 
-	return string(asRunes[start : start+length])
+	return string(asRunes[start : start+length]), true
 }
 
 // substr.go ends here.

@@ -29,6 +29,10 @@
 
 package utils
 
+import (
+	"strings"
+)
+
 const (
 	// Character to use when padding strings.
 	PadPadding string = " "
@@ -37,21 +41,11 @@ const (
 // Pad the given string with the given number of spaces.
 func Pad(str string, padding int) string {
 	length := len(str)
-
 	if length > padding {
 		return string([]rune(str)[0:padding])
 	}
 
-	var (
-		buf    string
-		spaces = padding - length
-	)
-
-	for range spaces {
-		buf += PadPadding
-	}
-
-	return str + buf
+	return str + strings.Repeat(PadPadding, padding-length)
 }
 
 // pad.go ends here.

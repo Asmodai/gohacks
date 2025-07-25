@@ -69,7 +69,7 @@ original array with the last element removed.
 #### func  Substr
 
 ```go
-func Substr(input string, start int, length int) string
+func Substr(input string, start int, length int) (string, bool)
 ```
 Return a substring of the given input string that starts at the given start
 point and has the given length.
