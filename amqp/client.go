@@ -47,6 +47,7 @@ import (
 
 	"github.com/Asmodai/gohacks/amqp/amqpshim"
 	"github.com/Asmodai/gohacks/dynworker"
+	"github.com/prometheus/client_golang/prometheus"
 	goamqp "github.com/rabbitmq/amqp091-go"
 	"gitlab.com/tozd/go/errors"
 )
@@ -55,6 +56,72 @@ import (
 
 var (
 	ErrNoWorkerPool error = errors.Base("no worker pool available")
+
+	//nolint:gochecknoglobals
+	disconnectTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "amqp_disconnect_total",
+			Help: "Total number of times client has been disconnected",
+		},
+		[]string{"consumer"},
+	)
+
+	//nolint:gochecknoglobals
+	reconnectAttemptTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "amqp_reconnect_attempt_total",
+			Help: "Total number of times a reconnect has been attempted",
+		},
+		[]string{"consumer"},
+	)
+
+	//nolint:gochecknoglobals
+	consumeTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "amqp_consume_total",
+			Help: "Number of consumed messages",
+		},
+		[]string{"consumer"},
+	)
+
+	//nolint:gochecknoglobals
+	consumeErrorTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "amqp_consume_error_total",
+			Help: "Number of errors during message consumption",
+		},
+		[]string{"consumer"},
+	)
+
+	//nolint:gochecknoglobals
+	rejectTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "amqp_reject_total",
+			Help: "Number of rejects during message consumption",
+		},
+		[]string{"consumer"},
+	)
+
+	//nolint:gochecknoglobals
+	publishTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "amqp_publish_total",
+			Help: "Number of messages published",
+		},
+		[]string{"consumer"},
+	)
+
+	//nolint:gochecknoglobals
+	publishErrorTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "amqp_publish_error_total",
+			Help: "Number of errors during message publishing",
+		},
+		[]string{"consumer"},
+	)
+
+	//nolint:gochecknoglobals
+	prometheusInitOnce sync.Once
 )
 
 // * Code:
@@ -90,6 +157,14 @@ type client struct {
 	lastMsgCount int64
 
 	pool dynworker.WorkerPool
+
+	disconnectMetric       prometheus.Counter
+	reconnectAttemptMetric prometheus.Counter
+	consumeMetric          prometheus.Counter
+	consumeErrorMetric     prometheus.Counter
+	rejectMetric           prometheus.Counter
+	publishMetric          prometheus.Counter
+	publishErrorMetric     prometheus.Counter
 }
 
 // ** Methods:
@@ -159,6 +234,8 @@ func (obj *client) monitorConnection() {
 			"AMQP connection closed, attempting reconnection...",
 			"consumer", obj.cfg.ConsumerName,
 		)
+
+		obj.disconnectMetric.Inc()
 		obj.reconnectLoop()
 
 	case <-obj.ctx.Done():
@@ -176,6 +253,8 @@ func (obj *client) reconnectLoop() {
 
 		default:
 			time.Sleep(obj.cfg.ReconnectDelay.Duration())
+
+			obj.reconnectAttemptMetric.Inc()
 
 			if err := obj.Connect(); err == nil {
 				obj.cfg.logger.Info(
@@ -225,8 +304,12 @@ func (obj *client) Consume() error {
 
 			case msg, ok := <-msgs:
 				if !ok {
+					obj.consumeErrorMetric.Inc()
+
 					return
 				}
+
+				obj.consumeMetric.Inc()
 
 				err := obj.pool.Submit(msg)
 				if err != nil {
@@ -235,6 +318,8 @@ func (obj *client) Consume() error {
 						msg.DeliveryTag,
 						true,
 					)
+
+					obj.rejectMetric.Inc()
 				}
 			}
 		}
@@ -244,6 +329,8 @@ func (obj *client) Consume() error {
 }
 
 func (obj *client) Publish(msg goamqp.Publishing) error {
+	obj.publishMetric.Inc()
+
 	err := obj.channel.PublishWithContext(
 		obj.ctx,           // Context.
 		"",                // Default exchange.
@@ -254,6 +341,8 @@ func (obj *client) Publish(msg goamqp.Publishing) error {
 	)
 
 	if err != nil {
+		obj.publishErrorMetric.Inc()
+
 		err = errors.WithStack(err)
 	}
 
@@ -367,9 +456,9 @@ func (obj *client) Close() error {
 // ** Functions:
 
 func NewClient(cfg *Config, pool dynworker.WorkerPool) Client {
-	ctx, cancel := context.WithCancel(cfg.parent)
-
 	cfg.Validate()
+	ctx, cancel := context.WithCancel(cfg.parent)
+	label := prometheus.Labels{"consumer": cfg.ConsumerName}
 
 	return &client{
 		cfg:    cfg,
@@ -377,7 +466,30 @@ func NewClient(cfg *Config, pool dynworker.WorkerPool) Client {
 		cancel: cancel,
 		pool:   pool,
 		dialFn: cfg.dialer,
+
+		// Prometheus metrics.
+		disconnectMetric:       disconnectTotal.With(label),
+		reconnectAttemptMetric: reconnectAttemptTotal.With(label),
+		consumeMetric:          consumeTotal.With(label),
+		consumeErrorMetric:     consumeErrorTotal.With(label),
+		rejectMetric:           rejectTotal.With(label),
+		publishMetric:          publishTotal.With(label),
+		publishErrorMetric:     publishErrorTotal.With(label),
 	}
+}
+
+func InitPrometheus() {
+	prometheusInitOnce.Do(func() {
+		prometheus.MustRegister(
+			disconnectTotal,
+			reconnectAttemptTotal,
+			consumeTotal,
+			consumeErrorTotal,
+			rejectTotal,
+			publishTotal,
+			publishErrorTotal,
+		)
+	})
 }
 
 // * client.go ends here.
