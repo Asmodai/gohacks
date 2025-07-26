@@ -34,16 +34,6 @@ const (
 CSI Pm [; Pm ...] m -- Character Attributes (SGR).
 
 ```go
-const (
-	// Amount of time to delay semaphore acquisition loops.
-	MailboxDelaySleep time.Duration = 50 * time.Millisecond
-
-	// Default deadline for context timeouts.
-	DefaultCtxDeadline time.Duration = 5 * time.Second
-)
-```
-
-```go
 var (
 	// Error condition that signals an invalid time duration of some kind.
 	//
@@ -257,6 +247,13 @@ type Colour rune
 
 ECMA-48 colour descriptor type.
 
+#### type Datum
+
+```go
+type Datum = any
+```
+
+
 #### type Duration
 
 ```go
@@ -378,7 +375,14 @@ func NewMailbox() *Mailbox
 ```
 Create and return a new empty mailbox.
 
-Note: this acquires the `preventRead` semaphore.
+Note: this acquires the `readAvailable` semaphore.
+
+#### func (*Mailbox) Empty
+
+```go
+func (m *Mailbox) Empty() bool
+```
+Is the mailbox empty like my heart?
 
 #### func (*Mailbox) Full
 
@@ -390,7 +394,7 @@ Does the mailbox contain a value?
 #### func (*Mailbox) Get
 
 ```go
-func (m *Mailbox) Get() (any, bool)
+func (m *Mailbox) Get() (Datum, bool)
 ```
 Get an element from the mailbox. Defaults to using a context with a deadline of
 5 seconds.
@@ -398,7 +402,7 @@ Get an element from the mailbox. Defaults to using a context with a deadline of
 #### func (*Mailbox) GetWithContext
 
 ```go
-func (m *Mailbox) GetWithContext(ctx context.Context) (any, bool)
+func (m *Mailbox) GetWithContext(ctx context.Context) (Datum, bool)
 ```
 Get an element from the mailbox using the provided context.
 
@@ -407,9 +411,37 @@ It is recommended to use a context that has a timeout deadline.
 #### func (*Mailbox) Put
 
 ```go
-func (m *Mailbox) Put(elem any)
+func (m *Mailbox) Put(elem Datum) bool
 ```
 Put an element into the mailbox.
+
+#### func (*Mailbox) PutWithContext
+
+```go
+func (m *Mailbox) PutWithContext(ctx context.Context, elem Datum) bool
+```
+Put an element into the mailbox using a context.
+
+#### func (*Mailbox) Reset
+
+```go
+func (m *Mailbox) Reset()
+```
+Reset the mailbox.
+
+#### func (*Mailbox) TryGet
+
+```go
+func (m *Mailbox) TryGet() (Datum, bool)
+```
+Try to get an element from the mailbox.
+
+#### func (*Mailbox) TryPut
+
+```go
+func (m *Mailbox) TryPut(item Datum) bool
+```
+Try to put an element into the mailbox.
 
 #### type Pair
 

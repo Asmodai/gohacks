@@ -42,6 +42,8 @@ package types
 // * Imports:
 
 import (
+	"sync"
+
 	"golang.org/x/sync/semaphore"
 
 	"context"
@@ -51,16 +53,15 @@ import (
 // * Constants:
 
 const (
-	// Amount of time to delay semaphore acquisition loops.
-	MailboxDelaySleep time.Duration = 50 * time.Millisecond
-
 	// Default deadline for context timeouts.
-	DefaultCtxDeadline time.Duration = 5 * time.Second
+	defaultCtxDeadline time.Duration = 5 * time.Second
 )
 
 // * Code:
 
 // ** Types:
+
+type Datum = any
 
 /*
 Mailbox structure.
@@ -73,101 +74,152 @@ a single datum.
 This is *not* a queue!
 */
 type Mailbox struct {
-	element any
+	mu      sync.Mutex
+	element Datum
 
-	// The `preventWrite` semaphore, when acquired, will prevent writes.
-	preventWrite *semaphore.Weighted
+	// The `writeAvailable` semaphore, when acquired, will prevent writes.
+	writeAvailable *semaphore.Weighted
 
-	// The `preventRead` semaphore, when acquired, will prevent reads.
-	preventRead *semaphore.Weighted
+	// The `readAvailable` semaphore, when acquired, will prevent reads.
+	readAvailable *semaphore.Weighted
 }
 
 // ** Methods:
 
 // Put an element into the mailbox.
-func (m *Mailbox) Put(elem any) {
-	// Attempt to acquire `preventWrite` semaphore.
-	for !m.preventWrite.TryAcquire(1) {
-		time.Sleep(MailboxDelaySleep)
+func (m *Mailbox) Put(elem Datum) bool {
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		defaultCtxDeadline,
+	)
+	defer cancel()
+
+	return m.PutWithContext(ctx, elem)
+}
+
+// Put an element into the mailbox using a context.
+func (m *Mailbox) PutWithContext(ctx context.Context, elem Datum) bool {
+	// Attempt to acquire `writeAvailable` semaphore.
+	if err := m.writeAvailable.Acquire(ctx, 1); err != nil {
+		return false
 	}
 
 	// Semaphore acquired, put elem on queue.
+	m.mu.Lock()
 	m.element = elem
+	m.mu.Unlock()
 
-	// We're no longer full, so release the `preventRead` semaphore.
-	m.preventRead.Release(1)
+	// We're no longer full, so release the `readAvailable` semaphore.
+	m.readAvailable.Release(1)
+
+	return true
+}
+
+// Try to put an element into the mailbox.
+func (m *Mailbox) TryPut(item Datum) bool {
+	if !m.writeAvailable.TryAcquire(1) {
+		return false
+	}
+
+	m.mu.Lock()
+	m.element = item
+	m.mu.Unlock()
+
+	m.readAvailable.Release(1)
+
+	return true
 }
 
 // Get an element from the mailbox.  Defaults to using a context with
 // a deadline of 5 seconds.
-func (m *Mailbox) Get() (any, bool) {
+func (m *Mailbox) Get() (Datum, bool) {
 	ctx, cancel := context.WithTimeout(
-		context.TODO(),
-		DefaultCtxDeadline,
+		context.Background(),
+		defaultCtxDeadline,
 	)
+	defer cancel()
 
-	// Blocks.
-	val, ok := m.GetWithContext(ctx)
-
-	// Cancel the context.
-	cancel()
-
-	return val, ok
+	return m.GetWithContext(ctx)
 }
 
 // Get an element from the mailbox using the provided context.
 //
 // It is recommended to use a context that has a timeout deadline.
-func (m *Mailbox) GetWithContext(ctx context.Context) (any, bool) {
-	var result any
-
-	if m.element == nil {
+func (m *Mailbox) GetWithContext(ctx context.Context) (Datum, bool) {
+	// Attempt to acquire the `readAvailable` semaphore
+	if err := m.readAvailable.Acquire(ctx, 1); err != nil {
 		return nil, false
 	}
 
-	// Attempt to acquire the `preventRead` semaphore
-	for !m.preventRead.TryAcquire(1) {
-		time.Sleep(MailboxDelaySleep)
+	m.mu.Lock()
+	result := m.element
+	m.element = nil
+	m.mu.Unlock()
 
-		select {
-		case <-ctx.Done():
-			return nil, false
-		default:
-		}
+	// Release the `writeAvailable` semaphore.
+	m.writeAvailable.Release(1)
+
+	return result, true
+}
+
+// Try to get an element from the mailbox.
+func (m *Mailbox) TryGet() (Datum, bool) {
+	if !m.readAvailable.TryAcquire(1) {
+		return nil, false
 	}
 
-	result = m.element
+	m.mu.Lock()
+	result := m.element
 	m.element = nil
+	m.mu.Unlock()
 
-	// Release the `preventWrite` semaphore.
-	m.preventWrite.Release(1)
+	m.writeAvailable.Release(1)
 
 	return result, true
 }
 
 // Does the mailbox contain a value?
 func (m *Mailbox) Full() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	return m.element != nil
+}
+
+// Is the mailbox empty like my heart?
+func (m *Mailbox) Empty() bool {
+	return !m.Full()
+}
+
+// Reset the mailbox.
+func (m *Mailbox) Reset() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.element = nil
+	m.writeAvailable = semaphore.NewWeighted(1)
+	m.readAvailable = semaphore.NewWeighted(1)
+	m.readAvailable.Acquire(context.Background(), 1)
 }
 
 // ** Functions:
 
 // Create and return a new empty mailbox.
 //
-// Note: this acquires the `preventRead` semaphore.
+// Note: this acquires the `readAvailable` semaphore.
 //
 //nolint:errcheck
 func NewMailbox() *Mailbox {
 	// Please note that the context given here should never be one
 	// passed in by the user, we want a TODO context because *we* are
 	// setting up this initial context.
-	preventRead := semaphore.NewWeighted(int64(1))
-	preventRead.Acquire(context.TODO(), 1)
+	readAvailable := semaphore.NewWeighted(int64(1))
+	readAvailable.Acquire(context.TODO(), 1)
 
 	return &Mailbox{
-		element:      nil,
-		preventWrite: semaphore.NewWeighted(int64(1)),
-		preventRead:  preventRead,
+		element:        nil,
+		writeAvailable: semaphore.NewWeighted(int64(1)),
+		readAvailable:  readAvailable,
 	}
 }
 
