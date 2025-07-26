@@ -17,7 +17,7 @@ import (
 	time "time"
 
 	amqpshim "github.com/Asmodai/gohacks/v1/amqp/amqpshim"
-	amqp091_go "github.com/rabbitmq/amqp091-go"
+	amqp091 "github.com/rabbitmq/amqp091-go"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -131,10 +131,10 @@ func (mr *MockConnectionMockRecorder) LocalAddr() *gomock.Call {
 }
 
 // NotifyBlocked mocks base method.
-func (m *MockConnection) NotifyBlocked(arg0 chan amqp091_go.Blocking) chan amqp091_go.Blocking {
+func (m *MockConnection) NotifyBlocked(arg0 chan amqp091.Blocking) chan amqp091.Blocking {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NotifyBlocked", arg0)
-	ret0, _ := ret[0].(chan amqp091_go.Blocking)
+	ret0, _ := ret[0].(chan amqp091.Blocking)
 	return ret0
 }
 
@@ -145,10 +145,10 @@ func (mr *MockConnectionMockRecorder) NotifyBlocked(arg0 any) *gomock.Call {
 }
 
 // NotifyClose mocks base method.
-func (m *MockConnection) NotifyClose(arg0 chan *amqp091_go.Error) chan *amqp091_go.Error {
+func (m *MockConnection) NotifyClose(arg0 chan *amqp091.Error) chan *amqp091.Error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NotifyClose", arg0)
-	ret0, _ := ret[0].(chan *amqp091_go.Error)
+	ret0, _ := ret[0].(chan *amqp091.Error)
 	return ret0
 }
 
@@ -267,10 +267,10 @@ func (mr *MockChannelMockRecorder) Confirm(arg0 any) *gomock.Call {
 }
 
 // Consume mocks base method.
-func (m *MockChannel) Consume(arg0, arg1 string, arg2, arg3, arg4, arg5 bool, arg6 amqp091_go.Table) (<-chan amqp091_go.Delivery, error) {
+func (m *MockChannel) Consume(arg0, arg1 string, arg2, arg3, arg4, arg5 bool, arg6 amqp091.Table) (<-chan amqp091.Delivery, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Consume", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
-	ret0, _ := ret[0].(<-chan amqp091_go.Delivery)
+	ret0, _ := ret[0].(<-chan amqp091.Delivery)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -282,10 +282,10 @@ func (mr *MockChannelMockRecorder) Consume(arg0, arg1, arg2, arg3, arg4, arg5, a
 }
 
 // ConsumeWithContext mocks base method.
-func (m *MockChannel) ConsumeWithContext(arg0 context.Context, arg1, arg2 string, arg3, arg4, arg5, arg6 bool, arg7 amqp091_go.Table) (<-chan amqp091_go.Delivery, error) {
+func (m *MockChannel) ConsumeWithContext(arg0 context.Context, arg1, arg2 string, arg3, arg4, arg5, arg6 bool, arg7 amqp091.Table) (<-chan amqp091.Delivery, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ConsumeWithContext", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-	ret0, _ := ret[0].(<-chan amqp091_go.Delivery)
+	ret0, _ := ret[0].(<-chan amqp091.Delivery)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -297,7 +297,7 @@ func (mr *MockChannelMockRecorder) ConsumeWithContext(arg0, arg1, arg2, arg3, ar
 }
 
 // ExchangeBind mocks base method.
-func (m *MockChannel) ExchangeBind(arg0, arg1, arg2 string, arg3 bool, arg4 amqp091_go.Table) error {
+func (m *MockChannel) ExchangeBind(arg0, arg1, arg2 string, arg3 bool, arg4 amqp091.Table) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExchangeBind", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
@@ -311,7 +311,7 @@ func (mr *MockChannelMockRecorder) ExchangeBind(arg0, arg1, arg2, arg3, arg4 any
 }
 
 // ExchangeDeclare mocks base method.
-func (m *MockChannel) ExchangeDeclare(arg0, arg1 string, arg2, arg3, arg4, arg5 bool, arg6 amqp091_go.Table) error {
+func (m *MockChannel) ExchangeDeclare(arg0, arg1 string, arg2, arg3, arg4, arg5 bool, arg6 amqp091.Table) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExchangeDeclare", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(error)
@@ -325,7 +325,7 @@ func (mr *MockChannelMockRecorder) ExchangeDeclare(arg0, arg1, arg2, arg3, arg4,
 }
 
 // ExchangeDeclarePassive mocks base method.
-func (m *MockChannel) ExchangeDeclarePassive(arg0, arg1 string, arg2, arg3, arg4, arg5 bool, arg6 amqp091_go.Table) error {
+func (m *MockChannel) ExchangeDeclarePassive(arg0, arg1 string, arg2, arg3, arg4, arg5 bool, arg6 amqp091.Table) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExchangeDeclarePassive", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(error)
@@ -353,7 +353,7 @@ func (mr *MockChannelMockRecorder) ExchangeDelete(arg0, arg1, arg2 any) *gomock.
 }
 
 // ExchangeUnbind mocks base method.
-func (m *MockChannel) ExchangeUnbind(arg0, arg1, arg2 string, arg3 bool, arg4 amqp091_go.Table) error {
+func (m *MockChannel) ExchangeUnbind(arg0, arg1, arg2 string, arg3 bool, arg4 amqp091.Table) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExchangeUnbind", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
@@ -381,10 +381,10 @@ func (mr *MockChannelMockRecorder) Flow(arg0 any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockChannel) Get(arg0 string, arg1 bool) (amqp091_go.Delivery, bool, error) {
+func (m *MockChannel) Get(arg0 string, arg1 bool) (amqp091.Delivery, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(amqp091_go.Delivery)
+	ret0, _ := ret[0].(amqp091.Delivery)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -453,10 +453,10 @@ func (mr *MockChannelMockRecorder) NotifyCancel(arg0 any) *gomock.Call {
 }
 
 // NotifyClose mocks base method.
-func (m *MockChannel) NotifyClose(arg0 chan *amqp091_go.Error) chan *amqp091_go.Error {
+func (m *MockChannel) NotifyClose(arg0 chan *amqp091.Error) chan *amqp091.Error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NotifyClose", arg0)
-	ret0, _ := ret[0].(chan *amqp091_go.Error)
+	ret0, _ := ret[0].(chan *amqp091.Error)
 	return ret0
 }
 
@@ -496,10 +496,10 @@ func (mr *MockChannelMockRecorder) NotifyFlow(arg0 any) *gomock.Call {
 }
 
 // NotifyPublish mocks base method.
-func (m *MockChannel) NotifyPublish(arg0 chan amqp091_go.Confirmation) chan amqp091_go.Confirmation {
+func (m *MockChannel) NotifyPublish(arg0 chan amqp091.Confirmation) chan amqp091.Confirmation {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NotifyPublish", arg0)
-	ret0, _ := ret[0].(chan amqp091_go.Confirmation)
+	ret0, _ := ret[0].(chan amqp091.Confirmation)
 	return ret0
 }
 
@@ -510,10 +510,10 @@ func (mr *MockChannelMockRecorder) NotifyPublish(arg0 any) *gomock.Call {
 }
 
 // NotifyReturn mocks base method.
-func (m *MockChannel) NotifyReturn(arg0 chan amqp091_go.Return) chan amqp091_go.Return {
+func (m *MockChannel) NotifyReturn(arg0 chan amqp091.Return) chan amqp091.Return {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NotifyReturn", arg0)
-	ret0, _ := ret[0].(chan amqp091_go.Return)
+	ret0, _ := ret[0].(chan amqp091.Return)
 	return ret0
 }
 
@@ -524,7 +524,7 @@ func (mr *MockChannelMockRecorder) NotifyReturn(arg0 any) *gomock.Call {
 }
 
 // Publish mocks base method.
-func (m *MockChannel) Publish(arg0, arg1 string, arg2, arg3 bool, arg4 amqp091_go.Publishing) error {
+func (m *MockChannel) Publish(arg0, arg1 string, arg2, arg3 bool, arg4 amqp091.Publishing) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Publish", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
@@ -538,7 +538,7 @@ func (mr *MockChannelMockRecorder) Publish(arg0, arg1, arg2, arg3, arg4 any) *go
 }
 
 // PublishWithContext mocks base method.
-func (m *MockChannel) PublishWithContext(arg0 context.Context, arg1, arg2 string, arg3, arg4 bool, arg5 amqp091_go.Publishing) error {
+func (m *MockChannel) PublishWithContext(arg0 context.Context, arg1, arg2 string, arg3, arg4 bool, arg5 amqp091.Publishing) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PublishWithContext", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(error)
@@ -552,10 +552,10 @@ func (mr *MockChannelMockRecorder) PublishWithContext(arg0, arg1, arg2, arg3, ar
 }
 
 // PublishWithDeferredConfirm mocks base method.
-func (m *MockChannel) PublishWithDeferredConfirm(arg0, arg1 string, arg2, arg3 bool, arg4 amqp091_go.Publishing) (*amqp091_go.DeferredConfirmation, error) {
+func (m *MockChannel) PublishWithDeferredConfirm(arg0, arg1 string, arg2, arg3 bool, arg4 amqp091.Publishing) (*amqp091.DeferredConfirmation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PublishWithDeferredConfirm", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(*amqp091_go.DeferredConfirmation)
+	ret0, _ := ret[0].(*amqp091.DeferredConfirmation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -567,10 +567,10 @@ func (mr *MockChannelMockRecorder) PublishWithDeferredConfirm(arg0, arg1, arg2, 
 }
 
 // PublishWithDeferredConfirmWithContext mocks base method.
-func (m *MockChannel) PublishWithDeferredConfirmWithContext(arg0 context.Context, arg1, arg2 string, arg3, arg4 bool, arg5 amqp091_go.Publishing) (*amqp091_go.DeferredConfirmation, error) {
+func (m *MockChannel) PublishWithDeferredConfirmWithContext(arg0 context.Context, arg1, arg2 string, arg3, arg4 bool, arg5 amqp091.Publishing) (*amqp091.DeferredConfirmation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PublishWithDeferredConfirmWithContext", arg0, arg1, arg2, arg3, arg4, arg5)
-	ret0, _ := ret[0].(*amqp091_go.DeferredConfirmation)
+	ret0, _ := ret[0].(*amqp091.DeferredConfirmation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -596,7 +596,7 @@ func (mr *MockChannelMockRecorder) Qos(arg0, arg1, arg2 any) *gomock.Call {
 }
 
 // QueueBind mocks base method.
-func (m *MockChannel) QueueBind(arg0, arg1, arg2 string, arg3 bool, arg4 amqp091_go.Table) error {
+func (m *MockChannel) QueueBind(arg0, arg1, arg2 string, arg3 bool, arg4 amqp091.Table) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueueBind", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
@@ -610,10 +610,10 @@ func (mr *MockChannelMockRecorder) QueueBind(arg0, arg1, arg2, arg3, arg4 any) *
 }
 
 // QueueDeclare mocks base method.
-func (m *MockChannel) QueueDeclare(arg0 string, arg1, arg2, arg3, arg4 bool, arg5 amqp091_go.Table) (amqp091_go.Queue, error) {
+func (m *MockChannel) QueueDeclare(arg0 string, arg1, arg2, arg3, arg4 bool, arg5 amqp091.Table) (amqp091.Queue, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueueDeclare", arg0, arg1, arg2, arg3, arg4, arg5)
-	ret0, _ := ret[0].(amqp091_go.Queue)
+	ret0, _ := ret[0].(amqp091.Queue)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -625,10 +625,10 @@ func (mr *MockChannelMockRecorder) QueueDeclare(arg0, arg1, arg2, arg3, arg4, ar
 }
 
 // QueueDeclarePassive mocks base method.
-func (m *MockChannel) QueueDeclarePassive(arg0 string, arg1, arg2, arg3, arg4 bool, arg5 amqp091_go.Table) (amqp091_go.Queue, error) {
+func (m *MockChannel) QueueDeclarePassive(arg0 string, arg1, arg2, arg3, arg4 bool, arg5 amqp091.Table) (amqp091.Queue, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueueDeclarePassive", arg0, arg1, arg2, arg3, arg4, arg5)
-	ret0, _ := ret[0].(amqp091_go.Queue)
+	ret0, _ := ret[0].(amqp091.Queue)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -670,7 +670,7 @@ func (mr *MockChannelMockRecorder) QueuePurge(arg0, arg1 any) *gomock.Call {
 }
 
 // QueueUnbind mocks base method.
-func (m *MockChannel) QueueUnbind(arg0, arg1, arg2 string, arg3 amqp091_go.Table) error {
+func (m *MockChannel) QueueUnbind(arg0, arg1, arg2 string, arg3 amqp091.Table) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueueUnbind", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)

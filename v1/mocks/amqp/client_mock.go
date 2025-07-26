@@ -12,7 +12,7 @@ package amqp
 import (
 	reflect "reflect"
 
-	amqp091_go "github.com/rabbitmq/amqp091-go"
+	amqp091 "github.com/rabbitmq/amqp091-go"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -123,7 +123,7 @@ func (mr *MockClientMockRecorder) IsConnected() *gomock.Call {
 }
 
 // Publish mocks base method.
-func (m *MockClient) Publish(arg0 amqp091_go.Publishing) error {
+func (m *MockClient) Publish(arg0 amqp091.Publishing) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Publish", arg0)
 	ret0, _ := ret[0].(error)
@@ -137,10 +137,10 @@ func (mr *MockClientMockRecorder) Publish(arg0 any) *gomock.Call {
 }
 
 // QueueStats mocks base method.
-func (m *MockClient) QueueStats() (amqp091_go.Queue, error) {
+func (m *MockClient) QueueStats() (amqp091.Queue, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueueStats")
-	ret0, _ := ret[0].(amqp091_go.Queue)
+	ret0, _ := ret[0].(amqp091.Queue)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
