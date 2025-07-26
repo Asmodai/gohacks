@@ -44,7 +44,7 @@ package apiclient
 import (
 	"time"
 
-	"github.com/Asmodai/gohacks/types"
+	"github.com/Asmodai/gohacks/v1/types"
 )
 
 // * Constants:

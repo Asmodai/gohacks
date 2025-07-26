@@ -43,8 +43,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/Asmodai/gohacks/dynworker"
-	mlogger "github.com/Asmodai/gohacks/mocks/logger"
+	"github.com/Asmodai/gohacks/v1/dynworker"
+	mlogger "github.com/Asmodai/gohacks/v1/mocks/logger"
 	goamqp "github.com/rabbitmq/amqp091-go"
 	"go.uber.org/mock/gomock"
 )

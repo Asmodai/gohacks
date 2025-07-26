@@ -32,8 +32,8 @@
 package modules
 
 import (
-	"github.com/Asmodai/gohacks/logger"
-	"github.com/Asmodai/gohacks/semver"
+	"github.com/Asmodai/gohacks/v1/logger"
+	"github.com/Asmodai/gohacks/v1/semver"
 
 	"gitlab.com/tozd/go/errors"
 

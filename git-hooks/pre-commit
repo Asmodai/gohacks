@@ -1,3 +1,26 @@
-#!/bin/bash
+#!/bin/sh
+set -e
 
-golangci-lint run --tests=0 ./...
+# Collect staged files
+changed_files=$(git diff --cached --name-only)
+
+# Filter only .go files in versioned directories
+go_files=$(echo "$changed_files" | grep -E '^v[0-9]+/.*\.go$' || true)
+
+if [ -z "$go_files" ]; then
+    echo "No Go files in versioned directories staged. Skipping golangci-lint."
+    exit 0
+fi
+
+# Extract unique top-level version dirs (e.g. v0, v1, v2)
+versions=$(echo "$go_files" | sed -E 's|/(.*)||' | sort -u)
+
+status=0
+
+for v in $versions; do
+    echo "Linting version: $v"
+    golangci-lint run --tests=0 "./$v/..." || status=$?
+done
+
+exit $status
+

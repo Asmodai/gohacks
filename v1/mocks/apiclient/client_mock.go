@@ -14,7 +14,7 @@ import (
 	http "net/http"
 	reflect "reflect"
 
-	apiclient "github.com/Asmodai/gohacks/apiclient"
+	apiclient "github.com/Asmodai/gohacks/v1/apiclient"
 	gomock "go.uber.org/mock/gomock"
 )
 

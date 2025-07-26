@@ -12,7 +12,7 @@ package logger
 import (
 	reflect "reflect"
 
-	logger "github.com/Asmodai/gohacks/logger"
+	logger "github.com/Asmodai/gohacks/v1/logger"
 	gomock "go.uber.org/mock/gomock"
 )
 

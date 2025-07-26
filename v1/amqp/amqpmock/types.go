@@ -47,7 +47,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Asmodai/gohacks/amqp/amqpshim"
+	"github.com/Asmodai/gohacks/v1/amqp/amqpshim"
 	goamqp "github.com/rabbitmq/amqp091-go"
 )
 

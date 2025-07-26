@@ -12,7 +12,7 @@ package memoise
 import (
 	reflect "reflect"
 
-	memoise "github.com/Asmodai/gohacks/memoise"
+	memoise "github.com/Asmodai/gohacks/v1/memoise"
 	gomock "go.uber.org/mock/gomock"
 )
 

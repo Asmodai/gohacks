@@ -13,7 +13,7 @@ import (
 	flag "flag"
 	reflect "reflect"
 
-	semver "github.com/Asmodai/gohacks/semver"
+	semver "github.com/Asmodai/gohacks/v1/semver"
 	gomock "go.uber.org/mock/gomock"
 )
 

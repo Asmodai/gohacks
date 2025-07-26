@@ -42,7 +42,7 @@ package amqpmock
 import (
 	"crypto/tls"
 
-	"github.com/Asmodai/gohacks/amqp/amqpshim"
+	"github.com/Asmodai/gohacks/v1/amqp/amqpshim"
 )
 
 // * Constants:

@@ -34,7 +34,7 @@
 package database
 
 import (
-	"github.com/Asmodai/gohacks/contextext"
+	"github.com/Asmodai/gohacks/v1/contextext"
 
 	// This is the MySQL driver, it must be blank.
 	_ "github.com/go-sql-driver/mysql"

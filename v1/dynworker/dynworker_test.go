@@ -40,7 +40,7 @@ package dynworker
 // * Imports:
 
 import (
-	"github.com/Asmodai/gohacks/mocks/logger"
+	"github.com/Asmodai/gohacks/v1/mocks/logger"
 
 	"go.uber.org/mock/gomock"
 

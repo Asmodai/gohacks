@@ -13,8 +13,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	logger "github.com/Asmodai/gohacks/logger"
-	process "github.com/Asmodai/gohacks/process"
+	logger "github.com/Asmodai/gohacks/v1/logger"
+	process "github.com/Asmodai/gohacks/v1/process"
 	gomock "go.uber.org/mock/gomock"
 )
 

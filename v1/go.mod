@@ -1,4 +1,4 @@
-module github.com/Asmodai/gohacks
+module github.com/Asmodai/gohacks/v1
 
 go 1.23.0
 

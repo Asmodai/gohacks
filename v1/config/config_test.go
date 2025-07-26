@@ -32,7 +32,7 @@
 package config
 
 import (
-	"github.com/Asmodai/gohacks/semver"
+	"github.com/Asmodai/gohacks/v1/semver"
 
 	"fmt"
 	"os"

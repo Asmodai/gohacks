@@ -32,9 +32,9 @@
 package apiserver
 
 import (
-	"github.com/Asmodai/gohacks/logger"
-	"github.com/Asmodai/gohacks/process"
-	"github.com/Asmodai/gohacks/types"
+	"github.com/Asmodai/gohacks/v1/logger"
+	"github.com/Asmodai/gohacks/v1/process"
+	"github.com/Asmodai/gohacks/v1/types"
 
 	"github.com/gin-gonic/gin"
 	"gitlab.com/tozd/go/errors"

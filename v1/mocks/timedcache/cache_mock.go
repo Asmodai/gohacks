@@ -13,7 +13,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	timedcache "github.com/Asmodai/gohacks/timedcache"
+	timedcache "github.com/Asmodai/gohacks/v1/timedcache"
 	gomock "go.uber.org/mock/gomock"
 )
 

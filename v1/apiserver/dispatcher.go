@@ -32,8 +32,8 @@
 package apiserver
 
 import (
-	"github.com/Asmodai/gohacks/logger"
-	"github.com/Asmodai/gohacks/utils"
+	"github.com/Asmodai/gohacks/v1/logger"
+	"github.com/Asmodai/gohacks/v1/utils"
 
 	"github.com/gin-gonic/gin"
 

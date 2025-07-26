@@ -34,10 +34,10 @@
 package app
 
 import (
-	"github.com/Asmodai/gohacks/config"
-	"github.com/Asmodai/gohacks/logger"
-	"github.com/Asmodai/gohacks/process"
-	"github.com/Asmodai/gohacks/semver"
+	"github.com/Asmodai/gohacks/v1/config"
+	"github.com/Asmodai/gohacks/v1/logger"
+	"github.com/Asmodai/gohacks/v1/process"
+	"github.com/Asmodai/gohacks/v1/semver"
 
 	"context"
 	"time"

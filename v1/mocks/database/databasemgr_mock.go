@@ -12,7 +12,7 @@ package database
 import (
 	reflect "reflect"
 
-	database "github.com/Asmodai/gohacks/database"
+	database "github.com/Asmodai/gohacks/v1/database"
 	gomock "go.uber.org/mock/gomock"
 )
 

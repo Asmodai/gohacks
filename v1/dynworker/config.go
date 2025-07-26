@@ -42,7 +42,7 @@ package dynworker
 // * Imports:
 
 import (
-	"github.com/Asmodai/gohacks/logger"
+	"github.com/Asmodai/gohacks/v1/logger"
 
 	"context"
 	"time"

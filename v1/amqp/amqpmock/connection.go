@@ -44,8 +44,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/Asmodai/gohacks/amqp/amqpshim"
-	mamqpshim "github.com/Asmodai/gohacks/mocks/amqpshim"
+	"github.com/Asmodai/gohacks/v1/amqp/amqpshim"
+	mamqpshim "github.com/Asmodai/gohacks/v1/mocks/amqpshim"
 	goamqp "github.com/rabbitmq/amqp091-go"
 	"go.uber.org/mock/gomock"
 )

@@ -42,9 +42,10 @@ package amqpmock
 import (
 	"context"
 
-	"github.com/Asmodai/gohacks/mocks/amqpshim"
 	goamqp "github.com/rabbitmq/amqp091-go"
 	"go.uber.org/mock/gomock"
+
+	"github.com/Asmodai/gohacks/v1/mocks/amqpshim"
 )
 
 // * Code:

@@ -45,7 +45,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Asmodai/gohacks/process"
+	"github.com/Asmodai/gohacks/v1/process"
 )
 
 // * Code:

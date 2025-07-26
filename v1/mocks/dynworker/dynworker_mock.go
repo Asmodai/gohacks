@@ -12,7 +12,7 @@ package dynworker
 import (
 	reflect "reflect"
 
-	dynworker "github.com/Asmodai/gohacks/dynworker"
+	dynworker "github.com/Asmodai/gohacks/v1/dynworker"
 	gomock "go.uber.org/mock/gomock"
 )
 

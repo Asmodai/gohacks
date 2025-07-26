@@ -44,7 +44,7 @@ package dynworker
 import (
 	"context"
 
-	"github.com/Asmodai/gohacks/logger"
+	"github.com/Asmodai/gohacks/v1/logger"
 )
 
 // * Code:

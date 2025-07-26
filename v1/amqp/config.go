@@ -46,10 +46,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/Asmodai/gohacks/amqp/amqpshim"
-	"github.com/Asmodai/gohacks/dynworker"
-	"github.com/Asmodai/gohacks/logger"
-	"github.com/Asmodai/gohacks/types"
+	"github.com/Asmodai/gohacks/v1/amqp/amqpshim"
+	"github.com/Asmodai/gohacks/v1/dynworker"
+	"github.com/Asmodai/gohacks/v1/logger"
+	"github.com/Asmodai/gohacks/v1/types"
 )
 
 // * Constants:

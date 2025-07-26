@@ -51,7 +51,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"gitlab.com/tozd/go/errors"
 
-	"github.com/Asmodai/gohacks/logger"
+	"github.com/Asmodai/gohacks/v1/logger"
 )
 
 // * Constants:

@@ -13,11 +13,11 @@ import (
 	context "context"
 	reflect "reflect"
 
-	app "github.com/Asmodai/gohacks/app"
-	config "github.com/Asmodai/gohacks/config"
-	logger "github.com/Asmodai/gohacks/logger"
-	process "github.com/Asmodai/gohacks/process"
-	semver "github.com/Asmodai/gohacks/semver"
+	app "github.com/Asmodai/gohacks/v1/app"
+	config "github.com/Asmodai/gohacks/v1/config"
+	logger "github.com/Asmodai/gohacks/v1/logger"
+	process "github.com/Asmodai/gohacks/v1/process"
+	semver "github.com/Asmodai/gohacks/v1/semver"
 	gomock "go.uber.org/mock/gomock"
 )
 

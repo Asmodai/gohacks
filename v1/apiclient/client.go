@@ -52,8 +52,8 @@ import (
 
 	"gitlab.com/tozd/go/errors"
 
-	"github.com/Asmodai/gohacks/logger"
-	"github.com/Asmodai/gohacks/rlhttp"
+	"github.com/Asmodai/gohacks/v1/logger"
+	"github.com/Asmodai/gohacks/v1/rlhttp"
 )
 
 // * Variables:

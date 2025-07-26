@@ -46,7 +46,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/Asmodai/gohacks/math/conversion"
+	"github.com/Asmodai/gohacks/v1/math/conversion"
 )
 
 // * Variables:

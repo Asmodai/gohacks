@@ -44,7 +44,7 @@ PACKAGE = gohack
 DIR = $(PWD)
 
 # Version.
-VERSION = v1
+VERSION ?= v1
 
 # Source modules.
 MODULES = amqp            \
@@ -114,11 +114,11 @@ prunedeps:
 # XML to this file".  Or, some other format and a HTML converter.  Either way,
 # the sed invocation is terrible.
 lint:
-	@echo "Running linter."
+	@echo "Running linter on $(VERSION)."
 	@if [ -f "$$HOME/.local/bin/junit2html" ]; then                        \
 		echo "Generating $(LINT_REPORT) and $(HTML_REPORT)";           \
-		golangci-lint run                                              \
-			--out-format junit-xml                                 \
+		(cd $(VERSION); golangci-lint run                              \
+			--out-format junit-xml)                                \
 			| sed -n '1h;1!H;$$ {g;s|\(</testsuites>\).*|\1|; p;}' \
 			> $(LINT_REPORT);                                      \
 		junit2html $(LINT_REPORT) $(HTML_REPORT);                      \
@@ -129,14 +129,14 @@ lint:
 
 critic:
 	@echo "Everyone is a critic..."
-	@gocritic check ./...
+	@gocritic check $(VERSION)
 
 build:
 	@echo "THIS IS A LIBRARY"
 
 test: deps
-	@echo "Running tests"
-	@go test $$(go list ./... | grep -v "mocks/") \
+	@echo "Running $(VERSION) tests"
+	@go test $$(go list ./$(VERSION)/... | grep -v "mocks/") \
 		-coverprofile=tests.out               \
 		--tags testing
 	@go tool cover -html=tests.out -o coverage.html
@@ -152,26 +152,18 @@ clean:
 	@rm *.out
 	@rm golint.*
 	@rm coverage.html
-	@rm doc/*.md
-	@rm -rf vendor
+	@rm $(VERSION)/doc/*.md
 
 protobuf:
 	@PROTOC="$(PROTOC)" ./makeproto.sh
+	@echo "Done."
 
 mocks:
 	@./makemocks.sh
+	@echo "Done."
 
 doc:
-	@echo "Generating documentation"
-	@test -d doc || mkdir doc
-	@for dir in $(VERSION)/$(MODULES); do \
-		echo "... Generating $${dir}.md"                                    ;\
-		godocdown -template doc/gohacks.template ./$${dir}/ >doc/$${dir}.md ;\
-	done
-#	@echo "Generating license information"
-#	@test -d vendor || go work vendor -o vendor
-#	@./checklic.sh >doc/dependencies.md
-#	@test -d vendor && rm -rf vendor
+	@VERSION="$(VERSION)" MODULES="$(MODULES)" ./makedoc.sh
 	@echo "Done."
 
 # Makefile ends here.

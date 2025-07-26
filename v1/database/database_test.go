@@ -32,7 +32,7 @@
 package database
 
 import (
-	"github.com/Asmodai/gohacks/contextext"
+	"github.com/Asmodai/gohacks/v1/contextext"
 	"github.com/DATA-DOG/go-sqlmock"
 	"gitlab.com/tozd/go/errors"
 

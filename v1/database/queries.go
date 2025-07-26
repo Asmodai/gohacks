@@ -150,8 +150,6 @@ func Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
 // Wrapper around `Tx.Prepare`.
 //
 // The transaction should be passed via a context value.
-//
-//nolint:revive
 func Prepare(ctx context.Context, query string, args ...any) (*stmt, error) {
 	tx, err := getTx(ctx)
 	if err != nil {

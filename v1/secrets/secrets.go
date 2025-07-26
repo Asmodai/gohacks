@@ -32,7 +32,7 @@
 package secrets
 
 import (
-	"github.com/Asmodai/gohacks/utils"
+	"github.com/Asmodai/gohacks/v1/utils"
 
 	"gitlab.com/tozd/go/errors"
 

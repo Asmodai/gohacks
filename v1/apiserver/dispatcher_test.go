@@ -34,7 +34,7 @@
 package apiserver
 
 import (
-	mlogger "github.com/Asmodai/gohacks/mocks/logger"
+	mlogger "github.com/Asmodai/gohacks/v1/mocks/logger"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/mock/gomock"

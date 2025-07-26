@@ -32,7 +32,7 @@
 package process
 
 import (
-	"github.com/Asmodai/gohacks/logger"
+	"github.com/Asmodai/gohacks/v1/logger"
 )
 
 // Process configuration structure.

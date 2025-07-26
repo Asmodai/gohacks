@@ -47,8 +47,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Asmodai/gohacks/amqp/amqpshim"
-	"github.com/Asmodai/gohacks/dynworker"
+	"github.com/Asmodai/gohacks/v1/amqp/amqpshim"
+	"github.com/Asmodai/gohacks/v1/dynworker"
 	"github.com/prometheus/client_golang/prometheus"
 	goamqp "github.com/rabbitmq/amqp091-go"
 	"gitlab.com/tozd/go/errors"

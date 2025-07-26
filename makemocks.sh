@@ -38,13 +38,23 @@
 #
 # }}}
 
-test -d "mocks" && rm -rf "mocks"
-
 ROOT=$(pwd)
-FILES=$(find . -iname "*.go" | grep -v "/vendor/" | grep -v "\#" | grep -v "\.swp")
-MOCK_PATH="mocks"
 
-test -d "${MOCK_PATH}" || mkdir "${MOCK_PATH}"
+VERSION="v1"
+if [[ ! -d "${VERSION}" ]]
+then
+  echo "FATAL:  Version directory '${VERSION}' not found."
+  exit 1
+fi
+cd ${VERSION}
+
+MOCK_PATH="mocks"
+test -d "${MOCK_PATH}" || mkdir "${MOCK_PATH}" && (rm -rf "${MOCK_PATH}"; mkdir "${MOCK_PATH}")
+
+
+FILES=$(find . -iname "*.go" | grep -v "/vendor/" | grep -v "/mocks/" | grep -v "\#" | grep -v "\.swp")
+
+
 
 for file in ${FILES}
 do
@@ -60,7 +70,11 @@ do
     pname=$(basename $(dirname ${file}))
     output="${MOCK_PATH}/${pname}/$(echo ${fname} | cut -d. -f1)_mock.go"
 
-    echo "Processing ${pname}/${fname} => ${output}"
+    echo "---------------------------"
+    echo "Package: ${pname}"
+    echo "File:    ${file}"
+    echo "Output:  ${fname} -> ${output}"
+#    echo "Processing ${pname}/${fname} => ${output}"
 
     mockgen                      \
         -package="${pname}"      \

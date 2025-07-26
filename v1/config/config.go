@@ -34,7 +34,7 @@
 package config
 
 import (
-	"github.com/Asmodai/gohacks/semver"
+	"github.com/Asmodai/gohacks/v1/semver"
 
 	json "github.com/goccy/go-json"
 	"gitlab.com/tozd/go/errors"
