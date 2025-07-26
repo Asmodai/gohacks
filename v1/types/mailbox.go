@@ -199,6 +199,8 @@ func (m *Mailbox) Reset() {
 	m.element = nil
 	m.writeAvailable = semaphore.NewWeighted(1)
 	m.readAvailable = semaphore.NewWeighted(1)
+
+	//nolint:errcheck
 	m.readAvailable.Acquire(context.Background(), 1)
 }
 

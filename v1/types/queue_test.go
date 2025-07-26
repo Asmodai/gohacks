@@ -97,7 +97,7 @@ func TestUnboundedQueue(t *testing.T) {
 			}
 
 			if res.(string) != elems[idx] {
-				t.Errorf("Result mismatch: '%s' != '%s'", res.(string), elems[idx])
+				t.Errorf("Result mismatch: %#v != %#v", res.(string), elems[idx])
 				return
 			}
 		}
@@ -178,7 +178,7 @@ func TestBoundedQueue(t *testing.T) {
 			}
 
 			if res.(string) != elems1[idx] {
-				t.Errorf("Result mismatch: '%s' != '%s'", res.(string), elems1[idx])
+				t.Errorf("Result mismatch: %#v != %#v", res.(string), elems1[idx])
 				return
 			}
 		}
@@ -223,7 +223,7 @@ func TestBoundedQueue(t *testing.T) {
 			}
 
 			if res.(string) != elems2[idx] {
-				t.Errorf("Result mismatch: '%s' != '%s'", res.(string), elems1[idx])
+				t.Errorf("Result mismatch: %#v != %#v", res.(string), elems1[idx])
 				return
 			}
 		}

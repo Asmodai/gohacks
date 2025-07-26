@@ -487,7 +487,7 @@ type Queue struct {
 
 Queue structure.
 
-This is a cheap implementation of a LIFO queue.
+This is a cheap implementation of a FIFO queue.
 
 #### func  NewBoundedQueue
 
@@ -503,6 +503,13 @@ func NewQueue() *Queue
 ```
 Create a new empty queue.
 
+#### func (*Queue) Empty
+
+```go
+func (q *Queue) Empty() bool
+```
+Is the queue empty?
+
 #### func (*Queue) Full
 
 ```go
@@ -513,7 +520,7 @@ Is the queue full?
 #### func (*Queue) Get
 
 ```go
-func (q *Queue) Get() (any, bool)
+func (q *Queue) Get() (Datum, bool)
 ```
 Remove an element from the end of the queue and return it.
 
@@ -527,7 +534,7 @@ Return the number of elements in the queue.
 #### func (*Queue) Put
 
 ```go
-func (q *Queue) Put(elem any) bool
+func (q *Queue) Put(elem Datum) bool
 ```
 Append an element to the queue. Returns `false` if there is no more room in the
 queue.

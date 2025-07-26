@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package types
@@ -52,12 +48,12 @@ import (
 /*
 Queue structure.
 
-This is a cheap implementation of a LIFO queue.
+This is a cheap implementation of a FIFO queue.
 */
 type Queue struct {
 	sync.Mutex
 
-	queue   []any
+	queue   []Datum
 	bounds  int
 	bounded bool
 }
@@ -66,55 +62,67 @@ type Queue struct {
 
 // Append an element to the queue.  Returns `false` if there is no
 // more room in the queue.
-func (q *Queue) Put(elem any) bool {
-	if q.bounded && q.Len() == q.bounds {
+func (q *Queue) Put(elem Datum) bool {
+	q.Lock()
+	defer q.Unlock()
+
+	// If you're new to synchronisation:
+	// This is the same as `Full`, yes... but doesn't allow races...
+	// so leave this alone.
+	if q.bounded && q.helperLen() == q.bounds {
 		return false
 	}
 
-	q.Lock()
-	{
-		q.queue = append(q.queue, elem)
-	}
-	q.Unlock()
+	q.queue = append(q.queue, elem)
 
 	return true
 }
 
 // Remove an element from the end of the queue and return it.
-func (q *Queue) Get() (any, bool) {
-	var elem any
+func (q *Queue) Get() (Datum, bool) {
+	q.Lock()
+	defer q.Unlock()
 
-	if q.Len() == 0 {
+	if q.helperLen() == 0 {
 		return nil, false
 	}
 
-	q.Lock()
-	{
-		elem = q.queue[0]
-		q.queue[0] = nil
-		q.queue = q.queue[1:]
-	}
-	q.Unlock()
+	elem := q.queue[0]
+	q.queue[0] = nil
+	q.queue = q.queue[1:]
 
 	return elem, true
 }
 
+// Internal helper that returns the number of elements in the queue.
+//
+// Should never lock. Callers must ensure lock is held.
+func (q *Queue) helperLen() int {
+	return len(q.queue)
+}
+
 // Return the number of elements in the queue.
 func (q *Queue) Len() int {
-	var length int
-
 	q.Lock()
-	{
-		length = len(q.queue)
-	}
-	q.Unlock()
+	defer q.Unlock()
 
-	return length
+	return len(q.queue)
 }
 
 // Is the queue full?
 func (q *Queue) Full() bool {
-	return q.bounded && q.Len() == q.bounds
+	q.Lock()
+	defer q.Unlock()
+
+	return q.bounded && q.helperLen() == q.bounds
+}
+
+// Is the queue empty?
+func (q *Queue) Empty() bool {
+	q.Lock()
+	defer q.Unlock()
+
+	return q.helperLen() == 0
 }
 
 // ** Functions:
@@ -126,21 +134,22 @@ func NewQueue() *Queue {
 
 // Create a queue that is bounded to a specific size.
 func NewBoundedQueue(bounds int) *Queue {
-	queue := &Queue{
-		queue:  make([]any, 0),
-		bounds: 0,
+	var capacity int
+
+	// Do not accept negative bounds.
+	if bounds < 0 {
+		bounds = 0
 	}
 
-	if bounds == 0 {
-		queue.bounded = false
-
-		return queue
+	if bounds > 0 {
+		capacity = bounds
 	}
 
-	queue.bounded = true
-	queue.bounds = bounds
-
-	return queue
+	return &Queue{
+		queue:   make([]Datum, 0, capacity),
+		bounds:  bounds,
+		bounded: bounds > 0,
+	}
 }
 
 // * queue.go ends here.
