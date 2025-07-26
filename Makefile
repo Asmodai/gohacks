@@ -149,10 +149,11 @@ rundebug:
 
 clean:
 	@echo "Cleaning"
-	@rm *.out
-	@rm golint.*
-	@rm coverage.html
-	@rm $(VERSION)/doc/*.md
+	@rm -f *.out
+	@rm -f golint.*
+	@rm -f report.xml
+	@rm -f coverage.html
+	@rm -f $(VERSION)/doc/*.md
 
 protobuf:
 	@PROTOC="$(PROTOC)" ./makeproto.sh

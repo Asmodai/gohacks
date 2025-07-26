@@ -31,11 +31,27 @@
 //
 // mock:yes
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package memoise
 
+// * Imports:
+
 import (
+	"sync"
+
 	"gitlab.com/tozd/go/errors"
 )
+
+// * Code:
+
+// ** Types:
 
 // Memoisation function type.
 type CallbackFn func() (any, error)
@@ -48,27 +64,55 @@ type Memoise interface {
 }
 
 // Implementation of the memoisation type.
-type memoise map[string]any
+type memoise struct {
+	sync.RWMutex
 
-// Create a new memoisation object.
-func NewMemoise() Memoise {
-	return memoise{}
+	store map[string]any
 }
+
+// ** Methods:
 
 // Check the map of memoised values fo#r the given key.  If the key exists,
 // then return its associated value.  Otherwise, obtain the value via the
 // given memoisation function.
-func (obj memoise) Check(name string, fn CallbackFn) (any, error) {
-	if result, ok := obj[name]; ok {
+func (obj *memoise) Check(name string, callback CallbackFn) (any, error) {
+	obj.RLock()
+	result, ok := obj.store[name]
+	obj.RUnlock()
+
+	// If we get a hit, return it.
+	if ok {
 		return result, nil
 	}
 
-	res, err := fn()
-	if err == nil {
-		obj[name] = res
+	// Miss, so obtain a lock.
+	obj.Lock()
+	defer obj.Unlock()
+
+	// Sanity check in case we lost a race.
+	if result, ok := obj.store[name]; ok {
+		return result, nil
 	}
 
-	return obj[name], errors.WithStack(err)
+	// Still a miss.
+	res, err := callback()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	// Store the result.
+	obj.store[name] = res
+
+	return res, errors.WithStack(err)
 }
 
-// memoise.go ends here.
+// ** Functions:
+
+// Create a new memoisation object.
+func NewMemoise() Memoise {
+	return &memoise{
+		store: map[string]any{},
+	}
+}
+
+// * memoise.go ends here.
