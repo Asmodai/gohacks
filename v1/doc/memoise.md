@@ -20,9 +20,14 @@ Memoisation function type.
 
 ```go
 type Memoise interface {
-	// Check if we have a memorised value for a given key.  If not, then
-	// inovke the callback function and memorise its result.
+	// Check returns the memoised value for the given key if available.
+	// Otherwise it calls the provided callback to compute the value,
+	// stores the result, and returns it.
+	// Thread-safe.
 	Check(string, CallbackFn) (any, error)
+
+	// Clear the contents of the memoise map.
+	Reset()
 }
 ```
 

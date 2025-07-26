@@ -58,9 +58,14 @@ type CallbackFn func() (any, error)
 
 // Memoisation type.
 type Memoise interface {
-	// Check if we have a memorised value for a given key.  If not, then
-	// inovke the callback function and memorise its result.
+	// Check returns the memoised value for the given key if available.
+	// Otherwise it calls the provided callback to compute the value,
+	// stores the result, and returns it.
+	// Thread-safe.
 	Check(string, CallbackFn) (any, error)
+
+	// Clear the contents of the memoise map.
+	Reset()
 }
 
 // Implementation of the memoisation type.
@@ -72,9 +77,10 @@ type memoise struct {
 
 // ** Methods:
 
-// Check the map of memoised values fo#r the given key.  If the key exists,
-// then return its associated value.  Otherwise, obtain the value via the
-// given memoisation function.
+// Check returns the memoised value for the given key if available.
+// Otherwise it calls the provided callback to compute the value,
+// stores the result, and returns it.
+// Thread-safe.
 func (obj *memoise) Check(name string, callback CallbackFn) (any, error) {
 	obj.RLock()
 	result, ok := obj.store[name]
@@ -103,7 +109,14 @@ func (obj *memoise) Check(name string, callback CallbackFn) (any, error) {
 	// Store the result.
 	obj.store[name] = res
 
-	return res, errors.WithStack(err)
+	return res, nil
+}
+
+func (obj *memoise) Reset() {
+	obj.Lock()
+	defer obj.Unlock()
+
+	obj.store = make(map[string]any)
 }
 
 // ** Functions:
@@ -111,7 +124,7 @@ func (obj *memoise) Check(name string, callback CallbackFn) (any, error) {
 // Create a new memoisation object.
 func NewMemoise() Memoise {
 	return &memoise{
-		store: map[string]any{},
+		store: make(map[string]any),
 	}
 }
 
