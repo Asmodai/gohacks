@@ -19,7 +19,7 @@ type Client struct {
 #### func  NewClient
 
 ```go
-func NewClient(rlimiter *rate.Limiter, timeout time.Duration) *Client
+func NewClient(limit int, timeout time.Duration) *Client
 ```
 
 #### func (*Client) Do

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// process.go --- SysInfo process.
+// queryparam.go --- Query parameters.
 //
 // Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -29,59 +29,37 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package sysinfo
+// * Comments:
 
-import (
-	"github.com/Asmodai/gohacks/process"
+//
+//
+//
 
-	"time"
-)
+// * Package:
 
-type Proc struct {
-	si *SysInfo
+package apiclient
+
+// * Code:
+
+// ** Types:
+
+// API URL query parameter.
+type QueryParam struct {
+	// Name of the query parameter.
+	Name string
+
+	// Content of the query parameter
+	Content string
 }
 
-func NewProc() *Proc {
-	return &Proc{
-		si: NewSysInfo(),
+// ** Functions:
+
+// Create a new query parameter.
+func NewQueryParam(name, content string) *QueryParam {
+	return &QueryParam{
+		Name:    name,
+		Content: content,
 	}
 }
 
-func (sip *Proc) Action(state **process.State) {
-	ps := *state
-
-	sip.si.UpdateStats()
-
-	ps.Logger().Debug(
-		"System Information.",
-		"runtime", sip.si.RunTime().Round(time.Second),
-		"allocated_mib", sip.si.Allocated(),
-		"heap_mib", sip.si.Heap(),
-		"system_mib", sip.si.System(),
-		"collections", sip.si.GC(),
-		"goroutines", sip.si.GoRoutines(),
-	)
-}
-
-func Spawn(mgr process.Manager, interval int) (*process.Process, error) {
-	name := "SysInfo"
-
-	inst, found := mgr.Find(name)
-	if found {
-		return inst, nil
-	}
-
-	sip := NewProc()
-	conf := &process.Config{
-		Name:     name,
-		Interval: interval,
-		Function: sip.Action,
-	}
-	pr := mgr.Create(conf)
-
-	go pr.Run()
-
-	return pr, nil
-}
-
-// process.go ends here.
+// * queryparam.go ends here.

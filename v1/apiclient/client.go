@@ -31,22 +31,32 @@
 //
 // mock:yes
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package apiclient
 
+// * Imports:
+
 import (
-	"github.com/Asmodai/gohacks/logger"
-	"github.com/Asmodai/gohacks/rlhttp"
-
-	"gitlab.com/tozd/go/errors"
-	"golang.org/x/time/rate"
-
 	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptrace"
-	"time"
+
+	"gitlab.com/tozd/go/errors"
+
+	"github.com/Asmodai/gohacks/logger"
+	"github.com/Asmodai/gohacks/rlhttp"
 )
+
+// * Variables:
 
 var (
 	// Triggered when an invalid authentication method is passed via the API
@@ -59,9 +69,13 @@ var (
 	ErrMissingArgument = errors.Base("missing argument")
 
 	// Triggered if the result of an API call via the client does not have a
-	// `200` HTTP status code.
+	// `2xx` HTTP status code or fails the user-defined success check.
 	ErrNotOk = errors.Base("not ok")
 )
+
+// * Code:
+
+// ** Interfaces:
 
 /*
 API Client
@@ -74,7 +88,7 @@ are followed.
 	```go
 	conf := &apiclient.Config{
 		RequestsPerSecond: 5,    // 5 requests per second.
-		Timeout:           5,    // 5 seconds.
+		Timeout:           types.Duration(5*time.Second),
 	}
 	```
 
@@ -115,7 +129,7 @@ type Client interface {
 	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
-	Get(*Params) ([]byte, int, error)
+	Get(*Params) Response
 
 	// Perform a HTTP POST using the given API parameters.
 	//
@@ -123,7 +137,7 @@ type Client interface {
 	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
-	Post(*Params) ([]byte, int, error)
+	Post(*Params) Response
 
 	// Perform a HTTP get using the given API parameters and context.
 	//
@@ -131,7 +145,7 @@ type Client interface {
 	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
-	GetWithContext(context.Context, *Params) ([]byte, int, error)
+	GetWithContext(context.Context, *Params) Response
 
 	// Perform a HTTP POST using the given API parameters and context.
 	//
@@ -139,72 +153,61 @@ type Client interface {
 	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
-	PostWithContext(context.Context, *Params) ([]byte, int, error)
+	PostWithContext(context.Context, *Params) Response
 }
 
 type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
+// ** Types:
+
+type SuccessCheckFn func(int) bool
+
 // Implementation structure.
 type client struct {
-	Client  HTTPClient
-	Limiter *rate.Limiter
-	Trace   *httptrace.ClientTrace
-	logger  logger.Logger
+	Client       HTTPClient
+	Trace        *httptrace.ClientTrace
+	logger       logger.Logger
+	checkSuccess SuccessCheckFn
 }
 
-// Create a new API client with the given configuration.
-func NewClient(config *Config, logger logger.Logger) Client {
-	trace := &httptrace.ClientTrace{}
-
-	limiter := rate.NewLimiter(
-		rate.Every(1*time.Second),
-		config.RequestsPerSecond,
-	)
-
-	//nolint:durationcheck
-	rlclient := rlhttp.NewClient(
-		limiter,
-		(time.Duration)(config.Timeout)*time.Second,
-	)
-
-	return &client{
-		Limiter: limiter,
-		Client:  rlclient,
-		Trace:   trace,
-		logger:  logger,
-	}
-}
+// ** Methods:
 
 // Perform a HTTP GET using the given API parameters.
-func (c *client) Get(data *Params) ([]byte, int, error) {
-	return c.httpAction(context.TODO(), "GET", data)
+func (c *client) Get(data *Params) Response {
+	return c.httpAction(context.Background(), "GET", data)
 }
 
 // Perform a HTTP GET using the given API parameters and context.
-func (c *client) GetWithContext(ctx context.Context, data *Params) ([]byte, int, error) {
+func (c *client) GetWithContext(ctx context.Context, data *Params) Response {
 	return c.httpAction(ctx, "GET", data)
 }
 
 // Perform a HTTP POST using the given API parameters.
-func (c *client) Post(data *Params) ([]byte, int, error) {
-	return c.httpAction(context.TODO(), "POST", data)
+func (c *client) Post(data *Params) Response {
+	return c.httpAction(context.Background(), "POST", data)
 }
 
 // Perform a HTTP POST using the given API parameters and context.
-func (c *client) PostWithContext(ctx context.Context, data *Params) ([]byte, int, error) {
+func (c *client) PostWithContext(ctx context.Context, data *Params) Response {
 	return c.httpAction(ctx, "POST", data)
+}
+
+func (c *client) defaultCheckSuccess(code int) bool {
+	return (code >= http.StatusOK && code < http.StatusMultipleChoices)
 }
 
 // The actual meat of the API client.
 // TODO: This function is way to complex.
+// TODO: Have this function pass HTTP headers to the success check
+// TODO: Have this function return HTTP headers.
 //
 //nolint:cyclop,funlen
-func (c *client) httpAction(ctx context.Context, verb string, data *Params) ([]byte, int, error) {
+func (c *client) httpAction(ctx context.Context, verb string, data *Params) Response {
 	req, err := http.NewRequestWithContext(ctx, verb, data.URL, nil)
 	if err != nil {
-		return nil, 0, errors.WithStack(err)
+		return NewResponseFromError(errors.WithStack(err))
 	}
 
 	// Set `Accept` header if required.
@@ -219,18 +222,22 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) ([]b
 
 	// Error if we're told to use both basic auth and an auth token.
 	if data.UseBasic && data.UseToken {
-		return nil, 0, errors.Wrap(
-			ErrInvalidAuthMethod,
-			"cannot use basic auth and token at the same time",
+		return NewResponseFromError(
+			errors.Wrap(
+				ErrInvalidAuthMethod,
+				"cannot use basic auth and token at the same time",
+			),
 		)
 	}
 
 	// Set up basic authentication if required.
 	if data.UseBasic {
 		if data.Basic.Username == "" {
-			return nil, 0, errors.Wrap(
-				ErrMissingArgument,
-				"no basic auth username given",
+			return NewResponseFromError(
+				errors.Wrap(
+					ErrMissingArgument,
+					"no basic auth username given",
+				),
 			)
 		}
 
@@ -240,9 +247,11 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) ([]b
 	// Set up authentication token if required.
 	if data.UseToken {
 		if data.Token.Header == "" {
-			return nil, 0, errors.Wrap(
-				ErrMissingArgument,
-				"no auth token header given",
+			return NewResponseFromError(
+				errors.Wrap(
+					ErrMissingArgument,
+					"no auth token header given",
+				),
 			)
 		}
 
@@ -263,19 +272,27 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) ([]b
 	// Perform the request.
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return nil, 0, errors.WithStack(err)
+		return NewResponseFromError(errors.WithStack(err))
+	}
+	defer resp.Body.Close()
+
+	if c.checkSuccess == nil {
+		c.checkSuccess = c.defaultCheckSuccess
 	}
 
-	// Did we get a non-200 status code?
-	if resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
-
-		return nil, resp.StatusCode, errors.Wrap(
-			ErrNotOk,
-			fmt.Sprintf(
-				"received status code %d for %s",
-				resp.StatusCode,
-				req.URL,
+	// Was the request not successful?
+	if !c.checkSuccess(resp.StatusCode) {
+		return NewResponse(
+			resp.StatusCode,
+			[]byte{},
+			resp.Header,
+			errors.Wrap(
+				ErrNotOk,
+				fmt.Sprintf(
+					"received status code %d for %s",
+					resp.StatusCode,
+					req.URL,
+				),
 			),
 		)
 	}
@@ -283,14 +300,34 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) ([]b
 	// Decode the body.
 	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		resp.Body.Close()
-
-		return nil, resp.StatusCode, errors.WithStack(err)
+		return NewResponse(
+			resp.StatusCode,
+			[]byte{},
+			resp.Header,
+			errors.WithStack(err),
+		)
 	}
 
-	resp.Body.Close()
-
-	return bytes, resp.StatusCode, nil
+	return NewResponse(resp.StatusCode, bytes, resp.Header, nil)
 }
 
-// client.go ends here.
+// ** Functions:
+
+// Create a new API client with the given configuration.
+func NewClient(config *Config, logger logger.Logger) Client {
+	trace := &httptrace.ClientTrace{}
+
+	rlclient := rlhttp.NewClient(
+		config.RequestsPerSecond,
+		config.Timeout.Duration(),
+	)
+
+	return &client{
+		Client:       rlclient,
+		Trace:        trace,
+		logger:       logger,
+		checkSuccess: config.SuccessCheck,
+	}
+}
+
+// * client.go ends here.

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// params_test.go --- Query params tests.
+// rlhttp.go --- Rate-limited HTTP client.
 //
 // Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -29,63 +29,71 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package apiclient
+// * Comments:
 
-import "testing"
+//
+//
+//
 
-func TestAccessors(t *testing.T) {
-	p := NewParams()
+// * Package:
 
-	t.Run("SetUseBasic works", func(t *testing.T) {
-		p.SetUseBasic(true)
+package rlhttp
 
-		if !p.UseBasic {
-			t.Error("No, UseBasic is not set!")
-		}
-	})
+// * Imports:
 
-	t.Run("SetUseToken works", func(t *testing.T) {
-		p.SetUseToken(true)
+import (
+	"net/http"
+	"time"
 
-		if !p.UseToken {
-			t.Error("No, UseToken is not set!")
-		}
-	})
+	"gitlab.com/tozd/go/errors"
+	"golang.org/x/time/rate"
+)
 
-	t.Run("AddQueryParam works", func(t *testing.T) {
-		p.AddQueryParam("drink", "yes please")
+// * Code:
 
-		if len(p.Queries) != 1 {
-			t.Errorf("No, length of queries is %v", len(p.Queries))
-		}
+// ** Types:
 
-		if p.Queries[0].Name != "drink" {
-			t.Error("Query name does not match.")
-		}
-
-		if p.Queries[0].Content != "yes please" {
-			t.Error("Query content does not match.")
-		}
-	})
-
-	t.Run("ClearQueryParams works", func(t *testing.T) {
-		before := len(p.Queries)
-		p.ClearQueryParams()
-		after := len(p.Queries)
-
-		if before == 0 {
-			t.Error("Array was empty before the test ran!")
-			return
-		}
-
-		if before == after {
-			t.Error("Nothing was removed!")
-		}
-
-		if after != 0 {
-			t.Error("Array still contains elements.")
-		}
-	})
+type Client struct {
+	client  *http.Client
+	limiter *rate.Limiter
 }
 
-// params_test.go ends here.
+// ** Methods:
+
+func (c *Client) Do(req *http.Request) (*http.Response, error) {
+	ctx := req.Context()
+
+	if c.limiter != nil {
+		if err := c.limiter.Wait(ctx); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return resp, nil
+}
+
+// ** Functions:
+
+func NewClient(limit int, timeout time.Duration) *Client {
+	var rlimiter *rate.Limiter
+
+	if limit > 0 {
+		rlimiter = rate.NewLimiter(rate.Limit(limit), limit)
+	}
+
+	client := &http.Client{
+		Timeout: timeout,
+	}
+
+	return &Client{
+		client:  client,
+		limiter: rlimiter,
+	}
+}
+
+// * rlhttp.go ends here.

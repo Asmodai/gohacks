@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// rlhttp.go --- Rate-limited HTTP client.
+// float.go --- Floating-point conversion functions.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -29,44 +29,54 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package rlhttp
+// * Comments:
 
-import (
-	"context"
-	"net/http"
-	"time"
+//
+//
+//
 
-	"gitlab.com/tozd/go/errors"
-	"golang.org/x/time/rate"
-)
+// * Package:
 
-type Client struct {
-	client  *http.Client
-	limiter *rate.Limiter
+package conversion
+
+// * Code:
+
+// Convert a value to a 64-bit floating-point value.
+//
+//nolint:cyclop,varnamelen
+func ToFloat64(val any) (float64, bool) {
+	switch v := val.(type) {
+	case float64:
+		return v, true
+
+	case float32:
+		return float64(v), true
+
+	case int:
+		return float64(v), true
+	case int8:
+		return float64(v), true
+	case int16:
+		return float64(v), true
+	case int32:
+		return float64(v), true
+	case int64:
+		return float64(v), true
+
+	case uint:
+		return float64(v), true
+	case uint8:
+		return float64(v), true
+	case uint16:
+		return float64(v), true
+	case uint32:
+		return float64(v), true
+	case uint64:
+		return float64(v), true
+
+	default:
+		return 0, false
+	}
 }
 
-func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	if err := c.limiter.Wait(context.Background()); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return resp, nil
-}
-
-func NewClient(rlimiter *rate.Limiter, timeout time.Duration) *Client {
-	client := &http.Client{
-		Timeout: timeout,
-	}
-
-	return &Client{
-		client:  client,
-		limiter: rlimiter,
-	}
-}
-
-// rlhttp.go ends here.
+// * float.go ends here.

@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// queryparam.go --- Query parameters.
+// response.go --- API client response structure.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -29,23 +29,58 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package apiclient
 
-// API URL query parameter.
-type QueryParam struct {
-	// Name of the query parameter.
-	Name string
+// * Imports:
 
-	// Content of the query parameter
-	Content string
+import (
+	"net/http"
+)
+
+// * Constants:
+
+// * Variables:
+
+// * Code:
+
+// ** Types:
+
+type Response struct {
+	Body       []byte
+	StatusCode int
+	Headers    http.Header
+	Limits     RateLimitInfo
+	Error      error
 }
 
-// Create a new query parameter.
-func NewQueryParam(name, content string) *QueryParam {
-	return &QueryParam{
-		Name:    name,
-		Content: content,
+// ** Methods:
+
+// ** Functions:
+
+func NewResponse(code int, body []byte, headers http.Header, err error) Response {
+	return Response{
+		Body:       body,
+		StatusCode: code,
+		Headers:    headers,
+		Limits:     NewRateLimitInfo(code, headers),
+		Error:      err,
 	}
 }
 
-// queryparam.go ends here.
+func NewResponseFromError(err error) Response {
+	return NewResponse(0, nil, http.Header{}, err)
+}
+
+func NewResponseWithCodeFromError(code int, err error) Response {
+	return NewResponse(code, nil, http.Header{}, err)
+}
+
+// * response.go ends here.

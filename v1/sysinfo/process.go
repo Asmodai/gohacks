@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// sysinfo_test.go --- Tests for sysinfo package.
+// process.go --- SysInfo process.
 //
 // Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -29,72 +29,77 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package sysinfo
 
+// * Imports:
+
 import (
-	"github.com/Asmodai/gohacks/math/conversion"
+	"time"
 
-	"os"
-	"runtime"
-	"testing"
+	"github.com/Asmodai/gohacks/process"
 )
 
-var (
-	sinfo *SysInfo
-)
+// * Code:
 
-func TestSysInfo(t *testing.T) {
-	var (
-		stats runtime.MemStats
-		sinfo = NewSysInfo()
-	)
+// ** Types:
 
-	t.Run("`Hostname`", func(t *testing.T) {
-		this, err := os.Hostname()
-		if err != nil {
-			t.Errorf("%s", err.Error())
-		}
-
-		if this != sinfo.Hostname() {
-			t.Errorf("Hostname: %s != %s", this, sinfo.Hostname())
-		}
-	})
-
-	t.Run("`MemStats`", func(t *testing.T) {
-		runtime.ReadMemStats(&stats)
-		sinfo.UpdateStats()
-		runtime.ReadMemStats(&stats)
-
-		t.Run("Stats match", func(t *testing.T) {
-			if conversion.BToMiB(stats.Alloc) != sinfo.Allocated() {
-				t.Error("`Allocated` does NOT match.")
-			}
-		})
-
-		if conversion.BToMiB(stats.HeapSys) != sinfo.Heap() {
-			t.Errorf("`Heap` does NOT match.")
-		}
-
-		if conversion.BToMiB(stats.Sys) != sinfo.System() {
-			t.Error("`System` does NOT match.")
-		}
-	})
-
-	t.Run("GC matches", func(t *testing.T) {
-		if stats.NumGC != sinfo.GC() {
-			t.Error("`GC` does NOT match.")
-		}
-	})
-
-	t.Run("GoRoutines match", func(t *testing.T) {
-		sinfo.UpdateStats()
-		rtgo := runtime.NumGoroutine()
-		sigo := sinfo.GoRoutines()
-
-		if rtgo != sigo {
-			t.Errorf("No, runtime:%v, sysinfo:%v", rtgo, sigo)
-		}
-	})
+type Proc struct {
+	si *SysInfo
 }
 
-// sysinfo_test.go ends here.
+// ** Methods:
+
+func (sip *Proc) Action(state **process.State) {
+	ps := *state
+
+	sip.si.UpdateStats()
+
+	ps.Logger().Debug(
+		"System Information.",
+		"runtime", sip.si.RunTime().Round(time.Second),
+		"allocated_mib", sip.si.Allocated(),
+		"heap_mib", sip.si.Heap(),
+		"system_mib", sip.si.System(),
+		"collections", sip.si.GC(),
+		"goroutines", sip.si.GoRoutines(),
+	)
+}
+
+// ** Functions:
+
+func NewProc() *Proc {
+	return &Proc{
+		si: NewSysInfo(),
+	}
+}
+
+func Spawn(mgr process.Manager, interval int) (*process.Process, error) {
+	name := "SysInfo"
+
+	inst, found := mgr.Find(name)
+	if found {
+		return inst, nil
+	}
+
+	sip := NewProc()
+	conf := &process.Config{
+		Name:     name,
+		Interval: interval,
+		Function: sip.Action,
+	}
+	pr := mgr.Create(conf)
+
+	go pr.Run()
+
+	return pr, nil
+}
+
+// * process.go ends here.

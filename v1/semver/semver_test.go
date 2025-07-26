@@ -29,11 +29,25 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package semver
+
+// * Imports:
 
 import (
 	"testing"
 )
+
+// * Code:
+
+// ** Tests:
 
 func TestBuild(t *testing.T) {
 	t.Run("Parses proper version string", func(t *testing.T) {
@@ -141,4 +155,4 @@ func TestVersionNumber(t *testing.T) {
 	})
 }
 
-// semver_test.go ends here.
+// * semver_test.go ends here.

@@ -43,6 +43,9 @@ PACKAGE = gohack
 # Directories.
 DIR = $(PWD)
 
+# Version.
+VERSION = v1
+
 # Source modules.
 MODULES = amqp            \
 	  apiclient       \
@@ -161,7 +164,7 @@ mocks:
 doc:
 	@echo "Generating documentation"
 	@test -d doc || mkdir doc
-	@for dir in $(MODULES); do \
+	@for dir in $(VERSION)/$(MODULES); do \
 		echo "... Generating $${dir}.md"                                    ;\
 		godocdown -template doc/gohacks.template ./$${dir}/ >doc/$${dir}.md ;\
 	done

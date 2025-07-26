@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float.go --- Floating-point conversion functions.
+// bytes_test.go --- Byte conversion testing.
 //
-// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -30,6 +30,8 @@
 // SOFTWARE.
 
 // * Comments:
+
+//
 //
 //
 
@@ -37,44 +39,78 @@
 
 package conversion
 
+// * Imports:
+
+import (
+	"testing"
+)
+
 // * Code:
 
-// Convert a value to a 64-bit floating-point value.
-//
-//nolint:cyclop,varnamelen
-func ToFloat64(val any) (float64, bool) {
-	switch v := val.(type) {
-	case float64:
-		return v, true
+// ** Tests:
 
-	case float32:
-		return float64(v), true
+func TestKiB(t *testing.T) {
+	var b uint64 = 1024
+	var kib uint64 = 1
 
-	case int:
-		return float64(v), true
-	case int8:
-		return float64(v), true
-	case int16:
-		return float64(v), true
-	case int32:
-		return float64(v), true
-	case int64:
-		return float64(v), true
+	r1 := BToKiB(b)
+	r2 := KiBToB(r1)
 
-	case uint:
-		return float64(v), true
-	case uint8:
-		return float64(v), true
-	case uint16:
-		return float64(v), true
-	case uint32:
-		return float64(v), true
-	case uint64:
-		return float64(v), true
-
-	default:
-		return 0, false
+	t.Log("Does B -> KiB -> B conversion work?")
+	if r1 == kib && r2 == b {
+		t.Log("Yes.")
+		return
 	}
+
+	t.Error("No.")
 }
 
-// * float.go ends here.
+func TestMiB(t *testing.T) {
+	var b uint64 = 1 * 1.049e6
+	var mib uint64 = 1
+
+	r1 := BToMiB(b)
+	r2 := MiBToB(r1)
+
+	t.Log("Does B -> MiB -> B conversion work?")
+	if r1 == mib && r2 == b {
+		t.Log("Yes.")
+		return
+	}
+
+	t.Error("No.")
+}
+
+func TestGiB(t *testing.T) {
+	var b uint64 = 1 * 1.074e9
+	var gib uint64 = 1
+
+	r1 := BToGiB(b)
+	r2 := GiBToB(r1)
+
+	t.Log("Does B -> GiB -> B conversion work?")
+	if r1 == gib && r2 == b {
+		t.Log("Yes.")
+		return
+	}
+
+	t.Error("No.")
+}
+
+func TestTiB(t *testing.T) {
+	var b uint64 = 1 * 1.1e12
+	var tib uint64 = 1
+
+	r1 := BToTiB(b)
+	r2 := TiBToB(r1)
+
+	t.Log("Does B -> TiB -> B conversion work?")
+	if r1 == tib && r2 == b {
+		t.Log("Yes.")
+		return
+	}
+
+	t.Error("No.")
+}
+
+// * bytes_test.go ends here.

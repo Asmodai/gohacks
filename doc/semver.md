@@ -9,14 +9,6 @@
 ## Usage
 
 ```go
-const (
-	MAGICMAJOR        = 10000000
-	MAGICMINOR        = 10000
-	MAGICMAJORTOMINOR = 1000
-)
-```
-
-```go
 var (
 	ErrInvalidVersion = errors.Base("invalid version")
 )
@@ -26,25 +18,28 @@ var (
 
 ```go
 type SemVer struct {
-	Major  int
-	Minor  int
-	Patch  int
-	Commit string
+	Major  int    // Major version number.
+	Minor  int    // Minor version number.
+	Patch  int    // Patch number.
+	Commit string // VCS commit identifier.
 }
 ```
 
+Semantic version structure.
 
 #### func  MakeSemVer
 
 ```go
 func MakeSemVer(info string) (*SemVer, error)
 ```
+Make a new semantic version from the given string.
 
 #### func  NewSemVer
 
 ```go
 func NewSemVer() *SemVer
 ```
+Create a new empty semantic version object.
 
 #### func (*SemVer) FromString
 
@@ -58,9 +53,11 @@ Convert numeric version to components.
 ```go
 func (s *SemVer) String() string
 ```
+Return a string representation of the semantic version.
 
 #### func (*SemVer) Version
 
 ```go
 func (s *SemVer) Version() int
 ```
+Return an integer version.

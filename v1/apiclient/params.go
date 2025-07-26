@@ -29,7 +29,19 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package apiclient
+
+// * Code:
+
+// ** Types:
 
 // Basic authentication configuration.
 type AuthBasic struct {
@@ -88,6 +100,8 @@ type Params struct {
 	Queries []*QueryParam
 }
 
+// ** Methods:
+
 // Add a new query parameter.
 func (p *Params) AddQueryParam(name, content string) *QueryParam {
 	q := NewQueryParam(name, content)
@@ -112,6 +126,8 @@ func (p *Params) SetUseToken(val bool) {
 	p.UseToken = val
 }
 
+// ** Functions:
+
 // Create a new API parameters object.
 func NewParams() *Params {
 	return &Params{
@@ -134,4 +150,4 @@ func NewParams() *Params {
 	}
 }
 
-// params.go ends here.
+// * params.go ends here.

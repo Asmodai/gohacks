@@ -29,7 +29,17 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package semver
+
+// * Imports:
 
 import (
 	"gitlab.com/tozd/go/errors"
@@ -39,36 +49,33 @@ import (
 	"strings"
 )
 
+// * Constants:
+
+const (
+	magicMajor        = 10000000
+	magicMinor        = 10000
+	magicMajorToMinor = 1000
+)
+
+// * Variables:
+
 var (
 	ErrInvalidVersion = errors.Base("invalid version")
 )
 
-const (
-	MAGICMAJOR        = 10000000
-	MAGICMINOR        = 10000
-	MAGICMAJORTOMINOR = 1000
-)
+// * Code:
 
+// ** Types:
+
+// Semantic version structure.
 type SemVer struct {
-	Major  int
-	Minor  int
-	Patch  int
-	Commit string
+	Major  int    // Major version number.
+	Minor  int    // Minor version number.
+	Patch  int    // Patch number.
+	Commit string // VCS commit identifier.
 }
 
-func MakeSemVer(info string) (*SemVer, error) {
-	semver := &SemVer{}
-
-	if err := semver.FromString(info); err != nil {
-		return nil, err
-	}
-
-	return semver, nil
-}
-
-func NewSemVer() *SemVer {
-	return &SemVer{}
-}
+// * Methods:
 
 // Convert numeric version to components.
 func (s *SemVer) FromString(info string) error {
@@ -94,9 +101,9 @@ func (s *SemVer) FromString(info string) error {
 		return errors.WithStack(err)
 	}
 
-	nmaj := iver / MAGICMAJOR
-	nmin := (iver / MAGICMINOR) - (nmaj * MAGICMAJORTOMINOR)
-	npatch := iver - ((nmaj * MAGICMAJOR) + (nmin * MAGICMINOR))
+	nmaj := iver / magicMajor
+	nmin := (iver / magicMinor) - (nmaj * magicMajorToMinor)
+	npatch := iver - ((nmaj * magicMajor) + (nmin * magicMinor))
 
 	s.Major = nmaj
 	s.Minor = nmin
@@ -106,6 +113,7 @@ func (s *SemVer) FromString(info string) error {
 	return nil
 }
 
+// Return a string representation of the semantic version.
 func (s *SemVer) String() string {
 	return fmt.Sprintf(
 		"%d.%d.%d",
@@ -115,10 +123,29 @@ func (s *SemVer) String() string {
 	)
 }
 
+// Return an integer version.
 func (s *SemVer) Version() int {
-	return ((s.Major * MAGICMAJOR) +
-		(s.Minor * MAGICMINOR) +
+	return ((s.Major * magicMajor) +
+		(s.Minor * magicMinor) +
 		s.Patch)
 }
 
-// semver.go ends here.
+// ** Functions:
+
+// Make a new semantic version from the given string.
+func MakeSemVer(info string) (*SemVer, error) {
+	semver := &SemVer{}
+
+	if err := semver.FromString(info); err != nil {
+		return nil, err
+	}
+
+	return semver, nil
+}
+
+// Create a new empty semantic version object.
+func NewSemVer() *SemVer {
+	return &SemVer{}
+}
+
+// * semver.go ends here.

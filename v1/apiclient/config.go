@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// process_test.go --- SysInfo process tests.
+// config.go --- API client configuration.
 //
 // Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -29,36 +29,60 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package sysinfo
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
+package apiclient
+
+// * Imports:
 
 import (
-	"github.com/Asmodai/gohacks/process"
-
-	"testing"
 	"time"
+
+	"github.com/Asmodai/gohacks/types"
 )
 
-func TestProcess(t *testing.T) {
-	t.Log("Does the system info process run as expected?")
+// * Constants:
 
-	mgr := process.NewManager()
+const (
+	defaultRequestsPerSecond int            = 60
+	defaultTimeout           types.Duration = types.Duration(30 * time.Second)
+)
 
-	testSIProc, err := Spawn(mgr, 1)
-	if err != nil {
-		t.Errorf("Spawn: %s", err.Error())
-		return
-	}
+// * Code:
 
-	time.Sleep(2 * time.Second)
+// ** Types:
 
-	if !testSIProc.Running {
-		t.Error("Process is not running.")
-		testSIProc.Stop()
-		return
-	}
+// API client configuration.
+type Config struct {
+	// The number of requests per second should rate limiting be required.
+	RequestsPerSecond int `json:"requests_per_second"`
 
-	testSIProc.Stop()
-	t.Log("Yes.")
+	// HTTP connection timeout value.
+	Timeout types.Duration `json:"timeout"`
+
+	// Callback to call in order to check request success.
+	SuccessCheck SuccessCheckFn `json:"-"`
 }
 
-// process_test.go ends here.
+// ** Functions:
+
+// Create a new API client configuration.
+func NewConfig(reqsPerSec int, timeout types.Duration) *Config {
+	return &Config{
+		RequestsPerSecond: reqsPerSec,
+		Timeout:           timeout,
+	}
+}
+
+// Return a new default API client configuration.
+func NewDefaultConfig() *Config {
+	return NewConfig(defaultRequestsPerSecond, defaultTimeout)
+}
+
+// * config.go ends here.

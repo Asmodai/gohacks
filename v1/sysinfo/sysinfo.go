@@ -29,17 +29,31 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package sysinfo
 
-import (
-	"github.com/Asmodai/gohacks/math/conversion"
+// * Imports:
 
+import (
 	"log"
 	"os"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/Asmodai/gohacks/math/conversion"
 )
+
+// * Code:
+
+// ** Types:
 
 type SysInfo struct {
 	sync.Mutex
@@ -50,17 +64,7 @@ type SysInfo struct {
 	goroutines int
 }
 
-// Create a new System Information instance.
-func NewSysInfo() *SysInfo {
-	siproc := &SysInfo{
-		rt:    runtime.MemStats{},
-		start: time.Now(),
-	}
-
-	siproc.initHostname()
-
-	return siproc
-}
+// ** Methods:
 
 // Initialize hostname field.
 func (si *SysInfo) initHostname() {
@@ -122,4 +126,18 @@ func (si *SysInfo) GoRoutines() int {
 	return si.goroutines
 }
 
-// sysinfo.go ends here.
+// ** Functions:
+
+// Create a new System Information instance.
+func NewSysInfo() *SysInfo {
+	siproc := &SysInfo{
+		rt:    runtime.MemStats{},
+		start: time.Now(),
+	}
+
+	siproc.initHostname()
+
+	return siproc
+}
+
+// * sysinfo.go ends here.

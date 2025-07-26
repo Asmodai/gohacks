@@ -1,13 +1,24 @@
-<!-- -*- mode: gfm;auto-fill: t; fill-column: 78; -*- -->
+<!-- -*- mode: gfm; auto-fill: t; fill-column: 78; -*- -->
 
 # Security Policy
 
 ## Supported versions
 
-| Version | Supported |
-| ------- | --------- |
-| Master  | :white_check_mark:       |
-| < 0.3.0 | :x:       |
+| Version | Supported          | Notes                     |
+| ------- | ------------------ | ------------------------- |
+| Master  | :white_check_mark: | Active development        |
+| v0.x    | :x:                | Deprecated, will not fix. |
+
+### v0 Notice
+
+The `v0` series is considered **frozen in time**.  No further updates,
+security or otherwise, will be made.
+
+If you're using `v0`, you are doing so at your own risk, peril, and
+potentially moral disgrace.
+
+Please upgrade to `v1` unless you're archaeologically studying ancient
+codebases.
 
 ## Reporting a Vulnerability
 

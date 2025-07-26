@@ -29,7 +29,17 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package apiclient
+
+// * Imports:
 
 import (
 	"github.com/Asmodai/gohacks/logger"
@@ -42,26 +52,34 @@ import (
 	"testing"
 )
 
+// * Code:
+
+// ** Types:
+
 // Callback type for fake HTTP magic.
-type FakeHttpFn func(*http.Request) ([]byte, int, error)
+type FakeHttpFn func(*http.Request) Response
 
 // Fake HTTP magic structure.
 type FakeHttp struct {
 	Payload FakeHttpFn
 }
 
+// ** Methods:
+
 // Perform a fake HTTP magic request thing, FEEL THE POWER!
 func (c *FakeHttp) Do(req *http.Request) (*http.Response, error) {
-	data, code, err := c.Payload(req)
+	result := c.Payload(req)
 
-	body := io.NopCloser(bytes.NewReader(data))
+	body := io.NopCloser(bytes.NewReader(result.Body))
 	resp := &http.Response{
-		StatusCode: code,
+		StatusCode: result.StatusCode,
 		Body:       body,
 	}
 
-	return resp, err
+	return resp, result.Error
 }
+
+// ** Functions:
 
 // Create default parameters
 func defaultParams() *Params {
@@ -72,7 +90,7 @@ func defaultParams() *Params {
 }
 
 // Invoke afake HTTP magic GET request.
-func invokeGet(params *Params, payloadfn FakeHttpFn) ([]byte, int, error) {
+func invokeGet(params *Params, payloadfn FakeHttpFn) Response {
 	c := NewClient(NewDefaultConfig(), logger.NewDefaultLogger())
 	c.(*client).Client = &FakeHttp{
 		Payload: payloadfn,
@@ -82,7 +100,7 @@ func invokeGet(params *Params, payloadfn FakeHttpFn) ([]byte, int, error) {
 }
 
 // Invoke afake HTTP magic POST request.
-func invokePost(params *Params, payloadfn FakeHttpFn) ([]byte, int, error) {
+func invokePost(params *Params, payloadfn FakeHttpFn) Response {
 	c := NewClient(NewDefaultConfig(), logger.NewDefaultLogger())
 	c.(*client).Client = &FakeHttp{
 		Payload: payloadfn,
@@ -92,10 +110,10 @@ func invokePost(params *Params, payloadfn FakeHttpFn) ([]byte, int, error) {
 }
 
 // Invoke a fake HTTP magic request with a custom HTTP method verb.
-func invokeVerb(verb string, params *Params, payloadfn FakeHttpFn) ([]byte, int, error) {
+func invokeVerb(verb string, params *Params, payloadfn FakeHttpFn) Response {
 	conf := &Config{
-		RequestsPerSecond: 5,
-		Timeout:           5,
+		RequestsPerSecond: defaultRequestsPerSecond,
+		Timeout:           defaultTimeout,
 	}
 
 	c := NewClient(conf, logger.NewDefaultLogger())
@@ -106,6 +124,8 @@ func invokeVerb(verb string, params *Params, payloadfn FakeHttpFn) ([]byte, int,
 	return c.(*client).httpAction(context.TODO(), verb, params)
 }
 
+// ** Tests:
+
 // Test the 'Get' method.
 func TestGet(t *testing.T) {
 	// Basic run, no errors.
@@ -113,22 +133,26 @@ func TestGet(t *testing.T) {
 		"Works as expected",
 		func(t *testing.T) {
 			payload := []byte("{}")
-			data, code, err := invokeGet(
+			resp := invokeGet(
 				defaultParams(),
-				func(_ *http.Request) ([]byte, int, error) {
-					return payload, 200, nil
+				func(_ *http.Request) Response {
+					return NewResponse(
+						200,
+						payload,
+						http.Header{},
+						nil)
 				},
 			)
 
-			if err != nil {
-				t.Errorf("No, %s", err.Error())
+			if resp.Error != nil {
+				t.Errorf("No, %s", resp.Error.Error())
 			}
 
-			if code != 200 {
-				t.Errorf("No, code %v", code)
+			if resp.StatusCode != 200 {
+				t.Errorf("No, code %v", resp.StatusCode)
 			}
 
-			if !bytes.Equal(data, payload) {
+			if !bytes.Equal(resp.Body, payload) {
 				t.Error("No, payload does not match.")
 			}
 		},
@@ -138,15 +162,24 @@ func TestGet(t *testing.T) {
 	t.Run(
 		"Handles server-side errors",
 		func(t *testing.T) {
-			data, code, err := invokeGet(
+			resp := invokeGet(
 				defaultParams(),
-				func(_ *http.Request) ([]byte, int, error) {
-					return []byte("busted"), 0, fmt.Errorf("broken")
+				func(_ *http.Request) Response {
+					return NewResponse(
+						0,
+						[]byte("busted"),
+						http.Header{},
+						fmt.Errorf("broken"))
 				},
 			)
 
-			if data != nil || code != 0 || err.Error() != "broken" {
-				t.Errorf("No, unexpected data='%v', code='%v', err='%v'", data, code, err.Error())
+			if resp.Body != nil || resp.StatusCode != 0 || resp.Error.Error() != "broken" {
+				t.Errorf(
+					"No, unexpected data='%v', code='%v', err='%v'",
+					resp.Body,
+					resp.StatusCode,
+					resp.Error.Error(),
+				)
 			}
 		},
 	)
@@ -155,21 +188,26 @@ func TestGet(t *testing.T) {
 	t.Run(
 		"Handles invalid methods",
 		func(t *testing.T) {
-			_, _, err := invokeVerb(
+			resp := invokeVerb(
 				"Do The Thing",
 				defaultParams(),
-				func(_ *http.Request) ([]byte, int, error) {
-					return []byte(""), 200, nil
+				func(_ *http.Request) Response {
+					return NewResponse(
+						200,
+						[]byte(""),
+						http.Header{},
+						nil,
+					)
 				},
 			)
 
-			if err == nil {
+			if resp.Error == nil {
 				t.Error("No, no error returned.")
 				return
 			}
 
-			if err.Error() != "net/http: invalid method \"Do The Thing\"" {
-				t.Errorf("No, '%v'", err.Error())
+			if resp.Error.Error() != "net/http: invalid method \"Do The Thing\"" {
+				t.Errorf("No, '%v'", resp.Error.Error())
 			}
 		},
 	)
@@ -180,7 +218,7 @@ func TestGet(t *testing.T) {
 		func(t *testing.T) {
 			accept := "text/gibberish"
 			contentType := "text/shenanigans"
-			_, code, err := invokeGet(
+			resp := invokeGet(
 				&Params{
 					URL: "http://127.0.0.1/test",
 					Content: ContentType{
@@ -188,23 +226,32 @@ func TestGet(t *testing.T) {
 						Type:   contentType,
 					},
 				},
-				func(req *http.Request) ([]byte, int, error) {
+				func(req *http.Request) Response {
 					payload := []byte("")
 
 					if val := req.Header.Get("Accept"); val != accept {
-						return payload, 500, fmt.Errorf("Invalid Accept hdr: '%v'", val)
+						return NewResponseWithCodeFromError(
+							500,
+							fmt.Errorf("Invalid Accept hdr: '%v'", val))
 					}
 
 					if val := req.Header.Get("Content-Type"); val != contentType {
-						return payload, 500, fmt.Errorf("Invalid Content-Type hdr: '%v'", val)
+						return NewResponseWithCodeFromError(
+							500,
+							fmt.Errorf("Invalid Content-Type hdr: '%v'", val))
 					}
 
-					return payload, 200, nil
+					return NewResponse(
+						200,
+						payload,
+						http.Header{},
+						nil,
+					)
 				},
 			)
 
-			if code == 500 {
-				t.Errorf("No, '%v'", err.Error())
+			if resp.StatusCode == 500 {
+				t.Errorf("No, '%v'", resp.Error.Error())
 			}
 		},
 	)
@@ -213,24 +260,28 @@ func TestGet(t *testing.T) {
 	t.Run(
 		"Complains if both auth types are used",
 		func(t *testing.T) {
-			_, _, err := invokeGet(
+			resp := invokeGet(
 				&Params{
 					UseBasic: true,
 					UseToken: true,
 					URL:      "http://127.0.0.1/test",
 				},
-				func(_ *http.Request) ([]byte, int, error) {
-					return []byte(""), 200, nil
+				func(_ *http.Request) Response {
+					return NewResponse(
+						200,
+						[]byte(""),
+						http.Header{},
+						nil)
 				},
 			)
 
-			if err == nil {
+			if resp.Error == nil {
 				t.Error("No, no error returned.")
 				return
 			}
 
-			if err.Error() != "cannot use basic auth and token at the same time" {
-				t.Errorf("No, '%v'", err.Error())
+			if resp.Error.Error() != "cannot use basic auth and token at the same time" {
+				t.Errorf("No, '%v'", resp.Error.Error())
 			}
 		},
 	)
@@ -238,23 +289,23 @@ func TestGet(t *testing.T) {
 	t.Run(
 		"Complains if basic auth is missing a username",
 		func(t *testing.T) {
-			_, _, err := invokeGet(
+			resp := invokeGet(
 				&Params{
 					URL:      "http://127.0.0.1/test",
 					UseBasic: true,
 				},
-				func(_ *http.Request) ([]byte, int, error) {
-					return []byte(""), 200, nil
+				func(_ *http.Request) Response {
+					return Response{StatusCode: 200}
 				},
 			)
 
-			if err == nil {
+			if resp.Error == nil {
 				t.Error("No, no error returned.")
 				return
 			}
 
-			if err.Error() != "no basic auth username given" {
-				t.Errorf("No, '%v'", err.Error())
+			if resp.Error.Error() != "no basic auth username given" {
+				t.Errorf("No, '%v'", resp.Error.Error())
 			}
 		},
 	)
@@ -263,23 +314,23 @@ func TestGet(t *testing.T) {
 	t.Run(
 		"Complains if token auth is missing headers",
 		func(t *testing.T) {
-			_, _, err := invokeGet(
+			resp := invokeGet(
 				&Params{
 					URL:      "http://127.0.0.1/test",
 					UseToken: true,
 				},
-				func(_ *http.Request) ([]byte, int, error) {
-					return []byte(""), 200, nil
+				func(_ *http.Request) Response {
+					return Response{StatusCode: 200}
 				},
 			)
 
-			if err == nil {
+			if resp.Error == nil {
 				t.Error("No, no error returned.")
 				return
 			}
 
-			if err.Error() != "no auth token header given" {
-				t.Errorf("No, '%v'", err.Error())
+			if resp.Error.Error() != "no auth token header given" {
+				t.Errorf("No, '%v'", resp.Error.Error())
 			}
 		},
 	)
@@ -293,20 +344,24 @@ func TestGet(t *testing.T) {
 			}
 			params.AddQueryParam("test", "value")
 
-			_, _, err := invokeGet(
+			resp := invokeGet(
 				params,
-				func(req *http.Request) ([]byte, int, error) {
-					return []byte(""), 500, fmt.Errorf("%v", req.URL.RawQuery)
+				func(req *http.Request) Response {
+					return NewResponse(
+						500,
+						[]byte(""),
+						http.Header{},
+						fmt.Errorf("%v", req.URL.RawQuery))
 				},
 			)
 
-			if err == nil {
+			if resp.Error == nil {
 				t.Error("Unexpected result!")
 				return
 			}
 
-			if err.Error() != "test=value" {
-				t.Errorf("No, '%v'", err.Error())
+			if resp.Error.Error() != "test=value" {
+				t.Errorf("No, '%v'", resp.Error.Error())
 			}
 		},
 	)
@@ -319,15 +374,24 @@ func TestPost(t *testing.T) {
 		"Works as expected",
 		func(t *testing.T) {
 			payload := []byte("woot")
-			data, code, err := invokePost(
+			resp := invokePost(
 				defaultParams(),
-				func(_ *http.Request) ([]byte, int, error) {
-					return payload, 200, nil
+				func(_ *http.Request) Response {
+					return NewResponse(
+						200,
+						payload,
+						http.Header{},
+						nil,
+					)
 				},
 			)
 
-			if !bytes.Equal(data, payload) || code != 200 || err != nil {
-				t.Errorf("No, unexpected data='%v', code='%v', err='%v'", data, code, err.Error())
+			if !bytes.Equal(resp.Body, payload) || resp.StatusCode != 200 || resp.Error != nil {
+				t.Errorf("No, unexpected data='%v', code='%v', err='%v'",
+					resp.Body,
+					resp.StatusCode,
+					resp.Error.Error(),
+				)
 			}
 		},
 	)
@@ -340,7 +404,7 @@ func TestTokenAuth(t *testing.T) {
 		"Does auth token header get added if required",
 		func(t *testing.T) {
 			payload := []byte("TOKEN")
-			data, code, err := invokeGet(
+			resp := invokeGet(
 				&Params{
 					URL:      "http://127.0.0.1/test",
 					UseToken: true,
@@ -349,15 +413,24 @@ func TestTokenAuth(t *testing.T) {
 						Data:   "TOKEN",
 					},
 				},
-				func(req *http.Request) ([]byte, int, error) {
+				func(req *http.Request) Response {
 					tok := req.Header.Get("HEADER")
 
-					return []byte(tok), 200, nil
+					return NewResponse(
+						200,
+						[]byte(tok),
+						req.Header,
+						nil,
+					)
 				},
 			)
 
-			if !bytes.Equal(data, payload) || code != 200 || err != nil {
-				t.Errorf("No, unexpected data='%v', code='%v', err='%v'", data, code, err.Error())
+			if !bytes.Equal(resp.Body, payload) || resp.StatusCode != 200 || resp.Error != nil {
+				t.Errorf("No, unexpected data='%v', code='%v', err='%v'",
+					resp.Body,
+					resp.StatusCode,
+					resp.Error.Error(),
+				)
 			}
 		},
 	)
@@ -370,7 +443,7 @@ func TestBasicAuth(t *testing.T) {
 		"Is basic auth added when required",
 		func(t *testing.T) {
 			payload := []byte("user:pass")
-			data, code, err := invokeGet(
+			resp := invokeGet(
 				&Params{
 					URL:      "http://127.0.0.1/test",
 					UseBasic: true,
@@ -379,18 +452,30 @@ func TestBasicAuth(t *testing.T) {
 						Password: "pass",
 					},
 				},
-				func(req *http.Request) ([]byte, int, error) {
+				func(req *http.Request) Response {
 					u, p, ok := req.BasicAuth()
 					if !ok {
-						return []byte(""), 500, fmt.Errorf("basic auth")
+						return NewResponseWithCodeFromError(
+							500,
+							fmt.Errorf("basic auth"),
+						)
 					}
 
-					return []byte(u + ":" + p), 200, nil
+					return NewResponse(
+						200,
+						[]byte(u+":"+p),
+						http.Header{},
+						nil,
+					)
 				},
 			)
 
-			if !bytes.Equal(data, payload) || code != 200 || err != nil {
-				t.Errorf("No, unexpected data='%v', code='%v', err='%v'", data, code, err.Error())
+			if !bytes.Equal(resp.Body, payload) || resp.StatusCode != 200 || resp.Error != nil {
+				t.Errorf("No, unexpected data='%v', code='%v', err='%v'",
+					resp.Body,
+					resp.StatusCode,
+					resp.Error.Error(),
+				)
 			}
 		},
 	)
@@ -400,23 +485,28 @@ func TestStatusCode(t *testing.T) {
 	t.Run(
 		"Non-200 status codes should generate errors",
 		func(t *testing.T) {
-			_, _, err := invokeGet(
+			resp := invokeGet(
 				defaultParams(),
-				func(req *http.Request) ([]byte, int, error) {
-					return []byte("404 Not Found"), 404, nil
+				func(req *http.Request) Response {
+					return NewResponse(
+						404,
+						[]byte("404 Not Found"),
+						http.Header{},
+						nil,
+					)
 				},
 			)
 
-			if err == nil {
+			if resp.Error == nil {
 				t.Error("No, no error generated.")
 				return
 			}
 
-			if err.Error() != "received status code 404 for http://127.0.0.1/test" {
-				t.Errorf("No, '%v'", err.Error())
+			if resp.Error.Error() != "received status code 404 for http://127.0.0.1/test" {
+				t.Errorf("No, '%v'", resp.Error.Error())
 			}
 		},
 	)
 }
 
-// client_test.go ends here.
+// * client_test.go ends here.

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// random_test.go --- RNG tests.
+// process_test.go --- SysInfo process tests.
 //
 // Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -29,79 +29,50 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package crypto
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
+package sysinfo
+
+// * Imports:
 
 import (
-	"bytes"
 	"testing"
+	"time"
+
+	"github.com/Asmodai/gohacks/process"
 )
 
-func TestRandomBytes(t *testing.T) {
-	var r1 []byte = []byte("")
-	var r2 []byte = []byte("")
-	var err error = nil
+// * Code:
 
-	t.Run("Generates 16 bytes", func(t *testing.T) {
-		r1, err = GenerateRandomBytes(16)
-		if err != nil {
-			t.Errorf("No, '%v'", err.Error())
-			return
-		}
+// ** Tests:
 
-		if len(r1) != 16 {
-			t.Errorf("Length mismatch")
-		}
-	})
+func TestProcess(t *testing.T) {
+	t.Log("Does the system info process run as expected?")
 
-	t.Run("Subsequent generations are unique", func(t *testing.T) {
-		r2, err = GenerateRandomBytes(16)
-		if err != nil {
-			t.Errorf("No, '%v'", err.Error())
-		}
+	mgr := process.NewManager()
 
-		if len(r2) != 16 {
-			t.Errorf("Length mismatch")
-			return
-		}
+	testSIProc, err := Spawn(mgr, 1)
+	if err != nil {
+		t.Errorf("Spawn: %s", err.Error())
+		return
+	}
 
-		if bytes.Equal(r1, r2) {
-			t.Errorf("Not unique!")
-		}
-	})
+	time.Sleep(2 * time.Second)
+
+	if !testSIProc.Running {
+		t.Error("Process is not running.")
+		testSIProc.Stop()
+		return
+	}
+
+	testSIProc.Stop()
+	t.Log("Yes.")
 }
 
-func TestRandomString(t *testing.T) {
-	var s1 string = ""
-	var s2 string = ""
-	var err error = nil
-
-	t.Run("Generates 32 characters", func(t *testing.T) {
-		s1, err = GenerateRandomString(32)
-		if err != nil {
-			t.Errorf("No, '%v'", err.Error())
-			return
-		}
-
-		if len(s1) != 32 {
-			t.Errorf("Length mismatch")
-		}
-	})
-
-	t.Run("Subsequent generations are unique", func(t *testing.T) {
-		s2, err = GenerateRandomString(32)
-		if err != nil {
-			t.Errorf("No, '%v'", err.Error())
-		}
-
-		if len(s2) != 32 {
-			t.Errorf("Length mismatch")
-			return
-		}
-
-		if s1 == s2 {
-			t.Errorf("Not unique!")
-		}
-	})
-}
-
-// random_test.go ends here.
+// * process_test.go ends here.

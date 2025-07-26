@@ -9,6 +9,18 @@
 ## Usage
 
 ```go
+const (
+	ReasonNone int = iota
+	ReasonRetryAfter
+	ReasonRateLimitExceeded
+	ReasonHTTPStatusCode
+	ReasonMaximum
+
+	ReasonInvalid string = "invalid reason"
+)
+```
+
+```go
 var (
 	// Triggered when an invalid authentication method is passed via the API
 	// parameters.  Will also be triggered if both basic auth and auth token
@@ -20,7 +32,7 @@ var (
 	ErrMissingArgument = errors.Base("missing argument")
 
 	// Triggered if the result of an API call via the client does not have a
-	// `200` HTTP status code.
+	// `2xx` HTTP status code or fails the user-defined success check.
 	ErrNotOk = errors.Base("not ok")
 )
 ```
@@ -63,7 +75,7 @@ type Client interface {
 	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
-	Get(*Params) ([]byte, int, error)
+	Get(*Params) Response
 
 	// Perform a HTTP POST using the given API parameters.
 	//
@@ -71,7 +83,7 @@ type Client interface {
 	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
-	Post(*Params) ([]byte, int, error)
+	Post(*Params) Response
 
 	// Perform a HTTP get using the given API parameters and context.
 	//
@@ -79,7 +91,7 @@ type Client interface {
 	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
-	GetWithContext(context.Context, *Params) ([]byte, int, error)
+	GetWithContext(context.Context, *Params) Response
 
 	// Perform a HTTP POST using the given API parameters and context.
 	//
@@ -87,7 +99,7 @@ type Client interface {
 	// code, and an error if one is triggered.
 	//
 	// You will need to remember to check both the error and status code.
-	PostWithContext(context.Context, *Params) ([]byte, int, error)
+	PostWithContext(context.Context, *Params) Response
 }
 ```
 
@@ -101,7 +113,7 @@ followed.
     ```go
     conf := &apiclient.Config{
     	RequestsPerSecond: 5,    // 5 requests per second.
-    	Timeout:           5,    // 5 seconds.
+    	Timeout:           types.Duration(5*time.Second),
     }
     ```
 
@@ -150,7 +162,10 @@ type Config struct {
 	RequestsPerSecond int `json:"requests_per_second"`
 
 	// HTTP connection timeout value.
-	Timeout int `json:"timeout"`
+	Timeout types.Duration `json:"timeout"`
+
+	// Callback to call in order to check request success.
+	SuccessCheck SuccessCheckFn `json:"-"`
 }
 ```
 
@@ -159,7 +174,7 @@ API client configuration.
 #### func  NewConfig
 
 ```go
-func NewConfig(reqsPerSec, timeout int) *Config
+func NewConfig(reqsPerSec int, timeout types.Duration) *Config
 ```
 Create a new API client configuration.
 
@@ -283,3 +298,82 @@ API URL query parameter.
 func NewQueryParam(name, content string) *QueryParam
 ```
 Create a new query parameter.
+
+#### type RateLimitInfo
+
+```go
+type RateLimitInfo struct {
+	Limit      int           // Total limit count.
+	Remaining  int           // Number of calls remaining.
+	ResetTime  time.Time     // Limit reset time.
+	RetryAfter time.Duration // Retry delay.
+	ReasonCode int           // Inferred throttle reason.
+}
+```
+
+Rate limit information.
+
+#### func  NewRateLimitInfo
+
+```go
+func NewRateLimitInfo(code int, headers http.Header) RateLimitInfo
+```
+Return a new rate limit info object.
+
+#### func (RateLimitInfo) IsRateLimited
+
+```go
+func (obj RateLimitInfo) IsRateLimited() bool
+```
+Has the rate limit been reached?
+
+#### func (RateLimitInfo) Reason
+
+```go
+func (obj RateLimitInfo) Reason() string
+```
+Return the throttling reason (if any) as a string.
+
+#### func (RateLimitInfo) String
+
+```go
+func (obj RateLimitInfo) String() string
+```
+Return the rate limit information in string format.
+
+#### type Response
+
+```go
+type Response struct {
+	Body       []byte
+	StatusCode int
+	Headers    http.Header
+	Limits     RateLimitInfo
+	Error      error
+}
+```
+
+
+#### func  NewResponse
+
+```go
+func NewResponse(code int, body []byte, headers http.Header, err error) Response
+```
+
+#### func  NewResponseFromError
+
+```go
+func NewResponseFromError(err error) Response
+```
+
+#### func  NewResponseWithCodeFromError
+
+```go
+func NewResponseWithCodeFromError(code int, err error) Response
+```
+
+#### type SuccessCheckFn
+
+```go
+type SuccessCheckFn func(int) bool
+```

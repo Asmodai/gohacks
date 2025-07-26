@@ -43,13 +43,11 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockClient) Get(arg0 *apiclient.Params) ([]byte, int, error) {
+func (m *MockClient) Get(arg0 *apiclient.Params) apiclient.Response {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(apiclient.Response)
+	return ret0
 }
 
 // Get indicates an expected call of Get.
@@ -59,13 +57,11 @@ func (mr *MockClientMockRecorder) Get(arg0 any) *gomock.Call {
 }
 
 // GetWithContext mocks base method.
-func (m *MockClient) GetWithContext(arg0 context.Context, arg1 *apiclient.Params) ([]byte, int, error) {
+func (m *MockClient) GetWithContext(arg0 context.Context, arg1 *apiclient.Params) apiclient.Response {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetWithContext", arg0, arg1)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(apiclient.Response)
+	return ret0
 }
 
 // GetWithContext indicates an expected call of GetWithContext.
@@ -75,13 +71,11 @@ func (mr *MockClientMockRecorder) GetWithContext(arg0, arg1 any) *gomock.Call {
 }
 
 // Post mocks base method.
-func (m *MockClient) Post(arg0 *apiclient.Params) ([]byte, int, error) {
+func (m *MockClient) Post(arg0 *apiclient.Params) apiclient.Response {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Post", arg0)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(apiclient.Response)
+	return ret0
 }
 
 // Post indicates an expected call of Post.
@@ -91,13 +85,11 @@ func (mr *MockClientMockRecorder) Post(arg0 any) *gomock.Call {
 }
 
 // PostWithContext mocks base method.
-func (m *MockClient) PostWithContext(arg0 context.Context, arg1 *apiclient.Params) ([]byte, int, error) {
+func (m *MockClient) PostWithContext(arg0 context.Context, arg1 *apiclient.Params) apiclient.Response {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PostWithContext", arg0, arg1)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(apiclient.Response)
+	return ret0
 }
 
 // PostWithContext indicates an expected call of PostWithContext.

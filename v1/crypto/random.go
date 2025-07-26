@@ -29,17 +29,31 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package crypto
+
+// * Imports:
 
 import (
 	"gitlab.com/tozd/go/errors"
 
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
-	"math/big"
 )
+
+// * Code:
+
+// ** Functions:
 
 // Check that the underlying OS has a cryptographic randomiser by attempting
 // to exercise it.  If the read operation fails, then panic.
@@ -64,18 +78,40 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 
 // Generate a random string of the given length using bytes from the
 // cryptographic randomiser.
+//
+//nolint:mnd
 func GenerateRandomString(count int) (string, error) {
-	const alnum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	const (
+		alnum     = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+		alnumLen  = byte(len(alnum))
+		byteLimit = 255
+		maxByte   = byteLimit - (byteLimit % alnumLen) // Discard bias.
+	)
 
-	ret := make([]byte, count)
+	ret := make([]byte, 0, count)
+	buf := make([]byte, count*2) // Overshoot to reduce re-fills.
 
-	for idx := range count {
-		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(alnum))))
-		if err != nil {
+	defer func() {
+		for i := range buf {
+			buf[i] = 0
+		}
+	}()
+
+	for len(ret) < count {
+		if _, err := rand.Read(buf); err != nil {
 			return "", errors.WithStack(err)
 		}
 
-		ret[idx] = alnum[num.Int64()]
+		for _, b := range buf {
+			if b > maxByte {
+				continue // Avoid modulo bias.
+			}
+
+			ret = append(ret, alnum[b%alnumLen])
+			if len(ret) == count {
+				break
+			}
+		}
 	}
 
 	return string(ret), nil
@@ -83,13 +119,15 @@ func GenerateRandomString(count int) (string, error) {
 
 // Operates the same way as `GenerateRandomString` but encodes the result
 // using base64 encoding.
+//
+//nolint:mnd
 func GenerateRandomSafeString(count int) (string, error) {
-	b, err := GenerateRandomBytes(count)
+	b, err := GenerateRandomBytes((count*6 + 7) / 8)
 	if err != nil {
-		err = errors.WithStack(err)
+		return "", errors.WithStack(err)
 	}
 
-	return base64.URLEncoding.EncodeToString(b), err
+	return base64.URLEncoding.EncodeToString(b)[:count], nil
 }
 
 // Operates the same way as `GenerateRandomBytes` but encodes the result using
@@ -103,6 +141,19 @@ func GenerateRandomSafeBytes(count int) ([]byte, error) {
 	return []byte(b), err
 }
 
+// Operates the same way as `GenerateRandomBytes` but encodes the result
+// as a string of hexadecimal characters.
+func GenerateRandomHexString(count int) (string, error) {
+	b, err := GenerateRandomBytes(count)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	return hex.EncodeToString(b), nil
+}
+
+// ** Init magic function:
+
 // Initialise the randomiser.
 //
 //nolint:gochecknoinits
@@ -110,4 +161,4 @@ func init() {
 	assertAvailablePRNG()
 }
 
-// random.go ends here.
+// * random.go ends here.

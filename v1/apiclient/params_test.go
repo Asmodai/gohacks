@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float_test.go --- Floating-point conversion tests.
+// params_test.go --- Query params tests.
 //
-// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -30,12 +30,14 @@
 // SOFTWARE.
 
 // * Comments:
+
+//
 //
 //
 
 // * Package:
 
-package conversion
+package apiclient
 
 // * Imports:
 
@@ -45,63 +47,61 @@ import (
 
 // * Code:
 
-// ** Types:
-
-type expected struct {
-	name string
-	val  any
-	want float64
-}
-
 // ** Tests:
 
-func TestToFloat64(t *testing.T) {
-	want := []expected{
-		expected{"float64", float64(42.0), float64(42.0)},
-		expected{"float32", float32(42.0), float64(42.0)},
-		expected{"int", int(42), float64(42.0)},
-		expected{"int8", int8(42), float64(42.0)},
-		expected{"int16", int16(42), float64(42.0)},
-		expected{"int32", int32(42), float64(42.0)},
-		expected{"int64", int64(42), float64(42.0)},
-		expected{"uint", uint(42), float64(42.0)},
-		expected{"uint8", uint8(42), float64(42.0)},
-		expected{"uint16", uint16(42), float64(42.0)},
-		expected{"uint32", uint32(42), float64(42.0)},
-		expected{"uint64", uint64(42), float64(42.0)},
-	}
+func TestAccessors(t *testing.T) {
+	p := NewParams()
 
-	t.Run("Numeric types", func(t *testing.T) {
-		for idx := range want {
-			res, ok := ToFloat64(want[idx].val)
+	t.Run("SetUseBasic works", func(t *testing.T) {
+		p.SetUseBasic(true)
 
-			if !ok {
-				t.Errorf("'%s' value not ok", want[idx].name)
-				return
-			}
-
-			if res != want[idx].want {
-				t.Errorf(
-					"Value mismatch: %#v != %#v",
-					res,
-					want[idx].want,
-				)
-				return
-			}
+		if !p.UseBasic {
+			t.Error("No, UseBasic is not set!")
 		}
 	})
 
-	t.Run("Non-numeric types", func(t *testing.T) {
-		res, ok := ToFloat64("Huh?")
+	t.Run("SetUseToken works", func(t *testing.T) {
+		p.SetUseToken(true)
 
-		if ok {
-			t.Error("Unexpectedly ok!")
+		if !p.UseToken {
+			t.Error("No, UseToken is not set!")
+		}
+	})
+
+	t.Run("AddQueryParam works", func(t *testing.T) {
+		p.AddQueryParam("drink", "yes please")
+
+		if len(p.Queries) != 1 {
+			t.Errorf("No, length of queries is %v", len(p.Queries))
 		}
 
-		if res != 0 {
-			t.Errorf("Value mismatch: %#v != 0", res)
+		if p.Queries[0].Name != "drink" {
+			t.Error("Query name does not match.")
+		}
+
+		if p.Queries[0].Content != "yes please" {
+			t.Error("Query content does not match.")
+		}
+	})
+
+	t.Run("ClearQueryParams works", func(t *testing.T) {
+		before := len(p.Queries)
+		p.ClearQueryParams()
+		after := len(p.Queries)
+
+		if before == 0 {
+			t.Error("Array was empty before the test ran!")
+			return
+		}
+
+		if before == after {
+			t.Error("Nothing was removed!")
+		}
+
+		if after != 0 {
+			t.Error("Array still contains elements.")
 		}
 	})
 }
 
-// * float_test.go ends here.
+// * params_test.go ends here.

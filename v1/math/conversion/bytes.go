@@ -29,7 +29,17 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+//
+//
+//
+
+// * Package:
+
 package conversion
+
+// * Constants:
 
 const (
 	bytesKiB = 1024
@@ -37,6 +47,10 @@ const (
 	bytesGiB = 1.074e9
 	bytesTiB = 1.1e12
 )
+
+// * Code:
+
+// ** Functions:
 
 // Convert bytes to kibibytes.
 func BToKiB(b uint64) uint64 {
@@ -78,4 +92,4 @@ func TiBToB(b uint64) uint64 {
 	return b * bytesTiB
 }
 
-// conversion.go ends here.
+// * conversion.go ends here.

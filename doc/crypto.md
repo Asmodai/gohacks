@@ -15,6 +15,14 @@ func GenerateRandomBytes(n int) ([]byte, error)
 ```
 Generate n number of random bytes from a cryptographic randomiser.
 
+#### func  GenerateRandomHexString
+
+```go
+func GenerateRandomHexString(count int) (string, error)
+```
+Operates the same way as `GenerateRandomBytes` but encodes the result as a
+string of hexadecimal characters.
+
 #### func  GenerateRandomSafeBytes
 
 ```go
