@@ -134,6 +134,9 @@ type TimedCache interface {
 
 	//  Returns `true` if the cache has expired.
 	Expired() bool
+
+	// Return a list of all keys in the cache.
+	Keys() []any
 }
 ```
 

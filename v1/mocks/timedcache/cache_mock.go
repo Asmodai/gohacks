@@ -125,6 +125,20 @@ func (mr *MockTimedCacheMockRecorder) Get(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockTimedCache)(nil).Get), arg0)
 }
 
+// Keys mocks base method.
+func (m *MockTimedCache) Keys() []any {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Keys")
+	ret0, _ := ret[0].([]any)
+	return ret0
+}
+
+// Keys indicates an expected call of Keys.
+func (mr *MockTimedCacheMockRecorder) Keys() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Keys", reflect.TypeOf((*MockTimedCache)(nil).Keys))
+}
+
 // LastUpdated mocks base method.
 func (m *MockTimedCache) LastUpdated() time.Time {
 	m.ctrl.T.Helper()

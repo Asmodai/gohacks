@@ -31,7 +31,19 @@
 //
 // mock:yes
 
+// * Comments:
+
+//
+// TODO: Replace weird metrics callbacks with Prometheus.
+// TODO: Add a config element to give the cache a name so that we can have
+// multiple caches with Prometheus labels to track them.
+//
+
+// * Package:
+
 package timedcache
+
+// * Imports:
 
 import (
 	"gitlab.com/tozd/go/errors"
@@ -40,6 +52,8 @@ import (
 	"sync"
 	"time"
 )
+
+// * Variables:
 
 var (
 	// Triggered when an operation that expects a key to not exist find
@@ -51,19 +65,9 @@ var (
 	ErrKeyNotExist = errors.Base("the specified key does not exist")
 )
 
-// Type definition for the "On Eviction" callback function.
-type OnEvictFn func(any, any)
+// * Code:
 
-// Type definition for a metrics callback function.
-type MetricFn func()
-
-// Type definition for the internal cache item structure.
-type Item struct {
-	Object any
-}
-
-// Type definition for the map of items in the cache.
-type CacheItems map[any]Item
+// ** Interfaces:
 
 type TimedCache interface {
 	// Sets the value for the given key to the given value.
@@ -115,7 +119,26 @@ type TimedCache interface {
 
 	//  Returns `true` if the cache has expired.
 	Expired() bool
+
+	// Return a list of all keys in the cache.
+	Keys() []any
 }
+
+// ** Types:
+
+// Type definition for the "On Eviction" callback function.
+type OnEvictFn func(any, any)
+
+// Type definition for a metrics callback function.
+type MetricFn func()
+
+// Type definition for the internal cache item structure.
+type Item struct {
+	Object any
+}
+
+// Type definition for the map of items in the cache.
+type CacheItems map[any]Item
 
 type timedCache struct {
 	updated         time.Time     // Last update time.
@@ -129,19 +152,19 @@ type timedCache struct {
 	cacheSetMetric  MetricFn      // Callbcak for set metrics.
 }
 
-// Create a new timed cache with the given configuration.
-func New(config *Config) TimedCache {
-	expire := time.Duration(config.ExpirationTime) * time.Second
+// ** Methods:
 
-	return &timedCache{
-		expiration:      expire,
-		onEvicted:       config.OnEvicted,
-		items:           CacheItems{},
-		cacheHitMetric:  config.CacheHitMetric,
-		cacheMissMetric: config.CacheMissMetric,
-		cacheGetMetric:  config.CacheGetMetric,
-		cacheSetMetric:  config.CacheSetMetric,
+// Return a list of all keys in the cache.
+func (obj *timedCache) Keys() []any {
+	obj.mutex.RLock()
+	defer obj.mutex.RUnlock()
+
+	keys := make([]any, 0, len(obj.items))
+	for k := range obj.items {
+		keys = append(keys, k)
 	}
+
+	return keys
 }
 
 // Set the value for the given key.
@@ -189,18 +212,16 @@ func (obj *timedCache) get(key any) (any, bool) {
 // Triggers `ErrKeyExists` if the given key already exists.
 func (obj *timedCache) Add(key any, value any) error {
 	obj.mutex.Lock()
+	defer obj.mutex.Unlock()
 
 	if _, found := obj.get(key); found {
-		obj.mutex.Unlock()
-
 		return errors.Wrap(
 			ErrKeyExists,
-			fmt.Sprintf("key '%s' already exists", key),
+			fmt.Sprintf("key %#v already exists", key),
 		)
 	}
 
 	obj.set(key, value)
-	obj.mutex.Unlock()
 
 	return nil
 }
@@ -210,18 +231,16 @@ func (obj *timedCache) Add(key any, value any) error {
 // Triggers `ErrKeyNotExist` if the key does not exist.
 func (obj *timedCache) Replace(key any, value any) error {
 	obj.mutex.Lock()
+	defer obj.mutex.Unlock()
 
 	if _, found := obj.get(key); !found {
-		obj.mutex.Unlock()
-
 		return errors.Wrap(
 			ErrKeyNotExist,
-			fmt.Sprintf("key '%s' does not exist", key),
+			fmt.Sprintf("key %#v does not exist", key),
 		)
 	}
 
 	obj.set(key, value)
-	obj.mutex.Unlock()
 
 	return nil
 }
@@ -231,10 +250,6 @@ func (obj *timedCache) Delete(key any) (any, bool) {
 	obj.mutex.Lock()
 	val, found := obj.zap(key)
 	obj.mutex.Unlock()
-
-	if found {
-		obj.tryOnEvicted(key, val)
-	}
 
 	return val, found
 }
@@ -260,9 +275,9 @@ func (obj *timedCache) OnEvicted(fn OnEvictFn) {
 
 // Return a count of the elements in the cache.
 func (obj *timedCache) Count() int {
-	obj.mutex.Lock()
+	obj.mutex.RLock()
 	itms := len(obj.items)
-	obj.mutex.Unlock()
+	obj.mutex.RUnlock()
 
 	return itms
 }
@@ -270,9 +285,15 @@ func (obj *timedCache) Count() int {
 // Flush all elements from the cache.
 func (obj *timedCache) Flush() {
 	obj.mutex.Lock()
+	defer obj.mutex.Unlock()
+
 	obj.updated = time.Now()
+
+	for k, v := range obj.items {
+		obj.tryOnEvicted(k, v.Object)
+	}
+
 	obj.items = CacheItems{}
-	obj.mutex.Unlock()
 }
 
 // Return the time of the last cache update.
@@ -338,4 +359,22 @@ func (obj *timedCache) tryCacheMissMetric() {
 	obj.cacheMissMetric()
 }
 
-// cache.go ends here.
+// * Functions:
+
+// Create a new timed cache with the given configuration.
+func New(config *Config) TimedCache {
+	expire := time.Duration(config.ExpirationTime) * time.Second
+
+	return &timedCache{
+		updated:         time.Now(),
+		expiration:      expire,
+		onEvicted:       config.OnEvicted,
+		items:           CacheItems{},
+		cacheHitMetric:  config.CacheHitMetric,
+		cacheMissMetric: config.CacheMissMetric,
+		cacheGetMetric:  config.CacheGetMetric,
+		cacheSetMetric:  config.CacheSetMetric,
+	}
+}
+
+// * cache.go ends here.
