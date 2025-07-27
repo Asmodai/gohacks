@@ -52,6 +52,7 @@ MODULES = amqp            \
 	  apiserver       \
 	  app             \
 	  config          \
+	  contextdi       \
 	  contextext      \
 	  crypto          \
 	  database        \
