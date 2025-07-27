@@ -64,6 +64,7 @@ MODULES = amqp            \
 	  math/conversion \
 	  memoise         \
 	  process         \
+	  responder       \
 	  rfc3339         \
 	  rlhttp          \
 	  secrets         \
