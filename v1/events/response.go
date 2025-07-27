@@ -41,7 +41,7 @@ type Response struct {
 
 	received time.Time
 	index    uint64
-	command  int
+	command  string
 	response any
 }
 
@@ -60,7 +60,7 @@ func NewResponse(msg *Message, rsp any) *Response {
 
 func (e *Response) Received() time.Time { return e.received }
 func (e *Response) Index() uint64       { return e.index }
-func (e *Response) Command() int        { return e.command }
+func (e *Response) Command() string     { return e.command }
 func (e *Response) Response() any       { return e.response }
 
 func (e *Response) String() string {

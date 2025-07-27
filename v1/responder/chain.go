@@ -352,7 +352,7 @@ func (chain *Chain) sendNamedUnsafe(name string, event events.Event) (events.Eve
 		return nil, false, true
 	}
 
-	return responder.Responder().Send(event), true, true
+	return responder.Responder().Invoke(event), true, true
 }
 
 // Send a message to a specific responder.
@@ -572,7 +572,7 @@ func (chain *Chain) RespondsTo(event events.Event) bool {
 // The first object that can respond to the event will consume it.
 //
 // Implements `Respondable`.
-func (chain *Chain) Send(event events.Event) events.Event {
+func (chain *Chain) Invoke(event events.Event) events.Event {
 	result, _ := chain.SendFirst(event)
 
 	return result

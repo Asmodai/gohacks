@@ -31,14 +31,26 @@
 //
 // mock:yes
 
+// * Comments:
+
+// * Package:
+
 package process
 
-import (
-	"github.com/Asmodai/gohacks/v1/logger"
+// * Imports:
 
+import (
 	"context"
+	"fmt"
 	"sync"
+
+	"github.com/Asmodai/gohacks/v1/contextdi"
+	"github.com/Asmodai/gohacks/v1/logger"
 )
+
+// * Code:
+
+// ** Interface:
 
 /*
 Process manager structure.
@@ -60,7 +72,7 @@ To use,
 	conf := &process.Config{
 	  Name:     "Windows 95",
 	  Interval: 10, // seconds
-	  Function: func(state **State) {
+	  Function: func(state *State) {
 	    // Crash or something.
 	  }
 	}
@@ -94,22 +106,31 @@ To use,
 Manager is optional, as you can create processes directly.
 */
 type Manager interface {
-	SetLogger(logger.Logger)
 	Logger() logger.Logger
 	SetContext(context.Context)
+	SetLogger(logger.Logger)
 	Context() context.Context
 	Create(*Config) *Process
 	Add(*Process)
 	Find(string) (*Process, bool)
 	Run(string) bool
 	Stop(string) bool
-	StopAll() bool
-	Processes() *[]*Process
+	StopAll() StopAllResults
+	Processes() []*Process
 	Count() int
 }
 
+// ** Types:
+
+type StopAllResults map[string]bool
+
+// Process map type.
+type processMap map[string]*Process
+
 type manager struct {
-	processes []*Process
+	mu sync.RWMutex
+
+	processes processMap
 	logger    logger.Logger
 	parent    context.Context
 	ctx       context.Context
@@ -117,36 +138,29 @@ type manager struct {
 	cwg       *sync.WaitGroup
 }
 
-// Create a new process manager with a given parent context.
-func NewManagerWithContext(parent context.Context) Manager {
-	ctx, cancel := context.WithCancel(parent)
-
-	return &manager{
-		processes: []*Process{},
-		logger:    logger.NewDefaultLogger(),
-		ctx:       ctx,
-		cancel:    cancel,
-		cwg:       &sync.WaitGroup{},
-	}
-}
-
-// Create a new process manager.
-func NewManager() Manager {
-	return NewManagerWithContext(context.TODO())
-}
+// ** Methods:
 
 // Set the process manager's logger.
 func (pm *manager) SetLogger(lgr logger.Logger) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
 	pm.logger = lgr
 }
 
 // Return the manager's logger.
 func (pm *manager) Logger() logger.Logger {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
 	return pm.logger
 }
 
 // Set the process manager's context.
 func (pm *manager) SetContext(parent context.Context) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
 	ctx, cancel := context.WithCancel(parent)
 
 	pm.parent = parent
@@ -156,16 +170,18 @@ func (pm *manager) SetContext(parent context.Context) {
 
 // Get the process manager's context.
 func (pm *manager) Context() context.Context {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
 	return pm.ctx
 }
 
 // Create a new process with the given configuration.
 func (pm *manager) Create(config *Config) *Process {
-	proc := NewProcessWithContext(config, pm.ctx)
-	proc.SetLogger(pm.logger)
-	proc.SetWaitGroup(pm.cwg)
+	proc := NewProcessWithContext(pm.ctx, config)
+	proc.setWaitGroup(pm.cwg)
 
-	pm.processes = append(pm.processes, proc)
+	pm.Add(proc)
 
 	return proc
 }
@@ -176,19 +192,34 @@ func (pm *manager) Add(proc *Process) {
 		return
 	}
 
-	proc.SetLogger(pm.logger)
-	pm.processes = append(pm.processes, proc)
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
+	proc.setLogger(pm.logger)
+
+	_, found := pm.processes[proc.name]
+	if found {
+		// No, absolutely do not allow this... and be violent about
+		// it.  Processes need to be unique.
+		panic(fmt.Sprintf(
+			"Attempt made to replace an existing process '%s'",
+			proc.name))
+	}
+
+	pm.processes[proc.name] = proc
 }
 
 // Find and return the given process, or nil if not found.
 func (pm *manager) Find(name string) (*Process, bool) {
-	for _, p := range pm.processes {
-		if p.Name == name {
-			return p, true
-		}
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
+	proc, found := pm.processes[name]
+	if !found {
+		return nil, false
 	}
 
-	return nil, false
+	return proc, true
 }
 
 // Run the named process.
@@ -201,7 +232,9 @@ func (pm *manager) Run(name string) bool {
 		return false
 	}
 
-	proc.SetContext(pm.ctx)
+	pm.mu.Lock()
+	proc.setContext(pm.ctx)
+	pm.mu.Unlock()
 
 	return proc.Run()
 }
@@ -221,27 +254,32 @@ func (pm *manager) Stop(name string) bool {
 
 // Stop all processes.
 //
-// Returns 'true' if *all* processes have been stopped; otherwise
-// 'false' is returned.
-func (pm *manager) StopAll() bool {
-	res := true
+// Returns a `map[string]bool` value where the keys are the names of the
+// currently-managed processes and the result of invoking `Stop` on them.
+func (pm *manager) StopAll() StopAllResults {
+	res := StopAllResults{}
 
 	pm.logger.Info(
 		"Stopping all processes.",
 		"type", "stop",
 	)
 
-	// This is better than invoking the context's cancel, as it allows
-	// cleanup to be executed.
-	for _, proc := range pm.processes {
-		pm.logger.Info(
-			"Stopping process.",
-			"type", "stop",
-			"name", proc.Name,
-		)
+	// Block is being used here to highlight the lock.
+	pm.mu.RLock()
+	{
+		// This is better than invoking the context's cancel, as
+		// it allows cleanup to be executed.
+		for _, proc := range pm.processes {
+			pm.logger.Info(
+				"Stopping process.",
+				"type", "stop",
+				"name", proc.name,
+			)
 
-		res = proc.Stop()
+			res[proc.name] = proc.Stop()
+		}
 	}
+	pm.mu.RUnlock()
 
 	// Stopping all process requires us to wait.
 	pm.cwg.Wait()
@@ -255,13 +293,50 @@ func (pm *manager) StopAll() bool {
 }
 
 // Return a list of all processes.
-func (pm *manager) Processes() *[]*Process {
-	return &pm.processes
+func (pm *manager) Processes() []*Process {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
+	var processes = make([]*Process, 0, len(pm.processes))
+
+	for _, proc := range pm.processes {
+		processes = append(processes, proc)
+	}
+
+	return processes
 }
 
 // Return the number of processes that we are managing.
 func (pm *manager) Count() int {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
 	return len(pm.processes)
 }
 
-// manager.go ends here.
+// ** Functions:
+
+// Create a new process manager with a given parent context.
+func NewManagerWithContext(parent context.Context) Manager {
+	lgr, err := contextdi.GetLogger(parent)
+	if err != nil {
+		lgr = logger.NewDefaultLogger()
+	}
+
+	ctx, cancel := context.WithCancel(parent)
+
+	return &manager{
+		processes: make(processMap),
+		logger:    lgr,
+		ctx:       ctx,
+		cancel:    cancel,
+		cwg:       &sync.WaitGroup{},
+	}
+}
+
+// Create a new process manager.
+func NewManager() Manager {
+	return NewManagerWithContext(context.Background())
+}
+
+// * manager.go ends here.

@@ -166,6 +166,17 @@ func (chain *Chain) Count() int
 ```
 Return the number of responders in the chain.
 
+#### func (*Chain) Invoke
+
+```go
+func (chain *Chain) Invoke(event events.Event) events.Event
+```
+Send an event to the chain.
+
+The first object that can respond to the event will consume it.
+
+Implements `Respondable`.
+
 #### func (*Chain) IsEmpty
 
 ```go
@@ -229,17 +240,6 @@ Iterate over responders checking if any implement the given event.
 
 The first responder found that responds to the event will result in `true` being
 returned.
-
-Implements `Respondable`.
-
-#### func (*Chain) Send
-
-```go
-func (chain *Chain) Send(event events.Event) events.Event
-```
-Send an event to the chain.
-
-The first object that can respond to the event will consume it.
 
 Implements `Respondable`.
 
@@ -372,7 +372,7 @@ type Respondable interface {
 	// There is no second return value to indicate success or whether
 	// the event was handled or not.  The idea being that the receiver
 	// will send an `events.Response` event back.
-	Send(events.Event) events.Event
+	Invoke(events.Event) events.Event
 }
 ```
 

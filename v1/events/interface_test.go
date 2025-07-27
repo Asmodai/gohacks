@@ -38,7 +38,7 @@ import (
 
 func TestEventInterface(t *testing.T) {
 	evt1 := NewTime()
-	evt2 := NewMessage(12, "nope")
+	evt2 := NewMessage("yep", "nope")
 
 	t.Run("EventType", func(t *testing.T) {
 		t1 := EventType(evt1)

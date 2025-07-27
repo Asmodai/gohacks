@@ -91,13 +91,13 @@ type Message struct {
 #### func  NewMessage
 
 ```go
-func NewMessage(cmd int, data any) *Message
+func NewMessage(cmd string, data any) *Message
 ```
 
 #### func (*Message) Command
 
 ```go
-func (e *Message) Command() int
+func (e *Message) Command() string
 ```
 
 #### func (*Message) Data
@@ -175,7 +175,7 @@ func NewResponse(msg *Message, rsp any) *Response
 #### func (*Response) Command
 
 ```go
-func (e *Response) Command() int
+func (e *Response) Command() string
 ```
 
 #### func (*Response) Index

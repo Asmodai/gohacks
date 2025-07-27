@@ -40,6 +40,20 @@ func (m *MockRespondable) EXPECT() *MockRespondableMockRecorder {
 	return m.recorder
 }
 
+// Invoke mocks base method.
+func (m *MockRespondable) Invoke(arg0 events.Event) events.Event {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Invoke", arg0)
+	ret0, _ := ret[0].(events.Event)
+	return ret0
+}
+
+// Invoke indicates an expected call of Invoke.
+func (mr *MockRespondableMockRecorder) Invoke(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Invoke", reflect.TypeOf((*MockRespondable)(nil).Invoke), arg0)
+}
+
 // Name mocks base method.
 func (m *MockRespondable) Name() string {
 	m.ctrl.T.Helper()
@@ -66,20 +80,6 @@ func (m *MockRespondable) RespondsTo(arg0 events.Event) bool {
 func (mr *MockRespondableMockRecorder) RespondsTo(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RespondsTo", reflect.TypeOf((*MockRespondable)(nil).RespondsTo), arg0)
-}
-
-// Send mocks base method.
-func (m *MockRespondable) Send(arg0 events.Event) events.Event {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Send", arg0)
-	ret0, _ := ret[0].(events.Event)
-	return ret0
-}
-
-// Send indicates an expected call of Send.
-func (mr *MockRespondableMockRecorder) Send(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockRespondable)(nil).Send), arg0)
 }
 
 // Type mocks base method.

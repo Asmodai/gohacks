@@ -85,7 +85,7 @@ func (d *dummyResponder) RespondsTo(evt events.Event) bool {
 	return ok && e.Kind() == d.accepts
 }
 
-func (d *dummyResponder) Send(evt events.Event) events.Event {
+func (d *dummyResponder) Invoke(evt events.Event) events.Event {
 	var result events.Event
 
 	if d.log != nil {
@@ -93,7 +93,7 @@ func (d *dummyResponder) Send(evt events.Event) events.Event {
 	}
 
 	if d.useResponse {
-		msg := events.NewMessage(42, d.name)
+		msg := events.NewMessage("42", d.name)
 
 		result = events.NewResponse(msg, d.response)
 	} else {

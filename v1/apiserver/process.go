@@ -29,23 +29,39 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+// * Package:
+
 package apiserver
 
+// * Imports:
+
 import (
-	"github.com/Asmodai/gohacks/v1/logger"
-	"github.com/Asmodai/gohacks/v1/process"
-	"github.com/Asmodai/gohacks/v1/types"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"gitlab.com/tozd/go/errors"
 
-	"sync"
+	"github.com/Asmodai/gohacks/v1/events"
+	"github.com/Asmodai/gohacks/v1/logger"
+	"github.com/Asmodai/gohacks/v1/process"
 )
 
+// * Constants:
+
 const (
-	// API command magic numbers.
-	getRouter int = 1
+	// Responder name.
+	responderName string = "gohacks.dispatcher"
+
+	// Responder type.
+	responderType string = "apiserver.Dispatcher"
+
+	// "GetRouter" command.
+	CmdGetRouter string = "dispatcher.getrouter"
 )
+
+// * Variables:
 
 var (
 	// Triggered when no process manager instance is provided.
@@ -58,53 +74,93 @@ var (
 	ErrWrongReturnType = errors.Base("wrong return type")
 )
 
+// * Code:
+
+// ** Types:
+
 // Dispatcher process.
 type DispatcherProc struct {
-	mu sync.Mutex
+	mu sync.RWMutex
 
 	inst *Dispatcher
 }
+
+// ** Methods:
+
+// Start the dispatcher process.
+func (p *DispatcherProc) start() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	p.inst.Start()
+}
+
+// Internal method to stop the API dispatcher process.
+func (p *DispatcherProc) stop(_ *process.State) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	p.inst.Stop()
+}
+
+func (p *DispatcherProc) Name() string {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return responderName
+}
+
+func (p *DispatcherProc) Type() string {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return responderType
+}
+
+func (p *DispatcherProc) RespondsTo(event events.Event) bool {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	switch val := event.(type) {
+	case *events.Message:
+		switch val.Command() {
+		case CmdGetRouter:
+			return true
+
+		default:
+			return false
+		}
+
+	default:
+		return false
+	}
+}
+
+func (p *DispatcherProc) Invoke(event events.Event) events.Event {
+	cmd, ok := event.(*events.Message)
+	if !ok {
+		return event
+	}
+
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	switch cmd.Command() {
+	case CmdGetRouter:
+		return events.NewResponse(cmd, p.inst.GetRouter())
+
+	default:
+		return event
+	}
+}
+
+// * Functions:
 
 // Create a new dispatcher process.
 func NewDispatcherProc(lgr logger.Logger, config *Config) *DispatcherProc {
 	return &DispatcherProc{
 		inst: NewDispatcher(lgr, config),
 	}
-}
-
-// Start the dispatcher process.
-func (p *DispatcherProc) start() {
-	p.inst.Start()
-}
-
-// Action invoked when the dispatcher process receives a message.
-func (p *DispatcherProc) Action(state **process.State) {
-	var pst = *state
-
-	cmd, ok := pst.ReceiveBlocking().(*types.Pair)
-	if !ok && cmd != nil {
-		pst.Logger().Fatal(
-			"Received message that is not of type types.Pair",
-			"cmd", cmd,
-		)
-	}
-
-	if cmd == nil {
-		return
-	}
-
-	p.mu.Lock()
-	defer p.mu.Unlock()
-
-	if cmd.First == getRouter {
-		// Caller wants to know what our router is.
-		pst.Send(process.NewActionResult(p.inst.GetRouter(), nil))
-	}
-}
-
-// Internal method to stop the API dispatcher process.
-func (p *DispatcherProc) stop(_ **process.State) {
-	p.inst.Stop()
 }
 
 // Spawn an API dispatcher process.
@@ -122,10 +178,10 @@ func Spawn(mgr process.Manager, lgr logger.Logger, config *Config) (*process.Pro
 
 	dispatch := NewDispatcherProc(lgr, config)
 	conf := &process.Config{
-		Name:     name,
-		Interval: 0,
-		Function: dispatch.Action,
-		OnStop:   dispatch.stop,
+		Name:           name,
+		Interval:       0,
+		FirstResponder: dispatch,
+		OnStop:         dispatch.stop,
 	}
 	proc := mgr.Create(conf)
 
@@ -151,14 +207,14 @@ func GetRouter(mgr process.Manager) (*gin.Engine, error) {
 		return nil, errors.WithStack(ErrNoDispatcherProc)
 	}
 
-	inst.Send(types.NewPair(getRouter, nil))
+	event := inst.Invoke(events.NewMessage(CmdGetRouter, nil))
 
-	result, okay := inst.Receive().(*process.ActionResult)
-	if !okay {
+	result, ok := event.(*events.Response)
+	if !ok {
 		return nil, errors.WithStack(ErrWrongReturnType)
 	}
 
-	engine, okay := result.Value.(*gin.Engine)
+	engine, okay := result.Response().(*gin.Engine)
 	if !okay {
 		return nil, errors.WithStack(ErrWrongReturnType)
 	}

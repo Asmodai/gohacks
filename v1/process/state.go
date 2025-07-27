@@ -29,64 +29,72 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+// * Package:
+
 package process
 
-import (
-	"github.com/Asmodai/gohacks/v1/logger"
+// * Imports:
 
+import (
 	"context"
+	"sync"
+
+	"github.com/Asmodai/gohacks/v1/events"
+	"github.com/Asmodai/gohacks/v1/logger"
+	"github.com/Asmodai/gohacks/v1/responder"
 )
+
+// * Code:
+
+// ** Types:
 
 // Internal state for processes.
 type State struct {
-	parent *Process
+	mu sync.RWMutex
+
+	parent     *Process
+	responders *responder.Chain
 }
 
-func NewState() *State {
-	return &State{}
+// ** Methods:
+
+func (ps *State) RespondsTo(event events.Event) bool {
+	ps.mu.RLock()
+	defer ps.mu.RUnlock()
+
+	return ps.responders.RespondsTo(event)
+}
+
+func (ps *State) Invoke(event events.Event) (events.Event, bool) {
+	ps.mu.RLock()
+	defer ps.mu.RUnlock()
+
+	return ps.responders.SendFirst(event)
 }
 
 // Return the context for the parent process.
 func (ps *State) Context() context.Context {
+	ps.mu.RLock()
+	defer ps.mu.RUnlock()
+
 	return ps.parent.Context()
 }
 
-// Send data from a process to an external entity.
-func (ps *State) Send(data any) bool {
-	select {
-	case ps.parent.chanFromState <- data:
-		return true
-
-	default:
-	}
-
-	return false
-}
-
-// Send data from a process to an external entity with blocking.
-func (ps *State) SendBlocking(data any) {
-	ps.parent.chanFromState <- data
-}
-
-// Read data from an external entity.
-func (ps *State) Receive() (any, bool) {
-	select {
-	case data := <-ps.parent.chanToState:
-		return data, true
-
-	default:
-	}
-
-	return nil, false
-}
-
-// Read data from an external entity with blocking.
-func (ps *State) ReceiveBlocking() any {
-	return <-ps.parent.chanToState
-}
-
 func (ps *State) Logger() logger.Logger {
+	ps.mu.RLock()
+	defer ps.mu.RUnlock()
+
 	return ps.parent.logger
 }
 
-// state.go ends here.
+// ** Functions:
+
+func newState(name string) *State {
+	return &State{
+		responders: responder.NewChain(name),
+	}
+}
+
+// * state.go ends here.

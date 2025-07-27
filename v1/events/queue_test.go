@@ -32,6 +32,7 @@
 package events
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -50,7 +51,7 @@ func TestQueue(t *testing.T) {
 
 	t.Run("Push to capacity", func(t *testing.T) {
 		for i := 0; i < queue.Capacity(); i++ {
-			evt := NewMessage(i, "Nope")
+			evt := NewMessage(fmt.Sprintf("%d", i), "Nope")
 
 			queue.Push(evt)
 		}
@@ -70,7 +71,7 @@ func TestQueue(t *testing.T) {
 		newevts := 200
 
 		for i := 0; i < newevts; i++ {
-			evt := NewMessage(i, "Yup")
+			evt := NewMessage(fmt.Sprintf("%d", i), "Yup")
 
 			queue.Push(evt)
 		}

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// proc_manager.go --- Process manager context value.
+// di.go --- Process manager context value.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,14 +33,14 @@
 
 // * Package:
 
-package contextdi
+package process
 
 // * Imports:
 
 import (
 	"context"
 
-	"github.com/Asmodai/gohacks/v1/process"
+	"github.com/Asmodai/gohacks/v1/contextdi"
 	"gitlab.com/tozd/go/errors"
 )
 
@@ -61,21 +61,26 @@ var (
 // ** Functions:
 
 // Set the process manager value to the context map.
-func SetProcessManager(ctx context.Context, inst process.Manager) (context.Context, error) {
-	return PutToContext(ctx, ContextKeyProcManager, inst)
+func SetProcessManager(ctx context.Context, inst Manager) (context.Context, error) {
+	result, err := contextdi.PutToContext(ctx, ContextKeyProcManager, inst)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return result, nil
 }
 
 // Get the process manager from the given context.
 //
 // Will return `ErrValueNotProcessManager` if the value in the context is
 // not of type `process.Manager`.
-func GetProcessManager(ctx context.Context) (process.Manager, error) {
-	val, err := GetFromContext(ctx, ContextKeyProcManager)
+func GetProcessManager(ctx context.Context) (Manager, error) {
+	val, err := contextdi.GetFromContext(ctx, ContextKeyProcManager)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	inst, ok := val.(process.Manager)
+	inst, ok := val.(Manager)
 	if !ok {
 		return nil, errors.WithStack(ErrValueNotProcessManager)
 	}
@@ -85,7 +90,7 @@ func GetProcessManager(ctx context.Context) (process.Manager, error) {
 
 // Attempt to get the process manager from the given context.  Panics if the
 // operation fails.
-func MustGetProcessManager(ctx context.Context) process.Manager {
+func MustGetProcessManager(ctx context.Context) Manager {
 	inst, err := GetProcessManager(ctx)
 
 	if err != nil {
@@ -95,4 +100,4 @@ func MustGetProcessManager(ctx context.Context) process.Manager {
 	return inst
 }
 
-// * proc_manager.go ends here.
+// * di.go ends here.

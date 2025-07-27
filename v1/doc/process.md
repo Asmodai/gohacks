@@ -10,17 +10,29 @@
 
 ```go
 const (
-	EventLoopSleep time.Duration = 250 * time.Millisecond
+	ContextKeyProcManager = "_DI_PROC_MGR"
 )
 ```
+
+```go
+var (
+	ErrValueNotProcessManager = errors.Base("value is not process.Manager")
+)
+```
+
+#### func  SetProcessManager
+
+```go
+func SetProcessManager(ctx context.Context, inst Manager) (context.Context, error)
+```
+Set the process manager value to the context map.
 
 #### type ActionResult
 
 ```go
 type ActionResult struct {
-	Value   any
-	Error   error
-	Success bool
+	Value any
+	Error error
 }
 ```
 
@@ -46,7 +58,7 @@ func (ar *ActionResult) IsError() bool
 #### type CallbackFn
 
 ```go
-type CallbackFn func(**State)
+type CallbackFn func(*State)
 ```
 
 Callback function.
@@ -55,22 +67,22 @@ Callback function.
 
 ```go
 type Config struct {
-	Name     string        // Pretty name.
-	Interval int           // `RunEvery` time interval.
-	Function CallbackFn    // `Action` callback.
-	OnStart  CallbackFn    // `Start` callback.
-	OnStop   CallbackFn    // `Stop` callback.
-	OnQuery  QueryFn       // `Query` callback.
-	Logger   logger.Logger // Logger.
+	Name           string         // Pretty name.
+	Interval       types.Duration // `RunEvery` time interval.
+	Function       CallbackFn     // `Action` callback.
+	OnStart        CallbackFn     // `Start` callback.
+	OnStop         CallbackFn     // `Stop` callback.
+	OnQuery        QueryFn        // `Query` callback.
+	FirstResponder responder.Respondable
 }
 ```
 
 Process configuration structure.
 
-#### func  NewDefaultConfig
+#### func  NewConfig
 
 ```go
-func NewDefaultConfig() *Config
+func NewConfig() *Config
 ```
 Create a default process configuration.
 
@@ -78,17 +90,15 @@ Create a default process configuration.
 
 ```go
 type Manager interface {
-	SetLogger(logger.Logger)
 	Logger() logger.Logger
-	SetContext(context.Context)
 	Context() context.Context
 	Create(*Config) *Process
 	Add(*Process)
 	Find(string) (*Process, bool)
 	Run(string) bool
 	Stop(string) bool
-	StopAll() bool
-	Processes() *[]*Process
+	StopAll() StopAllResults
+	Processes() []*Process
 	Count() int
 }
 ```
@@ -112,7 +122,7 @@ To use,
     conf := &process.Config{
       Name:     "Windows 95",
       Interval: 10, // seconds
-      Function: func(state **State) {
+      Function: func(state *State) {
         // Crash or something.
       }
     }
@@ -145,6 +155,24 @@ To use,
 
 Manager is optional, as you can create processes directly.
 
+#### func  GetProcessManager
+
+```go
+func GetProcessManager(ctx context.Context) (Manager, error)
+```
+Get the process manager from the given context.
+
+Will return `ErrValueNotProcessManager` if the value in the context is not of
+type `process.Manager`.
+
+#### func  MustGetProcessManager
+
+```go
+func MustGetProcessManager(ctx context.Context) Manager
+```
+Attempt to get the process manager from the given context. Panics if the
+operation fails.
+
 #### func  NewManager
 
 ```go
@@ -163,15 +191,6 @@ Create a new process manager with a given parent context.
 
 ```go
 type Process struct {
-	sync.Mutex
-
-	Name     string        // Pretty name.
-	Function CallbackFn    // `Action` callback.
-	OnStart  CallbackFn    // `Start` callback.
-	OnStop   CallbackFn    // `Stop` callback.
-	OnQuery  QueryFn       // `Query` callback.
-	Running  bool          // Is the process running?
-	Interval time.Duration // `RunEvery` time interval.
 }
 ```
 
@@ -186,7 +205,7 @@ To use:
     conf := &process.Config{
       Name:     "Windows 95",
       Interval: 10,        // 10 seconds.
-      Function: func(state **State) {
+      Function: func(state *State) {
         // Crash or something.
       },
     }
@@ -245,7 +264,7 @@ Create a new process with the given configuration.
 #### func  NewProcessWithContext
 
 ```go
-func NewProcessWithContext(config *Config, parent context.Context) *Process
+func NewProcessWithContext(parent context.Context, config *Config) *Process
 ```
 Create a new process with the given configuration and parent context.
 
@@ -256,6 +275,18 @@ func (p *Process) Context() context.Context
 ```
 Return the context for the process.
 
+#### func (*Process) Invoke
+
+```go
+func (p *Process) Invoke(event events.Event) events.Event
+```
+
+#### func (*Process) Name
+
+```go
+func (p *Process) Name() string
+```
+
 #### func (*Process) Query
 
 ```go
@@ -265,19 +296,11 @@ Query the running process.
 
 This allows interaction with the process's base object without using `Action`.
 
-#### func (*Process) Receive
+#### func (*Process) RespondsTo
 
 ```go
-func (p *Process) Receive() interface{}
+func (p *Process) RespondsTo(event events.Event) bool
 ```
-Receive data from the process with blocking.
-
-#### func (*Process) ReceiveNonBlocking
-
-```go
-func (p *Process) ReceiveNonBlocking() (interface{}, bool)
-```
-Receive data from the process without blocking.
 
 #### func (*Process) Run
 
@@ -289,40 +312,12 @@ Run the process with its action taking place on a continuous loop.
 Returns 'true' if the process has been started, or 'false' if it is already
 running.
 
-#### func (*Process) Send
+#### func (*Process) Running
 
 ```go
-func (p *Process) Send(data interface{})
+func (p *Process) Running() bool
 ```
-Send data to the process with blocking.
-
-#### func (*Process) SendNonBlocking
-
-```go
-func (p *Process) SendNonBlocking(data interface{})
-```
-Send data to the process without blocking.
-
-#### func (*Process) SetContext
-
-```go
-func (p *Process) SetContext(parent context.Context)
-```
-Set the process's context.
-
-#### func (*Process) SetLogger
-
-```go
-func (p *Process) SetLogger(lgr logger.Logger)
-```
-Set the process's logger.
-
-#### func (*Process) SetWaitGroup
-
-```go
-func (p *Process) SetWaitGroup(wg *sync.WaitGroup)
-```
-Set the process's wait group.
+Is the process running?
 
 #### func (*Process) Stop
 
@@ -333,6 +328,12 @@ Stop the process.
 
 Returns 'true' if the process was successfully stopped, or 'false' if it was not
 running.
+
+#### func (*Process) Type
+
+```go
+func (p *Process) Type() string
+```
 
 #### type QueryFn
 
@@ -350,12 +351,6 @@ type State struct {
 
 Internal state for processes.
 
-#### func  NewState
-
-```go
-func NewState() *State
-```
-
 #### func (*State) Context
 
 ```go
@@ -363,36 +358,26 @@ func (ps *State) Context() context.Context
 ```
 Return the context for the parent process.
 
+#### func (*State) Invoke
+
+```go
+func (ps *State) Invoke(event events.Event) (events.Event, bool)
+```
+
 #### func (*State) Logger
 
 ```go
 func (ps *State) Logger() logger.Logger
 ```
 
-#### func (*State) Receive
+#### func (*State) RespondsTo
 
 ```go
-func (ps *State) Receive() (any, bool)
+func (ps *State) RespondsTo(event events.Event) bool
 ```
-Read data from an external entity.
 
-#### func (*State) ReceiveBlocking
+#### type StopAllResults
 
 ```go
-func (ps *State) ReceiveBlocking() any
+type StopAllResults map[string]bool
 ```
-Read data from an external entity with blocking.
-
-#### func (*State) Send
-
-```go
-func (ps *State) Send(data any) bool
-```
-Send data from a process to an external entity.
-
-#### func (*State) SendBlocking
-
-```go
-func (ps *State) SendBlocking(data any)
-```
-Send data from a process to an external entity with blocking.

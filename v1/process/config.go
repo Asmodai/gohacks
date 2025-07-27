@@ -29,28 +29,37 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+// * Package:
+
 package process
 
 import (
-	"github.com/Asmodai/gohacks/v1/logger"
+	"github.com/Asmodai/gohacks/v1/responder"
+	"github.com/Asmodai/gohacks/v1/types"
 )
+
+// * Code:
+
+// ** Types:
 
 // Process configuration structure.
 type Config struct {
-	Name     string        // Pretty name.
-	Interval int           // `RunEvery` time interval.
-	Function CallbackFn    // `Action` callback.
-	OnStart  CallbackFn    // `Start` callback.
-	OnStop   CallbackFn    // `Stop` callback.
-	OnQuery  QueryFn       // `Query` callback.
-	Logger   logger.Logger // Logger.
+	Name           string         // Pretty name.
+	Interval       types.Duration // `RunEvery` time interval.
+	Function       CallbackFn     // `Action` callback.
+	OnStart        CallbackFn     // `Start` callback.
+	OnStop         CallbackFn     // `Stop` callback.
+	OnQuery        QueryFn        // `Query` callback.
+	FirstResponder responder.Respondable
 }
+
+// ** Functions:
 
 // Create a default process configuration.
-func NewDefaultConfig() *Config {
-	return &Config{
-		Logger: logger.NewDefaultLogger(),
-	}
+func NewConfig() *Config {
+	return &Config{}
 }
 
-// config.go ends here.
+// * config.go ends here.

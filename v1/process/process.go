@@ -29,22 +29,39 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+// * Package:
+
 package process
 
-import (
-	"github.com/Asmodai/gohacks/v1/logger"
+// * Imports:
 
+import (
 	"context"
+	"fmt"
+	godebug "runtime/debug"
 	"sync"
 	"time"
+
+	"github.com/Asmodai/gohacks/v1/contextdi"
+	"github.com/Asmodai/gohacks/v1/events"
+	"github.com/Asmodai/gohacks/v1/logger"
 )
+
+// * Constants:
 
 const (
-	EventLoopSleep time.Duration = 250 * time.Millisecond
+	eventLoopSleep    time.Duration = 250 * time.Millisecond
+	channelBufferSize int           = 1
+	processTypeString string        = "process.Process"
 )
 
+// ** Types:
+
 // Callback function.
-type CallbackFn func(**State)
+type CallbackFn func(*State)
+
 type QueryFn func(interface{}) interface{}
 
 /*
@@ -59,7 +76,7 @@ To use:
 	conf := &process.Config{
 	  Name:     "Windows 95",
 	  Interval: 10,        // 10 seconds.
-	  Function: func(state **State) {
+	  Function: func(state *State) {
 	    // Crash or something.
 	  },
 	}
@@ -109,78 +126,38 @@ To use:
 	will stop the process.
 */
 type Process struct {
-	sync.Mutex
+	mu sync.RWMutex
 
-	Name     string        // Pretty name.
-	Function CallbackFn    // `Action` callback.
-	OnStart  CallbackFn    // `Start` callback.
-	OnStop   CallbackFn    // `Stop` callback.
-	OnQuery  QueryFn       // `Query` callback.
-	Running  bool          // Is the process running?
-	Interval time.Duration // `RunEvery` time interval.
+	name     string        // Pretty name.
+	function CallbackFn    // `Action` callback.
+	onStart  CallbackFn    // `Start` callback.
+	onStop   CallbackFn    // `Stop` callback.
+	onQuery  QueryFn       // `Query` callback.
+	interval time.Duration // `RunEvery` time interval.
 
 	logger logger.Logger
-
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     *sync.WaitGroup
 
-	chanToState   chan interface{}
-	chanFromState chan interface{}
-
-	period time.Duration
-	state  *State
+	running bool // Is the process running?
+	period  time.Duration
+	state   *State
 }
 
-// Create a new process with the given configuration and parent context.
-//
-//nolint:revive,durationcheck
-func NewProcessWithContext(config *Config, parent context.Context) *Process {
-	if config.Logger == nil {
-		config.Logger = logger.NewDefaultLogger()
-	}
-
-	ctx, cancel := context.WithCancel(parent)
-
-	proc := &Process{
-		Name:          config.Name,
-		Function:      config.Function,
-		OnStart:       config.OnStart,
-		OnStop:        config.OnStop,
-		OnQuery:       config.OnQuery,
-		Running:       false,
-		Interval:      (time.Duration)(config.Interval) * time.Second,
-		period:        (time.Duration)(config.Interval) * time.Second,
-		logger:        config.Logger,
-		ctx:           ctx,
-		cancel:        cancel,
-		wg:            &sync.WaitGroup{},
-		chanToState:   make(chan interface{}, 1),
-		chanFromState: make(chan interface{}, 1),
-		state:         &State{},
-	}
-
-	if config.Function == nil {
-		proc.Function = proc.nilFunction
-	}
-
-	proc.state.parent = proc
-
-	return proc
-}
-
-// Create a new process with the given configuration.
-func NewProcess(config *Config) *Process {
-	return NewProcessWithContext(config, context.TODO())
-}
+// ** Methods:
 
 // Set the process's logger.
-func (p *Process) SetLogger(lgr logger.Logger) {
+//
+// This should only be called by the process manager at process startup.
+func (p *Process) setLogger(lgr logger.Logger) {
 	p.logger = lgr
 }
 
 // Set the process's context.
-func (p *Process) SetContext(parent context.Context) {
+//
+// This should only be called by the process manager at process startup.
+func (p *Process) setContext(parent context.Context) {
 	ctx, cancel := context.WithCancel(parent)
 
 	p.ctx = ctx
@@ -189,12 +166,25 @@ func (p *Process) SetContext(parent context.Context) {
 
 // Return the context for the process.
 func (p *Process) Context() context.Context {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
 	return p.ctx
 }
 
 // Set the process's wait group.
-func (p *Process) SetWaitGroup(wg *sync.WaitGroup) {
+//
+// This should only be called by the process manager at process startup.
+func (p *Process) setWaitGroup(wg *sync.WaitGroup) {
 	p.wg = wg
+}
+
+// Is the process running?
+func (p *Process) Running() bool {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return p.running
 }
 
 // Run the process with its action taking place on a continuous loop.
@@ -202,40 +192,60 @@ func (p *Process) SetWaitGroup(wg *sync.WaitGroup) {
 // Returns 'true' if the process has been started, or 'false' if it is
 // already running.
 func (p *Process) Run() bool {
-	if p.Running {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if p.running {
 		return false
 	}
 
-	p.Running = true
-
-	// Execute startup callback if available.
-	if p.OnStart != nil {
-		p.OnStart(&p.state)
-	}
+	p.running = true
 
 	// Add child to wait group
 	p.wg.Add(1)
 
-	// Are we to run on an interval?
-	if p.Interval > 0 {
+	// Wrap everything up so it can be recovered.
+	go func() {
+		defer p.wg.Done()
+
+		defer func() {
+			if r := recover(); r != nil {
+				p.logger.Info(
+					"Process panicked!",
+					"type", "panic",
+					"name", p.name,
+					"recovery", r,
+					"stack", godebug.Stack(),
+				)
+			}
+		}()
+
+		// Execute startup callback if available.
+		if p.onStart != nil {
+			p.onStart(p.state)
+		}
+
+		// Are we to run on an interval?
+		if p.interval > 0 {
+			p.logger.Info(
+				"Process started.",
+				"type", "start",
+				"name", p.name,
+				"interval", p.interval.Round(time.Second),
+			)
+			p.everyAction()
+
+			return
+		}
+
 		p.logger.Info(
 			"Process started.",
 			"type", "start",
-			"name", p.Name,
-			"interval", p.Interval.Round(time.Second),
+			"name", p.name,
 		)
-		p.everyAction()
 
-		return true
-	}
-
-	p.logger.Info(
-		"Process started.",
-		"type", "start",
-		"name", p.Name,
-	)
-
-	p.runAction()
+		p.runAction()
+	}()
 
 	return true
 }
@@ -245,20 +255,17 @@ func (p *Process) Run() bool {
 // Returns 'true' if the process was successfully stopped, or 'false'
 // if it was not running.
 func (p *Process) Stop() bool {
-	if !p.Running {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if !p.running {
 		return false
 	}
 
-	p.Send(nil)
 	p.cancel()
-	p.Running = false
+	p.running = false
 
 	return true
-}
-
-// Send data to the process with blocking.
-func (p *Process) Send(data interface{}) {
-	p.chanToState <- data
 }
 
 // Query the running process.
@@ -266,40 +273,15 @@ func (p *Process) Send(data interface{}) {
 // This allows interaction with the process's base object without using
 // `Action`.
 func (p *Process) Query(arg interface{}) interface{} {
-	if p.OnQuery == nil {
+	if p.onQuery == nil {
 		return nil
 	}
 
-	return p.OnQuery(arg)
-}
-
-// Send data to the process without blocking.
-func (p *Process) SendNonBlocking(data interface{}) {
-	select {
-	case p.chanToState <- data:
-	default:
-	}
-}
-
-// Receive data from the process with blocking.
-func (p *Process) Receive() interface{} {
-	return <-p.chanFromState
-}
-
-// Receive data from the process without blocking.
-func (p *Process) ReceiveNonBlocking() (interface{}, bool) {
-	select {
-	case data := <-p.chanFromState:
-		return data, true
-
-	default:
-	}
-
-	return nil, false
+	return p.onQuery(arg)
 }
 
 // Default action callback.
-func (p *Process) nilFunction(_ **State) {
+func (p *Process) nilFunction(_ *State) {
 }
 
 // Internal callback invoked upon process stop.
@@ -307,23 +289,20 @@ func (p *Process) internalStop() {
 	p.logger.Info(
 		"Process stopped.",
 		"type", "stop",
-		"name", p.Name,
+		"name", p.name,
 	)
-
-	// Set wait as done.
-	p.wg.Done()
 }
 
 // Run the configured action for this process.
 func (p *Process) runAction() {
-	p.Lock()
-	defer p.Unlock()
-
 	for {
 		select {
 		case <-p.ctx.Done():
-			if p.OnStop != nil {
-				p.OnStop(&p.state)
+			p.mu.Lock()
+			defer p.mu.Unlock()
+
+			if p.onStop != nil {
+				p.onStop(p.state)
 			}
 
 			p.internalStop()
@@ -333,10 +312,10 @@ func (p *Process) runAction() {
 		default:
 		}
 
-		if p.Function != nil {
-			p.Function(&p.state)
+		if p.function != nil {
+			p.function(p.state)
 		} else {
-			time.Sleep(EventLoopSleep)
+			time.Sleep(eventLoopSleep)
 		}
 	}
 }
@@ -346,14 +325,14 @@ func (p *Process) runAction() {
 // Identical to 'runAction', except for the fact that this sleeps,
 // giving the appearance of something that runs on an interval.
 func (p *Process) everyAction() {
-	p.Lock()
-	defer p.Unlock()
-
 	for {
 		select {
 		case <-p.ctx.Done():
-			if p.OnStop != nil {
-				p.OnStop(&p.state)
+			p.mu.Lock()
+			defer p.mu.Unlock()
+
+			if p.onStop != nil {
+				p.onStop(p.state)
 			}
 
 			p.internalStop()
@@ -366,14 +345,108 @@ func (p *Process) everyAction() {
 
 		started := time.Now()
 
-		if p.Function != nil {
-			p.Function(&p.state)
+		if p.function != nil {
+			p.function(p.state)
 		}
 
 		finished := time.Now()
 		duration := finished.Sub(started)
-		p.period = p.Interval - duration
+
+		p.period = p.interval - duration
+		if p.period < 0 {
+			p.logger.Warn(
+				"Period less than 0.  Process doing too much?",
+				"name", p.name,
+				"period", p.period,
+				"start", started,
+				"finished", finished,
+				"duration", duration,
+			)
+
+			p.period = 0
+		}
 	}
 }
 
-// process.go ends here.
+func (p *Process) Name() string {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return p.name
+}
+
+func (p *Process) Type() string {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return processTypeString
+}
+
+func (p *Process) RespondsTo(event events.Event) bool {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return p.state.RespondsTo(event)
+}
+
+func (p *Process) Invoke(event events.Event) events.Event {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	ret, _ := p.state.Invoke(event)
+
+	return ret
+}
+
+// ** Functions:
+
+// Create a new process with the given configuration.
+func NewProcess(config *Config) *Process {
+	return NewProcessWithContext(context.Background(), config)
+}
+
+// Create a new process with the given configuration and parent context.
+func NewProcessWithContext(parent context.Context, config *Config) *Process {
+	lgr, err := contextdi.GetLogger(parent)
+	if err != nil {
+		lgr = logger.NewDefaultLogger()
+	}
+
+	ctx, cancel := context.WithCancel(parent)
+
+	proc := &Process{
+		name:     config.Name,
+		function: config.Function,
+		onStart:  config.OnStart,
+		onStop:   config.OnStop,
+		onQuery:  config.OnQuery,
+		running:  false,
+		interval: config.Interval.Duration(),
+		period:   config.Interval.Duration(),
+		logger:   lgr,
+		ctx:      ctx,
+		cancel:   cancel,
+		wg:       &sync.WaitGroup{},
+		state:    newState(config.Name),
+	}
+
+	if config.Function == nil {
+		proc.function = proc.nilFunction
+	}
+
+	if config.FirstResponder != nil {
+		_, err := proc.state.responders.Add(config.FirstResponder)
+		if err != nil {
+			panic(fmt.Sprintf(
+				"Could not add responder for process %s: %#v",
+				config.Name,
+				config.FirstResponder))
+		}
+	}
+
+	proc.state.parent = proc
+
+	return proc
+}
+
+// * process.go ends here.

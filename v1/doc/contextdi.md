@@ -28,12 +28,6 @@ const (
 
 ```go
 const (
-	ContextKeyProcManager = "_DI_PROC_MGR"
-)
-```
-
-```go
-const (
 	ContextKeyResponderChain = "_DI_RESPONDER"
 )
 ```
@@ -65,12 +59,6 @@ var (
 ```go
 var (
 	ErrValueNotMemoise = errors.Base("value is not memoise.Memoise")
-)
-```
-
-```go
-var (
-	ErrValueNotProcessManager = errors.Base("value is not process.Manager")
 )
 ```
 
@@ -127,16 +115,6 @@ Get the memoiser from the given context.
 Will return `ErrValueNoMemoise` if the value in the context is not of type
 `memoise.Memoise`.
 
-#### func  GetProcessManager
-
-```go
-func GetProcessManager(ctx context.Context) (process.Manager, error)
-```
-Get the process manager from the given context.
-
-Will return `ErrValueNotProcessManager` if the value in the context is not of
-type `process.Manager`.
-
 #### func  GetResponderChain
 
 ```go
@@ -182,14 +160,6 @@ func MustGetMemoise(ctx context.Context) memoise.Memoise
 ```
 Attempt to get the memoiser from the given context. Panics if the operation
 fails.
-
-#### func  MustGetProcessManager
-
-```go
-func MustGetProcessManager(ctx context.Context) process.Manager
-```
-Attempt to get the process manager from the given context. Panics if the
-operation fails.
 
 #### func  MustGetResponderChain
 
@@ -238,13 +208,6 @@ Set the logger value to the context map.
 func SetMemoise(ctx context.Context, inst memoise.Memoise) (context.Context, error)
 ```
 Set the memoiser value to the context map.
-
-#### func  SetProcessManager
-
-```go
-func SetProcessManager(ctx context.Context, inst process.Manager) (context.Context, error)
-```
-Set the process manager value to the context map.
 
 #### func  SetResponderChain
 

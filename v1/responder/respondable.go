@@ -80,7 +80,7 @@ type Respondable interface {
 	// There is no second return value to indicate success or whether
 	// the event was handled or not.  The idea being that the receiver
 	// will send an `events.Response` event back.
-	Send(events.Event) events.Event
+	Invoke(events.Event) events.Event
 }
 
 // * respondable.go ends here.

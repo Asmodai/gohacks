@@ -34,7 +34,7 @@ package events
 import "testing"
 
 func TestMessageEvent(t *testing.T) {
-	command := 42
+	command := "test.laugh"
 	message := "Data message"
 
 	evt := NewMessage(command, message)
@@ -57,7 +57,7 @@ func TestMessageEvent(t *testing.T) {
 		var e *Message
 
 		for i := 1; i < 2000; i++ {
-			e = NewMessage(1, "test")
+			e = NewMessage("Nope", "test")
 		}
 
 		if e.Index() != uint64(2001) {

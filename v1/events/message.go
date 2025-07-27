@@ -45,7 +45,7 @@ type Message struct {
 	Time
 
 	index   uint64
-	command int
+	command string
 	data    any
 }
 
@@ -57,7 +57,7 @@ func updateCounter() {
 	atomic.AddUint64(&counter, 1)
 }
 
-func NewMessage(cmd int, data any) *Message {
+func NewMessage(cmd string, data any) *Message {
 	updateCounter()
 
 	return &Message{
@@ -70,9 +70,9 @@ func NewMessage(cmd int, data any) *Message {
 	}
 }
 
-func (e *Message) Index() uint64 { return e.index }
-func (e *Message) Command() int  { return e.command }
-func (e *Message) Data() any     { return e.data }
+func (e *Message) Index() uint64   { return e.index }
+func (e *Message) Command() string { return e.command }
+func (e *Message) Data() any       { return e.data }
 
 func (e *Message) String() string {
 	return fmt.Sprintf("Message Event: index:%d", e.index)

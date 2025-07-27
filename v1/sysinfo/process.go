@@ -45,6 +45,7 @@ import (
 	"time"
 
 	"github.com/Asmodai/gohacks/v1/process"
+	"github.com/Asmodai/gohacks/v1/types"
 )
 
 // * Code:
@@ -57,12 +58,10 @@ type Proc struct {
 
 // ** Methods:
 
-func (sip *Proc) Action(state **process.State) {
-	ps := *state
-
+func (sip *Proc) Action(state *process.State) {
 	sip.si.UpdateStats()
 
-	ps.Logger().Debug(
+	state.Logger().Debug(
 		"System Information.",
 		"runtime", sip.si.RunTime().Round(time.Second),
 		"allocated_mib", sip.si.Allocated(),
@@ -81,7 +80,7 @@ func NewProc() *Proc {
 	}
 }
 
-func Spawn(mgr process.Manager, interval int) (*process.Process, error) {
+func Spawn(mgr process.Manager, interval types.Duration) (*process.Process, error) {
 	name := "SysInfo"
 
 	inst, found := mgr.Find(name)

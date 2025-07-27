@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// proc_manager_test.go --- Process manager tests.
+// di_test.go --- Process manager tests.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,15 +33,13 @@
 
 // * Package:
 
-package contextdi
+package process
 
 // * Imports:
 
 import (
 	"context"
 	"testing"
-
-	"github.com/Asmodai/gohacks/v1/process"
 )
 
 // * Code:
@@ -51,7 +49,7 @@ import (
 func TestProcessManager(t *testing.T) {
 	var (
 		ctx  context.Context = context.TODO()
-		inst process.Manager = process.NewManager()
+		inst Manager         = NewManager()
 		err  error
 	)
 

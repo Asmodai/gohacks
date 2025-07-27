@@ -38,7 +38,7 @@ import (
 )
 
 func TestResponseEvent(t *testing.T) {
-	command := 42
+	command := "test.wibble"
 	data := "Test"
 	reply := "Reply"
 

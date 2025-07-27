@@ -46,6 +46,7 @@ import (
 	"time"
 
 	"github.com/Asmodai/gohacks/v1/process"
+	"github.com/Asmodai/gohacks/v1/types"
 )
 
 // * Code:
@@ -57,7 +58,7 @@ func TestProcess(t *testing.T) {
 
 	mgr := process.NewManager()
 
-	testSIProc, err := Spawn(mgr, 1)
+	testSIProc, err := Spawn(mgr, types.Duration(1 * time.Second))
 	if err != nil {
 		t.Errorf("Spawn: %s", err.Error())
 		return
@@ -65,7 +66,7 @@ func TestProcess(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	if !testSIProc.Running {
+	if !testSIProc.Running() {
 		t.Error("Process is not running.")
 		testSIProc.Stop()
 		return

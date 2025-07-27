@@ -11,7 +11,7 @@
 #### func  Spawn
 
 ```go
-func Spawn(mgr process.Manager, interval int) (*process.Process, error)
+func Spawn(mgr process.Manager, interval types.Duration) (*process.Process, error)
 ```
 
 #### type Proc
@@ -31,7 +31,7 @@ func NewProc() *Proc
 #### func (*Proc) Action
 
 ```go
-func (sip *Proc) Action(state **process.State)
+func (sip *Proc) Action(state *process.State)
 ```
 
 #### type SysInfo
