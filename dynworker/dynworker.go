@@ -63,7 +63,7 @@ const (
 	// Default number of worker channels.
 	defaultWorkerChannels int64 = 1000
 
-	pressureDelay = time.Duration(50) * time.Millisecond
+	pressureDelay = 15 * time.Millisecond
 )
 
 // * Variables:
@@ -277,11 +277,6 @@ func (obj *workerPool) spawnWorker() {
 			obj.activeWorkersMetric.Dec()
 		}()
 
-		var (
-			start   time.Time
-			elapsed int64
-		)
-
 		idleTimer := time.NewTimer(obj.config.IdleTimeout)
 		defer idleTimer.Stop()
 
@@ -291,9 +286,11 @@ func (obj *workerPool) spawnWorker() {
 				return
 
 			case task := <-obj.input:
-				start = time.Now()
+				start := time.Now()
 				_ = obj.processFn(task)
-				elapsed = time.Since(start).Nanoseconds()
+				// TODO Make this dynamic?
+				time.Sleep(pressureDelay)
+				elapsed := time.Since(start).Nanoseconds()
 
 				// Update metrics.
 				obj.updateAvgProcTime(elapsed)
@@ -305,9 +302,6 @@ func (obj *workerPool) spawnWorker() {
 				// Reset and put the task back in the pool.
 				task.reset()
 				obj.taskPool.Put(task)
-
-				// TODO Make this dynamic?
-				time.Sleep(pressureDelay)
 
 			case <-idleTimer.C:
 				current := obj.workerCount.Load()
