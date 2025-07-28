@@ -402,7 +402,7 @@ func (obj *client) pollQueueStats() {
 }
 
 func (obj *client) QueueStats() (goamqp.Queue, error) {
-	queue, err := obj.channel.QueueDeclare(
+	queue, err := obj.channel.QueueDeclarePassive(
 		obj.cfg.QueueName,
 		false, // Passive!
 		false, // Don't care.
