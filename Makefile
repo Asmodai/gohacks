@@ -43,9 +43,6 @@ PACKAGE = gohack
 # Directories.
 DIR = $(PWD)
 
-# Version.
-VERSION ?= v1
-
 # Source modules.
 MODULES = amqp            \
 	  apiclient       \
@@ -116,11 +113,11 @@ prunedeps:
 # XML to this file".  Or, some other format and a HTML converter.  Either way,
 # the sed invocation is terrible.
 lint:
-	@echo "Running linter on $(VERSION)."
+	@echo "Running linter."
 	@if [ -f "$$HOME/.local/bin/junit2html" ]; then                        \
 		echo "Generating $(LINT_REPORT) and $(HTML_REPORT)";           \
-		(cd $(VERSION); golangci-lint run                              \
-			--out-format junit-xml)                                \
+		golangci-lint run                                              \
+			--out-format junit-xml                                 \
 			| sed -n '1h;1!H;$$ {g;s|\(</testsuites>\).*|\1|; p;}' \
 			> $(LINT_REPORT);                                      \
 		junit2html $(LINT_REPORT) $(HTML_REPORT);                      \
@@ -131,14 +128,14 @@ lint:
 
 critic:
 	@echo "Everyone is a critic..."
-	@gocritic check $(VERSION)
+	@gocritic check 
 
 build:
 	@echo "THIS IS A LIBRARY"
 
 test: deps
-	@echo "Running $(VERSION) tests"
-	@go test $$(go list ./$(VERSION)/... | grep -v "mocks/") \
+	@echo "Running tests"
+	@go test $$(go list ./... | grep -v "mocks/") \
 		-coverprofile=tests.out               \
 		--tags testing
 	@go tool cover -html=tests.out -o coverage.html
@@ -155,7 +152,7 @@ clean:
 	@rm -f golint.*
 	@rm -f report.xml
 	@rm -f coverage.html
-	@rm -f $(VERSION)/doc/*.md
+	@rm -f doc/go/*.md
 
 protobuf:
 	@PROTOC="$(PROTOC)" ./makeproto.sh
@@ -166,7 +163,7 @@ mocks:
 	@echo "Done."
 
 doc:
-	@VERSION="$(VERSION)" MODULES="$(MODULES)" ./makedoc.sh
+	@MODULES="$(MODULES)" ./makedoc.sh
 	@echo "Done."
 
 # Makefile ends here.

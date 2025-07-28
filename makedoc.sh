@@ -38,9 +38,8 @@
 #
 # }}}
 
-VERSION="${VERSION:-v1}"
 MODULES="${MODULES:-none}"
-path="${VERSION}/doc"
+path="doc/go"
 
 if [ "${MODULES}" == "none" ]
 then
@@ -51,7 +50,7 @@ then
     exit 1
 fi
 
-echo "Generating ${VERSION} docs in '${path}'."
+echo "Generating docs in '${path}'."
 
 # Make doc directory if needed.
 test -d "${path}"                             \
@@ -69,8 +68,8 @@ do
     mkdir -p "${outdir}"
 
     godocdown \
-        -template doc/gohacks.template \
-        "./${VERSION}/${module}/" \
+        -template doc/templates/gohacks.template \
+        "./${module}/" \
         >"${outfile}"
 done
 

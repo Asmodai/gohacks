@@ -40,21 +40,10 @@
 
 ROOT=$(pwd)
 
-VERSION="v1"
-if [[ ! -d "${VERSION}" ]]
-then
-  echo "FATAL:  Version directory '${VERSION}' not found."
-  exit 1
-fi
-cd ${VERSION}
-
 MOCK_PATH="mocks"
 test -d "${MOCK_PATH}" || mkdir "${MOCK_PATH}" && (rm -rf "${MOCK_PATH}"; mkdir "${MOCK_PATH}")
 
-
 FILES=$(find . -iname "*.go" | grep -v "/vendor/" | grep -v "/mocks/" | grep -v "\#" | grep -v "\.swp")
-
-
 
 for file in ${FILES}
 do
