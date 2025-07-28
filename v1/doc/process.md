@@ -27,34 +27,6 @@ func SetProcessManager(ctx context.Context, inst Manager) (context.Context, erro
 ```
 Set the process manager value to the context map.
 
-#### type ActionResult
-
-```go
-type ActionResult struct {
-	Value any
-	Error error
-}
-```
-
-
-#### func  NewActionResult
-
-```go
-func NewActionResult(val any, err error) *ActionResult
-```
-
-#### func  NewEmptyActionResult
-
-```go
-func NewEmptyActionResult() *ActionResult
-```
-
-#### func (*ActionResult) IsError
-
-```go
-func (ar *ActionResult) IsError() bool
-```
-
 #### type CallbackFn
 
 ```go
@@ -67,13 +39,13 @@ Callback function.
 
 ```go
 type Config struct {
-	Name           string         // Pretty name.
-	Interval       types.Duration // `RunEvery` time interval.
-	Function       CallbackFn     // `Action` callback.
-	OnStart        CallbackFn     // `Start` callback.
-	OnStop         CallbackFn     // `Stop` callback.
-	OnQuery        QueryFn        // `Query` callback.
-	FirstResponder responder.Respondable
+	Name      string                // Pretty name.
+	Interval  types.Duration        // `RunEvery` time interval.
+	Function  CallbackFn            // `Action` callback.
+	OnStart   CallbackFn            // `Start` callback.
+	OnStop    CallbackFn            // `Stop` callback.
+	OnQuery   QueryFn               // `Query` callback.
+	Responder responder.Respondable // Responder object.
 }
 ```
 
@@ -91,6 +63,8 @@ Create a default process configuration.
 ```go
 type Manager interface {
 	Logger() logger.Logger
+	SetContext(context.Context)
+	SetLogger(logger.Logger)
 	Context() context.Context
 	Create(*Config) *Process
 	Add(*Process)

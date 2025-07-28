@@ -10,6 +10,14 @@
 
 ```go
 const (
+
+	// "GetRouter" command.
+	CmdGetRouter string = "dispatcher.getrouter"
+)
+```
+
+```go
+const (
 	MinimumTimeout = 5
 )
 ```
@@ -217,12 +225,41 @@ func NewDispatcherProc(lgr logger.Logger, config *Config) *DispatcherProc
 ```
 Create a new dispatcher process.
 
-#### func (*DispatcherProc) Action
+#### func (*DispatcherProc) Invoke
 
 ```go
-func (p *DispatcherProc) Action(state **process.State)
+func (p *DispatcherProc) Invoke(event events.Event) events.Event
 ```
-Action invoked when the dispatcher process receives a message.
+Send an event to the process's responder chain.
+
+Implements `responder.Respondable`.
+
+#### func (*DispatcherProc) Name
+
+```go
+func (p *DispatcherProc) Name() string
+```
+Return the name of the process's responder component.
+
+Implements `responder.Respondable`.
+
+#### func (*DispatcherProc) RespondsTo
+
+```go
+func (p *DispatcherProc) RespondsTo(event events.Event) bool
+```
+Return if the process responds to the given event.
+
+Implements `responder.Respondable`.
+
+#### func (*DispatcherProc) Type
+
+```go
+func (p *DispatcherProc) Type() string
+```
+Return the type of the process's responder component.
+
+Implements `responder.Respondable`.
 
 #### type Document
 

@@ -434,13 +434,13 @@ func NewProcessWithContext(parent context.Context, config *Config) *Process {
 		proc.function = proc.nilFunction
 	}
 
-	if config.FirstResponder != nil {
-		_, err := proc.state.responders.Add(config.FirstResponder)
+	if config.Responder != nil {
+		_, err := proc.state.responders.Add(config.Responder)
 		if err != nil {
 			panic(fmt.Sprintf(
 				"Could not add responder for process %s: %#v",
 				config.Name,
-				config.FirstResponder))
+				config.Responder))
 		}
 	}
 

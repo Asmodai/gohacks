@@ -103,6 +103,9 @@ func (p *DispatcherProc) stop(_ *process.State) {
 	p.inst.Stop()
 }
 
+// Return the name of the process's responder component.
+//
+// Implements `responder.Respondable`.
 func (p *DispatcherProc) Name() string {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
@@ -110,6 +113,9 @@ func (p *DispatcherProc) Name() string {
 	return responderName
 }
 
+// Return the type of the process's responder component.
+//
+// Implements `responder.Respondable`.
 func (p *DispatcherProc) Type() string {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
@@ -117,6 +123,9 @@ func (p *DispatcherProc) Type() string {
 	return responderType
 }
 
+// Return if the process responds to the given event.
+//
+// Implements `responder.Respondable`.
 func (p *DispatcherProc) RespondsTo(event events.Event) bool {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
@@ -136,6 +145,9 @@ func (p *DispatcherProc) RespondsTo(event events.Event) bool {
 	}
 }
 
+// Send an event to the process's responder chain.
+//
+// Implements `responder.Respondable`.
 func (p *DispatcherProc) Invoke(event events.Event) events.Event {
 	cmd, ok := event.(*events.Message)
 	if !ok {
@@ -178,10 +190,10 @@ func Spawn(mgr process.Manager, lgr logger.Logger, config *Config) (*process.Pro
 
 	dispatch := NewDispatcherProc(lgr, config)
 	conf := &process.Config{
-		Name:           name,
-		Interval:       0,
-		FirstResponder: dispatch,
-		OnStop:         dispatch.stop,
+		Name:      name,
+		Interval:  0,
+		Responder: dispatch,
+		OnStop:    dispatch.stop,
 	}
 	proc := mgr.Create(conf)
 

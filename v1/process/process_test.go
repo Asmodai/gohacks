@@ -123,7 +123,7 @@ func NewResponderConfig(object responder.Respondable) *Config {
 	cnf.Name = "Responder Test"
 	cnf.Interval = 0
 	cnf.Function = nil
-	cnf.FirstResponder = object
+	cnf.Responder = object
 
 	return cnf
 }

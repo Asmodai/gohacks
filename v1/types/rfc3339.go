@@ -267,6 +267,11 @@ func CurrentZone() (string, int) {
 	return time.Now().Zone()
 }
 
+// Convert a Unix timestamp to an RFC3339 timestamp.
+func RFC3339FromUnix(unix int64) RFC3339 {
+	return RFC3339(time.Unix(unix, 0).UTC())
+}
+
 // *** Conversion:
 
 // Convert a `time.Time` value to a MySQL timestamp for queries.

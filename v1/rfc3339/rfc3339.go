@@ -40,11 +40,13 @@ import (
 )
 
 // An RFC3339 object.
+// Deprecated:  use `types.RFC3339` instead.
 //
 //nolint:recvcheck
 type JSONRFC3339 time.Time
 
 // Unmarshal an RFC3339 timestamp from JSON.
+// Deprecated:  use `types.RFC3339` instead.
 func (j *JSONRFC3339) UnmarshalJSON(b []byte) error {
 	s := strings.Trim(string(b), "\"")
 
@@ -59,36 +61,43 @@ func (j *JSONRFC3339) UnmarshalJSON(b []byte) error {
 }
 
 // Marshal an RFC3339 object to JSON.
+// Deprecated:  use `types.RFC3339` instead.
 func (j JSONRFC3339) MarshalJSON() ([]byte, error) {
 	return []byte("\"" + j.Format(time.RFC3339) + "\""), nil
 }
 
 // Format an RFC3339 object as a string.
+// Deprecated:  use `types.RFC3339` instead.
 func (j JSONRFC3339) Format(s string) string {
 	return j.Time().Format(s)
 }
 
 // Convert an RFC3339 time to UTC.
+// Deprecated:  use `types.RFC3339` instead.
 func (j JSONRFC3339) UTC() time.Time {
 	return j.Time().UTC()
 }
 
 // Convert an RFC3339 time to Unix time.
+// Deprecated:  use `types.RFC3339` instead.
 func (j JSONRFC3339) Unix() int64 {
 	return j.Time().Unix()
 }
 
 // convert an RFC3339 time to time.Time.
+// Deprecated:  use `types.RFC3339` instead.
 func (j JSONRFC3339) Time() time.Time {
 	return time.Time(j)
 }
 
 // Convert an RFC3339 time to a MySQL timestamp.
+// Deprecated:  use `types.RFC3339` instead.
 func (j JSONRFC3339) MySQL() string {
 	return TimeToMySQL(j.Time())
 }
 
 // Parse a string to an RFC3339 timestamp.
+// Deprecated:  use `types.RFC3339` instead.
 func Parse(data string) (time.Time, error) {
 	tzchar := strings.ToUpper(data[len(data)-1:])
 	tzoff := data[len(data)-5:]
@@ -117,16 +126,19 @@ func Parse(data string) (time.Time, error) {
 }
 
 // Return the current time zone.
+// Deprecated:  use `types.RFC3339` instead.
 func CurrentZone() (string, int) {
 	return time.Now().Zone()
 }
 
 // Convert a time to a MySQL string.
+// Deprecated:  use `types.RFC3339` instead.
 func TimeToMySQL(t time.Time) string {
 	return t.Format("2006-01-02 15:04:05")
 }
 
 // Convert a Unix `time_t` value to a time.
+// Deprecated:  use `types.RFC3339` instead.
 func FromUnix(t int64) time.Time {
 	unix := time.Unix(t, 0)
 

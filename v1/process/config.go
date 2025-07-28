@@ -46,13 +46,13 @@ import (
 
 // Process configuration structure.
 type Config struct {
-	Name           string         // Pretty name.
-	Interval       types.Duration // `RunEvery` time interval.
-	Function       CallbackFn     // `Action` callback.
-	OnStart        CallbackFn     // `Start` callback.
-	OnStop         CallbackFn     // `Stop` callback.
-	OnQuery        QueryFn        // `Query` callback.
-	FirstResponder responder.Respondable
+	Name      string                // Pretty name.
+	Interval  types.Duration        // `RunEvery` time interval.
+	Function  CallbackFn            // `Action` callback.
+	OnStart   CallbackFn            // `Start` callback.
+	OnStop    CallbackFn            // `Stop` callback.
+	OnQuery   QueryFn               // `Query` callback.
+	Responder responder.Respondable // Responder object.
 }
 
 // ** Functions:

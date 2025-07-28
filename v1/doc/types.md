@@ -557,6 +557,13 @@ Parse the given string for an RFC3339 timestamp.
 If the timestamp is not a valid RFC3339 timestamp, then `ErrInvalidRFC3339` is
 returned.
 
+#### func  RFC3339FromUnix
+
+```go
+func RFC3339FromUnix(unix int64) RFC3339
+```
+Convert a Unix timestamp to an RFC3339 timestamp.
+
 #### func (RFC3339) Add
 
 ```go

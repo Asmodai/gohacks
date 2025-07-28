@@ -153,6 +153,30 @@ func (mr *MockManagerMockRecorder) Run(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockManager)(nil).Run), arg0)
 }
 
+// SetContext mocks base method.
+func (m *MockManager) SetContext(arg0 context.Context) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetContext", arg0)
+}
+
+// SetContext indicates an expected call of SetContext.
+func (mr *MockManagerMockRecorder) SetContext(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetContext", reflect.TypeOf((*MockManager)(nil).SetContext), arg0)
+}
+
+// SetLogger mocks base method.
+func (m *MockManager) SetLogger(arg0 logger.Logger) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetLogger", arg0)
+}
+
+// SetLogger indicates an expected call of SetLogger.
+func (mr *MockManagerMockRecorder) SetLogger(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogger", reflect.TypeOf((*MockManager)(nil).SetLogger), arg0)
+}
+
 // Stop mocks base method.
 func (m *MockManager) Stop(arg0 string) bool {
 	m.ctrl.T.Helper()
