@@ -369,7 +369,7 @@ func (obj *workerPool) scaleCheck() {
 		for range toSpawn {
 			obj.spawnWorker()
 		}
-	} else {
+	} else if required < current {
 		obj.lgr.Info(
 			"dynworker: scaling down workers.",
 			"pool", obj.name,
