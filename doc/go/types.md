@@ -547,10 +547,10 @@ type RFC3339 time.Time
 
 RFC 3339 time type.
 
-#### func  Parse
+#### func  ParseRFC3339
 
 ```go
-func Parse(data string) (RFC3339, error)
+func ParseRFC3339(data string) (RFC3339, error)
 ```
 Parse the given string for an RFC3339 timestamp.
 

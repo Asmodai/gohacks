@@ -177,7 +177,7 @@ func (obj RFC3339) Sub(t time.Time) time.Duration {
 //
 // If the string value fails to parse, then `ErrInvalidRFC3339` is returned.
 func (obj *RFC3339) Set(str string) error {
-	parsed, err := Parse(str)
+	parsed, err := ParseRFC3339(str)
 	if err != nil {
 		return errors.WithMessagef(
 			ErrInvalidRFC3339,
@@ -285,7 +285,7 @@ func TimeToMySQL(val time.Time) string {
 //
 // If the timestamp is not a valid RFC3339 timestamp, then `ErrInvalidRFC3339`
 // is returned.
-func Parse(data string) (RFC3339, error) {
+func ParseRFC3339(data string) (RFC3339, error) {
 	if len(data) < minRFC3339Length {
 		return RFC3339{}, errors.WithMessagef(
 			ErrInvalidRFC3339,
@@ -311,7 +311,7 @@ func Parse(data string) (RFC3339, error) {
 	// future.  We don't care about the future.
 	temp, _ := datetime.Parse(data, time.UTC)
 	if temp.After(time.Now()) {
-		return Parse(time.Now().UTC().Format("2006-01-02T15:04:05Z"))
+		return ParseRFC3339(time.Now().UTC().Format("2006-01-02T15:04:05Z"))
 	}
 
 	// `time.Local` exists here because of some cases where there is

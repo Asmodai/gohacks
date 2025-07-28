@@ -336,7 +336,7 @@ func BenchmarkRFC3339Parse(b *testing.B) {
 	b.ReportAllocs()
 
 	for range b.N {
-		Parse(TestRFC3339String)
+		ParseRFC3339(TestRFC3339String)
 	}
 }
 
