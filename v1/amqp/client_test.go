@@ -124,9 +124,20 @@ func TestClient(t *testing.T) {
 		t.Fatalf("Unexpected error: %#v", err)
 	}
 
+	cnf.Hostname = "127.0.0.1"
+	cnf.VirtualHost = "/"
 	cnf.SetParent(context.Background())
 	cnf.SetLogger(lgr)
 	cnf.SetDialer(dialer.Dial)
+
+	errs := cnf.Validate()
+	if len(errs) > 0 {
+		t.Error("Errors from Validate():")
+		for i, e := range errs {
+			t.Errorf("  %d: %v", i+1, e.Error())
+		}
+		t.Fatal("Cannot continue.")
+	}
 
 	t.Run("Constructs", func(t *testing.T) {
 		inst = NewClient(cnf, pool)

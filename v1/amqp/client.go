@@ -184,7 +184,7 @@ func (obj *client) Connect() error {
 	var err error
 
 	// Connect to the AMQP server.
-	obj.conn, err = obj.dialFn(obj.cfg.URL)
+	obj.conn, err = obj.dialFn(obj.cfg.URL())
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -460,7 +460,10 @@ func (obj *client) Close() error {
 // ** Functions:
 
 func NewClient(cfg *Config, pool dynworker.WorkerPool) Client {
-	cfg.Validate()
+	if !cfg.validated {
+		panic("AMQP configuration has not been validated.")
+	}
+
 	ctx, cancel := context.WithCancel(cfg.parent)
 	label := prometheus.Labels{"consumer": cfg.ConsumerName}
 

@@ -43,13 +43,16 @@ package amqp
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Asmodai/gohacks/v1/amqp/amqpshim"
 	"github.com/Asmodai/gohacks/v1/dynworker"
 	"github.com/Asmodai/gohacks/v1/logger"
 	"github.com/Asmodai/gohacks/v1/types"
+	"gitlab.com/tozd/go/errors"
 )
 
 // * Constants:
@@ -80,11 +83,24 @@ const (
 	// value.
 	defaultMaxRetryConnect int = 0
 
+	// Default minimum worker count.
 	defaultMinWorkerCount int64 = 1
 
+	// Default maximum worker count.
 	defaultMaxWorkerCount int64 = 200
 
+	// Default worker idle timeout.
 	defaultWorkerIdleTimeout types.Duration = types.Duration(30 * time.Second)
+)
+
+// * Variables:
+
+var (
+	// Signalled when there is no hostname in the AMQP configuration.
+	ErrNoHostname = errors.Base("no AMQP hostname provided")
+
+	// Signalled when there is no queue name in the AMQP configuration.
+	ErrNoQueueName = errors.Base("no AMQP queue name provided")
 )
 
 // * Code:
@@ -93,8 +109,13 @@ const (
 
 type DialFn func(url string) (amqpshim.Connection, error)
 
+//nolint:tagalign
 type Config struct {
-	URL                   string         `json:"url"`
+	Username              string         `json:"username"`
+	Password              string         `config_obscure:"true" json:"password"`
+	Hostname              string         `json:"hostname"`
+	Port                  int            `json:"port"`
+	VirtualHost           string         `json:"vhost"`
 	QueueName             string         `json:"queue_name"`
 	QueueIsDurable        bool           `json:"queue_is_durable"`
 	QueueDeleteWhenUnused bool           `json:"queue_delete_when_unused"`
@@ -115,26 +136,40 @@ type Config struct {
 	consumerTag    string           `json:"-"`
 	metricsLabel   string           `json:"-"`
 	messageHandler dynworker.TaskFn `json:"-"`
+	validated      bool             `json:"-"`
+	cachedURL      string           `json:"-"`
 }
 
 // ** Methods:
 
+// Has the configuration been validated?
+func (obj *Config) IsValidated() bool {
+	return obj.validated
+}
+
+// Set the message handler worker function.
 func (obj *Config) SetMessageHandler(callback dynworker.TaskFn) {
 	obj.messageHandler = callback
 }
 
+// Set the parent context.
 func (obj *Config) SetParent(ctx context.Context) {
 	obj.parent = ctx
 }
 
+// Set the logger instance.
 func (obj *Config) SetLogger(lgr logger.Logger) {
 	obj.logger = lgr
 }
 
+// Set the dialer function.
+//
+// This is useful for mocking.
 func (obj *Config) SetDialer(dialer DialFn) {
 	obj.dialer = dialer
 }
 
+// Default worker function.
 func (obj *Config) defaultMessageHandler(_ *dynworker.Task) error {
 	obj.logger.Warn(
 		"No AMQP message handler callback installed.",
@@ -144,6 +179,7 @@ func (obj *Config) defaultMessageHandler(_ *dynworker.Task) error {
 	return nil
 }
 
+// Generate a Prometheus label.
 func (obj *Config) makeMetricsLabel() {
 	if len(obj.metricsLabel) > 0 {
 		return
@@ -177,6 +213,7 @@ func (obj *Config) makeConsumerTag() {
 	obj.consumerTag = tag
 }
 
+// Generate a worker pool configuration.
 func (obj *Config) ConfigureWorkerPool() *dynworker.Config {
 	return &dynworker.Config{
 		Name:        obj.ConsumerName,
@@ -188,12 +225,30 @@ func (obj *Config) ConfigureWorkerPool() *dynworker.Config {
 	}
 }
 
-//nolint:cyclop
-func (obj *Config) Validate() {
-	if len(obj.URL) == 0 {
-		obj.logger.Fatal(
-			"No AMQP server URL has been provided.",
-		)
+// Validate the AMQP configuration.
+//
+// This *must* be called before any attempt to use the AMQP configuration
+// with a client is made.
+//
+// The idea here is that we use the `config` package and its `Validate`
+// methods.
+//
+//nolint:cyclop,funlen
+func (obj *Config) Validate() []error {
+	// XXX break this up.
+	errs := []error{}
+
+	if len(obj.Hostname) == 0 {
+		errs = append(errs, ErrNoHostname)
+	}
+
+	if len(obj.QueueName) == 0 {
+		errs = append(errs, ErrNoQueueName)
+	}
+
+	// Important validation should exit early on failure.
+	if len(errs) > 0 {
+		return errs
 	}
 
 	if obj.dialer == nil {
@@ -237,11 +292,55 @@ func (obj *Config) Validate() {
 	}
 
 	// Set up the default handler.
-	obj.messageHandler = obj.defaultMessageHandler
+	if obj.messageHandler == nil {
+		obj.messageHandler = obj.defaultMessageHandler
+	}
 
 	// Build the metrics label and consumer tag.
 	obj.makeMetricsLabel()
 	obj.makeConsumerTag()
+
+	// We've been validated.
+	obj.validated = true
+
+	return errs
+}
+
+// Compose the AMQP URL.
+func (obj *Config) URL() string {
+	if !obj.validated {
+		panic("AMQP configuration has not been validated.")
+	}
+
+	if len(obj.cachedURL) == 0 {
+		// Build the URL string.
+		var sbld strings.Builder
+
+		sbld.WriteString("amqp://")
+
+		if len(obj.Username) > 0 {
+			sbld.WriteString(obj.Username)
+
+			if len(obj.Password) > 0 {
+				sbld.WriteByte(':')
+				sbld.WriteString(obj.Password)
+			}
+
+			sbld.WriteByte('@')
+		}
+
+		sbld.WriteString(obj.Hostname)
+
+		if obj.Port > 0 {
+			fmt.Fprintf(&sbld, "%d", obj.Port)
+		}
+
+		sbld.WriteString(obj.VirtualHost)
+
+		obj.cachedURL = sbld.String()
+	}
+
+	return obj.cachedURL
 }
 
 // ** Functions:
@@ -251,7 +350,8 @@ func NewDefaultConfig() *Config {
 	return NewConfig(
 		context.Background(),
 		logger.NewDefaultLogger(),
-		"amqp://127.0.0.1",
+		"127.0.0.1",
+		"/",
 		"",
 	)
 }
@@ -260,10 +360,11 @@ func NewDefaultConfig() *Config {
 func NewConfig(
 	parent context.Context,
 	lgr logger.Logger,
-	url, queuename string,
+	hostname, virtualhost, queuename string,
 ) *Config {
 	inst := &Config{
-		URL:            url,
+		Hostname:       hostname,
+		VirtualHost:    virtualhost,
 		QueueName:      queuename,
 		PrefetchCount:  defaultPrefetchCount,
 		PollInterval:   defaultPollInterval,

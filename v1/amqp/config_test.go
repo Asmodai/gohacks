@@ -96,9 +96,19 @@ func TestConfig(t *testing.T) {
 		t.Fatalf("JSON error: %#v", err)
 	}
 
-	inst.Validate()
+	inst.Hostname = "127.0.0.1"
+	inst.VirtualHost = "/"
 	inst.SetMessageHandler(testHandlerCB)
 	inst.SetLogger(lgr)
+
+	errs := inst.Validate()
+	if len(errs) > 0 {
+		t.Error("Errors from Validate():")
+		for i, e := range errs {
+			t.Errorf("  %d: %v", i+1, e.Error())
+		}
+		t.Fatal("Cannot continue.")
+	}
 
 	t.Run("HandleMessage", func(t *testing.T) {
 		delivery := goamqp.Delivery{Body: []byte(TestHandlerParam)}
@@ -155,6 +165,19 @@ func TestConfig(t *testing.T) {
 
 func TestConfigCallbacks(t *testing.T) {
 	inst := NewDefaultConfig()
+
+	inst.Hostname = "127.0.0.1"
+	inst.VirtualHost = "/"
+	inst.QueueName = "testing"
+
+	errs := inst.Validate()
+	if len(errs) > 0 {
+		t.Error("Errors from Validate():")
+		for i, e := range errs {
+			t.Errorf("  %d: %v", i+1, e.Error())
+		}
+		t.Fatal("Cannot continue.")
+	}
 
 	t.Run("defaultHandleMessage", func(t *testing.T) {
 		mocker := gomock.NewController(t)
