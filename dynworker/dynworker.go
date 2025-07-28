@@ -359,7 +359,7 @@ func (obj *workerPool) scaleCheck() {
 		required = int64(float64(queued)*avg.Seconds()) + 1
 	} else {
 		// User-supplied scaler.
-		required = int64(obj.config.ScalerFunc())
+		required = int64(obj.scalerFn())
 	}
 
 	// Clamp if lower than minimum workers.
