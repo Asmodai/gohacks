@@ -62,6 +62,8 @@ const (
 
 	// Default number of worker channels.
 	defaultWorkerChannels int64 = 1000
+
+	pressureDelay = time.Duration(50) * time.Millisecond
 )
 
 // * Variables:
@@ -303,6 +305,9 @@ func (obj *workerPool) spawnWorker() {
 				// Reset and put the task back in the pool.
 				task.reset()
 				obj.taskPool.Put(task)
+
+				// TODO Make this dynamic?
+				time.Sleep(pressureDelay)
 
 			case <-idleTimer.C:
 				current := obj.workerCount.Load()
