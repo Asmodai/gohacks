@@ -77,6 +77,7 @@ type Config struct {
 	Logger      logger.Logger   // Logger instance.
 	Parent      context.Context // Parent context.
 	IdleTimeout time.Duration   // Idle timeout duration.
+	ScalerFunc  ScalerFn        // Function to use to determine scaling.
 }
 
 // ** Methods:
@@ -84,6 +85,11 @@ type Config struct {
 // Set the idle timeout value.
 func (obj *Config) SetItleTimeout(timeout time.Duration) {
 	obj.IdleTimeout = timeout
+}
+
+// Set the scaler function.
+func (obj *Config) SetScalerFunction(scalefn ScalerFn) {
+	obj.ScalerFunc = scalefn
 }
 
 // ** Functions:

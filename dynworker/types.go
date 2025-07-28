@@ -107,4 +107,9 @@ func (obj *Task) reset() {
 // Task callback function type.
 type TaskFn func(*Task) error
 
+// ** Scaler function type:
+
+// Scaler callback function type.
+type ScalerFn func() int
+
 // * types.go ends here.

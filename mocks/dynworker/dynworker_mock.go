@@ -92,6 +92,18 @@ func (mr *MockWorkerPoolMockRecorder) SetMinWorkers(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinWorkers", reflect.TypeOf((*MockWorkerPool)(nil).SetMinWorkers), arg0)
 }
 
+// SetScalerFunction mocks base method.
+func (m *MockWorkerPool) SetScalerFunction(arg0 dynworker.ScalerFn) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetScalerFunction", arg0)
+}
+
+// SetScalerFunction indicates an expected call of SetScalerFunction.
+func (mr *MockWorkerPoolMockRecorder) SetScalerFunction(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetScalerFunction", reflect.TypeOf((*MockWorkerPool)(nil).SetScalerFunction), arg0)
+}
+
 // SetTaskFunction mocks base method.
 func (m *MockWorkerPool) SetTaskFunction(arg0 dynworker.TaskFn) {
 	m.ctrl.T.Helper()

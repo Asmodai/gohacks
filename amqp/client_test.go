@@ -115,6 +115,7 @@ func TestClient(t *testing.T) {
 	mockconn.MockClose(amqpConn).AnyTimes()
 
 	pool := mdynworker.NewMockWorkerPool(mocker)
+	pool.EXPECT().SetScalerFunction(gomock.Any()).AnyTimes()
 
 	lgr := mlogger.NewMockLogger(mocker)
 	lgr.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()

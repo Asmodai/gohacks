@@ -353,7 +353,6 @@ func (obj *client) Publish(msg goamqp.Publishing) error {
 	return err
 }
 
-//nolint:unused
 func (obj *client) scaleWorkers() int {
 	num := obj.GetMessageCount() / obj.cfg.PrefetchCount
 	if (num % obj.cfg.PrefetchCount) != 0 {
@@ -467,7 +466,7 @@ func NewClient(cfg *Config, pool dynworker.WorkerPool) Client {
 	ctx, cancel := context.WithCancel(cfg.parent)
 	label := prometheus.Labels{"consumer": cfg.ConsumerName}
 
-	return &client{
+	inst := &client{
 		cfg:    cfg,
 		ctx:    ctx,
 		cancel: cancel,
@@ -483,6 +482,11 @@ func NewClient(cfg *Config, pool dynworker.WorkerPool) Client {
 		publishMetric:          publishTotal.With(label),
 		publishErrorMetric:     publishErrorTotal.With(label),
 	}
+
+	// Set the scaling function.
+	inst.pool.SetScalerFunction(inst.scaleWorkers)
+
+	return inst
 }
 
 // Initialise Prometheus metrics for this module.

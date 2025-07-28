@@ -150,6 +150,9 @@ type WorkerPool interface {
 
 	// Set the task callback function.
 	SetTaskFunction(TaskFn)
+
+	// Set the task scaler function.
+	SetScalerFunction(ScalerFn)
 }
 
 // ** Types:
@@ -164,6 +167,7 @@ type workerPool struct {
 	scaleDownCh chan struct{}
 
 	processFn TaskFn
+	scalerFn  ScalerFn
 
 	wg       sync.WaitGroup
 	taskPool *sync.Pool
@@ -213,6 +217,10 @@ func (obj *workerPool) MaxWorkers() int64 {
 // Set the task callback function.
 func (obj *workerPool) SetTaskFunction(workfn TaskFn) {
 	obj.processFn = workfn
+}
+
+func (obj *workerPool) SetScalerFunction(scalerfn ScalerFn) {
+	obj.scalerFn = scalerfn
 }
 
 // Start the worker pool.
@@ -331,17 +339,28 @@ func (obj *workerPool) scaler() {
 // scaling down, rather it will let workers terminate through either completion
 // or idle timeout.
 func (obj *workerPool) scaleCheck() {
-	queued := len(obj.input)
+	var required int64
+
+	// Current functions.
 	current := obj.workerCount.Load()
-	avg := time.Duration(obj.avgProcTime.Load())
 
-	// If we don't have an average process time, set one to 100ms.
-	if avg == 0 {
-		avg = defaultAverageProcessTime
+	// How to scale?
+	if obj.scalerFn == nil {
+		// Default scaler.
+		queued := len(obj.input)
+		avg := time.Duration(obj.avgProcTime.Load())
+
+		// If we don't have an average process time, set one to 100ms.
+		if avg == 0 {
+			avg = defaultAverageProcessTime
+		}
+
+		// Rough required workers = queue * avg / interval.
+		required = int64(float64(queued)*avg.Seconds()) + 1
+	} else {
+		// User-supplied scaler.
+		required = int64(obj.config.ScalerFunc())
 	}
-
-	// Rough required workers = queue * avg / interval.
-	required := int64(float64(queued)*avg.Seconds()) + 1
 
 	// Clamp if lower than minimum workers.
 	if required < obj.minWorkers {
@@ -422,6 +441,7 @@ func NewWorkerPool(config *Config, workfn TaskFn) WorkerPool {
 		scaleUpCh:             make(chan struct{}, 1),
 		scaleDownCh:           make(chan struct{}, 1),
 		processFn:             workfn,
+		scalerFn:              config.ScalerFunc,
 		ctx:                   ctx,
 		cancel:                cancel,
 		lgr:                   config.Logger,

@@ -31,6 +31,7 @@ type Config struct {
 	Logger      logger.Logger   // Logger instance.
 	Parent      context.Context // Parent context.
 	IdleTimeout time.Duration   // Idle timeout duration.
+	ScalerFunc  ScalerFn        // Function to use to determine scaling.
 }
 ```
 
@@ -60,6 +61,21 @@ Create a new default configuration.
 func (obj *Config) SetItleTimeout(timeout time.Duration)
 ```
 Set the idle timeout value.
+
+#### func (*Config) SetScalerFunction
+
+```go
+func (obj *Config) SetScalerFunction(scalefn ScalerFn)
+```
+Set the scaler function.
+
+#### type ScalerFn
+
+```go
+type ScalerFn func() int
+```
+
+Scaler callback function type.
 
 #### type Task
 
@@ -143,6 +159,9 @@ type WorkerPool interface {
 
 	// Set the task callback function.
 	SetTaskFunction(TaskFn)
+
+	// Set the task scaler function.
+	SetScalerFunction(ScalerFn)
 }
 ```
 
