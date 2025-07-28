@@ -301,13 +301,19 @@ func (obj *client) Consume() error {
 	}
 
 	go func() {
+		var (
+			err      error
+			msg      goamqp.Delivery
+			received bool
+		)
+
 		for {
 			select {
 			case <-obj.ctx.Done():
 				return
 
-			case msg, ok := <-msgs:
-				if !ok {
+			case msg, received = <-msgs:
+				if !received {
 					obj.consumeErrorMetric.Inc()
 
 					return
@@ -315,7 +321,7 @@ func (obj *client) Consume() error {
 
 				obj.consumeMetric.Inc()
 
-				err := obj.pool.Submit(msg)
+				err = obj.pool.Submit(msg)
 				if err != nil {
 					// We don't care if this fails.
 					_ = obj.channel.Reject(

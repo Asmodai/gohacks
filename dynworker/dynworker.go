@@ -275,6 +275,11 @@ func (obj *workerPool) spawnWorker() {
 			obj.activeWorkersMetric.Dec()
 		}()
 
+		var (
+			start   time.Time
+			elapsed int64
+		)
+
 		idleTimer := time.NewTimer(obj.config.IdleTimeout)
 		defer idleTimer.Stop()
 
@@ -284,9 +289,9 @@ func (obj *workerPool) spawnWorker() {
 				return
 
 			case task := <-obj.input:
-				start := time.Now()
+				start = time.Now()
 				_ = obj.processFn(task)
-				elapsed := time.Since(start).Nanoseconds()
+				elapsed = time.Since(start).Nanoseconds()
 
 				// Update metrics.
 				obj.updateAvgProcTime(elapsed)
