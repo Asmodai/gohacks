@@ -29,37 +29,43 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+// * Package:
+
 package app
+
+// * Imports:
 
 import (
 	"time"
 )
 
+// * Code:
+
+// ** Methods:
+
 // Main loop.
 func (app *application) loop() {
-	app.running = true
-
-	// Execute startup code (if any)
-	if app.onStart != nil {
-		app.onStart(app)
-	}
+	// Execute startup code.
+	app.onStart(app)
 
 	// While we're running...
-	for app.running {
+	for app.running.Load() {
 		// Check for parent context cancellation
 		select {
 		case <-app.ctx.Done():
 			// Stop the happening train!
-			app.running = false
+			break
 
 		default:
 		}
 
 		app.mainLoop(app)
-		time.Sleep(EventLoopSleep)
+		time.Sleep(eventLoopSleep)
 	}
 
-	// No longer running, so shut things down.
+	// Execute the exit code.
 	app.onExit(app)
 
 	if app.ProcessManager() != nil {
@@ -72,4 +78,4 @@ func (app *application) loop() {
 	)
 }
 
-// loop.go ends here.
+// * loop.go ends here.

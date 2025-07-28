@@ -29,7 +29,15 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+// * Package:
+
 package app
+
+// * Code:
+
+// ** Functions:
 
 // Default signal handler.
 func defaultHandler(Application) {
@@ -39,11 +47,4 @@ func defaultHandler(Application) {
 func defaultMainLoop(Application) {
 }
 
-// Special case for HUP support.
-func defaultOnHUP(app Application) {
-	app.Logger().Info(
-		"Default SIGHUP handler invoked.",
-	)
-}
-
-// callbacks.go ends here.
+// * callbacks.go ends here.

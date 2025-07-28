@@ -29,13 +29,25 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+// * Package:
+
 package app
+
+// * Imports:
 
 import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/Asmodai/gohacks/events"
 )
+
+// * Code:
+
+// ** Methods:
 
 // Install signal handler.
 func (app *application) installSignals() {
@@ -50,6 +62,7 @@ func (app *application) installSignals() {
 	go func() {
 		for {
 			sig := <-sigs
+			event := events.NewSignal(sig)
 
 			if sig != syscall.SIGURG {
 				app.Logger().Info(
@@ -67,24 +80,24 @@ func (app *application) installSignals() {
 
 			case syscall.SIGHUP:
 				// Handle SIGHUP.
-				app.onHUP(app)
+				app.responders.SendAll(event)
 
 			case syscall.SIGWINCH:
 				// Handle WINCH.
 				// Note: Do not bother logging this one.
-				app.onWINCH(app)
+				app.responders.SendAll(event)
 
 			case syscall.SIGUSR1:
 				// Handle user-defined signal #1.
-				app.onUSR1(app)
+				app.responders.SendAll(event)
 
 			case syscall.SIGUSR2:
 				// Handle user-defined signal #2.
-				app.onUSR2(app)
+				app.responders.SendAll(event)
 
 			case syscall.SIGCHLD:
-				// Handle SIGCHLD
-				app.onCHLD(app)
+				// Handle SIGCHLD.
+				app.responders.SendAll(event)
 
 			default:
 			}
@@ -92,4 +105,4 @@ func (app *application) installSignals() {
 	}()
 }
 
-// signals.go ends here.
+// * signals.go ends here.

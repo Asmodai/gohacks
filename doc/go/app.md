@@ -8,13 +8,6 @@
 
 ## Usage
 
-```go
-const (
-	// Time to sleep during main loop so we're a nice neighbour.
-	EventLoopSleep time.Duration = 250 * time.Millisecond
-)
-```
-
 #### type Application
 
 ```go
@@ -49,6 +42,15 @@ type Application interface {
 	// Return the application's context.
 	Context() context.Context
 
+	// Set the parent context for the application.
+	//
+	// Danger.  Setting this while the application is running can cause
+	// unintended side effects due to the old context's cancel function
+	// being executed.
+	//
+	// It is advisable to run this prior to initialisation.
+	SetContext(context.Context)
+
 	// Return the application's process manager instance.
 	ProcessManager() process.Manager
 
@@ -59,38 +61,25 @@ type Application interface {
 	Configuration() config.Config
 
 	// Set the callback that will be invoked when the application starts.
-	SetOnStart(OnSignalFn)
+	//
+	// If not set, then the default startup handler will be invoked.
+	//
+	// This cannot be set once the application has been initialised.
+	SetOnStart(CallbackFn)
 
 	// Set the callback that will be invoked when the application exits.
 	//
 	// If not set, then the default exit handler will be invoked.
-	SetOnExit(OnSignalFn)
-
-	// Set the callback that will be invoked when the application
-	// receives a HUP signal.
-	SetOnHUP(OnSignalFn)
-
-	// Set the callback that will be invoked when the application
-	// receives a USR1 signal.
-	SetOnUSR1(OnSignalFn)
-
-	// Set the callback that will be invoked when the application
-	// receives a USR2 signal.
-	SetOnUSR2(OnSignalFn)
-
-	// Set the callback that will be invoked when the application
-	// receives a WINCH signal.
 	//
-	// Be careful with this, as it will fire whenever the controlling
-	// terminal is resized.
-	SetOnWINCH(OnSignalFn)
-
-	// Set the callback that will be invoked when the application
-	// receives a CHLD signal.
-	SetOnCHLD(OnSignalFn)
+	/// This cannot be set once the application has been initialised.
+	SetOnExit(CallbackFn)
 
 	// Set the callback that will be invoked whenever the event loop
 	// fires.
+	//
+	// If not set, then the default main loop callback will be invoked.
+	//
+	// This cannot be set once the application has been initialised.
 	SetMainLoop(MainLoopFn)
 
 	// Is the application running?
@@ -98,6 +87,41 @@ type Application interface {
 
 	// Is the application in 'debug' mode.
 	IsDebug() bool
+
+	// Add a responder to the application's responder chain.
+	AddResponder(responder.Respondable) (responder.Respondable, error)
+
+	// Remove a responder from the application's responder chain.
+	RemoveResponder(responder.Respondable) bool
+
+	// Send an event to the application's responder.
+	//
+	// Event will be consumed by the first responder that handles it.
+	SendFirstResponder(events.Event) (events.Event, bool)
+
+	// Send an event to all the application's responders.
+	SendAllResponders(events.Event) []events.Event
+
+	// Return the name of the application's responder chain.
+	//
+	// Implements `Respondable`.
+	Type() string
+
+	// Ascertain if any of the application's responders will respond to
+	// an event.
+	//
+	// The first responder found that responds to the event will result
+	// in `true` being returned.
+	//
+	// Implements `Respondable`.
+	RespondsTo(events.Event) bool
+
+	// Send an event to the application's responders.
+	//
+	// The first object that can respond to the event will consume it.
+	//
+	// Implements `Respondable`.
+	Invoke(events.Event) events.Event
 }
 ```
 
@@ -110,6 +134,14 @@ func NewApplication(cnf *Config) Application
 ```
 Create a new application.
 
+#### type CallbackFn
+
+```go
+type CallbackFn func(Application)
+```
+
+Signal callback function type.
+
 #### type Config
 
 ```go
@@ -120,17 +152,14 @@ type Config struct {
 	// The application's version number.
 	Version *semver.SemVer
 
-	// The application's logger instance.
-	Logger logger.Logger
-
-	// The application's process manager instance.
-	ProcessManager process.Manager
-
 	// The application's configuration.
 	AppConfig any
 
 	// Validators used to validate the application's configuration.
 	Validators config.ValidatorsMap
+
+	// Require CLI flags like '-config' to be provided?
+	RequireCLI bool
 }
 ```
 
@@ -150,11 +179,3 @@ type MainLoopFn func(Application)
 ```
 
 Main loop callback function type.
-
-#### type OnSignalFn
-
-```go
-type OnSignalFn func(Application)
-```
-
-Signal callback function type.

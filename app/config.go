@@ -29,14 +29,27 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+// * Package:
+
 package app
+
+// * Imports:
 
 import (
 	"github.com/Asmodai/gohacks/config"
-	"github.com/Asmodai/gohacks/logger"
-	"github.com/Asmodai/gohacks/process"
 	"github.com/Asmodai/gohacks/semver"
 )
+
+// * Code:
+
+// ** Types:
+
+// Empty struct that gets passed as an application configuration when
+// no actual configuration is passed to the constructor.
+type defaultAppConfig struct {
+}
 
 // Application configuration.
 type Config struct {
@@ -46,23 +59,17 @@ type Config struct {
 	// The application's version number.
 	Version *semver.SemVer
 
-	// The application's logger instance.
-	Logger logger.Logger
-
-	// The application's process manager instance.
-	ProcessManager process.Manager
-
 	// The application's configuration.
 	AppConfig any
 
 	// Validators used to validate the application's configuration.
 	Validators config.ValidatorsMap
+
+	// Require CLI flags like '-config' to be provided?
+	RequireCLI bool
 }
 
-// Create a new empty configuration.
-func NewConfig() *Config {
-	return &Config{}
-}
+// ** Methods:
 
 // Validate the configuration.
 func (c *Config) validate() {
@@ -73,15 +80,13 @@ func (c *Config) validate() {
 	if c.AppConfig == nil {
 		c.AppConfig = &defaultAppConfig{}
 	}
-
-	if c.Logger == nil {
-		c.Logger = logger.NewDefaultLogger()
-	}
 }
 
-// Empty struct that gets passed as an application configuration when
-// no actual configuration is passed to the constructor.
-type defaultAppConfig struct {
+// ** Functions:
+
+// Create a new empty configuration.
+func NewConfig() *Config {
+	return &Config{}
 }
 
-// config.go ends here.
+// * config.go ends here.

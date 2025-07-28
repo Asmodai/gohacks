@@ -31,22 +31,43 @@
 //
 // mock:yes
 
+// * Comments:
+
+// * Package:
+
 package app
 
+// * Imports:
+
 import (
+	"context"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/Asmodai/gohacks/config"
+	"github.com/Asmodai/gohacks/contextdi"
+	"github.com/Asmodai/gohacks/events"
 	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/process"
+	"github.com/Asmodai/gohacks/responder"
 	"github.com/Asmodai/gohacks/semver"
-
-	"context"
-	"time"
+	"gitlab.com/tozd/go/errors"
 )
+
+// * Constants:
 
 const (
 	// Time to sleep during main loop so we're a nice neighbour.
-	EventLoopSleep time.Duration = 250 * time.Millisecond
+	eventLoopSleep time.Duration = 250 * time.Millisecond
+
+	// Responder type for the application object.
+	responderType string = "app.Application"
 )
+
+// * Code:
+
+// ** Interface:
 
 // Application.
 type Application interface {
@@ -80,6 +101,15 @@ type Application interface {
 	// Return the application's context.
 	Context() context.Context
 
+	// Set the parent context for the application.
+	//
+	// Danger.  Setting this while the application is running can cause
+	// unintended side effects due to the old context's cancel function
+	// being executed.
+	//
+	// It is advisable to run this prior to initialisation.
+	SetContext(context.Context)
+
 	// Return the application's process manager instance.
 	ProcessManager() process.Manager
 
@@ -90,38 +120,25 @@ type Application interface {
 	Configuration() config.Config
 
 	// Set the callback that will be invoked when the application starts.
-	SetOnStart(OnSignalFn)
+	//
+	// If not set, then the default startup handler will be invoked.
+	//
+	// This cannot be set once the application has been initialised.
+	SetOnStart(CallbackFn)
 
 	// Set the callback that will be invoked when the application exits.
 	//
 	// If not set, then the default exit handler will be invoked.
-	SetOnExit(OnSignalFn)
-
-	// Set the callback that will be invoked when the application
-	// receives a HUP signal.
-	SetOnHUP(OnSignalFn)
-
-	// Set the callback that will be invoked when the application
-	// receives a USR1 signal.
-	SetOnUSR1(OnSignalFn)
-
-	// Set the callback that will be invoked when the application
-	// receives a USR2 signal.
-	SetOnUSR2(OnSignalFn)
-
-	// Set the callback that will be invoked when the application
-	// receives a WINCH signal.
 	//
-	// Be careful with this, as it will fire whenever the controlling
-	// terminal is resized.
-	SetOnWINCH(OnSignalFn)
-
-	// Set the callback that will be invoked when the application
-	// receives a CHLD signal.
-	SetOnCHLD(OnSignalFn)
+	/// This cannot be set once the application has been initialised.
+	SetOnExit(CallbackFn)
 
 	// Set the callback that will be invoked whenever the event loop
 	// fires.
+	//
+	// If not set, then the default main loop callback will be invoked.
+	//
+	// This cannot be set once the application has been initialised.
 	SetMainLoop(MainLoopFn)
 
 	// Is the application running?
@@ -129,83 +146,109 @@ type Application interface {
 
 	// Is the application in 'debug' mode.
 	IsDebug() bool
+
+	// Add a responder to the application's responder chain.
+	AddResponder(responder.Respondable) (responder.Respondable, error)
+
+	// Remove a responder from the application's responder chain.
+	RemoveResponder(responder.Respondable) bool
+
+	// Send an event to the application's responder.
+	//
+	// Event will be consumed by the first responder that handles it.
+	SendFirstResponder(events.Event) (events.Event, bool)
+
+	// Send an event to all the application's responders.
+	SendAllResponders(events.Event) []events.Event
+
+	// Return the name of the application's responder chain.
+	//
+	// Implements `Respondable`.
+	Type() string
+
+	// Ascertain if any of the application's responders will respond to
+	// an event.
+	//
+	// The first responder found that responds to the event will result
+	// in `true` being returned.
+	//
+	// Implements `Respondable`.
+	RespondsTo(events.Event) bool
+
+	// Send an event to the application's responders.
+	//
+	// The first object that can respond to the event will consume it.
+	//
+	// Implements `Respondable`.
+	Invoke(events.Event) events.Event
 }
 
+// ** Types:
+
 // Signal callback function type.
-type OnSignalFn func(Application)
+type CallbackFn func(Application)
 
 // Main loop callback function type.
 type MainLoopFn func(Application)
 
 // Application implementation.
 type application struct {
+	mu sync.RWMutex
+
 	config    *Config       // App object configuration.
 	appconfig config.Config // User's app configuration.
 
-	onStart  OnSignalFn // Function called on app startup.
-	onExit   OnSignalFn // Function called on app exit.
-	onHUP    OnSignalFn // Function called when SIGHUP received.
-	onUSR1   OnSignalFn // Function called when SIGUSR1 received.
-	onUSR2   OnSignalFn // Function called when SIGUSR2 received.
-	onWINCH  OnSignalFn // Function used when SIGWINCH received.
-	onCHLD   OnSignalFn // Function used when SIGCHLD received.
-	mainLoop MainLoopFn // Application main loop function.
+	lgr  logger.Logger   // Logger instance.
+	pmgr process.Manager // Process manager instance.
 
-	running bool               // Is the app running?
-	ctx     context.Context    // Main context.
-	cancel  context.CancelFunc // Context cancellation function.
+	onStart    CallbackFn      // Function called on app startup.
+	onExit     CallbackFn      // Function called on app exit.
+	mainLoop   MainLoopFn      // Application main loop function.
+	responders responder.Chain // Responder chain.
+
+	running     atomic.Bool // Is the app running?
+	initialised atomic.Bool // Has the app been initialised?
+
+	ctx    context.Context    // Main context.
+	cancel context.CancelFunc // Context cancellation function.
 }
 
-// Create a new application.
-func NewApplication(cnf *Config) Application {
-	cnf.validate()
-
-	// Set up a new parent context for the whole application.
-	ctx, cancelFn := context.WithCancel(context.Background())
-
-	obj := &application{
-		config:   cnf,
-		onStart:  defaultHandler,
-		onExit:   defaultHandler,
-		onHUP:    defaultOnHUP,
-		onUSR1:   defaultHandler,
-		onUSR2:   defaultHandler,
-		onWINCH:  defaultHandler,
-		onCHLD:   defaultHandler,
-		mainLoop: defaultMainLoop,
-		ctx:      ctx,
-		cancel:   cancelFn,
-	}
-
-	if cnf.AppConfig != nil {
-		obj.appconfig = config.Init(
-			cnf.Name,
-			cnf.Version,
-			cnf.AppConfig,
-			cnf.Validators,
-			true,
-		)
-	}
-
-	return obj
-}
+// ** Methods:
 
 func (app *application) Init() {
+	if !app.initialised.CompareAndSwap(false, true) {
+		// Already initialised.
+		return
+	}
+
+	app.mu.Lock()
+	defer app.mu.Unlock()
+
+	if app.ctx == nil {
+		panic("Attempt made to initialise application with nil context")
+	}
+
+	// Get components from DI.
+	app.lgr = contextdi.MustGetLogger(app.ctx)
+	app.pmgr = process.MustGetProcessManager(app.ctx)
+
 	if app.config != nil {
 		app.appconfig.Parse()
-		app.config.Logger.SetLogFile(app.appconfig.LogFile())
-		app.config.Logger.SetDebug(app.appconfig.IsDebug())
+
+		app.lgr.SetLogFile(app.appconfig.LogFile())
+		app.lgr.SetDebug(app.appconfig.IsDebug())
 	}
 
-	pm := app.ProcessManager()
-	if pm != nil {
-		app.ProcessManager().SetLogger(app.Logger())
-		app.ProcessManager().SetContext(app.Context())
-	}
+	// Propagate context and logger.
+	app.pmgr.SetContext(app.ctx)
+	app.pmgr.SetLogger(app.lgr)
 
+	// Install signals.
 	app.installSignals()
 
-	app.Logger().Info(
+	// Let the user know we're ready.
+	// Safe to use this directly, object is read/write locked.
+	app.lgr.Info(
 		"Application initialised.",
 		"type", "init",
 		"name", app.config.Name,
@@ -216,97 +259,156 @@ func (app *application) Init() {
 
 // Return the application's pretty name.
 func (app *application) Name() string {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
 	return app.config.Name
 }
 
 // Return the application's version.
 func (app *application) Version() *semver.SemVer {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
 	return app.config.Version
 }
 
 // Return the application's version control commit identifier.
 func (app *application) Commit() string {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
 	return app.config.Version.Commit
 }
 
 // Return the application's context.
 func (app *application) Context() context.Context {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
 	return app.ctx
+}
+
+// Set the parent context for the application.
+//
+// Danger.  Setting this while the application is running can cause
+// unintended side effects due to the old context's cancel function being
+// executed.
+//
+// It is advisable to run this prior to initialisation.
+func (app *application) SetContext(ctx context.Context) {
+	if app.initialised.Load() {
+		app.Logger().Warn(
+			"Attempt made to set context after app initialisation",
+		)
+
+		return
+	}
+
+	app.mu.Lock()
+	defer app.mu.Unlock()
+
+	if app.cancel != nil {
+		app.cancel()
+	}
+
+	app.ctx, app.cancel = context.WithCancel(ctx)
 }
 
 // Return the application's process manager instance.
 func (app *application) ProcessManager() process.Manager {
-	return app.config.ProcessManager
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
+	return app.pmgr
 }
 
 // Return the application's logger instance.
 func (app *application) Logger() logger.Logger {
-	return app.config.Logger
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
+	return app.lgr
 }
 
 // Return the application's configuration.
 func (app *application) Configuration() config.Config {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
 	return app.appconfig
 }
 
 // Set the callback that will be invoked when the application starts.
-func (app *application) SetOnStart(fn OnSignalFn) {
-	app.onStart = fn
+//
+// This cannot be set once the application has been initialised.
+func (app *application) SetOnStart(callback CallbackFn) {
+	if app.initialised.Load() {
+		app.Logger().Warn(
+			"Attempt made to set 'on start' callback after app initialisation",
+		)
+
+		return
+	}
+
+	app.mu.Lock()
+	defer app.mu.Unlock()
+
+	app.onStart = callback
 }
 
 // Set the callback that will be invoked when the application exits.
-func (app *application) SetOnExit(fn OnSignalFn) {
-	app.onExit = fn
-}
+//
+// This cannot be set once the application has been initialised.
+func (app *application) SetOnExit(callback CallbackFn) {
+	if app.initialised.Load() {
+		app.Logger().Warn(
+			"Attempt made to set `on exit' callback after app initialisation",
+		)
 
-// Set the callback that will be invoked when the application receives a HUP
-// signal.
-func (app *application) SetOnHUP(fn OnSignalFn) {
-	app.onHUP = fn
-}
+		return
+	}
 
-// Set the callback that will be invoked when the application receives a USR1
-// signal.
-func (app *application) SetOnUSR1(fn OnSignalFn) {
-	app.onUSR1 = fn
-}
+	app.mu.Lock()
+	defer app.mu.Unlock()
 
-// Set the callback that will be invoked when the application receives a USR2
-// signal.
-func (app *application) SetOnUSR2(fn OnSignalFn) {
-	app.onUSR2 = fn
-}
-
-// Set the callback that will be invoked when the application receives a WINCH
-// signal.
-func (app *application) SetOnWINCH(fn OnSignalFn) {
-	app.onWINCH = fn
-}
-
-// Set the callback that will be invoked when the application receives a CHLD
-// singal.
-func (app *application) SetOnCHLD(fn OnSignalFn) {
-	app.onCHLD = fn
+	app.onExit = callback
 }
 
 // Set the callback that will be invoked whenever the event loop fires.
-func (app *application) SetMainLoop(fn MainLoopFn) {
-	app.mainLoop = fn
+//
+// This cannot be set once the application has been initialised.
+func (app *application) SetMainLoop(callback MainLoopFn) {
+	if app.initialised.Load() {
+		app.Logger().Warn(
+			"Attempt made to set `on exit' callback after app initialisation",
+		)
+
+		return
+	}
+
+	app.mu.Lock()
+	defer app.mu.Unlock()
+
+	app.mainLoop = callback
 }
 
 // Is the application running?
 func (app *application) IsRunning() bool {
-	return app.running
+	return app.running.Load()
 }
 
 // Is the application using debug mode?
 func (app *application) IsDebug() bool {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
 	return app.appconfig.IsDebug()
 }
 
 // Start the application.
 func (app *application) Run() {
-	if app.running {
+	if !app.running.CompareAndSwap(false, true) {
 		return
 	}
 
@@ -320,12 +422,120 @@ func (app *application) Run() {
 
 // Stop the application.
 func (app *application) Terminate() {
-	if !app.running {
-		return
+	if app.running.CompareAndSwap(true, false) {
+		app.cancel()
 	}
-
-	app.running = false
-	app.cancel()
 }
 
-// app.go ends here.
+// Add a responder to the application's responder chain.
+func (app *application) AddResponder(sel responder.Respondable) (responder.Respondable, error) {
+	app.mu.Lock()
+	defer app.mu.Unlock()
+
+	result, err := app.responders.Add(sel)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return result, nil
+}
+
+// Remove a responder from the application's responder chain.
+func (app *application) RemoveResponder(sel responder.Respondable) bool {
+	app.mu.Lock()
+	defer app.mu.Unlock()
+
+	return app.responders.Remove(sel)
+}
+
+// Send an event to the application's responder.
+//
+// Event will be consumed by the first responder that handles it.
+func (app *application) SendFirstResponder(evt events.Event) (events.Event, bool) {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
+	return app.responders.SendFirst(evt)
+}
+
+// Send an event to all the application's responders.
+func (app *application) SendAllResponders(evt events.Event) []events.Event {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
+	return app.responders.SendAll(evt)
+}
+
+// Return the name of the application's responder chain.
+//
+// Implements `Respondable`.
+func (app *application) Type() string {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
+	return responderType
+}
+
+// Ascertain if any of the application's responders will respond to an event.
+//
+// The first responder found that responds to the event will result in `true`
+// being returned.
+//
+// Implements `Respondable`.
+func (app *application) RespondsTo(event events.Event) bool {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
+	return app.responders.RespondsTo(event)
+}
+
+// Send an event to the application's responders.
+//
+// The first object that can respond to the event will consume it.
+//
+// Implements `Respondable`.
+func (app *application) Invoke(event events.Event) events.Event {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+	result, _ := app.responders.SendFirst(event)
+
+	return result
+}
+
+// ** Functions:
+
+// Create a new application.
+func NewApplication(cnf *Config) Application {
+	cnf.validate()
+
+	// Temptation here is to set up a context and cancel func... don't.
+	// If the user fails to provide one, then there will be a panic
+	// when Init is called.  This is what we want to have happen.
+	//
+	// In short, this just sets up the config and default handlers,
+	// the rest needs to be manually done by the user.  This is to
+	// enforce the use of dependency injection.
+
+	obj := &application{
+		responders: *responder.NewChain("Application"),
+		config:     cnf,
+	}
+
+	if cnf.AppConfig != nil {
+		obj.appconfig = config.Init(
+			cnf.Name,
+			cnf.Version,
+			cnf.AppConfig,
+			cnf.Validators,
+			cnf.RequireCLI,
+		)
+	}
+
+	obj.onStart = defaultHandler
+	obj.onExit = defaultHandler
+	obj.mainLoop = defaultMainLoop
+
+	return obj
+}
+
+// * app.go ends here.

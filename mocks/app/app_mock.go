@@ -15,8 +15,10 @@ import (
 
 	app "github.com/Asmodai/gohacks/app"
 	config "github.com/Asmodai/gohacks/config"
+	events "github.com/Asmodai/gohacks/events"
 	logger "github.com/Asmodai/gohacks/logger"
 	process "github.com/Asmodai/gohacks/process"
+	responder "github.com/Asmodai/gohacks/responder"
 	semver "github.com/Asmodai/gohacks/semver"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -43,6 +45,21 @@ func NewMockApplication(ctrl *gomock.Controller) *MockApplication {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockApplication) EXPECT() *MockApplicationMockRecorder {
 	return m.recorder
+}
+
+// AddResponder mocks base method.
+func (m *MockApplication) AddResponder(arg0 responder.Respondable) (responder.Respondable, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddResponder", arg0)
+	ret0, _ := ret[0].(responder.Respondable)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddResponder indicates an expected call of AddResponder.
+func (mr *MockApplicationMockRecorder) AddResponder(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddResponder", reflect.TypeOf((*MockApplication)(nil).AddResponder), arg0)
 }
 
 // Commit mocks base method.
@@ -97,6 +114,20 @@ func (m *MockApplication) Init() {
 func (mr *MockApplicationMockRecorder) Init() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockApplication)(nil).Init))
+}
+
+// Invoke mocks base method.
+func (m *MockApplication) Invoke(arg0 events.Event) events.Event {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Invoke", arg0)
+	ret0, _ := ret[0].(events.Event)
+	return ret0
+}
+
+// Invoke indicates an expected call of Invoke.
+func (mr *MockApplicationMockRecorder) Invoke(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Invoke", reflect.TypeOf((*MockApplication)(nil).Invoke), arg0)
 }
 
 // IsDebug mocks base method.
@@ -169,6 +200,34 @@ func (mr *MockApplicationMockRecorder) ProcessManager() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessManager", reflect.TypeOf((*MockApplication)(nil).ProcessManager))
 }
 
+// RemoveResponder mocks base method.
+func (m *MockApplication) RemoveResponder(arg0 responder.Respondable) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveResponder", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// RemoveResponder indicates an expected call of RemoveResponder.
+func (mr *MockApplicationMockRecorder) RemoveResponder(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveResponder", reflect.TypeOf((*MockApplication)(nil).RemoveResponder), arg0)
+}
+
+// RespondsTo mocks base method.
+func (m *MockApplication) RespondsTo(arg0 events.Event) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RespondsTo", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// RespondsTo indicates an expected call of RespondsTo.
+func (mr *MockApplicationMockRecorder) RespondsTo(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RespondsTo", reflect.TypeOf((*MockApplication)(nil).RespondsTo), arg0)
+}
+
 // Run mocks base method.
 func (m *MockApplication) Run() {
 	m.ctrl.T.Helper()
@@ -179,6 +238,47 @@ func (m *MockApplication) Run() {
 func (mr *MockApplicationMockRecorder) Run() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockApplication)(nil).Run))
+}
+
+// SendAllResponders mocks base method.
+func (m *MockApplication) SendAllResponders(arg0 events.Event) []events.Event {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendAllResponders", arg0)
+	ret0, _ := ret[0].([]events.Event)
+	return ret0
+}
+
+// SendAllResponders indicates an expected call of SendAllResponders.
+func (mr *MockApplicationMockRecorder) SendAllResponders(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendAllResponders", reflect.TypeOf((*MockApplication)(nil).SendAllResponders), arg0)
+}
+
+// SendFirstResponder mocks base method.
+func (m *MockApplication) SendFirstResponder(arg0 events.Event) (events.Event, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendFirstResponder", arg0)
+	ret0, _ := ret[0].(events.Event)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// SendFirstResponder indicates an expected call of SendFirstResponder.
+func (mr *MockApplicationMockRecorder) SendFirstResponder(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendFirstResponder", reflect.TypeOf((*MockApplication)(nil).SendFirstResponder), arg0)
+}
+
+// SetContext mocks base method.
+func (m *MockApplication) SetContext(arg0 context.Context) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetContext", arg0)
+}
+
+// SetContext indicates an expected call of SetContext.
+func (mr *MockApplicationMockRecorder) SetContext(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetContext", reflect.TypeOf((*MockApplication)(nil).SetContext), arg0)
 }
 
 // SetMainLoop mocks base method.
@@ -193,20 +293,8 @@ func (mr *MockApplicationMockRecorder) SetMainLoop(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMainLoop", reflect.TypeOf((*MockApplication)(nil).SetMainLoop), arg0)
 }
 
-// SetOnCHLD mocks base method.
-func (m *MockApplication) SetOnCHLD(arg0 app.OnSignalFn) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetOnCHLD", arg0)
-}
-
-// SetOnCHLD indicates an expected call of SetOnCHLD.
-func (mr *MockApplicationMockRecorder) SetOnCHLD(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOnCHLD", reflect.TypeOf((*MockApplication)(nil).SetOnCHLD), arg0)
-}
-
 // SetOnExit mocks base method.
-func (m *MockApplication) SetOnExit(arg0 app.OnSignalFn) {
+func (m *MockApplication) SetOnExit(arg0 app.CallbackFn) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetOnExit", arg0)
 }
@@ -217,20 +305,8 @@ func (mr *MockApplicationMockRecorder) SetOnExit(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOnExit", reflect.TypeOf((*MockApplication)(nil).SetOnExit), arg0)
 }
 
-// SetOnHUP mocks base method.
-func (m *MockApplication) SetOnHUP(arg0 app.OnSignalFn) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetOnHUP", arg0)
-}
-
-// SetOnHUP indicates an expected call of SetOnHUP.
-func (mr *MockApplicationMockRecorder) SetOnHUP(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOnHUP", reflect.TypeOf((*MockApplication)(nil).SetOnHUP), arg0)
-}
-
 // SetOnStart mocks base method.
-func (m *MockApplication) SetOnStart(arg0 app.OnSignalFn) {
+func (m *MockApplication) SetOnStart(arg0 app.CallbackFn) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetOnStart", arg0)
 }
@@ -239,42 +315,6 @@ func (m *MockApplication) SetOnStart(arg0 app.OnSignalFn) {
 func (mr *MockApplicationMockRecorder) SetOnStart(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOnStart", reflect.TypeOf((*MockApplication)(nil).SetOnStart), arg0)
-}
-
-// SetOnUSR1 mocks base method.
-func (m *MockApplication) SetOnUSR1(arg0 app.OnSignalFn) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetOnUSR1", arg0)
-}
-
-// SetOnUSR1 indicates an expected call of SetOnUSR1.
-func (mr *MockApplicationMockRecorder) SetOnUSR1(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOnUSR1", reflect.TypeOf((*MockApplication)(nil).SetOnUSR1), arg0)
-}
-
-// SetOnUSR2 mocks base method.
-func (m *MockApplication) SetOnUSR2(arg0 app.OnSignalFn) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetOnUSR2", arg0)
-}
-
-// SetOnUSR2 indicates an expected call of SetOnUSR2.
-func (mr *MockApplicationMockRecorder) SetOnUSR2(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOnUSR2", reflect.TypeOf((*MockApplication)(nil).SetOnUSR2), arg0)
-}
-
-// SetOnWINCH mocks base method.
-func (m *MockApplication) SetOnWINCH(arg0 app.OnSignalFn) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetOnWINCH", arg0)
-}
-
-// SetOnWINCH indicates an expected call of SetOnWINCH.
-func (mr *MockApplicationMockRecorder) SetOnWINCH(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOnWINCH", reflect.TypeOf((*MockApplication)(nil).SetOnWINCH), arg0)
 }
 
 // Terminate mocks base method.
@@ -287,6 +327,20 @@ func (m *MockApplication) Terminate() {
 func (mr *MockApplicationMockRecorder) Terminate() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Terminate", reflect.TypeOf((*MockApplication)(nil).Terminate))
+}
+
+// Type mocks base method.
+func (m *MockApplication) Type() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Type")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Type indicates an expected call of Type.
+func (mr *MockApplicationMockRecorder) Type() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockApplication)(nil).Type))
 }
 
 // Version mocks base method.
