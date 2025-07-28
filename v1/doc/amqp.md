@@ -111,6 +111,13 @@ func (obj *Config) IsValidated() bool
 ```
 Has the configuration been validated?
 
+#### func (*Config) MakeWorkerPool
+
+```go
+func (obj *Config) MakeWorkerPool() dynworker.WorkerPool
+```
+Generate a worker pool.
+
 #### func (*Config) SetDialer
 
 ```go

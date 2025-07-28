@@ -225,6 +225,14 @@ func (obj *Config) ConfigureWorkerPool() *dynworker.Config {
 	}
 }
 
+// Generate a worker pool.
+func (obj *Config) MakeWorkerPool() dynworker.WorkerPool {
+	return dynworker.NewWorkerPool(
+		obj.ConfigureWorkerPool(),
+		obj.messageHandler,
+	)
+}
+
 // Validate the AMQP configuration.
 //
 // This *must* be called before any attempt to use the AMQP configuration
