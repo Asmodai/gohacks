@@ -2,7 +2,7 @@ module github.com/Asmodai/gohacks
 
 go 1.23.0
 
-retract [v1.0.0,v1.0.4]
+retract [v1.0.0,v1.0.4] // Published accidentally.
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
