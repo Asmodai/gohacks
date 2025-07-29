@@ -33,14 +33,14 @@
 
 // * Package:
 
-package contextdi
+package database
 
 // * Imports:
 
 import (
 	"context"
 
-	"github.com/Asmodai/gohacks/database"
+	"github.com/Asmodai/gohacks/contextdi"
 	"gitlab.com/tozd/go/errors"
 )
 
@@ -61,21 +61,26 @@ var (
 // ** Functions:
 
 // Set the database manager value to the context map.
-func SetDBManager(ctx context.Context, inst database.Manager) (context.Context, error) {
-	return PutToContext(ctx, ContextKeyDBManager, inst)
+func SetManager(ctx context.Context, inst Manager) (context.Context, error) {
+	val, err := contextdi.PutToContext(ctx, ContextKeyDBManager, inst)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return val, nil
 }
 
 // Get the database manager from the given context.
 //
 // Will return `ErrValueNoDBManager` if the value in the context is not of type
 // `database.Manager`.
-func GetDBManager(ctx context.Context) (database.Manager, error) {
-	val, err := GetFromContext(ctx, ContextKeyDBManager)
+func GetManager(ctx context.Context) (Manager, error) {
+	val, err := contextdi.GetFromContext(ctx, ContextKeyDBManager)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	inst, ok := val.(database.Manager)
+	inst, ok := val.(Manager)
 	if !ok {
 		return nil, errors.WithStack(ErrValueNotDBManager)
 	}
@@ -85,8 +90,8 @@ func GetDBManager(ctx context.Context) (database.Manager, error) {
 
 // Attempt to get the database manager from the given context.  Panics if the
 // operation fails.
-func MustGetDBManager(ctx context.Context) database.Manager {
-	inst, err := GetDBManager(ctx)
+func MustGetDBManager(ctx context.Context) Manager {
+	inst, err := GetManager(ctx)
 
 	if err != nil {
 		panic("Could not get database manager instance from context")

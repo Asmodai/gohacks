@@ -18,6 +18,12 @@ const (
 ```
 
 ```go
+const (
+	ContextKeyDBManager = "_DI_DB_MGR"
+)
+```
+
+```go
 var (
 	ErrNoDriver   error = errors.Base("no driver provided")
 	ErrNoUsername error = errors.Base("no username provided")
@@ -44,6 +50,12 @@ var (
 var (
 	// The empty cursor.
 	EmptyCursor = &Cursor{Offset: 0, Limit: 0}
+)
+```
+
+```go
+var (
+	ErrValueNotDBManager = errors.Base("value is not database.Manager")
 )
 ```
 
@@ -118,6 +130,13 @@ func Select(ctx context.Context, dest any, query string, args ...any) error
 Wrapper around `Tx.Select`.
 
 The transaction should be passed via a context value.
+
+#### func  SetManager
+
+```go
+func SetManager(ctx context.Context, inst Manager) (context.Context, error)
+```
+Set the database manager value to the context map.
 
 #### type Config
 
@@ -254,6 +273,24 @@ Database management.
 
 This is a series of wrappers around Go's internal DB stuff to ensure that we set
 up max idle/open connections et al.
+
+#### func  GetManager
+
+```go
+func GetManager(ctx context.Context) (Manager, error)
+```
+Get the database manager from the given context.
+
+Will return `ErrValueNoDBManager` if the value in the context is not of type
+`database.Manager`.
+
+#### func  MustGetDBManager
+
+```go
+func MustGetDBManager(ctx context.Context) Manager
+```
+Attempt to get the database manager from the given context. Panics if the
+operation fails.
 
 #### func  NewManager
 

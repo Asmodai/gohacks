@@ -10,12 +10,6 @@
 
 ```go
 const (
-	ContextKeyDBManager = "_DI_DB_MGR"
-)
-```
-
-```go
-const (
 	ContextKeyMemoise = "_DI_MEMO"
 )
 ```
@@ -40,12 +34,6 @@ var (
 
 ```go
 var (
-	ErrValueNotDBManager = errors.Base("value is not database.Manager")
-)
-```
-
-```go
-var (
 	ErrValueNotMemoise = errors.Base("value is not memoise.Memoise")
 )
 ```
@@ -61,16 +49,6 @@ var (
 	ErrValueNotTimedCache = errors.Base("value is not timedcache.TimedCache")
 )
 ```
-
-#### func  GetDBManager
-
-```go
-func GetDBManager(ctx context.Context) (database.Manager, error)
-```
-Get the database manager from the given context.
-
-Will return `ErrValueNoDBManager` if the value in the context is not of type
-`database.Manager`.
 
 #### func  GetFromContext
 
@@ -116,14 +94,6 @@ Get the timed cache value from the given context.
 WIll return `ErrValueNotTimedCache` if the value in the context is not of type
 `timedcache.TimedCache`.
 
-#### func  MustGetDBManager
-
-```go
-func MustGetDBManager(ctx context.Context) database.Manager
-```
-Attempt to get the database manager from the given context. Panics if the
-operation fails.
-
 #### func  MustGetMemoise
 
 ```go
@@ -158,13 +128,6 @@ Place a value in a context.
 If there is no value map in the context then one will be created.
 
 Returns a new context with the value map.
-
-#### func  SetDBManager
-
-```go
-func SetDBManager(ctx context.Context, inst database.Manager) (context.Context, error)
-```
-Set the database manager value to the context map.
 
 #### func  SetMemoise
 

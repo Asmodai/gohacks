@@ -33,37 +33,35 @@
 
 // * Package:
 
-package contextdi
+package database
 
 // * Imports:
 
 import (
 	"context"
 	"testing"
-
-	"github.com/Asmodai/gohacks/database"
 )
 
 // * Code:
 
 // ** Tests:
 
-func TestDBManager(t *testing.T) {
+func TestDI(t *testing.T) {
 	var (
-		ctx  context.Context  = context.TODO()
-		inst database.Manager = database.NewManager()
+		ctx  context.Context = context.TODO()
+		inst Manager         = NewManager()
 		err  error
 	)
 
-	t.Run("SetDBManager", func(t *testing.T) {
-		ctx, err = SetDBManager(ctx, inst)
+	t.Run("SetManager", func(t *testing.T) {
+		ctx, err = SetManager(ctx, inst)
 		if err != nil {
 			t.Fatalf("Unexpected error: %#v", err)
 		}
 	})
 
-	t.Run("GetDBManager", func(t *testing.T) {
-		res, err := GetDBManager(ctx)
+	t.Run("GetManager", func(t *testing.T) {
+		res, err := GetManager(ctx)
 		if err != nil {
 			t.Fatalf("Unexpected error: %#v", err)
 		}
