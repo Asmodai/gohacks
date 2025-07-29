@@ -10,6 +10,12 @@
 
 ```go
 const (
+	ContextKeyTimedCache = "_DI_TIMEDCACHE"
+)
+```
+
+```go
+const (
 	DefaultCacheExpiration int = 1000
 )
 ```
@@ -25,6 +31,19 @@ var (
 	ErrKeyNotExist = errors.Base("the specified key does not exist")
 )
 ```
+
+```go
+var (
+	ErrValueNotTimedCache = errors.Base("value is not timedcache.TimedCache")
+)
+```
+
+#### func  SetTimedCache
+
+```go
+func SetTimedCache(ctx context.Context, inst TimedCache) (context.Context, error)
+```
+Set the timed cache value in the context map.
 
 #### type CacheItems
 
@@ -140,6 +159,24 @@ type TimedCache interface {
 }
 ```
 
+
+#### func  GetTimedCache
+
+```go
+func GetTimedCache(ctx context.Context) (TimedCache, error)
+```
+Get the timed cache value from the given context.
+
+WIll return `ErrValueNotTimedCache` if the value in the context is not of type
+`timedcache.TimedCache`.
+
+#### func  MustGetTimedCache
+
+```go
+func MustGetTimedCache(ctx context.Context) TimedCache
+```
+Attempt to get the timed cache value from the given context. Panics if the
+operation fails.
 
 #### func  New
 

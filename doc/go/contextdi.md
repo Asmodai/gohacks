@@ -15,12 +15,6 @@ const (
 ```
 
 ```go
-const (
-	ContextKeyTimedCache = "_DI_TIMEDCACHE"
-)
-```
-
-```go
 var (
 	ErrKeyNotFound = errors.Base("value map key not found")
 )
@@ -29,12 +23,6 @@ var (
 ```go
 var (
 	ErrValueNotResponderChain = errors.Base("value is not responder.Chain")
-)
-```
-
-```go
-var (
-	ErrValueNotTimedCache = errors.Base("value is not timedcache.TimedCache")
 )
 ```
 
@@ -62,30 +50,12 @@ type `responder.Chain`.
 Please be aware that this responder chain should be treated as immutable, as we
 can't really propagate changes down the context hierarchy.
 
-#### func  GetTimedCache
-
-```go
-func GetTimedCache(ctx context.Context) (timedcache.TimedCache, error)
-```
-Get the timed cache value from the given context.
-
-WIll return `ErrValueNotTimedCache` if the value in the context is not of type
-`timedcache.TimedCache`.
-
 #### func  MustGetResponderChain
 
 ```go
 func MustGetResponderChain(ctx context.Context) *responder.Chain
 ```
 Attempt to get the responder chain from the given context. Panics if the
-operation fails.
-
-#### func  MustGetTimedCache
-
-```go
-func MustGetTimedCache(ctx context.Context) timedcache.TimedCache
-```
-Attempt to get the timed cache value from the given context. Panics if the
 operation fails.
 
 #### func  PutToContext
@@ -105,10 +75,3 @@ Returns a new context with the value map.
 func SetResponderChain(ctx context.Context, inst *responder.Chain) (context.Context, error)
 ```
 Set the responder chain value in the context map.
-
-#### func  SetTimedCache
-
-```go
-func SetTimedCache(ctx context.Context, inst timedcache.TimedCache) (context.Context, error)
-```
-Set the timed cache value in the context map.

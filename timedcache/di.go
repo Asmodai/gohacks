@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// timedcache_test.go --- Responder chain tests.
+// di.go --- Timed cache context value.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,46 +33,70 @@
 
 // * Package:
 
-package contextdi
+package timedcache
 
 // * Imports:
 
 import (
 	"context"
-	"testing"
 
-	"github.com/Asmodai/gohacks/timedcache"
+	"github.com/Asmodai/gohacks/contextdi"
+	"gitlab.com/tozd/go/errors"
+)
+
+// * Constants:
+
+const (
+	ContextKeyTimedCache = "_DI_TIMEDCACHE"
+)
+
+// * Variables:
+
+var (
+	ErrValueNotTimedCache = errors.Base("value is not timedcache.TimedCache")
 )
 
 // * Code:
 
-// ** Tests:
+// ** Functions:
 
-func TestTimedCache(t *testing.T) {
-	var (
-		ctx  = context.TODO()
-		cfg  = timedcache.NewDefaultConfig()
-		inst = timedcache.New(cfg)
-		err  error
-	)
+// Set the timed cache value in the context map.
+func SetTimedCache(ctx context.Context, inst TimedCache) (context.Context, error) {
+	val, err := contextdi.PutToContext(ctx, ContextKeyTimedCache, inst)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
-	t.Run("SetTimedCache", func(t *testing.T) {
-		ctx, err = SetTimedCache(ctx, inst)
-		if err != nil {
-			t.Fatalf("Unexpected error: %#v", err)
-		}
-	})
-
-	t.Run("GetTimedCache", func(t *testing.T) {
-		res, err := GetTimedCache(ctx)
-		if err != nil {
-			t.Fatalf("Unexpected error: %#v", err)
-		}
-
-		if res != inst {
-			t.Errorf("Unexpected result: %#v ", res)
-		}
-	})
+	return val, nil
 }
 
-// * memoise_test.go ends here.
+// Get the timed cache value from the given context.
+//
+// WIll return `ErrValueNotTimedCache` if the value in the context is not
+// of type `timedcache.TimedCache`.
+func GetTimedCache(ctx context.Context) (TimedCache, error) {
+	val, err := contextdi.GetFromContext(ctx, ContextKeyTimedCache)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	inst, ok := val.(TimedCache)
+	if !ok {
+		return nil, errors.WithStack(ErrValueNotTimedCache)
+	}
+
+	return inst, nil
+}
+
+// Attempt to get the timed cache value from the given context.  Panics if
+// the operation fails.
+func MustGetTimedCache(ctx context.Context) TimedCache {
+	inst, err := GetTimedCache(ctx)
+	if err != nil {
+		panic("Could not get timed cache instance from context")
+	}
+
+	return inst
+}
+
+// * di.go ends here.
