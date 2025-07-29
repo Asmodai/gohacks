@@ -29,51 +29,58 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+// * Package:
+
 package logger
 
+// * Imports:
+
 import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"fmt"
+	"log"
+	"sync"
 
 	"gitlab.com/tozd/go/errors"
-
-	"log"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
+
+// * Constants:
+
+const (
+	defaultSamplingInitial    = 100
+	defaultSamplingThereafter = 100
+)
+
+// * Code:
+
+// ** Types:
 
 // Log field map type.
 type Fields map[string]any
 
 // Logger using Zap as its implementation.
 type zapLogger struct {
-	logger   *zap.SugaredLogger
+	mu sync.RWMutex
+
+	logger   *zap.Logger
 	logfile  string
 	debug    bool
 	facility string
 }
 
-// Create a new logger.
-func NewZapLogger() Logger {
-	return NewZapLoggerWithFile("")
-}
-
-// Create a new logger with the given log file.
-func NewZapLoggerWithFile(logfile string) Logger {
-	instance := &zapLogger{
-		logger:  nil,
-		logfile: logfile,
-		debug:   false,
-	}
-
-	instance.SetDebug(false)
-
-	return instance
-}
+// ** Methods:
 
 // Set debug mode.
 //
 // Debug mode is a production-friendly runtime mode that will print
 // human-readable messages to standard output instead of the defined log file.
 func (l *zapLogger) SetDebug(flag bool) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	var cfg = zap.NewProductionConfig()
 
 	// If debug, use Zap's development config.
@@ -84,6 +91,12 @@ func (l *zapLogger) SetDebug(flag bool) {
 		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	}
 
+	// Set up sampling.
+	cfg.Sampling = &zap.SamplingConfig{
+		Initial:    defaultSamplingInitial,
+		Thereafter: defaultSamplingThereafter,
+	}
+
 	// Set up an output path.  If there is none, or we are running
 	// in debug mode, then output will be to standard output.
 	if l.logfile != "" && !flag {
@@ -92,12 +105,12 @@ func (l *zapLogger) SetDebug(flag bool) {
 
 	// Skip the first frame of the stack trace so we have the true
 	// caller rather than our own functions.
-	built, err := cfg.Build(zap.AddCallerSkip(1))
+	built, err := cfg.Build(zap.AddCaller(), zap.AddCallerSkip(1))
 	if err != nil {
 		log.Panic(err.Error())
 	}
 
-	l.logger = built.Sugar()
+	l.logger = built
 	l.debug = flag
 
 	//nolint:errcheck
@@ -106,6 +119,8 @@ func (l *zapLogger) SetDebug(flag bool) {
 
 // Set the log file to use.
 func (l *zapLogger) SetLogFile(file string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.logfile = file
 
 	l.SetDebug(l.debug)
@@ -129,84 +144,143 @@ func (l *zapLogger) GoError(err error, rest ...any) {
 		detail["cause"] = cause
 	}
 
-	nl := l.WithFields(detail)
-	nl.Error(e.Error(), rest...)
+	l.WithFields(detail).Error(e.Error(), rest...)
 }
 
 // Write a debug message to the log.
 func (l *zapLogger) Debug(msg string, rest ...any) {
-	l.logger.Debugw(msg, rest...)
+	l.logger.Debug(msg, buildFields(rest...)...)
 }
 
 // Write an error message to the log.
 func (l *zapLogger) Error(msg string, rest ...any) {
-	l.logger.Errorw(msg, rest...)
+	l.logger.Error(msg, buildFields(rest...)...)
 }
 
 // Write a warning message to the log.
 func (l *zapLogger) Warn(msg string, rest ...any) {
-	l.logger.Warnw(msg, rest...)
+	l.logger.Warn(msg, buildFields(rest...)...)
 }
 
 // Write an information message to the log.
 func (l *zapLogger) Info(msg string, rest ...any) {
-	l.logger.Infow(msg, rest...)
+	l.logger.Info(msg, buildFields(rest...)...)
 }
 
 // Write a fatal message to the log and then exit.
 func (l *zapLogger) Fatal(msg string, rest ...any) {
-	l.logger.Fatalw(msg, rest...)
+	l.logger.Fatal(msg, buildFields(rest...)...)
 }
 
 // Write a panic message to the log and then exit.
 func (l *zapLogger) Panic(msg string, rest ...any) {
-	l.logger.Panicw(msg, rest...)
+	l.logger.Panic(msg, buildFields(rest...)...)
 }
 
 // Compatibility method.
 func (l *zapLogger) Debugf(format string, args ...any) {
-	l.logger.Debugf(format, args...)
+	l.logger.Sugar().Debugf(format, args...)
 }
 
 // Compatibility method.
 func (l *zapLogger) Errorf(format string, args ...any) {
-	l.logger.Errorf(format, args...)
+	l.logger.Sugar().Errorf(format, args...)
 }
 
 // Compatibility method.
 func (l *zapLogger) Warnf(format string, args ...any) {
-	l.logger.Warnf(format, args...)
+	l.logger.Sugar().Warnf(format, args...)
 }
 
 // Compatibility method.
 func (l *zapLogger) Infof(format string, args ...any) {
-	l.logger.Infof(format, args...)
+	l.logger.Sugar().Infof(format, args...)
 }
 
 // Compatibility method.
 func (l *zapLogger) Fatalf(format string, args ...any) {
-	l.logger.Fatalf(format, args...)
+	l.logger.Sugar().Fatalf(format, args...)
 }
 
 // Compatibility method.
 func (l *zapLogger) Panicf(format string, args ...any) {
-	l.logger.Panicf(format, args...)
+	l.logger.Sugar().Panicf(format, args...)
 }
 
 // Encapsulate user-specified metadata fields.
 func (l *zapLogger) WithFields(fields Fields) Logger {
-	var flds = make([]any, 0)
-	for k, v := range fields {
-		flds = append(flds, k)
-		flds = append(flds, v)
+	zapFields := make([]zap.Field, 0, len(fields))
+
+	for key, val := range fields {
+		zapFields = append(zapFields, toZapField(key, val))
 	}
 
 	return &zapLogger{
-		logger:   l.logger.With(flds...),
+		logger:   l.logger.With(zapFields...),
 		logfile:  l.logfile,
 		debug:    l.debug,
 		facility: l.facility,
 	}
+}
+
+// * Functions:
+
+func buildFields(kvs ...any) []zap.Field {
+	fields := make([]zap.Field, 0, len(kvs)/2) //nolint:mnd
+
+	for idx := 0; idx < len(kvs)-1; idx += 2 {
+		key, ok := kvs[idx].(string)
+		if !ok {
+			key = fmt.Sprintf("invalid_key_%d", idx)
+		}
+
+		fields = append(fields, toZapField(key, kvs[idx+1]))
+	}
+
+	return fields
+}
+
+func toZapField(key string, value any) zap.Field {
+	switch val := value.(type) {
+	case string:
+		return zap.String(key, val)
+
+	case int:
+		return zap.Int(key, val)
+
+	case int64:
+		return zap.Int64(key, val)
+
+	case float64:
+		return zap.Float64(key, val)
+
+	case bool:
+		return zap.Bool(key, val)
+
+	case error:
+		return zap.NamedError(key, val)
+
+	default:
+		return zap.Any(key, value)
+	}
+}
+
+// Create a new logger.
+func NewZapLogger() Logger {
+	return NewZapLoggerWithFile("")
+}
+
+// Create a new logger with the given log file.
+func NewZapLoggerWithFile(logfile string) Logger {
+	instance := &zapLogger{
+		logger:  nil,
+		logfile: logfile,
+		debug:   false,
+	}
+
+	instance.SetDebug(false)
+
+	return instance
 }
 
 // zaplogger.go ends here.
