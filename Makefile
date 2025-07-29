@@ -59,6 +59,7 @@ MODULES = amqp            \
 	  fileloader      \
 	  generics        \
 	  logger          \
+	  math            \
 	  math/conversion \
 	  memoise         \
 	  process         \
@@ -128,7 +129,7 @@ lint:
 
 critic:
 	@echo "Everyone is a critic..."
-	@gocritic check 
+	@gocritic check
 
 build:
 	@echo "THIS IS A LIBRARY"

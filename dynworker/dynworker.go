@@ -52,18 +52,27 @@ import (
 	"gitlab.com/tozd/go/errors"
 
 	"github.com/Asmodai/gohacks/logger"
+	"github.com/Asmodai/gohacks/math"
 )
 
 // * Constants:
 
 const (
 	// Default average process time.
-	defaultAverageProcessTime time.Duration = 100 * time.Millisecond
+	defaultAverageProcessTime = 100 * time.Millisecond
 
 	// Default number of worker channels.
 	defaultWorkerChannels int64 = 1000
 
 	pressureDelay = 15 * time.Millisecond
+
+	defaultScaleCooldown = 3 * time.Second
+
+	defaultHystersisThreshold = 2
+
+	defaultMaxScaleDown = 4
+
+	smoothingFactor = 0.2
 )
 
 // * Variables:
@@ -170,6 +179,12 @@ type workerPool struct {
 
 	shutdownChans []chan struct{}
 	shutdownLock  sync.Mutex
+
+	lastScaleTime       time.Time
+	scaleCooldown       time.Duration
+	smoothedRequired    atomic.Int64
+	hysteresisThreshold int64
+	maxScaleDown        int64
 
 	processFn TaskFn
 	scalerFn  ScalerFn
@@ -311,12 +326,6 @@ func (obj *workerPool) spawnWorker() {
 				return
 
 			case <-killChan:
-				obj.lgr.Info(
-					"Worker forcefully killed.",
-					"type", "dynworker",
-					"pool", obj.name,
-				)
-
 				return
 
 			case task := <-obj.input:
@@ -386,29 +395,139 @@ func (obj *workerPool) scaler() {
 	}
 }
 
+// Compute the required number of workers.
+func (obj *workerPool) computeRequiredWorkers() int64 {
+	if obj.scalerFn != nil {
+		return math.ClampI64(
+			int64(obj.scalerFn()),
+			obj.minWorkers,
+			obj.maxWorkers,
+		)
+	}
+
+	queued := len(obj.input)
+
+	avg := time.Duration(obj.avgProcTime.Load())
+	if avg == 0 {
+		avg = defaultAverageProcessTime
+	}
+
+	raw := int64(float64(queued)*avg.Seconds()) + 1
+
+	return math.ClampI64(raw, obj.minWorkers, obj.maxWorkers)
+}
+
+// Smooth the number of required numbers.
+func (obj *workerPool) smoothRequiredWorkers(raw int64) int64 {
+	old := obj.smoothedRequired.Load()
+	if old == 0 {
+		old = raw
+	}
+
+	smoothed := int64(float64(raw)*smoothingFactor +
+		float64(old)*(1-smoothingFactor))
+
+	obj.smoothedRequired.Store(smoothed)
+
+	return smoothed
+}
+
+// Should we scale?
+//
+// Attempts to prevent hysteresis.
+func (obj *workerPool) shouldScale(required, current int64) bool {
+	return math.AbsI64(required-current) >= obj.hysteresisThreshold
+}
+
+// Scale the number of workers up to the given number.
+func (obj *workerPool) scaleUp(num, current, required int64) {
+	obj.lgr.Info(
+		"Scaling up workers.",
+		"type", "dynworker",
+		"pool", obj.name,
+		"current", current,
+		"required", required,
+		"new", num,
+	)
+
+	obj.totalScaledUpMetric.Inc()
+
+	for range num {
+		obj.spawnWorker()
+	}
+}
+
+// Scale the number of workers down to the given number.
+func (obj *workerPool) scaleDown(num, current, required int64) {
+	if num > obj.maxScaleDown {
+		num = obj.maxScaleDown
+	}
+
+	obj.lgr.Info(
+		"Scaling down workers.",
+		"type", "dynworker",
+		"pool", obj.name,
+		"current", current,
+		"required", required,
+		"new", num,
+	)
+
+	obj.totalScaledDownMetric.Inc()
+	obj.killWorkers(num)
+}
+
 // Check if we need to scale the number of workers if required.
 //
 // Note, this will not actively terminate workers should the number require
 // scaling down, rather it will let workers terminate through either completion
 // or idle timeout.
 func (obj *workerPool) scaleCheck() {
+	now := time.Now()
+
+	if now.Sub(obj.lastScaleTime) < obj.scaleCooldown {
+		return
+	}
+
+	current := obj.workerCount.Load()
+	rawRequired := obj.computeRequiredWorkers()
+	required := obj.smoothRequiredWorkers(rawRequired)
+
+	if !obj.shouldScale(required, current) {
+		return
+	}
+
+	obj.lastScaleTime = now
+	delta := required - current
+
+	if delta > 0 {
+		obj.scaleUp(delta, current, required)
+	} else {
+		obj.scaleDown(-delta, current, required)
+	}
+}
+
+/*
+func (obj *workerPool) scaleCheck() {
+	now := time.Now()
+
+	if now.Sub(obj.lastScaleTime) < obj.scaleCooldown {
+		return
+	}
+
 	var required int64
 
 	// Current functions.
 	current := obj.workerCount.Load()
 
-	// How to scale?
 	if obj.scalerFn == nil {
-		// Default scaler.
 		queued := len(obj.input)
 		avg := time.Duration(obj.avgProcTime.Load())
 
-		// If we don't have an average process time, set one to 100ms.
 		if avg == 0 {
 			avg = defaultAverageProcessTime
 		}
 
-		// Rough required workers = queue * avg / interval.
+		// Rough required workers = queued * avg / interval.
 		required = int64(float64(queued)*avg.Seconds()) + 1
 	} else {
 		// User-supplied scaler.
@@ -425,25 +544,40 @@ func (obj *workerPool) scaleCheck() {
 		required = obj.maxWorkers
 	}
 
-	// Can we scale?
-	if required > current {
-		toSpawn := required - current
+	old := obj.smoothedRequired.Load()
+	if old == 0 {
+		old = required
+	}
 
+	smoothed := int64(float64(required)*smoothingFactor + float64(old)*(1-smoothingFactor))
+	obj.smoothedRequired.Store(smoothed)
+	required = smoothed
+
+	delta := required - current
+
+	// Hysteresis check
+	if abs(delta) < obj.hysteresisThreshold {
+		return
+	}
+
+	obj.lastScaleTime = now
+
+	if delta > 0 {
 		obj.lgr.Info(
 			"Scaling up workers.",
 			"type", "dynworker",
 			"pool", obj.name,
 			"current", current,
 			"required", required,
-			"new", toSpawn,
+			"new", delta,
 		)
 		obj.totalScaledUpMetric.Inc()
 
-		for range toSpawn {
+		for range delta {
 			obj.spawnWorker()
 		}
 	} else if required < current {
-		toKill := current - required
+		toKill := -delta
 		obj.lgr.Info(
 			"Scaling down workers.",
 			"type", "dynworker",
@@ -455,7 +589,8 @@ func (obj *workerPool) scaleCheck() {
 		obj.totalScaledDownMetric.Inc()
 		obj.killWorkers(toKill)
 	}
-}
+	}
+*/
 
 // Update the average time spent processing.
 func (obj *workerPool) updateAvgProcTime(latest int64) {
@@ -509,6 +644,10 @@ func NewWorkerPool(ctx context.Context, config *Config) WorkerPool {
 		lgr:                   lgr,
 		config:                config,
 		taskPool:              taskPool,
+		lastScaleTime:         time.Now(),
+		scaleCooldown:         defaultScaleCooldown,
+		hysteresisThreshold:   defaultHystersisThreshold,
+		maxScaleDown:          defaultMaxScaleDown,
 		activeWorkersMetric:   activeWorkers.With(label),
 		tasksTotalMetric:      tasksTotal.With(label),
 		taskDurationMetric:    taskDuration.With(label),
