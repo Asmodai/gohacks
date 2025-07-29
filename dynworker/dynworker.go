@@ -168,6 +168,9 @@ type workerPool struct {
 	scaleUpCh   chan struct{}
 	scaleDownCh chan struct{}
 
+	shutdownChans []chan struct{}
+	shutdownLock  sync.Mutex
+
 	processFn TaskFn
 	scalerFn  ScalerFn
 
@@ -265,16 +268,38 @@ func (obj *workerPool) Submit(userData UserData) error {
 }
 
 // Spawn a new worker.
+//
+//nolint:funlen
 func (obj *workerPool) spawnWorker() {
 	obj.wg.Add(1)
 	obj.workerCount.Add(1)
 	obj.activeWorkersMetric.Inc()
+
+	// KillChan?  Japanese mascot for... uh...
+	killChan := make(chan struct{})
+
+	obj.shutdownLock.Lock()
+	obj.shutdownChans = append(obj.shutdownChans, killChan)
+	obj.shutdownLock.Unlock()
 
 	go func() {
 		defer func() {
 			obj.wg.Done()
 			obj.workerCount.Add(-1)
 			obj.activeWorkersMetric.Dec()
+
+			obj.shutdownLock.Lock()
+			for idx, kchan := range obj.shutdownChans {
+				if kchan == killChan {
+					obj.shutdownChans = append(
+						obj.shutdownChans[:idx],
+						obj.shutdownChans[idx+1:]...,
+					)
+
+					break
+				}
+			}
+			obj.shutdownLock.Unlock()
 		}()
 
 		idleTimer := time.NewTimer(obj.config.IdleTimeout)
@@ -283,6 +308,15 @@ func (obj *workerPool) spawnWorker() {
 		for {
 			select {
 			case <-obj.ctx.Done():
+				return
+
+			case <-killChan:
+				obj.lgr.Info(
+					"Worker forcefully killed.",
+					"type", "dynworker",
+					"pool", obj.name,
+				)
+
 				return
 
 			case task := <-obj.input:
@@ -307,7 +341,8 @@ func (obj *workerPool) spawnWorker() {
 				current := obj.workerCount.Load()
 				if current > obj.minWorkers {
 					obj.lgr.Info(
-						"dynworker: Worker idle timeout.",
+						"Worker idle timeout.",
+						"type", "dynworker",
 						"pool", obj.name,
 						"remaining", current-1,
 					)
@@ -319,6 +354,20 @@ func (obj *workerPool) spawnWorker() {
 			}
 		}
 	}()
+}
+
+// Kill the given number of workers.
+func (obj *workerPool) killWorkers(num int64) {
+	obj.shutdownLock.Lock()
+	defer obj.shutdownLock.Unlock()
+
+	for idx := int64(0); idx < num && len(obj.shutdownChans) > 0; idx++ {
+		kchan := obj.shutdownChans[0]
+
+		close(kchan) // Signal death.
+
+		obj.shutdownChans = obj.shutdownChans[1:]
+	}
 }
 
 // Initiate a scale check at a 1 second interval.
@@ -381,7 +430,8 @@ func (obj *workerPool) scaleCheck() {
 		toSpawn := required - current
 
 		obj.lgr.Info(
-			"dynworker: scaling up workers.",
+			"Scaling up workers.",
+			"type", "dynworker",
 			"pool", obj.name,
 			"current", current,
 			"required", required,
@@ -393,14 +443,17 @@ func (obj *workerPool) scaleCheck() {
 			obj.spawnWorker()
 		}
 	} else if required < current {
+		toKill := current - required
 		obj.lgr.Info(
-			"dynworker: scaling down workers.",
+			"Scaling down workers.",
+			"type", "dynworker",
 			"pool", obj.name,
 			"current", current,
 			"required", required,
-			"note", "noop, workers will die.",
+			"kill", toKill,
 		)
 		obj.totalScaledDownMetric.Inc()
+		obj.killWorkers(toKill)
 	}
 }
 
