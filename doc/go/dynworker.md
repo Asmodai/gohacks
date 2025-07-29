@@ -25,13 +25,12 @@ Initialise Prometheus metrics for this module.
 
 ```go
 type Config struct {
-	Name        string          // Worker pool name for logger and metrics.
-	MinWorkers  int64           // Minimum number of workers.
-	MaxWorkers  int64           // Maximum number of workers.
-	Logger      logger.Logger   // Logger instance.
-	Parent      context.Context // Parent context.
-	IdleTimeout time.Duration   // Idle timeout duration.
-	ScalerFunc  ScalerFn        // Function to use to determine scaling.
+	Name        string        // Worker pool name for logger and metrics.
+	MinWorkers  int64         // Minimum number of workers.
+	MaxWorkers  int64         // Maximum number of workers.
+	IdleTimeout time.Duration // Idle timeout duration.
+	WorkerFunc  TaskFn        // Function to use as the worker.
+	ScalerFunc  ScalerFn      // Function to use to determine scaling.
 }
 ```
 
@@ -40,8 +39,6 @@ type Config struct {
 
 ```go
 func NewConfig(
-	ctx context.Context,
-	lgr logger.Logger,
 	name string,
 	minw, maxw int64,
 ) *Config
@@ -55,10 +52,10 @@ func NewDefaultConfig() *Config
 ```
 Create a new default configuration.
 
-#### func (*Config) SetItleTimeout
+#### func (*Config) SetIdleTimeout
 
 ```go
-func (obj *Config) SetItleTimeout(timeout time.Duration)
+func (obj *Config) SetIdleTimeout(timeout time.Duration)
 ```
 Set the idle timeout value.
 
@@ -68,6 +65,13 @@ Set the idle timeout value.
 func (obj *Config) SetScalerFunction(scalefn ScalerFn)
 ```
 Set the scaler function.
+
+#### func (*Config) SetWorkerFunction
+
+```go
+func (obj *Config) SetWorkerFunction(workfn TaskFn)
+```
+Set the worker function.
 
 #### type ScalerFn
 
@@ -170,6 +174,9 @@ Worker pool interface.
 #### func  NewWorkerPool
 
 ```go
-func NewWorkerPool(config *Config, workfn TaskFn) WorkerPool
+func NewWorkerPool(ctx context.Context, config *Config) WorkerPool
 ```
 Create a new worker pool.
+
+The provided context must have `logger.Logger` in its user value. See
+`contextdi` and `logger.SetLogger`.

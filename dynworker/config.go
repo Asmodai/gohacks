@@ -42,9 +42,6 @@ package dynworker
 // * Imports:
 
 import (
-	"github.com/Asmodai/gohacks/logger"
-
-	"context"
 	"time"
 )
 
@@ -71,20 +68,24 @@ const (
 // ** Types:
 
 type Config struct {
-	Name        string          // Worker pool name for logger and metrics.
-	MinWorkers  int64           // Minimum number of workers.
-	MaxWorkers  int64           // Maximum number of workers.
-	Logger      logger.Logger   // Logger instance.
-	Parent      context.Context // Parent context.
-	IdleTimeout time.Duration   // Idle timeout duration.
-	ScalerFunc  ScalerFn        // Function to use to determine scaling.
+	Name        string        // Worker pool name for logger and metrics.
+	MinWorkers  int64         // Minimum number of workers.
+	MaxWorkers  int64         // Maximum number of workers.
+	IdleTimeout time.Duration // Idle timeout duration.
+	WorkerFunc  TaskFn        // Function to use as the worker.
+	ScalerFunc  ScalerFn      // Function to use to determine scaling.
 }
 
 // ** Methods:
 
 // Set the idle timeout value.
-func (obj *Config) SetItleTimeout(timeout time.Duration) {
+func (obj *Config) SetIdleTimeout(timeout time.Duration) {
 	obj.IdleTimeout = timeout
+}
+
+// Set the worker function.
+func (obj *Config) SetWorkerFunction(workfn TaskFn) {
+	obj.WorkerFunc = workfn
 }
 
 // Set the scaler function.
@@ -97,8 +98,6 @@ func (obj *Config) SetScalerFunction(scalefn ScalerFn) {
 // Create a new default configuration.
 func NewDefaultConfig() *Config {
 	return NewConfig(
-		context.Background(),
-		logger.NewDefaultLogger(),
 		"default",
 		defaultMinimumWorkerCount,
 		defaultMaximumWorkerCount,
@@ -107,8 +106,6 @@ func NewDefaultConfig() *Config {
 
 // Create a new configuration.
 func NewConfig(
-	ctx context.Context,
-	lgr logger.Logger,
 	name string,
 	minw, maxw int64,
 ) *Config {
@@ -128,8 +125,6 @@ func NewConfig(
 		Name:        name,
 		MinWorkers:  minw,
 		MaxWorkers:  maxw,
-		Logger:      lgr,
-		Parent:      ctx,
 		IdleTimeout: defaultTimeout,
 	}
 }

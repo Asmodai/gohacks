@@ -46,6 +46,7 @@ import (
 	"time"
 
 	"github.com/Asmodai/gohacks/amqp/amqpmock"
+	"github.com/Asmodai/gohacks/logger"
 	mamqpshim "github.com/Asmodai/gohacks/mocks/amqpshim"
 	mdynworker "github.com/Asmodai/gohacks/mocks/dynworker"
 	mlogger "github.com/Asmodai/gohacks/mocks/logger"
@@ -88,6 +89,9 @@ func TestClient(t *testing.T) {
 		cnf  *Config = &Config{}
 	)
 
+	ctx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
+
 	dialer := &amqpmock.MockDialer{}
 	mockconn := &amqpmock.MockConnection{}
 	mockchan := &amqpmock.MockChannel{}
@@ -120,15 +124,18 @@ func TestClient(t *testing.T) {
 	lgr := mlogger.NewMockLogger(mocker)
 	lgr.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
-	err := json.Unmarshal([]byte(ConfigJSON), &cnf)
+	dictx, err := logger.SetLogger(ctx, lgr)
+	if err != nil {
+		t.Fatalf("Could not set DI logger: %#v", err)
+	}
+
+	err = json.Unmarshal([]byte(ConfigJSON), &cnf)
 	if err != nil {
 		t.Fatalf("Unexpected error: %#v", err)
 	}
 
 	cnf.Hostname = "127.0.0.1"
 	cnf.VirtualHost = "/"
-	cnf.SetParent(context.Background())
-	cnf.SetLogger(lgr)
 	cnf.SetDialer(dialer.Dial)
 
 	errs := cnf.Validate()
@@ -141,7 +148,7 @@ func TestClient(t *testing.T) {
 	}
 
 	t.Run("Constructs", func(t *testing.T) {
-		inst = NewClient(cnf, pool)
+		inst = NewClient(dictx, cnf, pool)
 
 		if inst == nil {
 			t.Fatal("Construction failed!")

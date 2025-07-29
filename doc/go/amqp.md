@@ -50,7 +50,7 @@ type Client interface {
 #### func  NewClient
 
 ```go
-func NewClient(cfg *Config, pool dynworker.WorkerPool) Client
+func NewClient(ctx context.Context, cfg *Config, pool dynworker.WorkerPool) Client
 ```
 
 #### type Config
@@ -82,11 +82,7 @@ type Config struct {
 #### func  NewConfig
 
 ```go
-func NewConfig(
-	parent context.Context,
-	lgr logger.Logger,
-	hostname, virtualhost, queuename string,
-) *Config
+func NewConfig(hostname, virtualhost, queuename string) *Config
 ```
 Generate a new configuration object.
 
@@ -114,7 +110,7 @@ Has the configuration been validated?
 #### func (*Config) MakeWorkerPool
 
 ```go
-func (obj *Config) MakeWorkerPool() dynworker.WorkerPool
+func (obj *Config) MakeWorkerPool(ctx context.Context) dynworker.WorkerPool
 ```
 Generate a worker pool.
 
@@ -127,26 +123,12 @@ Set the dialer function.
 
 This is useful for mocking.
 
-#### func (*Config) SetLogger
-
-```go
-func (obj *Config) SetLogger(lgr logger.Logger)
-```
-Set the logger instance.
-
 #### func (*Config) SetMessageHandler
 
 ```go
 func (obj *Config) SetMessageHandler(callback dynworker.TaskFn)
 ```
 Set the message handler worker function.
-
-#### func (*Config) SetParent
-
-```go
-func (obj *Config) SetParent(ctx context.Context)
-```
-Set the parent context.
 
 #### func (*Config) URL
 

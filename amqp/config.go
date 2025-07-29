@@ -50,7 +50,6 @@ import (
 
 	"github.com/Asmodai/gohacks/amqp/amqpshim"
 	"github.com/Asmodai/gohacks/dynworker"
-	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/types"
 	"gitlab.com/tozd/go/errors"
 )
@@ -131,8 +130,6 @@ type Config struct {
 	WorkerIdleTimeout     types.Duration `json:"worker_idle_timeout"`
 
 	dialer         DialFn           `json:"-"`
-	parent         context.Context  `json:"-"`
-	logger         logger.Logger    `json:"-"`
 	consumerTag    string           `json:"-"`
 	metricsLabel   string           `json:"-"`
 	messageHandler dynworker.TaskFn `json:"-"`
@@ -152,16 +149,6 @@ func (obj *Config) SetMessageHandler(callback dynworker.TaskFn) {
 	obj.messageHandler = callback
 }
 
-// Set the parent context.
-func (obj *Config) SetParent(ctx context.Context) {
-	obj.parent = ctx
-}
-
-// Set the logger instance.
-func (obj *Config) SetLogger(lgr logger.Logger) {
-	obj.logger = lgr
-}
-
 // Set the dialer function.
 //
 // This is useful for mocking.
@@ -171,12 +158,15 @@ func (obj *Config) SetDialer(dialer DialFn) {
 
 // Default worker function.
 func (obj *Config) defaultMessageHandler(_ *dynworker.Task) error {
-	obj.logger.Warn(
-		"No AMQP message handler callback installed.",
-		"consumer", obj.ConsumerName,
-	)
-
-	return nil
+	// Originally this would just create a warning.  I think that is a
+	// loss.
+	//
+	// If the user gets this far in setting up an AMQP client and then
+	// runs the resulting binary or invokes `go run`... then without
+	// a handler, AMQP does nothing of use.
+	//
+	// So, complain loudly when one is not set.
+	panic("No AMQP message handler callback installed.")
 }
 
 // Generate a Prometheus label.
@@ -219,17 +209,16 @@ func (obj *Config) ConfigureWorkerPool() *dynworker.Config {
 		Name:        obj.ConsumerName,
 		MinWorkers:  obj.MinWorkers,
 		MaxWorkers:  obj.MaxWorkers,
-		Logger:      obj.logger,
-		Parent:      obj.parent,
 		IdleTimeout: obj.WorkerIdleTimeout.Duration(),
+		WorkerFunc:  obj.messageHandler,
 	}
 }
 
 // Generate a worker pool.
-func (obj *Config) MakeWorkerPool() dynworker.WorkerPool {
+func (obj *Config) MakeWorkerPool(ctx context.Context) dynworker.WorkerPool {
 	return dynworker.NewWorkerPool(
+		ctx,
 		obj.ConfigureWorkerPool(),
-		obj.messageHandler,
 	)
 }
 
@@ -356,8 +345,6 @@ func (obj *Config) URL() string {
 // Generate a new default configuration object.
 func NewDefaultConfig() *Config {
 	return NewConfig(
-		context.Background(),
-		logger.NewDefaultLogger(),
 		"127.0.0.1",
 		"/",
 		"",
@@ -365,11 +352,7 @@ func NewDefaultConfig() *Config {
 }
 
 // Generate a new configuration object.
-func NewConfig(
-	parent context.Context,
-	lgr logger.Logger,
-	hostname, virtualhost, queuename string,
-) *Config {
+func NewConfig(hostname, virtualhost, queuename string) *Config {
 	inst := &Config{
 		Hostname:       hostname,
 		VirtualHost:    virtualhost,
@@ -377,8 +360,6 @@ func NewConfig(
 		PrefetchCount:  defaultPrefetchCount,
 		PollInterval:   defaultPollInterval,
 		ReconnectDelay: defaultReconnectDelay,
-		parent:         parent,
-		logger:         lgr,
 	}
 
 	inst.Validate()

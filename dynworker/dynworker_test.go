@@ -40,7 +40,8 @@ package dynworker
 // * Imports:
 
 import (
-	"github.com/Asmodai/gohacks/mocks/logger"
+	"github.com/Asmodai/gohacks/logger"
+	mlogger "github.com/Asmodai/gohacks/mocks/logger"
 
 	"go.uber.org/mock/gomock"
 
@@ -62,21 +63,28 @@ func TestDynworker(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	lgr := logger.NewMockLogger(mocker)
+	lgr := mlogger.NewMockLogger(mocker)
 	lgr.EXPECT().
 		Info(gomock.Any(), gomock.Any()).
 		AnyTimes()
 
-	timeout := time.Duration(5 * time.Second)
-	cfg := NewConfig(ctx, lgr, "test", 2, 5)
-	cfg.IdleTimeout = timeout
+	dictx, err := logger.SetLogger(ctx, lgr)
+	if err != nil {
+		t.Fatalf("Could not set logger DI context: %#v", err)
+	}
 
-	t.Logf("Creating worker pool with 2 minimum and 5 maximum workers.")
-	pool := NewWorkerPool(cfg, func(task *Task) error {
+	timeout := time.Duration(5 * time.Second)
+
+	cfg := NewConfig("test", 2, 5)
+	cfg.IdleTimeout = timeout
+	cfg.WorkerFunc = func(task *Task) error {
 		t.Logf("Task: %#v", task.Data())
 		time.Sleep(50 * time.Millisecond)
 		return nil
-	})
+	}
+
+	t.Logf("Creating worker pool with 2 minimum and 5 maximum workers.")
+	pool := NewWorkerPool(dictx, cfg)
 
 	pool.Start()
 	// `Stop` is invoked in the "terminate" test.

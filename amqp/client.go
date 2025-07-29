@@ -51,6 +51,7 @@ import (
 
 	"github.com/Asmodai/gohacks/amqp/amqpshim"
 	"github.com/Asmodai/gohacks/dynworker"
+	"github.com/Asmodai/gohacks/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	goamqp "github.com/rabbitmq/amqp091-go"
 	"gitlab.com/tozd/go/errors"
@@ -151,6 +152,8 @@ type client struct {
 	channel amqpshim.Channel    // was *goamqp.Channel
 
 	dialFn DialFn
+	lgr    logger.Logger
+
 	ctx    context.Context
 	cancel context.CancelFunc
 
@@ -234,7 +237,7 @@ func (obj *client) monitorConnection() {
 
 	select {
 	case <-notifyClose:
-		obj.cfg.logger.Warn(
+		obj.lgr.Warn(
 			"AMQP connection closed, attempting reconnection...",
 			"consumer", obj.cfg.ConsumerName,
 		)
@@ -261,7 +264,7 @@ func (obj *client) reconnectLoop() {
 			obj.reconnectAttemptMetric.Inc()
 
 			if err := obj.Connect(); err == nil {
-				obj.cfg.logger.Info(
+				obj.lgr.Info(
 					"AMQP reconnected.",
 					"consumer", obj.cfg.ConsumerName,
 				)
@@ -270,7 +273,7 @@ func (obj *client) reconnectLoop() {
 			}
 
 			if obj.cfg.MaxRetryConnect > 0 && tries > obj.cfg.MaxRetryConnect {
-				obj.cfg.logger.Fatal(
+				obj.lgr.Fatal(
 					"Maximum AMQP retry attempts reached.",
 					"consumer", obj.cfg.ConsumerName,
 					"retries", tries,
@@ -382,7 +385,7 @@ func (obj *client) pollQueueStats() {
 		case <-ticker.C:
 			queue, err := obj.QueueStats()
 			if err != nil {
-				obj.cfg.logger.Warn(
+				obj.lgr.Warn(
 					"Failed to inspect AMQP queue.",
 					"consumer", obj.cfg.ConsumerName,
 					"queue", obj.cfg.QueueName,
@@ -425,7 +428,7 @@ func (obj *client) GetMessageCount() int64 {
 }
 
 func (obj *client) Disconnect() {
-	obj.cfg.logger.Info(
+	obj.lgr.Info(
 		"Disconnecting from AMQP.",
 		"consumer", obj.cfg.ConsumerName,
 	)
@@ -458,20 +461,24 @@ func (obj *client) Close() error {
 
 // ** Functions:
 
-func NewClient(cfg *Config, pool dynworker.WorkerPool) Client {
+func NewClient(ctx context.Context, cfg *Config, pool dynworker.WorkerPool) Client {
 	if !cfg.validated {
 		panic("AMQP configuration has not been validated.")
 	}
 
-	ctx, cancel := context.WithCancel(cfg.parent)
+	lgr := logger.MustGetLogger(ctx)
+
+	nctx, cancel := context.WithCancel(ctx)
+
 	label := prometheus.Labels{"consumer": cfg.ConsumerName}
 
 	inst := &client{
 		cfg:    cfg,
-		ctx:    ctx,
+		ctx:    nctx,
 		cancel: cancel,
 		pool:   pool,
 		dialFn: cfg.dialer,
+		lgr:    lgr,
 
 		// Prometheus metrics.
 		disconnectMetric:       disconnectTotal.With(label),

@@ -422,12 +422,17 @@ func (obj *workerPool) updateAvgProcTime(latest int64) {
 // ** Functions:
 
 // Create a new worker pool.
-func NewWorkerPool(config *Config, workfn TaskFn) WorkerPool {
+//
+// The provided context must have `logger.Logger` in its user value.
+// See `contextdi` and `logger.SetLogger`.
+func NewWorkerPool(ctx context.Context, config *Config) WorkerPool {
 	if config == nil {
 		panic("invalid worker configuration")
 	}
 
-	ctx, cancel := context.WithCancel(config.Parent)
+	lgr := logger.MustGetLogger(ctx)
+
+	nctx, cancel := context.WithCancel(ctx)
 
 	label := prometheus.Labels{"pool": config.Name}
 
@@ -444,11 +449,11 @@ func NewWorkerPool(config *Config, workfn TaskFn) WorkerPool {
 		maxWorkers:            config.MaxWorkers,
 		scaleUpCh:             make(chan struct{}, 1),
 		scaleDownCh:           make(chan struct{}, 1),
-		processFn:             workfn,
+		processFn:             config.WorkerFunc,
 		scalerFn:              config.ScalerFunc,
-		ctx:                   ctx,
+		ctx:                   nctx,
 		cancel:                cancel,
-		lgr:                   config.Logger,
+		lgr:                   lgr,
 		config:                config,
 		taskPool:              taskPool,
 		activeWorkersMetric:   activeWorkers.With(label),

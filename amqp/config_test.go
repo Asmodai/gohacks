@@ -44,7 +44,6 @@ import (
 	"testing"
 
 	"github.com/Asmodai/gohacks/dynworker"
-	mlogger "github.com/Asmodai/gohacks/mocks/logger"
 	goamqp "github.com/rabbitmq/amqp091-go"
 	"go.uber.org/mock/gomock"
 )
@@ -80,8 +79,6 @@ func TestConfig(t *testing.T) {
 	mocker := gomock.NewController(t)
 	defer mocker.Finish()
 
-	lgr := mlogger.NewMockLogger(mocker)
-
 	testHandlerCB := func(param *dynworker.Task) error {
 		delivery := param.Data().(goamqp.Delivery)
 
@@ -99,7 +96,6 @@ func TestConfig(t *testing.T) {
 	inst.Hostname = "127.0.0.1"
 	inst.VirtualHost = "/"
 	inst.SetMessageHandler(testHandlerCB)
-	inst.SetLogger(lgr)
 
 	errs := inst.Validate()
 	if len(errs) > 0 {
@@ -178,21 +174,6 @@ func TestConfigCallbacks(t *testing.T) {
 		}
 		t.Fatal("Cannot continue.")
 	}
-
-	t.Run("defaultHandleMessage", func(t *testing.T) {
-		mocker := gomock.NewController(t)
-		defer mocker.Finish()
-
-		lgr := mlogger.NewMockLogger(mocker)
-		inst.logger = lgr
-
-		lgr.EXPECT().
-			Warn(gomock.Any(), gomock.Any()).
-			MaxTimes(1).
-			MinTimes(1)
-
-		inst.messageHandler(dynworker.NewTask(nil, nil, goamqp.Delivery{}))
-	})
 } // TestConfigCallbacks
 
 // * config_test.go ends here.
