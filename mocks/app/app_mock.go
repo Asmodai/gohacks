@@ -186,6 +186,18 @@ func (mr *MockApplicationMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockApplication)(nil).Name))
 }
 
+// ParseConfig mocks base method.
+func (m *MockApplication) ParseConfig() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ParseConfig")
+}
+
+// ParseConfig indicates an expected call of ParseConfig.
+func (mr *MockApplicationMockRecorder) ParseConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseConfig", reflect.TypeOf((*MockApplication)(nil).ParseConfig))
+}
+
 // ProcessManager mocks base method.
 func (m *MockApplication) ProcessManager() process.Manager {
 	m.ctrl.T.Helper()

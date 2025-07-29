@@ -47,6 +47,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"syscall"
 	"testing"
 
 	"github.com/Asmodai/gohacks/config"
@@ -173,6 +174,7 @@ func TestApp(t *testing.T) {
 
 	t.Run("Constructs", func(t *testing.T) {
 		theapp = NewApplication(cnf)
+		theapp.ParseConfig()
 
 		if theapp == nil {
 			t.Fatal("Could not construct application!")
@@ -356,7 +358,59 @@ func TestApp(t *testing.T) {
 				}
 			})
 		})
+	})
 
+	t.Run("Signals", func(t *testing.T) {
+		var sresp *SignalResponder
+
+		thesignal := syscall.SIGUSR1
+		goodevt := events.NewSignal(thesignal)
+		badevt := events.NewMessage("cheese", "Nope")
+
+		t.Run("Constructs", func(t *testing.T) {
+			sresp = NewSignalResponder()
+
+			if sresp == nil {
+				t.Fatal("Did not construct!")
+			}
+
+			if sresp.callback == nil {
+				t.Error("No default callback.")
+			}
+		})
+
+		t.Run("RespondsTo()", func(t *testing.T) {
+			if ok := sresp.RespondsTo(goodevt); !ok {
+				t.Error("Responder doesn't respond to good event.")
+			}
+
+			if ok := sresp.RespondsTo(badevt); ok {
+				t.Error("Responder responds to bad events.")
+			}
+		})
+
+		t.Run("Receives", func(t *testing.T) {
+			var (
+				called bool
+				with   os.Signal
+			)
+
+			sresp.SetOnSignal(func(sig os.Signal) {
+				called = true
+				with = sig
+			})
+
+			theapp.AddResponder(sresp)
+			theapp.(*application).responders.SendAll(goodevt)
+
+			if !called {
+				t.Fatal("Responder was not invoked")
+			}
+
+			if with != thesignal {
+				t.Errorf("Result mismatch: %#v != %#v", with, thesignal)
+			}
+		})
 	})
 }
 

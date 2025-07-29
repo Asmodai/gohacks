@@ -132,6 +132,10 @@ func (c *config) Parse() {
 
 		fmt.Printf("\n")
 
+		// XXX Maybe this shouldn't be responsible for exiting.
+		// Could have a failure chain that leads back to the
+		// user's code for them to make the decision on whether
+		// to exit back to the OS with an error.
 		os.Exit(1)
 	}
 

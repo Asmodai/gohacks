@@ -12,6 +12,9 @@
 
 ```go
 type Application interface {
+	// Cannot be invoked once the application has been initialised.
+	ParseConfig()
+
 	// Initialises the application object.
 	//
 	// This must be called, as it does several things to set up the
@@ -179,3 +182,61 @@ type MainLoopFn func(Application)
 ```
 
 Main loop callback function type.
+
+#### type OnSignalFn
+
+```go
+type OnSignalFn func(os.Signal)
+```
+
+Callback for the signal responder.
+
+#### type SignalResponder
+
+```go
+type SignalResponder struct {
+}
+```
+
+Signal responder.
+
+#### func  NewSignalResponder
+
+```go
+func NewSignalResponder() *SignalResponder
+```
+
+#### func (*SignalResponder) Invoke
+
+```go
+func (sr *SignalResponder) Invoke(evt events.Event) events.Event
+```
+Invokes the given event.
+
+#### func (*SignalResponder) Name
+
+```go
+func (sr *SignalResponder) Name() string
+```
+Returns the name of the responder.
+
+#### func (*SignalResponder) RespondsTo
+
+```go
+func (sr *SignalResponder) RespondsTo(evt events.Event) bool
+```
+Returns whether the responder can respond to a given event.
+
+#### func (*SignalResponder) SetOnSignal
+
+```go
+func (sr *SignalResponder) SetOnSignal(callback OnSignalFn)
+```
+Sets the callback function.
+
+#### func (*SignalResponder) Type
+
+```go
+func (sr *SignalResponder) Type() string
+```
+Returns the type of the responder.

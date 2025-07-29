@@ -71,6 +71,9 @@ const (
 
 // Application.
 type Application interface {
+	// Cannot be invoked once the application has been initialised.
+	ParseConfig()
+
 	// Initialises the application object.
 	//
 	// This must be called, as it does several things to set up the
@@ -215,6 +218,27 @@ type application struct {
 
 // ** Methods:
 
+// Parse the application's config (if available).
+//
+// Cannot be invoked once the application has been initialised.
+func (app *application) ParseConfig() {
+	if app.initialised.Load() {
+		// Already initialised.
+		return
+	}
+
+	app.mu.Lock()
+	defer app.mu.Unlock()
+
+	if app.config != nil {
+		app.appconfig.Parse()
+	}
+}
+
+// Initialises the application object.
+//
+// This must be called, as it does several things to set up the
+// various facilities (such as logging) used by the application.
 func (app *application) Init() {
 	if !app.initialised.CompareAndSwap(false, true) {
 		// Already initialised.
@@ -233,8 +257,6 @@ func (app *application) Init() {
 	app.pmgr = process.MustGetProcessManager(app.ctx)
 
 	if app.config != nil {
-		app.appconfig.Parse()
-
 		app.lgr.SetLogFile(app.appconfig.LogFile())
 		app.lgr.SetDebug(app.appconfig.IsDebug())
 	}
