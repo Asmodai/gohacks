@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package sysinfo
@@ -55,6 +51,7 @@ import (
 
 // ** Types:
 
+// System information poller.
 type SysInfo struct {
 	sync.Mutex
 

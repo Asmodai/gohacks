@@ -11,8 +11,12 @@
 #### func  Spawn
 
 ```go
-func Spawn(mgr process.Manager, interval types.Duration) (*process.Process, error)
+func Spawn(ctx context.Context, interval types.Duration) (*process.Process, error)
 ```
+Spawn a system information process.
+
+The provided context must have a `process.Manager` entry in its user value. See
+`contextdi` and `process.SetProcessManager`.
 
 #### type Proc
 
@@ -27,12 +31,16 @@ type Proc struct {
 ```go
 func NewProc() *Proc
 ```
+Create a new system information process with default values.
 
 #### func (*Proc) Action
 
 ```go
 func (sip *Proc) Action(state *process.State)
 ```
+Function that runs every tick in the sysinfo process.
+
+Simply prints out the Go runtime stats via the process's logger.
 
 #### type SysInfo
 
@@ -42,6 +50,7 @@ type SysInfo struct {
 }
 ```
 
+System information poller.
 
 #### func  NewSysInfo
 

@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package sysinfo
@@ -42,10 +38,18 @@ package sysinfo
 // * Imports:
 
 import (
+	"context"
 	"time"
 
 	"github.com/Asmodai/gohacks/process"
 	"github.com/Asmodai/gohacks/types"
+)
+
+// * Constants:
+
+const (
+	// Name for the process.
+	processName string = "SysInfo"
 )
 
 // * Code:
@@ -58,6 +62,9 @@ type Proc struct {
 
 // ** Methods:
 
+// Function that runs every tick in the sysinfo process.
+//
+// Simply prints out the Go runtime stats via the process's logger.
 func (sip *Proc) Action(state *process.State) {
 	sip.si.UpdateStats()
 
@@ -74,23 +81,28 @@ func (sip *Proc) Action(state *process.State) {
 
 // ** Functions:
 
+// Create a new system information process with default values.
 func NewProc() *Proc {
 	return &Proc{
 		si: NewSysInfo(),
 	}
 }
 
-func Spawn(mgr process.Manager, interval types.Duration) (*process.Process, error) {
-	name := "SysInfo"
+// Spawn a system information process.
+//
+// The provided context must have a `process.Manager` entry in its user
+// value.  See `contextdi` and `process.SetProcessManager`.
+func Spawn(ctx context.Context, interval types.Duration) (*process.Process, error) {
+	mgr := process.MustGetProcessManager(ctx)
 
-	inst, found := mgr.Find(name)
+	inst, found := mgr.Find(processName)
 	if found {
 		return inst, nil
 	}
 
 	sip := NewProc()
 	conf := &process.Config{
-		Name:     name,
+		Name:     processName,
 		Interval: interval,
 		Function: sip.Action,
 	}

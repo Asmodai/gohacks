@@ -42,6 +42,7 @@ package sysinfo
 // * Imports:
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -54,26 +55,31 @@ import (
 // ** Tests:
 
 func TestProcess(t *testing.T) {
-	t.Log("Does the system info process run as expected?")
+	ctx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
 
 	mgr := process.NewManager()
 
-	testSIProc, err := Spawn(mgr, types.Duration(1 * time.Second))
+	nctx, err := process.SetProcessManager(ctx, mgr)
 	if err != nil {
-		t.Errorf("Spawn: %s", err.Error())
+		t.Fatalf("Could not register process manager: %#v", err)
+	}
+
+	testSIProc, err := Spawn(nctx, types.Duration(1*time.Second))
+	if err != nil {
+		t.Fatalf("Spawn: %s", err.Error())
 		return
 	}
 
 	time.Sleep(2 * time.Second)
 
 	if !testSIProc.Running() {
-		t.Error("Process is not running.")
+		t.Fatal("Process is not running.")
 		testSIProc.Stop()
 		return
 	}
 
 	testSIProc.Stop()
-	t.Log("Yes.")
 }
 
 // * process_test.go ends here.
