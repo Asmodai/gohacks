@@ -38,6 +38,7 @@ package apiserver
 // * Imports:
 
 import (
+	"context"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -51,6 +52,9 @@ import (
 // * Constants:
 
 const (
+	// Process name.
+	processName string = "Dispatcher"
+
 	// Responder name.
 	responderName string = "gohacks.dispatcher"
 
@@ -176,21 +180,22 @@ func NewDispatcherProc(lgr logger.Logger, config *Config) *DispatcherProc {
 }
 
 // Spawn an API dispatcher process.
-func Spawn(mgr process.Manager, lgr logger.Logger, config *Config) (*process.Process, error) {
-	name := "Dispatcher"
+//
+// The provided context must have both `logger.Logger` and `process.Manager`
+// entries in its user value.  See `contextdi`, `logger.SetLogger`, and
+// `process.SetProcessmanager`.
+func Spawn(ctx context.Context, config *Config) (*process.Process, error) {
+	mgr := process.MustGetProcessManager(ctx)
+	lgr := logger.MustGetLogger(ctx)
 
-	if mgr == nil {
-		return nil, errors.WithStack(ErrNoProcessManager)
-	}
-
-	inst, found := mgr.Find(name)
+	inst, found := mgr.Find(processName)
 	if found {
 		return inst, nil
 	}
 
 	dispatch := NewDispatcherProc(lgr, config)
 	conf := &process.Config{
-		Name:      name,
+		Name:      processName,
 		Interval:  0,
 		Responder: dispatch,
 		OnStop:    dispatch.stop,

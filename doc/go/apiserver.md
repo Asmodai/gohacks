@@ -95,9 +95,13 @@ the boolean value of the flag.
 #### func  Spawn
 
 ```go
-func Spawn(mgr process.Manager, lgr logger.Logger, config *Config) (*process.Process, error)
+func Spawn(ctx context.Context, config *Config) (*process.Process, error)
 ```
 Spawn an API dispatcher process.
+
+The provided context must have both `logger.Logger` and `process.Manager`
+entries in its user value. See `contextdi`, `logger.SetLogger`, and
+`process.SetProcessmanager`.
 
 #### type Config
 
