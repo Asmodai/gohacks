@@ -51,8 +51,8 @@ import (
 	"testing"
 
 	"github.com/Asmodai/gohacks/config"
-	"github.com/Asmodai/gohacks/contextdi"
 	"github.com/Asmodai/gohacks/events"
+	"github.com/Asmodai/gohacks/logger"
 	mlogger "github.com/Asmodai/gohacks/mocks/logger"
 	mprocess "github.com/Asmodai/gohacks/mocks/process"
 	"github.com/Asmodai/gohacks/process"
@@ -153,7 +153,7 @@ func TestApp(t *testing.T) {
 	pmgr.EXPECT().SetLogger(gomock.Any()).AnyTimes()
 	pmgr.EXPECT().StopAll().AnyTimes()
 
-	ctx, err = contextdi.SetLogger(ctx, lgr)
+	ctx, err = logger.SetLogger(ctx, lgr)
 	if err != nil {
 		t.Fatalf("Error when setting logger DI: %#v", err)
 	}

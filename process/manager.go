@@ -44,7 +44,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Asmodai/gohacks/contextdi"
 	"github.com/Asmodai/gohacks/logger"
 )
 
@@ -318,7 +317,7 @@ func (pm *manager) Count() int {
 
 // Create a new process manager with a given parent context.
 func NewManagerWithContext(parent context.Context) Manager {
-	lgr, err := contextdi.GetLogger(parent)
+	lgr, err := logger.GetLogger(parent)
 	if err != nil {
 		lgr = logger.NewDefaultLogger()
 	}

@@ -44,7 +44,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Asmodai/gohacks/contextdi"
 	"github.com/Asmodai/gohacks/events"
 	"github.com/Asmodai/gohacks/logger"
 )
@@ -407,7 +406,7 @@ func NewProcess(config *Config) *Process {
 
 // Create a new process with the given configuration and parent context.
 func NewProcessWithContext(parent context.Context, config *Config) *Process {
-	lgr, err := contextdi.GetLogger(parent)
+	lgr, err := logger.GetLogger(parent)
 	if err != nil {
 		lgr = logger.NewDefaultLogger()
 	}

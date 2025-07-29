@@ -46,7 +46,6 @@ import (
 	"time"
 
 	"github.com/Asmodai/gohacks/config"
-	"github.com/Asmodai/gohacks/contextdi"
 	"github.com/Asmodai/gohacks/events"
 	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/process"
@@ -253,7 +252,7 @@ func (app *application) Init() {
 	}
 
 	// Get components from DI.
-	app.lgr = contextdi.MustGetLogger(app.ctx)
+	app.lgr = logger.MustGetLogger(app.ctx)
 	app.pmgr = process.MustGetProcessManager(app.ctx)
 
 	if app.config != nil {

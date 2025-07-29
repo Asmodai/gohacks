@@ -16,12 +16,6 @@ const (
 
 ```go
 const (
-	ContextKeyLogger = "_DI_LOGGER"
-)
-```
-
-```go
-const (
 	ContextKeyMemoise = "_DI_MEMO"
 )
 ```
@@ -47,12 +41,6 @@ var (
 ```go
 var (
 	ErrValueNotDBManager = errors.Base("value is not database.Manager")
-)
-```
-
-```go
-var (
-	ErrValueNotLogger = errors.Base("value is not logger.Logger")
 )
 ```
 
@@ -95,16 +83,6 @@ Will signal `contextext.ErrInvalidContext` if the context is not valid. Will
 signal `contextext.ErrValueMapNotFound` if there is no value map. Will signal
 `ErrKeyNotFound` if the value map does not contain the key.
 
-#### func  GetLogger
-
-```go
-func GetLogger(ctx context.Context) (logger.Logger, error)
-```
-Get the logger from the given context.
-
-Will return `ErrValueNotLogger` if the value in the context is not of type
-`logger.Logger`.
-
 #### func  GetMemoise
 
 ```go
@@ -145,13 +123,6 @@ func MustGetDBManager(ctx context.Context) database.Manager
 ```
 Attempt to get the database manager from the given context. Panics if the
 operation fails.
-
-#### func  MustGetLogger
-
-```go
-func MustGetLogger(ctx context.Context) logger.Logger
-```
-Attempt to get the logger from the given context. Panics if the operation fails.
 
 #### func  MustGetMemoise
 
@@ -194,13 +165,6 @@ Returns a new context with the value map.
 func SetDBManager(ctx context.Context, inst database.Manager) (context.Context, error)
 ```
 Set the database manager value to the context map.
-
-#### func  SetLogger
-
-```go
-func SetLogger(ctx context.Context, inst logger.Logger) (context.Context, error)
-```
-Set the logger value to the context map.
 
 #### func  SetMemoise
 

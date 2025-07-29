@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// logger_test.go --- Logger tests.
+// di.go --- Logger context value.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,45 +33,71 @@
 
 // * Package:
 
-package contextdi
+package logger
 
 // * Imports:
 
 import (
 	"context"
-	"testing"
 
-	"github.com/Asmodai/gohacks/logger"
+	"github.com/Asmodai/gohacks/contextdi"
+	"gitlab.com/tozd/go/errors"
+)
+
+// * Constants:
+
+const (
+	ContextKeyLogger = "_DI_LOGGER"
+)
+
+// * Variables:
+
+var (
+	ErrValueNotLogger = errors.Base("value is not logger.Logger")
 )
 
 // * Code:
 
-// ** Tests:
+// ** Functions:
 
-func TestLogger(t *testing.T) {
-	var (
-		ctx context.Context = context.TODO()
-		lgr logger.Logger   = logger.NewDefaultLogger()
-		err error
-	)
+// Set the logger value to the context map.
+func SetLogger(ctx context.Context, inst Logger) (context.Context, error) {
+	val, err := contextdi.PutToContext(ctx, ContextKeyLogger, inst)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
-	t.Run("SetLogger", func(t *testing.T) {
-		ctx, err = SetLogger(ctx, lgr)
-		if err != nil {
-			t.Fatalf("Unexpected error: %#v", err)
-		}
-	})
-
-	t.Run("GetLogger", func(t *testing.T) {
-		res, err := GetLogger(ctx)
-		if err != nil {
-			t.Fatalf("Unexpected error: %#v", err)
-		}
-
-		if res != lgr {
-			t.Errorf("Unexpected result: %#v ", res)
-		}
-	})
+	return val, nil
 }
 
-// * logger_test.go ends here.
+// Get the logger from the given context.
+//
+// Will return `ErrValueNotLogger` if the value in the context is not of type
+// `logger.Logger`.
+func GetLogger(ctx context.Context) (Logger, error) {
+	val, err := contextdi.GetFromContext(ctx, ContextKeyLogger)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	inst, ok := val.(Logger)
+	if !ok {
+		return nil, errors.WithStack(ErrValueNotLogger)
+	}
+
+	return inst, nil
+}
+
+// Attempt to get the logger from the given context.  Panics if the operation
+// fails.
+func MustGetLogger(ctx context.Context) Logger {
+	inst, err := GetLogger(ctx)
+
+	if err != nil {
+		panic("Could not get logger instance from context")
+	}
+
+	return inst
+}
+
+// * di.go ends here.

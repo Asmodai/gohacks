@@ -39,7 +39,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Asmodai/gohacks/contextdi"
 	"github.com/Asmodai/gohacks/events"
 	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/responder"
@@ -146,7 +145,7 @@ func TestMain(m *testing.M) {
 	lgr := logger.NewDefaultLogger()
 	ctx := context.Background()
 
-	ctx, err = contextdi.SetLogger(ctx, lgr)
+	ctx, err = logger.SetLogger(ctx, lgr)
 	if err != nil {
 		log.Printf("Could not set up DI: %#v", err)
 		os.Exit(128)

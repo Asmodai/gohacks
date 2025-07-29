@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// logger.go --- Logger context value.
+// di_test.go --- Logger tests.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,66 +33,43 @@
 
 // * Package:
 
-package contextdi
+package logger
 
 // * Imports:
 
 import (
 	"context"
-
-	"github.com/Asmodai/gohacks/logger"
-	"gitlab.com/tozd/go/errors"
-)
-
-// * Constants:
-
-const (
-	ContextKeyLogger = "_DI_LOGGER"
-)
-
-// * Variables:
-
-var (
-	ErrValueNotLogger = errors.Base("value is not logger.Logger")
+	"testing"
 )
 
 // * Code:
 
-// ** Functions:
+// ** Tests:
 
-// Set the logger value to the context map.
-func SetLogger(ctx context.Context, inst logger.Logger) (context.Context, error) {
-	return PutToContext(ctx, ContextKeyLogger, inst)
+func TestLogger(t *testing.T) {
+	var (
+		ctx context.Context = context.TODO()
+		lgr Logger          = NewDefaultLogger()
+		err error
+	)
+
+	t.Run("SetLogger", func(t *testing.T) {
+		ctx, err = SetLogger(ctx, lgr)
+		if err != nil {
+			t.Fatalf("Unexpected error: %#v", err)
+		}
+	})
+
+	t.Run("GetLogger", func(t *testing.T) {
+		res, err := GetLogger(ctx)
+		if err != nil {
+			t.Fatalf("Unexpected error: %#v", err)
+		}
+
+		if res != lgr {
+			t.Errorf("Unexpected result: %#v ", res)
+		}
+	})
 }
 
-// Get the logger from the given context.
-//
-// Will return `ErrValueNotLogger` if the value in the context is not of type
-// `logger.Logger`.
-func GetLogger(ctx context.Context) (logger.Logger, error) {
-	val, err := GetFromContext(ctx, ContextKeyLogger)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	inst, ok := val.(logger.Logger)
-	if !ok {
-		return nil, errors.WithStack(ErrValueNotLogger)
-	}
-
-	return inst, nil
-}
-
-// Attempt to get the logger from the given context.  Panics if the operation
-// fails.
-func MustGetLogger(ctx context.Context) logger.Logger {
-	inst, err := GetLogger(ctx)
-
-	if err != nil {
-		panic("Could not get logger instance from context")
-	}
-
-	return inst
-}
-
-// * logger.go ends here.
+// * di_test.go ends here.

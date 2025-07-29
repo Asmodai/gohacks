@@ -8,6 +8,25 @@
 
 ## Usage
 
+```go
+const (
+	ContextKeyLogger = "_DI_LOGGER"
+)
+```
+
+```go
+var (
+	ErrValueNotLogger = errors.Base("value is not logger.Logger")
+)
+```
+
+#### func  SetLogger
+
+```go
+func SetLogger(ctx context.Context, inst Logger) (context.Context, error)
+```
+Set the logger value to the context map.
+
 #### type Fields
 
 ```go
@@ -95,6 +114,23 @@ To use,
 
 If an empty string is passed to `NewLogger`, then the log facility will display
 messages on standard output.
+
+#### func  GetLogger
+
+```go
+func GetLogger(ctx context.Context) (Logger, error)
+```
+Get the logger from the given context.
+
+Will return `ErrValueNotLogger` if the value in the context is not of type
+`logger.Logger`.
+
+#### func  MustGetLogger
+
+```go
+func MustGetLogger(ctx context.Context) Logger
+```
+Attempt to get the logger from the given context. Panics if the operation fails.
 
 #### func  NewDefaultLogger
 
