@@ -116,7 +116,7 @@ func NewConfigWithQueue(name string, minw, maxw int64, queue TaskQueue) *Config 
 	if queue != nil {
 		inputQueue = queue
 	} else {
-		inputQueue = newChanTaskQueue(int(defaultWorkerChannels))
+		inputQueue = NewChanTaskQueue(int(defaultWorkerChannels))
 	}
 
 	if minw < 0 {

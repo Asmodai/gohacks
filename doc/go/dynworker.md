@@ -146,6 +146,18 @@ type TaskQueue interface {
 ```
 
 
+#### func  NewChanTaskQueue
+
+```go
+func NewChanTaskQueue(size int) TaskQueue
+```
+
+#### func  NewQueueTaskQueue
+
+```go
+func NewQueueTaskQueue(q *types.Queue) TaskQueue
+```
+
 #### type UserData
 
 ```go

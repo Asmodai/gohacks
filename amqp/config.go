@@ -44,6 +44,7 @@ package amqp
 import (
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"strings"
 	"time"
@@ -205,12 +206,24 @@ func (obj *Config) makeConsumerTag() {
 
 // Generate a worker pool configuration.
 func (obj *Config) ConfigureWorkerPool() *dynworker.Config {
+	var bound int
+
+	//nolint:mnd
+	if obj.PrefetchCount < math.MaxInt32 {
+		bound = int(obj.PrefetchCount * 2)
+	} else {
+		bound = int(defaultMaxWorkerCount * 2)
+	}
+
+	queue := types.NewBoundedQueue(bound)
+
 	return &dynworker.Config{
 		Name:        obj.ConsumerName,
 		MinWorkers:  obj.MinWorkers,
 		MaxWorkers:  obj.MaxWorkers,
 		IdleTimeout: obj.WorkerIdleTimeout.Duration(),
 		WorkerFunc:  obj.messageHandler,
+		InputQueue:  dynworker.NewQueueTaskQueue(queue),
 	}
 }
 

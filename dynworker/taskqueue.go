@@ -104,7 +104,7 @@ func (c *chanTaskQueue) Len() int {
 
 // *** Functions:
 
-func newChanTaskQueue(size int) *chanTaskQueue {
+func NewChanTaskQueue(size int) TaskQueue {
 	return &chanTaskQueue{
 		ch: make(chan *Task, size),
 	}
@@ -114,14 +114,12 @@ func newChanTaskQueue(size int) *chanTaskQueue {
 
 // *** Types:
 
-//nolint:unused
 type queueTaskQueue struct {
 	q *types.Queue
 }
 
 // *** Methods:
 
-//nolint:unused
 func (q *queueTaskQueue) Put(ctx context.Context, task *Task) error {
 	if err := q.q.PutWithContext(ctx, task); err != nil {
 		return errors.WithStack(err)
@@ -130,7 +128,6 @@ func (q *queueTaskQueue) Put(ctx context.Context, task *Task) error {
 	return nil
 }
 
-//nolint:unused
 func (q *queueTaskQueue) Get(ctx context.Context) (*Task, error) {
 	result, err := q.q.GetWithContext(ctx)
 	if err != nil {
@@ -145,15 +142,13 @@ func (q *queueTaskQueue) Get(ctx context.Context) (*Task, error) {
 	return task, nil
 }
 
-//nolint:unused
 func (q *queueTaskQueue) Len() int {
 	return q.q.Len()
 }
 
 // *** Functions:
 
-//nolint:unused
-func newQueueTaskQueue(q *types.Queue) *queueTaskQueue {
+func NewQueueTaskQueue(q *types.Queue) TaskQueue {
 	return &queueTaskQueue{q: q}
 }
 
