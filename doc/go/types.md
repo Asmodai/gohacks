@@ -520,9 +520,31 @@ Is the queue full?
 #### func (*Queue) Get
 
 ```go
-func (q *Queue) Get() (Datum, bool)
+func (q *Queue) Get() Datum
 ```
-Remove an element from the end of the queue and return it.
+Remove an element from the start of the queue and return it.
+
+This blocks.
+
+#### func (*Queue) GetWithContext
+
+```go
+func (q *Queue) GetWithContext(ctx context.Context) (Datum, error)
+```
+Remove an element from the start of the queue and return it.
+
+Will exit should the context time out or be cancelled.
+
+This blocks.
+
+#### func (*Queue) GetWithoutBlock
+
+```go
+func (q *Queue) GetWithoutBlock() (Datum, bool)
+```
+Remove an element from the start of the queue and return it.
+
+This does not block.
 
 #### func (*Queue) Len
 
@@ -534,10 +556,33 @@ Return the number of elements in the queue.
 #### func (*Queue) Put
 
 ```go
-func (q *Queue) Put(elem Datum) bool
+func (q *Queue) Put(elem Datum)
 ```
-Append an element to the queue. Returns `false` if there is no more room in the
-queue.
+Put an element on to the queue.
+
+This blocks.
+
+#### func (*Queue) PutWithContext
+
+```go
+func (q *Queue) PutWithContext(ctx context.Context, elem Datum) error
+```
+Put an element on to the queue.
+
+Will exit should the context time out or be cancelled.
+
+This blocks.
+
+#### func (*Queue) PutWithoutBlock
+
+```go
+func (q *Queue) PutWithoutBlock(elem Datum) bool
+```
+Append an element to the queue.
+
+Returns `false` if there is no more room in the queue.
+
+This does not block.
 
 #### type RFC3339
 

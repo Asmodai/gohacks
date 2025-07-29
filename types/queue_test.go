@@ -42,197 +42,189 @@ package types
 // * Imports:
 
 import (
+	"context"
+	"sync"
 	"testing"
+	"time"
 )
 
 // * Code:
 
 // ** Tests:
 
-// Unbounded queue tests.
-func TestUnboundedQueue(t *testing.T) {
-	var queue *Queue = nil
-	var elems []string = []string{"Test1", "Test2", "Test3"}
-
-	//
-	// Test creation.
-	t.Run("Can create a new unbounded queue", func(t *testing.T) {
-		queue = NewQueue()
-
-		if queue.Full() != false || queue.Len() != 0 {
-			t.Error("Something went wrong, queue has unexpected settings.")
-			return
-		}
-	})
-
-	//
-	// Test item appending.
-	t.Run("Can put items to the queue", func(t *testing.T) {
-		for _, elt := range elems {
-			if ok := queue.Put(elt); !ok {
-				t.Error("Queue is unexpectedly full!")
-				return
-			}
-		}
-	})
-
-	// Test item getting.
-	t.Run("Can get items from the queue", func(t *testing.T) {
-		if queue.Len() == 0 {
-			t.Error("Queue has a length of zero!")
-			return
-		}
-
-		if queue.Len() > len(elems) {
-			t.Error("Queue has more elements than source array!")
-			return
-		}
-
-		for idx := range elems {
-			res, ok := queue.Get()
-
-			if !ok {
-				t.Error("Queue unexpectedly has a length of zero!")
-				return
-			}
-
-			if res.(string) != elems[idx] {
-				t.Errorf("Result mismatch: %#v != %#v", res.(string), elems[idx])
-				return
-			}
-		}
-
-		if queue.Len() > 0 {
-			t.Error("Queue unexpectedly still contains items!")
-			return
-		}
-	})
-
-	t.Run("Get operation on empty queue returns false value", func(t *testing.T) {
-		if _, ok := queue.Get(); ok {
-			t.Error("Somehow we got a valid item from an empty queue!")
-		}
-	})
+type dummyDatum struct {
+	val int
 }
 
-// Bounded queue tests.
-func TestBoundedQueue(t *testing.T) {
-	var queue *Queue = nil
-	var elems1 []string = []string{"Test1", "Test2", "Test3"}
-	var elems2 []string = []string{"Test4", "Test5", "Test6"}
+// satisfy the Datum interface if any
+var _ Datum = (*dummyDatum)(nil)
 
-	//
-	// Test creation.
-	t.Run("Can create a new bounded queue", func(t *testing.T) {
-		nlen := len(elems1)
+func TestQueueBasicPutGet(t *testing.T) {
+	q := NewBoundedQueue(2)
+	d1 := &dummyDatum{1}
+	d2 := &dummyDatum{2}
 
-		queue = NewBoundedQueue(nlen)
+	q.Put(d1)
+	q.Put(d2)
 
-		if queue.Full() != false || queue.Len() != 0 {
-			t.Error("Something went wrong, queue has unexpected settings.")
-			return
+	if q.Len() != 2 {
+		t.Fatalf("expected length 2, got %d", q.Len())
+	}
+
+	got := q.Get()
+	if got.(*dummyDatum).val != 1 {
+		t.Errorf("expected 1, got %v", got)
+	}
+
+	got = q.Get()
+	if got.(*dummyDatum).val != 2 {
+		t.Errorf("expected 2, got %v", got)
+	}
+}
+
+func TestQueuePutBlocksWhenFull(t *testing.T) {
+	q := NewBoundedQueue(1)
+	q.Put(&dummyDatum{1})
+
+	done := make(chan struct{})
+	go func() {
+		// this should block until Get frees space
+		q.Put(&dummyDatum{2})
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		t.Fatal("Put did not block when queue was full")
+	case <-time.After(100 * time.Millisecond):
+		// expected, still blocked
+	}
+
+	// Free up space
+	_ = q.Get()
+
+	select {
+	case <-done:
+		// success, Put unblocked
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("Put did not unblock after space freed")
+	}
+}
+
+func TestQueueGetBlocksWhenEmpty(t *testing.T) {
+	q := NewBoundedQueue(1)
+
+	done := make(chan struct{})
+	var got Datum
+
+	go func() {
+		got = q.Get()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		t.Fatal("Get did not block when queue was empty")
+	case <-time.After(100 * time.Millisecond):
+		// expected, still blocked
+	}
+
+	val := &dummyDatum{42}
+	q.Put(val)
+
+	select {
+	case <-done:
+		if got.(*dummyDatum) != val {
+			t.Errorf("expected val %v, got %v", val, got)
 		}
-	})
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("Get did not unblock after Put")
+	}
+}
 
-	//
-	// Test item appending.
-	t.Run("Can put items to the queue", func(t *testing.T) {
-		for _, elt := range elems1 {
+func TestQueuePutWithContextCancellation(t *testing.T) {
+	q := NewBoundedQueue(1)
+	q.Put(&dummyDatum{1})
 
-			if ok := queue.Put(elt); !ok {
-				t.Error("Queue is unexpectedly full!")
-				return
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	err := q.PutWithContext(ctx, &dummyDatum{2})
+	if err == nil {
+		t.Fatal("expected timeout error from PutWithContext")
+	}
+}
+
+func TestQueueGetWithContextCancellation(t *testing.T) {
+	q := NewBoundedQueue(1)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	_, err := q.GetWithContext(ctx)
+	if err == nil {
+		t.Fatal("expected timeout error from GetWithContext")
+	}
+}
+
+func TestQueuePutWithoutBlock(t *testing.T) {
+	q := NewBoundedQueue(1)
+	ok := q.PutWithoutBlock(&dummyDatum{1})
+	if !ok {
+		t.Fatal("expected PutWithoutBlock to succeed")
+	}
+
+	ok = q.PutWithoutBlock(&dummyDatum{2})
+	if ok {
+		t.Fatal("expected PutWithoutBlock to fail due to full queue")
+	}
+}
+
+func TestQueueGetWithoutBlock(t *testing.T) {
+	q := NewBoundedQueue(1)
+	q.Put(&dummyDatum{1})
+
+	d, ok := q.GetWithoutBlock()
+	if !ok {
+		t.Fatal("expected GetWithoutBlock to succeed")
+	}
+	if d.(*dummyDatum).val != 1 {
+		t.Errorf("expected value 1, got %v", d)
+	}
+
+	d, ok = q.GetWithoutBlock()
+	if ok {
+		t.Fatal("expected GetWithoutBlock to fail on empty queue")
+	}
+}
+
+func TestQueueConcurrentPutGet(t *testing.T) {
+	q := NewBoundedQueue(100)
+	wg := sync.WaitGroup{}
+	n := 1000
+
+	// Producer
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < n; i++ {
+			q.Put(&dummyDatum{i})
+		}
+	}()
+
+	// Consumer
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < n; i++ {
+			d := q.Get()
+			if d == nil {
+				t.Errorf("got nil datum at index %d", i)
 			}
 		}
-	})
+	}()
 
-	//
-	// Test if any further puts fail or not.
-	t.Run("Puts refused at max capacity", func(t *testing.T) {
-		ok := queue.Put("Fail")
-		if ok {
-			t.Error("Able to `put` beyond bounds.")
-			return
-		}
-	})
-
-	//
-	// Test item getting.
-	t.Run("Can get items from the queue", func(t *testing.T) {
-		if queue.Len() == 0 {
-			t.Error("Queue has a length of zero!")
-			return
-		}
-
-		if queue.Len() > len(elems1) {
-			t.Error("Queue has more elements than source array!")
-			return
-		}
-
-		for idx := range elems1 {
-			res, ok := queue.Get()
-
-			if !ok {
-				t.Error("Queue unexpectedly has a length of zero!")
-				return
-			}
-
-			if res.(string) != elems1[idx] {
-				t.Errorf("Result mismatch: %#v != %#v", res.(string), elems1[idx])
-				return
-			}
-		}
-
-		if queue.Len() > 0 {
-			t.Error("Queue unexpectedly still contains items!")
-			return
-		}
-	})
-
-	//
-	// Test item appending once bounds are cleared.
-	t.Run("Can put further items to the queue", func(t *testing.T) {
-		for _, elt := range elems2 {
-
-			if ok := queue.Put(elt); !ok {
-				t.Error("Queue is unexpectedly full!")
-				return
-			}
-		}
-	})
-
-	//
-	// Test further item getting.
-	t.Run("Can get items from the queue", func(t *testing.T) {
-		if queue.Len() == 0 {
-			t.Error("Queue has a length of zero!")
-			return
-		}
-
-		if queue.Len() > len(elems2) {
-			t.Error("Queue has more elements than source array!")
-			return
-		}
-
-		for idx := range elems2 {
-			res, ok := queue.Get()
-
-			if !ok {
-				t.Error("Queue unexpectedly has a length of zero!")
-				return
-			}
-
-			if res.(string) != elems2[idx] {
-				t.Errorf("Result mismatch: %#v != %#v", res.(string), elems1[idx])
-				return
-			}
-		}
-
-		if queue.Len() > 0 {
-			t.Error("Queue unexpectedly still contains items!")
-			return
-		}
-	})
+	wg.Wait()
 }
 
 // * queue_test.go ends here.
