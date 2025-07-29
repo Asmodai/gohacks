@@ -8,6 +8,25 @@
 
 ## Usage
 
+```go
+const (
+	ContextKeyMemoise = "_DI_MEMO"
+)
+```
+
+```go
+var (
+	ErrValueNotMemoise = errors.Base("value is not memoise.Memoise")
+)
+```
+
+#### func  SetMemoiser
+
+```go
+func SetMemoiser(ctx context.Context, inst Memoise) (context.Context, error)
+```
+Set the memoiser value to the context map.
+
 #### type CallbackFn
 
 ```go
@@ -32,6 +51,24 @@ type Memoise interface {
 ```
 
 Memoisation type.
+
+#### func  GetMemoiser
+
+```go
+func GetMemoiser(ctx context.Context) (Memoise, error)
+```
+Get the memoiser from the given context.
+
+Will return `ErrValueNoMemoise` if the value in the context is not of type
+`memoise.Memoise`.
+
+#### func  MustGetMemoiser
+
+```go
+func MustGetMemoiser(ctx context.Context) Memoise
+```
+Attempt to get the memoiser from the given context. Panics if the operation
+fails.
 
 #### func  NewMemoise
 

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// memoise_test.go --- Memoiser tests.
+// memoise.go --- Memoiser context value.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,45 +33,71 @@
 
 // * Package:
 
-package contextdi
+package memoise
 
 // * Imports:
 
 import (
 	"context"
-	"testing"
 
-	"github.com/Asmodai/gohacks/memoise"
+	"github.com/Asmodai/gohacks/contextdi"
+	"gitlab.com/tozd/go/errors"
+)
+
+// * Constants:
+
+const (
+	ContextKeyMemoise = "_DI_MEMO"
+)
+
+// * Variables:
+
+var (
+	ErrValueNotMemoise = errors.Base("value is not memoise.Memoise")
 )
 
 // * Code:
 
-// ** Tests:
+// ** Functions:
 
-func TestMemoise(t *testing.T) {
-	var (
-		ctx  context.Context = context.TODO()
-		inst memoise.Memoise = memoise.NewMemoise()
-		err  error
-	)
+// Set the memoiser value to the context map.
+func SetMemoiser(ctx context.Context, inst Memoise) (context.Context, error) {
+	val, err := contextdi.PutToContext(ctx, ContextKeyMemoise, inst)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
-	t.Run("SetMemoise", func(t *testing.T) {
-		ctx, err = SetMemoise(ctx, inst)
-		if err != nil {
-			t.Fatalf("Unexpected error: %#v", err)
-		}
-	})
-
-	t.Run("GetMemoise", func(t *testing.T) {
-		res, err := GetMemoise(ctx)
-		if err != nil {
-			t.Fatalf("Unexpected error: %#v", err)
-		}
-
-		if res != inst {
-			t.Errorf("Unexpected result: %#v ", res)
-		}
-	})
+	return val, nil
 }
 
-// * memoise_test.go ends here.
+// Get the memoiser from the given context.
+//
+// Will return `ErrValueNoMemoise` if the value in the context is not of type
+// `memoise.Memoise`.
+func GetMemoiser(ctx context.Context) (Memoise, error) {
+	val, err := contextdi.GetFromContext(ctx, ContextKeyMemoise)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	inst, ok := val.(Memoise)
+	if !ok {
+		return nil, errors.WithStack(ErrValueNotMemoise)
+	}
+
+	return inst, nil
+}
+
+// Attempt to get the memoiser from the given context.  Panics if the
+// operation fails.
+func MustGetMemoiser(ctx context.Context) Memoise {
+	inst, err := GetMemoiser(ctx)
+
+	if err != nil {
+		panic("Could not get memoiser instance from context")
+	}
+
+	return inst
+}
+
+// * memoise.go ends here.

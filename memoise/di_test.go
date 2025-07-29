@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// memoise.go --- Memoiser context value.
+// memoise_test.go --- Memoiser tests.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,66 +33,43 @@
 
 // * Package:
 
-package contextdi
+package memoise
 
 // * Imports:
 
 import (
 	"context"
-
-	"github.com/Asmodai/gohacks/memoise"
-	"gitlab.com/tozd/go/errors"
-)
-
-// * Constants:
-
-const (
-	ContextKeyMemoise = "_DI_MEMO"
-)
-
-// * Variables:
-
-var (
-	ErrValueNotMemoise = errors.Base("value is not memoise.Memoise")
+	"testing"
 )
 
 // * Code:
 
-// ** Functions:
+// ** Tests:
 
-// Set the memoiser value to the context map.
-func SetMemoise(ctx context.Context, inst memoise.Memoise) (context.Context, error) {
-	return PutToContext(ctx, ContextKeyMemoise, inst)
+func TestDI(t *testing.T) {
+	var (
+		ctx  context.Context = context.TODO()
+		inst Memoise         = NewMemoise()
+		err  error
+	)
+
+	t.Run("SetMemoiser", func(t *testing.T) {
+		ctx, err = SetMemoiser(ctx, inst)
+		if err != nil {
+			t.Fatalf("Unexpected error: %#v", err)
+		}
+	})
+
+	t.Run("GetMemoiser", func(t *testing.T) {
+		res, err := GetMemoiser(ctx)
+		if err != nil {
+			t.Fatalf("Unexpected error: %#v", err)
+		}
+
+		if res != inst {
+			t.Errorf("Unexpected result: %#v ", res)
+		}
+	})
 }
 
-// Get the memoiser from the given context.
-//
-// Will return `ErrValueNoMemoise` if the value in the context is not of type
-// `memoise.Memoise`.
-func GetMemoise(ctx context.Context) (memoise.Memoise, error) {
-	val, err := GetFromContext(ctx, ContextKeyMemoise)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	inst, ok := val.(memoise.Memoise)
-	if !ok {
-		return nil, errors.WithStack(ErrValueNotMemoise)
-	}
-
-	return inst, nil
-}
-
-// Attempt to get the memoiser from the given context.  Panics if the
-// operation fails.
-func MustGetMemoise(ctx context.Context) memoise.Memoise {
-	inst, err := GetMemoise(ctx)
-
-	if err != nil {
-		panic("Could not get memoiser instance from context")
-	}
-
-	return inst
-}
-
-// * memoise.go ends here.
+// * memoise_test.go ends here.

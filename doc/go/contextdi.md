@@ -10,12 +10,6 @@
 
 ```go
 const (
-	ContextKeyMemoise = "_DI_MEMO"
-)
-```
-
-```go
-const (
 	ContextKeyResponderChain = "_DI_RESPONDER"
 )
 ```
@@ -29,12 +23,6 @@ const (
 ```go
 var (
 	ErrKeyNotFound = errors.Base("value map key not found")
-)
-```
-
-```go
-var (
-	ErrValueNotMemoise = errors.Base("value is not memoise.Memoise")
 )
 ```
 
@@ -61,16 +49,6 @@ Will signal `contextext.ErrInvalidContext` if the context is not valid. Will
 signal `contextext.ErrValueMapNotFound` if there is no value map. Will signal
 `ErrKeyNotFound` if the value map does not contain the key.
 
-#### func  GetMemoise
-
-```go
-func GetMemoise(ctx context.Context) (memoise.Memoise, error)
-```
-Get the memoiser from the given context.
-
-Will return `ErrValueNoMemoise` if the value in the context is not of type
-`memoise.Memoise`.
-
 #### func  GetResponderChain
 
 ```go
@@ -93,14 +71,6 @@ Get the timed cache value from the given context.
 
 WIll return `ErrValueNotTimedCache` if the value in the context is not of type
 `timedcache.TimedCache`.
-
-#### func  MustGetMemoise
-
-```go
-func MustGetMemoise(ctx context.Context) memoise.Memoise
-```
-Attempt to get the memoiser from the given context. Panics if the operation
-fails.
 
 #### func  MustGetResponderChain
 
@@ -128,13 +98,6 @@ Place a value in a context.
 If there is no value map in the context then one will be created.
 
 Returns a new context with the value map.
-
-#### func  SetMemoise
-
-```go
-func SetMemoise(ctx context.Context, inst memoise.Memoise) (context.Context, error)
-```
-Set the memoiser value to the context map.
 
 #### func  SetResponderChain
 
