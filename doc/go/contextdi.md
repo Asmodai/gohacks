@@ -9,10 +9,23 @@
 ## Usage
 
 ```go
+const (
+	ContextKeyDebugMode string = "_DI_FLG_DEBUG"
+)
+```
+
+```go
 var (
 	ErrKeyNotFound = errors.Base("value map key not found")
 )
 ```
+
+#### func  GetDebugMode
+
+```go
+func GetDebugMode(ctx context.Context) (bool, error)
+```
+Get the debug mode flag from the DI context.
 
 #### func  GetFromContext
 
@@ -35,3 +48,10 @@ Place a value in a context.
 If there is no value map in the context then one will be created.
 
 Returns a new context with the value map.
+
+#### func  SetDebugMode
+
+```go
+func SetDebugMode(ctx context.Context, debugMode bool) (context.Context, error)
+```
+Set the debug mode flag in the DI context to the given value.
