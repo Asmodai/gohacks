@@ -255,6 +255,12 @@ func (obj *workerPool) Start() {
 // Stop the worker pool.
 func (obj *workerPool) Stop() {
 	obj.cancel()
+
+	obj.shutdownLock.Lock()
+	killCount := int64(len(obj.shutdownChans))
+	obj.shutdownLock.Unlock()
+
+	obj.killWorkers(killCount)
 	close(obj.input)
 	obj.wg.Wait()
 }
