@@ -169,7 +169,7 @@ type WorkerPool interface {
 
 type workerPool struct {
 	name       string
-	input      chan *Task
+	input      TaskQueue
 	minWorkers int64
 	maxWorkers int64
 
@@ -259,7 +259,7 @@ func (obj *workerPool) Stop() {
 	killCount := int64(len(obj.shutdownChans))
 	obj.shutdownLock.Unlock()
 
-	close(obj.input)
+	//	close(obj.input)
 	obj.killWorkers(killCount)
 	obj.wg.Wait()
 }
@@ -278,18 +278,14 @@ func (obj *workerPool) Submit(userData UserData) error {
 		data:   userData,
 	}
 
-	select {
-	case obj.input <- task:
-		return nil
-
-	case <-obj.ctx.Done():
-		return context.Canceled
+	if err := obj.input.Put(obj.ctx, task); err != nil {
+		return errors.WithStack(err)
 	}
+
+	return nil
 }
 
 // Spawn a new worker.
-//
-//nolint:funlen
 func (obj *workerPool) spawnWorker() {
 	obj.wg.Add(1)
 	obj.workerCount.Add(1)
@@ -297,84 +293,92 @@ func (obj *workerPool) spawnWorker() {
 
 	// KillChan?  Japanese mascot for... uh...
 	killChan := make(chan struct{})
+	obj.registerShutdownChannel(killChan)
 
+	go obj.startWorkerLoop(killChan)
+}
+
+func (obj *workerPool) registerShutdownChannel(killChan chan struct{}) {
 	obj.shutdownLock.Lock()
+	defer obj.shutdownLock.Unlock()
+
 	obj.shutdownChans = append(obj.shutdownChans, killChan)
-	obj.shutdownLock.Unlock()
+}
 
-	go func() {
-		defer func() {
-			obj.wg.Done()
-			obj.workerCount.Add(-1)
-			obj.activeWorkersMetric.Dec()
+func (obj *workerPool) unregisterShutdownChannel(killChan chan struct{}) {
+	obj.shutdownLock.Lock()
+	defer obj.shutdownLock.Unlock()
 
-			obj.shutdownLock.Lock()
-			for idx, kchan := range obj.shutdownChans {
-				if kchan == killChan {
-					obj.shutdownChans = append(
-						obj.shutdownChans[:idx],
-						obj.shutdownChans[idx+1:]...,
-					)
+	for idx, kchan := range obj.shutdownChans {
+		if kchan == killChan {
+			obj.shutdownChans = append(
+				obj.shutdownChans[:idx],
+				obj.shutdownChans[idx+1:]...,
+			)
 
-					break
-				}
-			}
-			obj.shutdownLock.Unlock()
-		}()
+			break
+		}
+	}
+}
 
-		idleTimer := time.NewTimer(obj.config.IdleTimeout)
-		defer idleTimer.Stop()
+func (obj *workerPool) startWorkerLoop(killChan chan struct{}) {
+	defer func() {
+		obj.wg.Done()
+		obj.workerCount.Add(-1)
+		obj.activeWorkersMetric.Dec()
+		obj.unregisterShutdownChannel(killChan)
+	}()
 
-		for {
-			select {
-			case <-obj.ctx.Done():
+	idleTimer := time.NewTimer(obj.config.IdleTimeout)
+	defer idleTimer.Stop()
+
+	for {
+		select {
+		case <-obj.ctx.Done():
+			return
+
+		case <-killChan:
+			return
+
+		default:
+			if obj.handleWorkerLifecycle(idleTimer) {
 				return
-
-			case <-killChan:
-				return
-
-			case task := <-obj.input:
-				if task == nil {
-					return
-				}
-
-				start := time.Now()
-
-				_ = obj.processFn(task)
-				obj.tasksTotalMetric.Inc()
-
-				elapsed := time.Since(start).Nanoseconds()
-
-				runtime.Gosched() // Give Go some time.
-
-				// Update metrics.
-				obj.updateAvgProcTime(elapsed)
-				obj.taskDurationMetric.Observe(float64(elapsed))
-
-				// Reset idle timeout.
-				idleTimer.Reset(obj.config.IdleTimeout)
-
-				// Reset and put the task back in the pool.
-				task.reset()
-				obj.taskPool.Put(task)
-
-			case <-idleTimer.C:
-				current := obj.workerCount.Load()
-				if current > obj.minWorkers {
-					obj.lgr.Info(
-						"Worker idle timeout.",
-						"type", "dynworker",
-						"pool", obj.name,
-						"remaining", current-1,
-					)
-
-					return
-				}
-
-				idleTimer.Reset(obj.config.IdleTimeout)
 			}
 		}
-	}()
+	}
+}
+
+func (obj *workerPool) handleWorkerLifecycle(idleTimer *time.Timer) bool {
+	task, err := obj.input.Get(obj.ctx)
+	if err != nil {
+		return errors.Is(err, context.Canceled)
+	}
+
+	if task == nil {
+		return true
+	}
+
+	obj.processTask(task)
+	idleTimer.Reset(obj.config.IdleTimeout)
+
+	return false
+}
+
+func (obj *workerPool) processTask(task *Task) {
+	start := time.Now()
+
+	_ = obj.processFn(task)
+	obj.tasksTotalMetric.Inc()
+
+	elapsed := time.Since(start).Nanoseconds()
+
+	runtime.Gosched() // Give some time to Go.
+
+	obj.updateAvgProcTime(elapsed)
+	obj.taskDurationMetric.Observe(float64(elapsed))
+
+	task.reset()
+	obj.taskPool.Put(task)
 }
 
 // Kill the given number of workers.
@@ -417,7 +421,7 @@ func (obj *workerPool) computeRequiredWorkers() int64 {
 		)
 	}
 
-	queued := len(obj.input)
+	queued := obj.input.Len()
 
 	avg := time.Duration(obj.avgProcTime.Load())
 	if avg == 0 {
@@ -558,7 +562,7 @@ func NewWorkerPool(ctx context.Context, config *Config) WorkerPool {
 
 	return &workerPool{
 		name:                  config.Name,
-		input:                 make(chan *Task, defaultWorkerChannels),
+		input:                 config.InputQueue,
 		minWorkers:            config.MinWorkers,
 		maxWorkers:            config.MaxWorkers,
 		scaleUpCh:             make(chan struct{}, 1),

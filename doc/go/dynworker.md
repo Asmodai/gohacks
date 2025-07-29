@@ -10,6 +10,12 @@
 
 ```go
 var (
+	ErrChannelClosed = errors.Base("channel closed")
+)
+```
+
+```go
+var (
 	ErrNotTask error = errors.Base("task pool entity is not a task")
 )
 ```
@@ -31,6 +37,7 @@ type Config struct {
 	IdleTimeout time.Duration // Idle timeout duration.
 	WorkerFunc  TaskFn        // Function to use as the worker.
 	ScalerFunc  ScalerFn      // Function to use to determine scaling.
+	InputQueue  TaskQueue     // Custom queue to use.
 }
 ```
 
@@ -38,12 +45,15 @@ type Config struct {
 #### func  NewConfig
 
 ```go
-func NewConfig(
-	name string,
-	minw, maxw int64,
-) *Config
+func NewConfig(name string, minw, maxw int64) *Config
 ```
-Create a new configuration.
+
+#### func  NewConfigWithQueue
+
+```go
+func NewConfigWithQueue(name string, minw, maxw int64, queue TaskQueue) *Config
+```
+Create a new configuration with a custom queue.
 
 #### func  NewDefaultConfig
 
@@ -124,6 +134,17 @@ type TaskFn func(*Task) error
 ```
 
 Task callback function type.
+
+#### type TaskQueue
+
+```go
+type TaskQueue interface {
+	Put(context.Context, *Task) error
+	Get(context.Context) (*Task, error)
+	Len() int
+}
+```
+
 
 #### type UserData
 

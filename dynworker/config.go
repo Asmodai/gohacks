@@ -74,6 +74,7 @@ type Config struct {
 	IdleTimeout time.Duration // Idle timeout duration.
 	WorkerFunc  TaskFn        // Function to use as the worker.
 	ScalerFunc  ScalerFn      // Function to use to determine scaling.
+	InputQueue  TaskQueue     // Custom queue to use.
 }
 
 // ** Methods:
@@ -104,11 +105,20 @@ func NewDefaultConfig() *Config {
 	)
 }
 
-// Create a new configuration.
-func NewConfig(
-	name string,
-	minw, maxw int64,
-) *Config {
+func NewConfig(name string, minw, maxw int64) *Config {
+	return NewConfigWithQueue(name, minw, maxw, nil)
+}
+
+// Create a new configuration with a custom queue.
+func NewConfigWithQueue(name string, minw, maxw int64, queue TaskQueue) *Config {
+	var inputQueue TaskQueue
+
+	if queue != nil {
+		inputQueue = queue
+	} else {
+		inputQueue = newChanTaskQueue(int(defaultWorkerChannels))
+	}
+
 	if minw < 0 {
 		minw = defaultMinimumWorkerCount
 	}
@@ -126,6 +136,7 @@ func NewConfig(
 		MinWorkers:  minw,
 		MaxWorkers:  maxw,
 		IdleTimeout: defaultTimeout,
+		InputQueue:  inputQueue,
 	}
 }
 
