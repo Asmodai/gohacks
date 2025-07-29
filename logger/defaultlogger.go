@@ -54,6 +54,9 @@ func NewDefaultLogger() Logger {
 	return &defaultLogger{}
 }
 
+func (l *defaultLogger) SetSampling(_, _ int) {
+}
+
 // Set debug mode.
 func (l *defaultLogger) SetDebug(_ bool) {
 }

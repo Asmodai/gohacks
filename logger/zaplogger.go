@@ -50,8 +50,8 @@ import (
 // * Constants:
 
 const (
-	defaultSamplingInitial    = 100
-	defaultSamplingThereafter = 100
+	defaultSamplingInitial    = 100 //nolint:unused
+	defaultSamplingThereafter = 100 //nolint:unused
 )
 
 // * Code:
@@ -81,27 +81,28 @@ func (l *zapLogger) SetDebug(flag bool) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	var cfg = zap.NewProductionConfig()
+	var cfg zap.Config
 
-	// If debug, use Zap's development config.
-	//
-	// This will result in textual logs rather than JSON.
 	if flag {
 		cfg = zap.NewDevelopmentConfig()
 		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		cfg.OutputPaths = []string{"stderr"}
+	} else {
+		cfg = zap.NewProductionConfig()
+
+		if len(l.logfile) > 0 {
+			cfg.OutputPaths = []string{l.logfile}
+			cfg.ErrorOutputPaths = []string{l.logfile}
+		}
 	}
 
+	/* XXX This should be an optional for stuff that wants sampling.
 	// Set up sampling.
 	cfg.Sampling = &zap.SamplingConfig{
 		Initial:    defaultSamplingInitial,
 		Thereafter: defaultSamplingThereafter,
 	}
-
-	// Set up an output path.  If there is none, or we are running
-	// in debug mode, then output will be to standard output.
-	if l.logfile != "" && !flag {
-		cfg.OutputPaths = []string{l.logfile}
-	}
+	*/
 
 	// Skip the first frame of the stack trace so we have the true
 	// caller rather than our own functions.
@@ -115,6 +116,10 @@ func (l *zapLogger) SetDebug(flag bool) {
 
 	//nolint:errcheck
 	l.logger.Sync()
+}
+
+func (l *zapLogger) SetSampling(_, _ int) {
+	// Not wired in yet.
 }
 
 // Set the log file to use.

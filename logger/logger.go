@@ -67,6 +67,11 @@ type Logger interface {
 	// Set the log file to which the logger will write.
 	SetLogFile(string)
 
+	// Set sampling options.
+	//
+	// This is only used by the Zap logger.
+	SetSampling(initial, threshold int)
+
 	// Log a Go error.
 	GoError(error, ...any)
 

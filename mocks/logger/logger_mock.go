@@ -251,6 +251,18 @@ func (mr *MockLoggerMockRecorder) SetLogFile(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogFile", reflect.TypeOf((*MockLogger)(nil).SetLogFile), arg0)
 }
 
+// SetSampling mocks base method.
+func (m *MockLogger) SetSampling(initial, threshold int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetSampling", initial, threshold)
+}
+
+// SetSampling indicates an expected call of SetSampling.
+func (mr *MockLoggerMockRecorder) SetSampling(initial, threshold any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSampling", reflect.TypeOf((*MockLogger)(nil).SetSampling), initial, threshold)
+}
+
 // Warn mocks base method.
 func (m *MockLogger) Warn(arg0 string, arg1 ...any) {
 	m.ctrl.T.Helper()
