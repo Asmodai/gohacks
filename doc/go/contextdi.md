@@ -9,20 +9,8 @@
 ## Usage
 
 ```go
-const (
-	ContextKeyResponderChain = "_DI_RESPONDER"
-)
-```
-
-```go
 var (
 	ErrKeyNotFound = errors.Base("value map key not found")
-)
-```
-
-```go
-var (
-	ErrValueNotResponderChain = errors.Base("value is not responder.Chain")
 )
 ```
 
@@ -37,27 +25,6 @@ Will signal `contextext.ErrInvalidContext` if the context is not valid. Will
 signal `contextext.ErrValueMapNotFound` if there is no value map. Will signal
 `ErrKeyNotFound` if the value map does not contain the key.
 
-#### func  GetResponderChain
-
-```go
-func GetResponderChain(ctx context.Context) (*responder.Chain, error)
-```
-Get the responder chain from the given context.
-
-Will return `ErrValueNotResponderChain` if the value in the context is not of
-type `responder.Chain`.
-
-Please be aware that this responder chain should be treated as immutable, as we
-can't really propagate changes down the context hierarchy.
-
-#### func  MustGetResponderChain
-
-```go
-func MustGetResponderChain(ctx context.Context) *responder.Chain
-```
-Attempt to get the responder chain from the given context. Panics if the
-operation fails.
-
 #### func  PutToContext
 
 ```go
@@ -68,10 +35,3 @@ Place a value in a context.
 If there is no value map in the context then one will be created.
 
 Returns a new context with the value map.
-
-#### func  SetResponderChain
-
-```go
-func SetResponderChain(ctx context.Context, inst *responder.Chain) (context.Context, error)
-```
-Set the responder chain value in the context map.

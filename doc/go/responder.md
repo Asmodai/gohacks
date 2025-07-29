@@ -9,6 +9,12 @@
 ## Usage
 
 ```go
+const (
+	ContextKeyResponderChain = "_DI_RESPONDER"
+)
+```
+
+```go
 var (
 	// Error condition signalled when an attempt is made to add a
 	// non-unique responder to a responder chain.
@@ -19,6 +25,19 @@ var (
 	ErrResponderNameInvalid error = errors.Base("responder name invalid")
 )
 ```
+
+```go
+var (
+	ErrValueNotResponderChain = errors.Base("value is not responder.Chain")
+)
+```
+
+#### func  SetResponderChain
+
+```go
+func SetResponderChain(ctx context.Context, inst *Chain) (context.Context, error)
+```
+Set the responder chain value in the context map.
 
 #### type Chain
 
@@ -34,6 +53,27 @@ wonderful world of Go.
 
 It might also attempt to bring a bit of MIT Flavors, too... but don't expect to
 see crazy like `defwrapper` and `defwhopper`.
+
+#### func  GetResponderChain
+
+```go
+func GetResponderChain(ctx context.Context) (*Chain, error)
+```
+Get the responder chain from the given context.
+
+Will return `ErrValueNotResponderChain` if the value in the context is not of
+type `responder.Chain`.
+
+Please be aware that this responder chain should be treated as immutable, as we
+can't really propagate changes down the context hierarchy.
+
+#### func  MustGetResponderChain
+
+```go
+func MustGetResponderChain(ctx context.Context) *Chain
+```
+Attempt to get the responder chain from the given context. Panics if the
+operation fails.
 
 #### func  NewChain
 

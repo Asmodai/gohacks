@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// responder.go --- Responder context value.
+// di.go --- Dependency injection.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,14 +33,14 @@
 
 // * Package:
 
-package contextdi
+package responder
 
 // * Imports:
 
 import (
 	"context"
 
-	"github.com/Asmodai/gohacks/responder"
+	"github.com/Asmodai/gohacks/contextdi"
 	"gitlab.com/tozd/go/errors"
 )
 
@@ -61,8 +61,13 @@ var (
 // ** Functions:
 
 // Set the responder chain value in the context map.
-func SetResponderChain(ctx context.Context, inst *responder.Chain) (context.Context, error) {
-	return PutToContext(ctx, ContextKeyResponderChain, inst)
+func SetResponderChain(ctx context.Context, inst *Chain) (context.Context, error) {
+	val, err := contextdi.PutToContext(ctx, ContextKeyResponderChain, inst)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return val, nil
 }
 
 // Get the responder chain from the given context.
@@ -72,13 +77,13 @@ func SetResponderChain(ctx context.Context, inst *responder.Chain) (context.Cont
 //
 // Please be aware that this responder chain should be treated as immutable,
 // as we can't really propagate changes down the context hierarchy.
-func GetResponderChain(ctx context.Context) (*responder.Chain, error) {
-	val, err := GetFromContext(ctx, ContextKeyResponderChain)
+func GetResponderChain(ctx context.Context) (*Chain, error) {
+	val, err := contextdi.GetFromContext(ctx, ContextKeyResponderChain)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	inst, ok := val.(*responder.Chain)
+	inst, ok := val.(*Chain)
 	if !ok {
 		return nil, errors.WithStack(ErrValueNotResponderChain)
 	}
@@ -88,7 +93,7 @@ func GetResponderChain(ctx context.Context) (*responder.Chain, error) {
 
 // Attempt to get the responder chain from the given context.  Panics if the
 // operation fails.
-func MustGetResponderChain(ctx context.Context) *responder.Chain {
+func MustGetResponderChain(ctx context.Context) *Chain {
 	inst, err := GetResponderChain(ctx)
 	if err != nil {
 		panic("Could not get responder chain instance from context")
@@ -97,4 +102,4 @@ func MustGetResponderChain(ctx context.Context) *responder.Chain {
 	return inst
 }
 
-// * responder.go ends here.
+// * di.go ends here.

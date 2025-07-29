@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// responder_test.go --- Responder chain tests.
+// di_test.go --- DI tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,25 +33,23 @@
 
 // * Package:
 
-package contextdi
+package responder
 
 // * Imports:
 
 import (
 	"context"
 	"testing"
-
-	"github.com/Asmodai/gohacks/responder"
 )
 
 // * Code:
 
 // ** Tests:
 
-func TestResponderChain(t *testing.T) {
+func TestDI(t *testing.T) {
 	var (
-		ctx  context.Context  = context.TODO()
-		inst *responder.Chain = responder.NewChain("test")
+		ctx  context.Context = context.TODO()
+		inst *Chain          = NewChain("test")
 		err  error
 	)
 
@@ -74,4 +72,4 @@ func TestResponderChain(t *testing.T) {
 	})
 }
 
-// * memoise_test.go ends here.
+// * di.go ends here.
