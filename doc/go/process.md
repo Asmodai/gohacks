@@ -20,10 +20,10 @@ var (
 )
 ```
 
-#### func  SetProcessManager
+#### func  SetManager
 
 ```go
-func SetProcessManager(ctx context.Context, inst Manager) (context.Context, error)
+func SetManager(ctx context.Context, inst Manager) (context.Context, error)
 ```
 Set the process manager value to the context map.
 
@@ -129,20 +129,20 @@ To use,
 
 Manager is optional, as you can create processes directly.
 
-#### func  GetProcessManager
+#### func  GetManager
 
 ```go
-func GetProcessManager(ctx context.Context) (Manager, error)
+func GetManager(ctx context.Context) (Manager, error)
 ```
 Get the process manager from the given context.
 
 Will return `ErrValueNotProcessManager` if the value in the context is not of
 type `process.Manager`.
 
-#### func  MustGetProcessManager
+#### func  MustGetManager
 
 ```go
-func MustGetProcessManager(ctx context.Context) Manager
+func MustGetManager(ctx context.Context) Manager
 ```
 Attempt to get the process manager from the given context. Panics if the
 operation fails.

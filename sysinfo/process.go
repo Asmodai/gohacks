@@ -93,7 +93,7 @@ func NewProc() *Proc {
 // The provided context must have a `process.Manager` entry in its user
 // value.  See `contextdi` and `process.SetProcessManager`.
 func Spawn(ctx context.Context, interval types.Duration) (*process.Process, error) {
-	mgr := process.MustGetProcessManager(ctx)
+	mgr := process.MustGetManager(ctx)
 
 	inst, found := mgr.Find(processName)
 	if found {

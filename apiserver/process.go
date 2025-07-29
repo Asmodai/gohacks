@@ -185,7 +185,7 @@ func NewDispatcherProc(lgr logger.Logger, config *Config) *DispatcherProc {
 // entries in its user value.  See `contextdi`, `logger.SetLogger`, and
 // `process.SetProcessmanager`.
 func Spawn(ctx context.Context, config *Config) (*process.Process, error) {
-	mgr := process.MustGetProcessManager(ctx)
+	mgr := process.MustGetManager(ctx)
 	lgr := logger.MustGetLogger(ctx)
 
 	inst, found := mgr.Find(processName)

@@ -60,7 +60,7 @@ func TestProcess(t *testing.T) {
 
 	mgr := process.NewManager()
 
-	nctx, err := process.SetProcessManager(ctx, mgr)
+	nctx, err := process.SetManager(ctx, mgr)
 	if err != nil {
 		t.Fatalf("Could not register process manager: %#v", err)
 	}

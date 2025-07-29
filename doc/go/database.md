@@ -284,10 +284,10 @@ Get the database manager from the given context.
 Will return `ErrValueNoDBManager` if the value in the context is not of type
 `database.Manager`.
 
-#### func  MustGetDBManager
+#### func  MustGetManager
 
 ```go
-func MustGetDBManager(ctx context.Context) Manager
+func MustGetManager(ctx context.Context) Manager
 ```
 Attempt to get the database manager from the given context. Panics if the
 operation fails.

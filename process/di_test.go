@@ -53,15 +53,15 @@ func TestDI(t *testing.T) {
 		err  error
 	)
 
-	t.Run("SetProcessManager", func(t *testing.T) {
-		ctx, err = SetProcessManager(ctx, inst)
+	t.Run("SetManager", func(t *testing.T) {
+		ctx, err = SetManager(ctx, inst)
 		if err != nil {
 			t.Fatalf("Unexpected error: %#v", err)
 		}
 	})
 
-	t.Run("GetProcessManager", func(t *testing.T) {
-		res, err := GetProcessManager(ctx)
+	t.Run("GetManager", func(t *testing.T) {
+		res, err := GetManager(ctx)
 		if err != nil {
 			t.Fatalf("Unexpected error: %#v", err)
 		}

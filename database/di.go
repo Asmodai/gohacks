@@ -90,7 +90,7 @@ func GetManager(ctx context.Context) (Manager, error) {
 
 // Attempt to get the database manager from the given context.  Panics if the
 // operation fails.
-func MustGetDBManager(ctx context.Context) Manager {
+func MustGetManager(ctx context.Context) Manager {
 	inst, err := GetManager(ctx)
 
 	if err != nil {

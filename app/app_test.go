@@ -158,7 +158,7 @@ func TestApp(t *testing.T) {
 		t.Fatalf("Error when setting logger DI: %#v", err)
 	}
 
-	ctx, err = process.SetProcessManager(ctx, pmgr)
+	ctx, err = process.SetManager(ctx, pmgr)
 	if err != nil {
 		t.Fatalf("Error when setting process manager DI: %#v", err)
 	}

@@ -253,7 +253,7 @@ func (app *application) Init() {
 
 	// Get components from DI.
 	app.lgr = logger.MustGetLogger(app.ctx)
-	app.pmgr = process.MustGetProcessManager(app.ctx)
+	app.pmgr = process.MustGetManager(app.ctx)
 
 	if app.config != nil {
 		app.lgr.SetLogFile(app.appconfig.LogFile())

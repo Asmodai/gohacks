@@ -61,7 +61,7 @@ var (
 // ** Functions:
 
 // Set the process manager value to the context map.
-func SetProcessManager(ctx context.Context, inst Manager) (context.Context, error) {
+func SetManager(ctx context.Context, inst Manager) (context.Context, error) {
 	result, err := contextdi.PutToContext(ctx, ContextKeyProcManager, inst)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -74,7 +74,7 @@ func SetProcessManager(ctx context.Context, inst Manager) (context.Context, erro
 //
 // Will return `ErrValueNotProcessManager` if the value in the context is
 // not of type `process.Manager`.
-func GetProcessManager(ctx context.Context) (Manager, error) {
+func GetManager(ctx context.Context) (Manager, error) {
 	val, err := contextdi.GetFromContext(ctx, ContextKeyProcManager)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -90,8 +90,8 @@ func GetProcessManager(ctx context.Context) (Manager, error) {
 
 // Attempt to get the process manager from the given context.  Panics if the
 // operation fails.
-func MustGetProcessManager(ctx context.Context) Manager {
-	inst, err := GetProcessManager(ctx)
+func MustGetManager(ctx context.Context) Manager {
+	inst, err := GetManager(ctx)
 
 	if err != nil {
 		panic("Could not get process manager instance from context")
