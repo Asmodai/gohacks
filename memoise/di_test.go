@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// memoise_test.go --- Memoiser tests.
+// di_test.go --- Dependency injection tests.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -72,4 +72,4 @@ func TestDI(t *testing.T) {
 	})
 }
 
-// * memoise_test.go ends here.
+// * di_test.go ends here.

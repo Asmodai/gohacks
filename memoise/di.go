@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// memoise.go --- Memoiser context value.
+// di.go --- Dependency injection.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -100,4 +100,4 @@ func MustGetMemoiser(ctx context.Context) Memoise {
 	return inst
 }
 
-// * memoise.go ends here.
+// * di.go ends here.

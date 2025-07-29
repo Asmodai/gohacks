@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// di.go --- Logger context value.
+// di.go --- Dependency injection.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //

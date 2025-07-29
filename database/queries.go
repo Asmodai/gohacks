@@ -151,7 +151,7 @@ func Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
 //
 // The transaction should be passed via a context value.
 //
-//nolint:revive
+//nolint:revive,nolintlint
 func Prepare(ctx context.Context, query string, args ...any) (*stmt, error) {
 	tx, err := getTx(ctx)
 	if err != nil {

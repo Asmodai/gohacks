@@ -46,7 +46,7 @@ import (
 
 // ** Tests:
 
-func TestTimedCache(t *testing.T) {
+func TestDI(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		cfg  = NewDefaultConfig()

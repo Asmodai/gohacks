@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// di_test.go --- Logger tests.
+// di_test.go --- Dependency injection tests.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -46,7 +46,7 @@ import (
 
 // ** Tests:
 
-func TestLogger(t *testing.T) {
+func TestDI(t *testing.T) {
 	var (
 		ctx context.Context = context.TODO()
 		lgr Logger          = NewDefaultLogger()

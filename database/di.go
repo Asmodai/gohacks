@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// db_manager.go --- Database manager context value.
+// di.go --- Dependency injection.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -100,4 +100,4 @@ func MustGetDBManager(ctx context.Context) Manager {
 	return inst
 }
 
-// * db_manager.go ends here.
+// * di.go ends here.

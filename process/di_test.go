@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// di_test.go --- Process manager tests.
+// di_test.go --- Dependency injection tests.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -46,7 +46,7 @@ import (
 
 // ** Tests:
 
-func TestProcessManager(t *testing.T) {
+func TestDI(t *testing.T) {
 	var (
 		ctx  context.Context = context.TODO()
 		inst Manager         = NewManager()
@@ -72,4 +72,4 @@ func TestProcessManager(t *testing.T) {
 	})
 }
 
-// * process_manager_test.go ends here.
+// * di_test.go ends here.

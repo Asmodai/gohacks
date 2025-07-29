@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// db_manager_test.go --- Database manager tests.
+// di_test.go --- Dependency injection tests.
 //
 // Copyright (c) 2023-2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -72,4 +72,4 @@ func TestDI(t *testing.T) {
 	})
 }
 
-// * db_manager_test.go ends here.
+// * di_test.go ends here.
