@@ -158,6 +158,7 @@ type client struct {
 	cancel context.CancelFunc
 
 	connMux    sync.Mutex
+	chanMux    sync.Mutex
 	metricsMux sync.Mutex
 
 	connected    bool
@@ -180,6 +181,13 @@ func (obj *client) Connect() error {
 	obj.connMux.Lock()
 	defer obj.connMux.Unlock()
 
+	return obj.connectLocked()
+}
+
+// Only call this with `connMux` held.
+//
+// Failure honor this will introduce  Mr. Foot will meet Mr. Gun!
+func (obj *client) connectLocked() error {
 	if obj.connected {
 		return nil
 	}
@@ -233,13 +241,19 @@ func (obj *client) IsConnected() bool {
 }
 
 func (obj *client) monitorConnection() {
-	notifyClose := obj.conn.NotifyClose(make(chan *goamqp.Error))
+	obj.connMux.Lock()
+	conn := obj.conn
+	consumer := obj.cfg.ConsumerName
+	obj.connMux.Unlock()
+
+	notifyClose := conn.NotifyClose(make(chan *goamqp.Error))
 
 	select {
 	case <-notifyClose:
 		obj.lgr.Warn(
 			"AMQP connection closed, attempting reconnection...",
-			"consumer", obj.cfg.ConsumerName,
+			"type", "amqp",
+			"consumer", consumer,
 		)
 
 		obj.disconnectMetric.Inc()
@@ -263,7 +277,11 @@ func (obj *client) reconnectLoop() {
 
 			obj.reconnectAttemptMetric.Inc()
 
-			if err := obj.Connect(); err == nil {
+			obj.connMux.Lock()
+			err := obj.connectLocked()
+			obj.connMux.Unlock()
+
+			if err == nil {
 				obj.lgr.Info(
 					"AMQP reconnected.",
 					"consumer", obj.cfg.ConsumerName,
@@ -290,6 +308,7 @@ func (obj *client) Consume() error {
 		return errors.WithStack(ErrNoWorkerPool)
 	}
 
+	obj.chanMux.Lock()
 	msgs, err := obj.channel.Consume(
 		obj.cfg.QueueName,   // Queue name.
 		obj.cfg.consumerTag, // Consumer tag.
@@ -299,6 +318,8 @@ func (obj *client) Consume() error {
 		false,               // No-wait.
 		nil,                 // Arguments.
 	)
+	obj.chanMux.Unlock()
+
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -321,10 +342,12 @@ func (obj *client) Consume() error {
 				err := obj.pool.Submit(msg)
 				if err != nil {
 					// We don't care if this fails.
+					obj.chanMux.Lock()
 					_ = obj.channel.Reject(
 						msg.DeliveryTag,
 						true,
 					)
+					obj.chanMux.Unlock()
 
 					obj.rejectMetric.Inc()
 				}
@@ -336,6 +359,9 @@ func (obj *client) Consume() error {
 }
 
 func (obj *client) Publish(msg goamqp.Publishing) error {
+	obj.chanMux.Lock()
+	defer obj.chanMux.Unlock()
+
 	obj.publishMetric.Inc()
 
 	err := obj.channel.PublishWithContext(
@@ -404,6 +430,9 @@ func (obj *client) pollQueueStats() {
 }
 
 func (obj *client) QueueStats() (goamqp.Queue, error) {
+	obj.chanMux.Lock()
+	defer obj.chanMux.Unlock()
+
 	queue, err := obj.channel.QueueDeclarePassive(
 		obj.cfg.QueueName,
 		false, // Passive!
