@@ -335,6 +335,10 @@ func (obj *workerPool) spawnWorker() {
 				return
 
 			case task := <-obj.input:
+				if task == nil {
+					return
+				}
+
 				start := time.Now()
 				_ = obj.processFn(task)
 				// TODO Make this dynamic?
