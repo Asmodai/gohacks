@@ -44,6 +44,7 @@ package dynworker
 
 import (
 	"context"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -63,8 +64,6 @@ const (
 
 	// Default number of worker channels.
 	defaultWorkerChannels int64 = 1000
-
-	pressureDelay = 15 * time.Millisecond
 
 	defaultScaleCooldown = 3 * time.Second
 
@@ -260,8 +259,8 @@ func (obj *workerPool) Stop() {
 	killCount := int64(len(obj.shutdownChans))
 	obj.shutdownLock.Unlock()
 
-	obj.killWorkers(killCount)
 	close(obj.input)
+	obj.killWorkers(killCount)
 	obj.wg.Wait()
 }
 
@@ -340,10 +339,13 @@ func (obj *workerPool) spawnWorker() {
 				}
 
 				start := time.Now()
+
 				_ = obj.processFn(task)
-				// TODO Make this dynamic?
-				time.Sleep(pressureDelay)
+				obj.tasksTotalMetric.Inc()
+
 				elapsed := time.Since(start).Nanoseconds()
+
+				runtime.Gosched() // Give Go some time.
 
 				// Update metrics.
 				obj.updateAvgProcTime(elapsed)
@@ -515,92 +517,6 @@ func (obj *workerPool) scaleCheck() {
 		obj.scaleDown(-delta, current, required)
 	}
 }
-
-/*
-func (obj *workerPool) scaleCheck() {
-	now := time.Now()
-
-	if now.Sub(obj.lastScaleTime) < obj.scaleCooldown {
-		return
-	}
-
-	var required int64
-
-	// Current functions.
-	current := obj.workerCount.Load()
-
-	if obj.scalerFn == nil {
-		queued := len(obj.input)
-		avg := time.Duration(obj.avgProcTime.Load())
-
-		if avg == 0 {
-			avg = defaultAverageProcessTime
-		}
-
-		// Rough required workers = queued * avg / interval.
-		required = int64(float64(queued)*avg.Seconds()) + 1
-	} else {
-		// User-supplied scaler.
-		required = int64(obj.scalerFn())
-	}
-
-	// Clamp if lower than minimum workers.
-	if required < obj.minWorkers {
-		required = obj.minWorkers
-	}
-
-	// Clamp if higher than maximum workers.
-	if required > obj.maxWorkers {
-		required = obj.maxWorkers
-	}
-
-	old := obj.smoothedRequired.Load()
-	if old == 0 {
-		old = required
-	}
-
-	smoothed := int64(float64(required)*smoothingFactor + float64(old)*(1-smoothingFactor))
-	obj.smoothedRequired.Store(smoothed)
-	required = smoothed
-
-	delta := required - current
-
-	// Hysteresis check
-	if abs(delta) < obj.hysteresisThreshold {
-		return
-	}
-
-	obj.lastScaleTime = now
-
-	if delta > 0 {
-		obj.lgr.Info(
-			"Scaling up workers.",
-			"type", "dynworker",
-			"pool", obj.name,
-			"current", current,
-			"required", required,
-			"new", delta,
-		)
-		obj.totalScaledUpMetric.Inc()
-
-		for range delta {
-			obj.spawnWorker()
-		}
-	} else if required < current {
-		toKill := -delta
-		obj.lgr.Info(
-			"Scaling down workers.",
-			"type", "dynworker",
-			"pool", obj.name,
-			"current", current,
-			"required", required,
-			"kill", toKill,
-		)
-		obj.totalScaledDownMetric.Inc()
-		obj.killWorkers(toKill)
-	}
-	}
-*/
 
 // Update the average time spent processing.
 func (obj *workerPool) updateAvgProcTime(latest int64) {
