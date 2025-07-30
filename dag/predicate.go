@@ -41,6 +41,7 @@ package dag
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Asmodai/gohacks/math/conversion"
 	"github.com/Asmodai/gohacks/utils"
@@ -79,6 +80,13 @@ type MetaPredicate struct {
 	val any
 }
 
+func (meta *MetaPredicate) GetFloatValueFromInput(input DataMap) (float64, bool) {
+	data, dataOk := input[meta.key]
+	val, valOk := conversion.ToFloat64(data)
+
+	return val, dataOk && valOk
+}
+
 func (meta *MetaPredicate) GetFloatValues(input DataMap) (float64, float64, bool) {
 	data, dataOk := input[meta.key]
 
@@ -91,10 +99,86 @@ func (meta *MetaPredicate) GetFloatValues(input DataMap) (float64, float64, bool
 func (meta *MetaPredicate) GetStringValues(input DataMap) (string, string, bool) {
 	data, dataOk := input[meta.key]
 
-	lhs, lhsOk := data.(string)
-	rhs, rhsOk := meta.val.(string)
+	lhs, lhsOk := conversion.ToString(data)
+	rhs, rhsOk := conversion.ToString(meta.val)
 
 	return lhs, rhs, dataOk && lhsOk && rhsOk
+}
+
+func (meta *MetaPredicate) GetPredicateFloatArray() ([]float64, bool) {
+	return conversion.AnyArrayToFloat64Array(meta.val)
+}
+
+func (meta *MetaPredicate) GetPredicateStringArray() ([]string, bool) {
+	return conversion.AnyArrayToStringArray(meta.val)
+}
+
+func (meta *MetaPredicate) EvalExclusiveRange(input DataMap) bool {
+	array, arrayOk := meta.GetPredicateFloatArray()
+	val, valOk := meta.GetFloatValueFromInput(input)
+
+	if !valOk || !arrayOk {
+		return false
+	}
+
+	//nolint:mnd
+	if len(array) > 2 {
+		return false
+	}
+
+	first := array[0]
+	second := array[1]
+
+	return (first < val) && (val < second)
+}
+
+//nolint:mnd
+func (meta *MetaPredicate) EvalInclusiveRange(input DataMap) bool {
+	array, arrayOk := meta.GetPredicateFloatArray()
+	val, valOk := meta.GetFloatValueFromInput(input)
+
+	if !valOk || !arrayOk {
+		return false
+	}
+
+	//nolint:mnd
+	if len(array) > 2 {
+		return false
+	}
+
+	first := array[0]
+	second := array[1]
+
+	return (first <= val) && (val <= second)
+}
+
+func (meta *MetaPredicate) EvalStringMember(input DataMap, insens bool) bool {
+	valueRaw, okay := input[meta.key]
+	if !okay {
+		return false
+	}
+
+	valueStr, okay := conversion.ToString(valueRaw)
+	if !okay {
+		return false
+	}
+
+	strArray, okay := meta.GetPredicateStringArray()
+	if !okay {
+		return false
+	}
+
+	for _, str := range strArray {
+		if insens && strings.EqualFold(str, valueStr) {
+			return true
+		}
+
+		if str == valueStr {
+			return true
+		}
+	}
+
+	return false
 }
 
 // ** Functions:

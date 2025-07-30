@@ -57,10 +57,10 @@ type NEQPredicate struct {
 func (pred *NEQPredicate) String() string {
 	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
 	if !ok {
-		return invalidTokenString
+		return FormatIsnf(neqIsn, invalidTokenString)
 	}
 
-	return FormatIsnf(eqIsn, "%s %s %g", pred.MetaPredicate.key, neqToken, val)
+	return FormatIsnf(neqIsn, "%s %s %g", pred.MetaPredicate.key, neqToken, val)
 }
 
 func (pred *NEQPredicate) Eval(input DataMap) bool {

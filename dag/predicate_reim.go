@@ -40,6 +40,7 @@ package dag
 import (
 	"regexp"
 	"strings"
+	"sync"
 
 	"gitlab.com/tozd/go/errors"
 )
@@ -59,37 +60,42 @@ type REIMPredicate struct {
 	MetaPredicate
 
 	compiled *regexp.Regexp
+	once     sync.Once
+	err      error
 }
 
 func (pred *REIMPredicate) String() string {
 	val, ok := pred.MetaPredicate.val.(string)
 	if !ok {
-		return invalidTokenString
+		return FormatIsnf(reimIsn, invalidTokenString)
 	}
 
 	return FormatIsnf(reimIsn, "%s %s %#v", pred.MetaPredicate.key, reimToken, val)
 }
 
-func (pred *REIMPredicate) Eval(input DataMap) bool {
-	pattern, data, ok := pred.MetaPredicate.GetStringValues(input)
-	if !ok {
-		return false
-	}
-
-	if pred.compiled == nil {
+func (pred *REIMPredicate) compilePattern(pattern string) {
+	pred.once.Do(func() {
 		if !strings.HasPrefix(pattern, "(?i)") {
 			pattern = "(?i)" + pattern
 		}
 
-		result, err := regexp.Compile(pattern)
-		if err != nil {
-			panic(errors.WithMessagef(
-				err,
-				"regex compilation failed: %s",
-				err.Error()))
-		}
+		pred.compiled, pred.err = regexp.Compile(pattern)
+	})
+}
 
-		pred.compiled = result
+func (pred *REIMPredicate) Eval(input DataMap) bool {
+	data, pattern, ok := pred.MetaPredicate.GetStringValues(input)
+	if !ok {
+		return false
+	}
+
+	pred.compilePattern(pattern)
+
+	if pred.err != nil {
+		panic(errors.WithMessagef(
+			pred.err,
+			"regex compilation failed: %s",
+			pred.err.Error()))
 	}
 
 	return pred.compiled.MatchString(data)

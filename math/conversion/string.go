@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_lt.go --- LT - Numeric Less-Than.
+// string.go --- String conversion.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,56 +31,79 @@
 
 // * Comments:
 
+//
+//
+//
+
 // * Package:
 
-package dag
+package conversion
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/math/conversion"
-
-// * Constants:
-
-const (
-	ltIsn   = "LT"
-	ltToken = "<"
+import (
+	"fmt"
+	"strconv"
 )
 
 // * Code:
 
-// ** Predicate:
+// Convert a value to a string.
+//
+//nolint:cyclop
+func ToString(value any) (string, bool) {
+	switch val := value.(type) {
+	case string:
+		return val, true
 
-type LTPredicate struct {
-	MetaPredicate
-}
+	case fmt.Stringer:
+		return val.String(), true
 
-func (pred *LTPredicate) String() string {
-	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
-	if !ok {
-		return FormatIsnf(ltIsn, invalidTokenString)
+	case []byte:
+		return string(val), true
+
+	case bool:
+		return strconv.FormatBool(val), true
+
+	case int:
+		return strconv.Itoa(val), true
+
+	case int8:
+		return strconv.Itoa(int(val)), true
+
+	case int16:
+		return strconv.Itoa(int(val)), true
+
+	case int32:
+		return strconv.Itoa(int(val)), true
+
+	case int64:
+		return strconv.FormatInt(val, 10), true
+
+	case uint:
+		return strconv.FormatUint(uint64(val), 10), true
+
+	case uint8:
+		return strconv.FormatUint(uint64(val), 10), true
+
+	case uint16:
+		return strconv.FormatUint(uint64(val), 10), true
+
+	case uint32:
+		return strconv.FormatUint(uint64(val), 10), true
+
+	case uint64:
+		return strconv.FormatUint(val, 10), true
+
+	case float32:
+		return fmt.Sprintf("%v", val), true
+
+	case float64:
+		return fmt.Sprintf("%v", val), true
+
+	default:
+		return "", false
 	}
-
-	return FormatIsnf(ltIsn, "%s %s %g", pred.MetaPredicate.key, ltToken, val)
 }
 
-func (pred *LTPredicate) Eval(input DataMap) bool {
-	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
-
-	return ok && lhs < rhs
-}
-
-// ** Builder:
-
-type LTBuilder struct{}
-
-func (bld *LTBuilder) Token() string {
-	return ltToken
-}
-
-func (bld *LTBuilder) Build(key string, val any) Predicate {
-	return &LTPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
-	}
-}
-
-// * predicate_lt.go ends here.
+// * string.go ends here.

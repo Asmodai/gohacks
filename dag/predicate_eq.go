@@ -57,7 +57,7 @@ type EQPredicate struct {
 func (pred *EQPredicate) String() string {
 	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
 	if !ok {
-		return invalidTokenString
+		return FormatIsnf(eqIsn, invalidTokenString)
 	}
 
 	return FormatIsnf(eqIsn, "%s %s %g", pred.MetaPredicate.key, eqToken, val)

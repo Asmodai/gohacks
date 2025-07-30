@@ -2,7 +2,7 @@ module github.com/Asmodai/gohacks
 
 go 1.23.0
 
-retract [v1.0.0,v1.0.4] // Published accidentally.
+retract [v1.0.0, v1.0.4] // Published accidentally.
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
@@ -17,7 +17,8 @@ require (
 	gitlab.com/tozd/go/errors v0.8.1
 	go.uber.org/mock v0.4.0
 	go.uber.org/zap v1.24.0
-	golang.org/x/sync v0.12.0
+	golang.org/x/exp v0.0.0-20250718183923-645b1fa84792
+	golang.org/x/sync v0.16.0
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858
 	gopkg.in/yaml.v3 v3.0.1
 )

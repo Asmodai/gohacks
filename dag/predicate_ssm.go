@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_lt.go --- LT - Numeric Less-Than.
+// predicate_ssm.go --- SSM - String (Sensitive) Member.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -35,52 +35,50 @@
 
 package dag
 
-// * Imports:
-
-import "github.com/Asmodai/gohacks/math/conversion"
-
 // * Constants:
 
 const (
-	ltIsn   = "LT"
-	ltToken = "<"
+	ssmIsn   = "SSM"
+	ssmToken = "<"
 )
 
 // * Code:
 
 // ** Predicate:
 
-type LTPredicate struct {
+type SSMPredicate struct {
 	MetaPredicate
 }
 
-func (pred *LTPredicate) String() string {
-	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
+func (pred *SSMPredicate) String() string {
+	val, ok := pred.MetaPredicate.GetPredicateStringArray()
 	if !ok {
-		return FormatIsnf(ltIsn, invalidTokenString)
+		return FormatIsnf(ssmIsn, invalidTokenString)
 	}
 
-	return FormatIsnf(ltIsn, "%s %s %g", pred.MetaPredicate.key, ltToken, val)
+	return FormatIsnf(ssmIsn,
+		"%s %s %#v",
+		pred.MetaPredicate.key,
+		ssmToken,
+		val)
 }
 
-func (pred *LTPredicate) Eval(input DataMap) bool {
-	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
-
-	return ok && lhs < rhs
+func (pred *SSMPredicate) Eval(input DataMap) bool {
+	return pred.MetaPredicate.EvalStringMember(input, false)
 }
 
 // ** Builder:
 
-type LTBuilder struct{}
+type SSMBuilder struct{}
 
-func (bld *LTBuilder) Token() string {
-	return ltToken
+func (bld *SSMBuilder) Token() string {
+	return ssmToken
 }
 
-func (bld *LTBuilder) Build(key string, val any) Predicate {
-	return &LTPredicate{
+func (bld *SSMBuilder) Build(key string, val any) Predicate {
+	return &SSMPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
 }
 
-// * predicate_lt.go ends here.
+// * predicate_ssm.go ends here.

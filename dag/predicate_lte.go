@@ -59,10 +59,10 @@ type LTEPredicate struct {
 func (pred *LTEPredicate) String() string {
 	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
 	if !ok {
-		return invalidTokenString
+		return FormatIsnf(lteIsn, invalidTokenString)
 	}
 
-	return FormatIsnf(eqIsn, "%s %s %g", pred.MetaPredicate.key, lteToken, val)
+	return FormatIsnf(lteIsn, "%s %s %g", pred.MetaPredicate.key, lteToken, val)
 }
 
 func (pred *LTEPredicate) Eval(input DataMap) bool {

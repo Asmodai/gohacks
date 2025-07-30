@@ -39,6 +39,7 @@ package dag
 
 import (
 	"regexp"
+	"sync"
 
 	"gitlab.com/tozd/go/errors"
 )
@@ -58,33 +59,38 @@ type RESMPredicate struct {
 	MetaPredicate
 
 	compiled *regexp.Regexp
+	once     sync.Once
+	err      error
 }
 
 func (pred *RESMPredicate) String() string {
 	val, ok := pred.MetaPredicate.val.(string)
 	if !ok {
-		return invalidTokenString
+		return FormatIsnf(resmIsn, invalidTokenString)
 	}
 
 	return FormatIsnf(resmIsn, "%s %s %#v", pred.MetaPredicate.key, resmToken, val)
 }
 
+func (pred *RESMPredicate) compilePattern(pattern string) {
+	pred.once.Do(func() {
+		pred.compiled, pred.err = regexp.Compile(pattern)
+	})
+}
+
 func (pred *RESMPredicate) Eval(input DataMap) bool {
-	pattern, data, ok := pred.MetaPredicate.GetStringValues(input)
+	data, pattern, ok := pred.MetaPredicate.GetStringValues(input)
 	if !ok {
 		return false
 	}
 
-	if pred.compiled == nil {
-		result, err := regexp.Compile(pattern)
-		if err != nil {
-			panic(errors.WithMessagef(
-				err,
-				"regex compilation failed: %s",
-				err.Error()))
-		}
+	pred.compilePattern(pattern)
 
-		pred.compiled = result
+	if pred.err != nil {
+		panic(errors.WithMessagef(
+			pred.err,
+			"regex compilation failed: %s",
+			pred.err.Error()))
 	}
 
 	return pred.compiled.MatchString(data)

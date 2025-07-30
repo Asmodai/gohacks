@@ -53,7 +53,7 @@ type SSNEQPredicate struct {
 func (pred *SSNEQPredicate) String() string {
 	val, ok := pred.MetaPredicate.val.(string)
 	if !ok {
-		return invalidTokenString
+		return FormatIsnf(ssneqIsn, invalidTokenString)
 	}
 
 	return FormatIsnf(ssneqIsn, "%s %s %#v", pred.MetaPredicate.key, ssneqToken, val)

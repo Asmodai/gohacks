@@ -8,6 +8,18 @@
 
 ## Usage
 
+#### func  AnyArrayToFloat64Array
+
+```go
+func AnyArrayToFloat64Array(input any) ([]float64, bool)
+```
+
+#### func  AnyArrayToStringArray
+
+```go
+func AnyArrayToStringArray(input any) ([]string, bool)
+```
+
 #### func  BToGiB
 
 ```go
@@ -57,6 +69,12 @@ func MiBToB(b uint64) uint64
 ```
 Convert mebibytes to bytes.
 
+#### func  NumericArrayToFloat64
+
+```go
+func NumericArrayToFloat64[T Number](in []T) []float64
+```
+
 #### func  TiBToB
 
 ```go
@@ -70,3 +88,18 @@ Convert tebibytes to bytes.
 func ToFloat64(val any) (float64, bool)
 ```
 Convert a value to a 64-bit floating-point value.
+
+#### func  ToString
+
+```go
+func ToString(value any) (string, bool)
+```
+Convert a value to a string.
+
+#### type Number
+
+```go
+type Number interface {
+	constraints.Integer | constraints.Float
+}
+```

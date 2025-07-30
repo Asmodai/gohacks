@@ -133,6 +133,46 @@ Base data type.
 
 This is a map of key/value pairs.
 
+#### type EIRBuilder
+
+```go
+type EIRBuilder struct{}
+```
+
+
+#### func (*EIRBuilder) Build
+
+```go
+func (bld *EIRBuilder) Build(key string, val any) Predicate
+```
+
+#### func (*EIRBuilder) Token
+
+```go
+func (bld *EIRBuilder) Token() string
+```
+
+#### type EIRPredicate
+
+```go
+type EIRPredicate struct {
+	MetaPredicate
+}
+```
+
+
+#### func (*EIRPredicate) Eval
+
+```go
+func (pred *EIRPredicate) Eval(input DataMap) bool
+```
+
+#### func (*EIRPredicate) String
+
+```go
+func (pred *EIRPredicate) String() string
+```
+
 #### type EQBuilder
 
 ```go
@@ -253,6 +293,46 @@ func (pred *GTPredicate) Eval(input DataMap) bool
 func (pred *GTPredicate) String() string
 ```
 
+#### type IIRBuilder
+
+```go
+type IIRBuilder struct{}
+```
+
+
+#### func (*IIRBuilder) Build
+
+```go
+func (bld *IIRBuilder) Build(key string, val any) Predicate
+```
+
+#### func (*IIRBuilder) Token
+
+```go
+func (bld *IIRBuilder) Token() string
+```
+
+#### type IIRPredicate
+
+```go
+type IIRPredicate struct {
+	MetaPredicate
+}
+```
+
+
+#### func (*IIRPredicate) Eval
+
+```go
+func (pred *IIRPredicate) Eval(input DataMap) bool
+```
+
+#### func (*IIRPredicate) String
+
+```go
+func (pred *IIRPredicate) String() string
+```
+
 #### type LTBuilder
 
 ```go
@@ -341,10 +421,46 @@ type MetaPredicate struct {
 ```
 
 
+#### func (*MetaPredicate) EvalExclusiveRange
+
+```go
+func (meta *MetaPredicate) EvalExclusiveRange(input DataMap) bool
+```
+
+#### func (*MetaPredicate) EvalInclusiveRange
+
+```go
+func (meta *MetaPredicate) EvalInclusiveRange(input DataMap) bool
+```
+
+#### func (*MetaPredicate) EvalStringMember
+
+```go
+func (meta *MetaPredicate) EvalStringMember(input DataMap, insens bool) bool
+```
+
+#### func (*MetaPredicate) GetFloatValueFromInput
+
+```go
+func (meta *MetaPredicate) GetFloatValueFromInput(input DataMap) (float64, bool)
+```
+
 #### func (*MetaPredicate) GetFloatValues
 
 ```go
 func (meta *MetaPredicate) GetFloatValues(input DataMap) (float64, float64, bool)
+```
+
+#### func (*MetaPredicate) GetPredicateFloatArray
+
+```go
+func (meta *MetaPredicate) GetPredicateFloatArray() ([]float64, bool)
+```
+
+#### func (*MetaPredicate) GetPredicateStringArray
+
+```go
+func (meta *MetaPredicate) GetPredicateStringArray() ([]string, bool)
 ```
 
 #### func (*MetaPredicate) GetStringValues
@@ -588,6 +704,46 @@ func (pred *SIEQPredicate) Eval(input DataMap) bool
 func (pred *SIEQPredicate) String() string
 ```
 
+#### type SIMBuilder
+
+```go
+type SIMBuilder struct{}
+```
+
+
+#### func (*SIMBuilder) Build
+
+```go
+func (bld *SIMBuilder) Build(key string, val any) Predicate
+```
+
+#### func (*SIMBuilder) Token
+
+```go
+func (bld *SIMBuilder) Token() string
+```
+
+#### type SIMPredicate
+
+```go
+type SIMPredicate struct {
+	MetaPredicate
+}
+```
+
+
+#### func (*SIMPredicate) Eval
+
+```go
+func (pred *SIMPredicate) Eval(input DataMap) bool
+```
+
+#### func (*SIMPredicate) String
+
+```go
+func (pred *SIMPredicate) String() string
+```
+
 #### type SINEQBuilder
 
 ```go
@@ -666,6 +822,46 @@ func (pred *SSEQPredicate) Eval(input DataMap) bool
 
 ```go
 func (pred *SSEQPredicate) String() string
+```
+
+#### type SSMBuilder
+
+```go
+type SSMBuilder struct{}
+```
+
+
+#### func (*SSMBuilder) Build
+
+```go
+func (bld *SSMBuilder) Build(key string, val any) Predicate
+```
+
+#### func (*SSMBuilder) Token
+
+```go
+func (bld *SSMBuilder) Token() string
+```
+
+#### type SSMPredicate
+
+```go
+type SSMPredicate struct {
+	MetaPredicate
+}
+```
+
+
+#### func (*SSMPredicate) Eval
+
+```go
+func (pred *SSMPredicate) Eval(input DataMap) bool
+```
+
+#### func (*SSMPredicate) String
+
+```go
+func (pred *SSMPredicate) String() string
 ```
 
 #### type SSNEQBuilder

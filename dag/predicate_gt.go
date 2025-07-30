@@ -59,10 +59,10 @@ type GTPredicate struct {
 func (pred *GTPredicate) String() string {
 	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
 	if !ok {
-		return invalidTokenString
+		return FormatIsnf(gtIsn, invalidTokenString)
 	}
 
-	return FormatIsnf(eqIsn, "%s %s %g", pred.MetaPredicate.key, gtToken, val)
+	return FormatIsnf(gtIsn, "%s %s %g", pred.MetaPredicate.key, gtToken, val)
 }
 
 func (pred *GTPredicate) Eval(input DataMap) bool {

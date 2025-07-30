@@ -57,7 +57,7 @@ type SIEQPredicate struct {
 func (pred *SIEQPredicate) String() string {
 	val, ok := pred.MetaPredicate.val.(string)
 	if !ok {
-		return invalidTokenString
+		return FormatIsnf(sieqIsn, invalidTokenString)
 	}
 
 	return FormatIsnf(sieqIsn, "%s %s %#v", pred.MetaPredicate.key, sieqToken, val)

@@ -57,7 +57,7 @@ type SINEQPredicate struct {
 func (pred *SINEQPredicate) String() string {
 	val, ok := pred.MetaPredicate.val.(string)
 	if !ok {
-		return invalidTokenString
+		return FormatIsnf(sineqIsn, invalidTokenString)
 	}
 
 	return FormatIsnf(sineqIsn, "%s %s %#v", pred.MetaPredicate.key, sineqToken, val)

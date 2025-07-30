@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_lt.go --- LT - Numeric Less-Than.
+// predicate_ssm_test.go --- SSM tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,56 +31,49 @@
 
 // * Comments:
 
+//
+//
+//
+
 // * Package:
 
 package dag
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/math/conversion"
-
-// * Constants:
-
-const (
-	ltIsn   = "LT"
-	ltToken = "<"
-)
+import "testing"
 
 // * Code:
 
-// ** Predicate:
+func TestSSMPredicate(t *testing.T) {
+	var (
+		goodHaystack = []string{"one", "two", "three"}
+		badHaystack  = []string{"foo", "bar", "baz"}
+		good         = "two"
+	)
 
-type LTPredicate struct {
-	MetaPredicate
+	input := DataMap{"Range": good}
+	builder := &SSMBuilder{}
+	pred1 := builder.Build("Range", goodHaystack)
+	pred2 := builder.Build("Range", badHaystack)
+
+	t.Run(pred1.String(), func(t *testing.T) {
+		if !pred1.Eval(input) {
+			t.Errorf("%s - failed.  ! %v in %#v",
+				pred1.String(),
+				good,
+				goodHaystack)
+		}
+	})
+
+	t.Run(pred2.String(), func(t *testing.T) {
+		if pred2.Eval(input) {
+			t.Errorf("%s - failed.  %v in %v",
+				pred1.String(),
+				good,
+				badHaystack)
+		}
+	})
 }
 
-func (pred *LTPredicate) String() string {
-	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
-	if !ok {
-		return FormatIsnf(ltIsn, invalidTokenString)
-	}
-
-	return FormatIsnf(ltIsn, "%s %s %g", pred.MetaPredicate.key, ltToken, val)
-}
-
-func (pred *LTPredicate) Eval(input DataMap) bool {
-	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
-
-	return ok && lhs < rhs
-}
-
-// ** Builder:
-
-type LTBuilder struct{}
-
-func (bld *LTBuilder) Token() string {
-	return ltToken
-}
-
-func (bld *LTBuilder) Build(key string, val any) Predicate {
-	return &LTPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
-	}
-}
-
-// * predicate_lt.go ends here.
+// * predicate_ssm_test.go ends here.

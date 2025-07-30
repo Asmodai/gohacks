@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_lt.go --- LT - Numeric Less-Than.
+// predicate_lt_test.go --- LT tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,50 +37,39 @@ package dag
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/math/conversion"
-
-// * Constants:
-
-const (
-	ltIsn   = "LT"
-	ltToken = "<"
-)
+import "testing"
 
 // * Code:
 
-// ** Predicate:
+func TestLTPredicate(t *testing.T) {
+	const (
+		value int = 25
+		good  int = 50
+		bad   int = 10
+	)
 
-type LTPredicate struct {
-	MetaPredicate
+	input := DataMap{"Numeric": value}
+	builder := &LTBuilder{}
+	pred1 := builder.Build("Numeric", good)
+	pred2 := builder.Build("Numeric", bad)
+
+	t.Run(pred1.String(), func(t *testing.T) {
+		if !pred1.Eval(input) {
+			t.Errorf("[%s] failed.  %v >= %v",
+				pred1.String(),
+				value,
+				good)
+		}
+	})
+
+	t.Run(pred2.String(), func(t *testing.T) {
+		if pred2.Eval(input) {
+			t.Errorf("[%s] failed.  %v < %v",
+				pred2.String(),
+				value,
+				bad)
+		}
+	})
 }
 
-func (pred *LTPredicate) String() string {
-	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
-	if !ok {
-		return FormatIsnf(ltIsn, invalidTokenString)
-	}
-
-	return FormatIsnf(ltIsn, "%s %s %g", pred.MetaPredicate.key, ltToken, val)
-}
-
-func (pred *LTPredicate) Eval(input DataMap) bool {
-	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
-
-	return ok && lhs < rhs
-}
-
-// ** Builder:
-
-type LTBuilder struct{}
-
-func (bld *LTBuilder) Token() string {
-	return ltToken
-}
-
-func (bld *LTBuilder) Build(key string, val any) Predicate {
-	return &LTPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
-	}
-}
-
-// * predicate_lt.go ends here.
+// * predicate_lt_test.go ends here.

@@ -39,10 +39,6 @@ package dag
 
 import "testing"
 
-// * Constants:
-
-// * Variables:
-
 // * Code:
 
 func TestEQPredicate(t *testing.T) {
@@ -56,13 +52,23 @@ func TestEQPredicate(t *testing.T) {
 	pred1 := builder.Build("Numeric", good)
 	pred2 := builder.Build("Numeric", bad)
 
-	if !pred1.Eval(input) {
-		t.Errorf("%s - failed.  %d != %.1g", pred1.String(), good, float64(good))
-	}
+	t.Run(pred1.String(), func(t *testing.T) {
+		if !pred1.Eval(input) {
+			t.Errorf("%s - failed.  %v != %v",
+				pred1.String(),
+				good,
+				good)
+		}
+	})
 
-	if pred2.Eval(input) {
-		t.Errorf("%s - failed.  %d == %.1g", pred1.String(), good, float64(good))
-	}
+	t.Run(pred2.String(), func(t *testing.T) {
+		if pred2.Eval(input) {
+			t.Errorf("%s - failed.  %v == %v",
+				pred2.String(),
+				good,
+				bad)
+		}
+	})
 }
 
 // * predicate_eq_test.go ends here.

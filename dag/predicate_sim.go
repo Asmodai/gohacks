@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_lt.go --- LT - Numeric Less-Than.
+// predicate_sim.go --- SIM - String (Insensitive) Member.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -35,52 +35,50 @@
 
 package dag
 
-// * Imports:
-
-import "github.com/Asmodai/gohacks/math/conversion"
-
 // * Constants:
 
 const (
-	ltIsn   = "LT"
-	ltToken = "<"
+	simIsn   = "SIM"
+	simToken = "<"
 )
 
 // * Code:
 
 // ** Predicate:
 
-type LTPredicate struct {
+type SIMPredicate struct {
 	MetaPredicate
 }
 
-func (pred *LTPredicate) String() string {
-	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
+func (pred *SIMPredicate) String() string {
+	val, ok := pred.MetaPredicate.GetPredicateStringArray()
 	if !ok {
-		return FormatIsnf(ltIsn, invalidTokenString)
+		return FormatIsnf(simIsn, invalidTokenString)
 	}
 
-	return FormatIsnf(ltIsn, "%s %s %g", pred.MetaPredicate.key, ltToken, val)
+	return FormatIsnf(simIsn,
+		"%s %s %#v",
+		pred.MetaPredicate.key,
+		simToken,
+		val)
 }
 
-func (pred *LTPredicate) Eval(input DataMap) bool {
-	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
-
-	return ok && lhs < rhs
+func (pred *SIMPredicate) Eval(input DataMap) bool {
+	return pred.MetaPredicate.EvalStringMember(input, true)
 }
 
 // ** Builder:
 
-type LTBuilder struct{}
+type SIMBuilder struct{}
 
-func (bld *LTBuilder) Token() string {
-	return ltToken
+func (bld *SIMBuilder) Token() string {
+	return simToken
 }
 
-func (bld *LTBuilder) Build(key string, val any) Predicate {
-	return &LTPredicate{
+func (bld *SIMBuilder) Build(key string, val any) Predicate {
+	return &SIMPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
 }
 
-// * predicate_lt.go ends here.
+// * predicate_sim.go ends here.

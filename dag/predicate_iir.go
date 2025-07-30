@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_lt.go --- LT - Numeric Less-Than.
+// predicate_iir.go --- IIR - Inclusive In Range.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -35,52 +35,46 @@
 
 package dag
 
-// * Imports:
-
-import "github.com/Asmodai/gohacks/math/conversion"
-
 // * Constants:
 
 const (
-	ltIsn   = "LT"
-	ltToken = "<"
+	iirIsn   = "IIR"
+	iirToken = "<"
 )
 
 // * Code:
 
 // ** Predicate:
 
-type LTPredicate struct {
+type IIRPredicate struct {
 	MetaPredicate
 }
 
-func (pred *LTPredicate) String() string {
-	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
+func (pred *IIRPredicate) String() string {
+	val, ok := pred.MetaPredicate.GetPredicateFloatArray()
 	if !ok {
-		return FormatIsnf(ltIsn, invalidTokenString)
+		return FormatIsnf(iirIsn, invalidTokenString)
 	}
 
-	return FormatIsnf(ltIsn, "%s %s %g", pred.MetaPredicate.key, ltToken, val)
+	return FormatIsnf(iirIsn, "%s %s %g", pred.MetaPredicate.key, iirToken, val)
 }
 
-func (pred *LTPredicate) Eval(input DataMap) bool {
-	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
-
-	return ok && lhs < rhs
+func (pred *IIRPredicate) Eval(input DataMap) bool {
+	return pred.MetaPredicate.EvalInclusiveRange(input)
 }
 
 // ** Builder:
 
-type LTBuilder struct{}
+type IIRBuilder struct{}
 
-func (bld *LTBuilder) Token() string {
-	return ltToken
+func (bld *IIRBuilder) Token() string {
+	return iirToken
 }
 
-func (bld *LTBuilder) Build(key string, val any) Predicate {
-	return &LTPredicate{
+func (bld *IIRBuilder) Build(key string, val any) Predicate {
+	return &IIRPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
 }
 
-// * predicate_lt.go ends here.
+// * predicate_iir.go ends here.
