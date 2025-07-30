@@ -52,6 +52,7 @@ MODULES = amqp            \
 	  contextdi       \
 	  contextext      \
 	  crypto          \
+	  dag             \
 	  database        \
 	  debug           \
 	  dynworker       \

@@ -96,6 +96,7 @@ func (l *zapLogger) SetDebug(flag bool) {
 		}
 	}
 
+	cfg.Sampling = nil
 	/* XXX This should be an optional for stuff that wants sampling.
 	// Set up sampling.
 	cfg.Sampling = &zap.SamplingConfig{
@@ -125,8 +126,8 @@ func (l *zapLogger) SetSampling(_, _ int) {
 // Set the log file to use.
 func (l *zapLogger) SetLogFile(file string) {
 	l.mu.Lock()
-	defer l.mu.Unlock()
 	l.logfile = file
+	l.mu.Unlock()
 
 	l.SetDebug(l.debug)
 }
