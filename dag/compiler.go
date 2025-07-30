@@ -77,13 +77,14 @@ type Compiler interface {
 // ** Types:
 
 type compiler struct {
-	nodeCache map[string]*node    // Noe cache.
-	actions   map[string]ActionFn // Action cache.
-	root      *node               // Root node.
-	ctx       context.Context     // Owning context.
-	lgr       logger.Logger       // Logger instance from DI.
-	debugMode bool                // Are we debugging?
-	builder   Actions             // Action builder.
+	nodeCache  map[string]*node    // Node cache.
+	actions    map[string]ActionFn // Action cache.
+	predicates PredicateDict       // Predicates.
+	root       *node               // Root node.
+	ctx        context.Context     // Owning context.
+	lgr        logger.Logger       // Logger instance from DI.
+	debugMode  bool                // Are we debugging?
+	builder    Actions             // Action builder.
 }
 
 // ** Methods:
@@ -116,8 +117,16 @@ func (cmplr *compiler) CompileAction(spec ActionSpec) (ActionFn, error) {
 	return built, nil
 }
 
+func (cmplr *compiler) initPredicates() {
+	cmplr.predicates = BuildPredicateDict()
+}
+
 // Compile a rule spec into a DAG graph.
 func (cmplr *compiler) Compile(rules []RuleSpec) []error {
+	if cmplr.predicates == nil {
+		cmplr.initPredicates()
+	}
+
 	cmplr.initRoot()
 
 	issues := make([]error, 0)
@@ -133,7 +142,7 @@ func (cmplr *compiler) Compile(rules []RuleSpec) []error {
 
 // Build the root node with a dummy predicate.
 func (cmplr *compiler) initRoot() {
-	cmplr.root = &node{Predicate: alwaysTruePredicate()}
+	cmplr.root = &node{Predicate: &NOOPPredicate{}}
 	cmplr.nodeCache = make(map[string]*node)
 }
 
@@ -156,16 +165,16 @@ func (cmplr *compiler) compileRule(rule RuleSpec) error {
 }
 
 func (cmplr *compiler) buildPredicate(cond ConditionSpec) (Predicate, string, error) {
-	builder, ok := predicateBuilders[cond.Operator]
+	builder, ok := cmplr.predicates[cond.Operator]
 	if !ok {
-		return Predicate{}, "", errors.WithMessagef(
+		return nil, "", errors.WithMessagef(
 			ErrUnknownOperator,
 			"unknown operator: %q",
 			cond.Operator,
 		)
 	}
 
-	pred := builder(cond.Attribute, cond.Value)
+	pred := builder.Build(cond.Attribute, cond.Value)
 	key := fmt.Sprintf(
 		"%s %s %v",
 		cond.Attribute,
@@ -209,18 +218,10 @@ func (cmplr *compiler) attachAction(current *node, action ActionSpec) error {
 }
 
 func (cmplr *compiler) Evaluate(input DataMap) {
-	traverse(cmplr.ctx, cmplr.root, input)
+	traverse(cmplr.ctx, cmplr.root, input, cmplr.debugMode, cmplr.lgr)
 }
 
 // ** Functions:
-
-func alwaysTruePredicate() Predicate {
-	return Predicate{
-		Eval: func(_ *Predicate, _ DataMap) bool {
-			return true
-		},
-	}
-}
 
 func NewCompiler(ctx context.Context, builder Actions) Compiler {
 	lgr := logger.MustGetLogger(ctx)

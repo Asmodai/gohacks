@@ -58,9 +58,11 @@ const (
 
 // Pad the given string with the given number of spaces.
 func Pad(str string, padding int) string {
-	length := len(str)
+	runes := []rune(str)
+	length := len(runes)
+
 	if length > padding {
-		return string([]rune(str)[0:padding])
+		return string(runes[:padding])
 	}
 
 	return str + strings.Repeat(PadPadding, padding-length)

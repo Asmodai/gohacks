@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// node.go --- Direct Acyclic Graph node type.
+// predicate_eq_test.go --- EQ instruction test.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,63 +31,38 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package dag
 
 // * Imports:
 
-import (
-	"context"
+import "testing"
 
-	"github.com/Asmodai/gohacks/logger"
-)
+// * Constants:
+
+// * Variables:
 
 // * Code:
 
-// Graph node type.
-type node struct {
-	Predicate Predicate // Predicate.
-	Children  []*node   // Child nodes.
-	Action    ActionFn  // Action to execute upon successful predicate.
-}
+func TestEQPredicate(t *testing.T) {
+	const (
+		good int = 42
+		bad  int = 76
+	)
 
-// Traverse each child node in the given root node.
-//
-// If the node has an associated predicate then that is evaluated against
-// the given input.
-func traverse(ctx context.Context, root *node, input DataMap, debug bool, logger logger.Logger) {
-	if !root.Predicate.Eval(input) {
-		if debug {
-			logger.Debug(
-				"Eval failure",
-				"predicate", root.Predicate.String(),
-				"input", input,
-			)
-		}
+	input := DataMap{"Numeric": float64(good)}
+	builder := &EQBuilder{}
+	pred1 := builder.Build("Numeric", good)
+	pred2 := builder.Build("Numeric", bad)
 
-		return
+	if !pred1.Eval(input) {
+		t.Errorf("%s - failed.  %d != %.1g", pred1.String(), good, float64(good))
 	}
 
-	if debug {
-		logger.Debug(
-			"Eval success",
-			"predicate", root.Predicate.String(),
-			"input", input,
-		)
-	}
-
-	if root.Action != nil {
-		root.Action(ctx, input)
-	}
-
-	for _, child := range root.Children {
-		traverse(ctx, child, input, debug, logger)
+	if pred2.Eval(input) {
+		t.Errorf("%s - failed.  %d == %.1g", pred1.String(), good, float64(good))
 	}
 }
 
-// * node.go ends here.
+// * predicate_eq_test.go ends here.

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// node.go --- Direct Acyclic Graph node type.
+// predicate_lte.go --- LTE - Numeric Less-Than-or-Equal-To.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,63 +31,58 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package dag
 
 // * Imports:
 
-import (
-	"context"
+import "github.com/Asmodai/gohacks/math/conversion"
 
-	"github.com/Asmodai/gohacks/logger"
+// * Constants:
+
+const (
+	lteIsn   = "LTE"
+	lteToken = "<="
 )
+
+// * Variables:
 
 // * Code:
 
-// Graph node type.
-type node struct {
-	Predicate Predicate // Predicate.
-	Children  []*node   // Child nodes.
-	Action    ActionFn  // Action to execute upon successful predicate.
+// ** Predicate:
+
+type LTEPredicate struct {
+	MetaPredicate
 }
 
-// Traverse each child node in the given root node.
-//
-// If the node has an associated predicate then that is evaluated against
-// the given input.
-func traverse(ctx context.Context, root *node, input DataMap, debug bool, logger logger.Logger) {
-	if !root.Predicate.Eval(input) {
-		if debug {
-			logger.Debug(
-				"Eval failure",
-				"predicate", root.Predicate.String(),
-				"input", input,
-			)
-		}
-
-		return
+func (pred *LTEPredicate) String() string {
+	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
+	if !ok {
+		return invalidTokenString
 	}
 
-	if debug {
-		logger.Debug(
-			"Eval success",
-			"predicate", root.Predicate.String(),
-			"input", input,
-		)
-	}
+	return FormatIsnf(eqIsn, "%s %s %g", pred.MetaPredicate.key, lteToken, val)
+}
 
-	if root.Action != nil {
-		root.Action(ctx, input)
-	}
+func (pred *LTEPredicate) Eval(input DataMap) bool {
+	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
 
-	for _, child := range root.Children {
-		traverse(ctx, child, input, debug, logger)
+	return ok && lhs <= rhs
+}
+
+// ** Builder:
+
+type LTEBuilder struct{}
+
+func (bld *LTEBuilder) Token() string {
+	return lteToken
+}
+
+func (bld *LTEBuilder) Build(key string, val any) Predicate {
+	return &LTEPredicate{
+		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
 }
 
-// * node.go ends here.
+// * predicate_lte.go ends here.

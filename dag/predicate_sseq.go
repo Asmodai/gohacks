@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// node.go --- Direct Acyclic Graph node type.
+// predicate_sseq.go --- SSEQ - String (Sensitive) Equality.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,63 +31,52 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package dag
 
-// * Imports:
+// * Constants:
 
-import (
-	"context"
-
-	"github.com/Asmodai/gohacks/logger"
+const (
+	sseqIsn   = "SSEQ"
+	sseqToken = "string-equal"
 )
 
 // * Code:
 
-// Graph node type.
-type node struct {
-	Predicate Predicate // Predicate.
-	Children  []*node   // Child nodes.
-	Action    ActionFn  // Action to execute upon successful predicate.
+// ** Predicate:
+
+type SSEQPredicate struct {
+	MetaPredicate
 }
 
-// Traverse each child node in the given root node.
-//
-// If the node has an associated predicate then that is evaluated against
-// the given input.
-func traverse(ctx context.Context, root *node, input DataMap, debug bool, logger logger.Logger) {
-	if !root.Predicate.Eval(input) {
-		if debug {
-			logger.Debug(
-				"Eval failure",
-				"predicate", root.Predicate.String(),
-				"input", input,
-			)
-		}
-
-		return
+func (pred *SSEQPredicate) String() string {
+	val, ok := pred.MetaPredicate.val.(string)
+	if !ok {
+		return invalidTokenString
 	}
 
-	if debug {
-		logger.Debug(
-			"Eval success",
-			"predicate", root.Predicate.String(),
-			"input", input,
-		)
-	}
+	return FormatIsnf(sseqIsn, "%s %s %#v", pred.MetaPredicate.key, sseqToken, val)
+}
 
-	if root.Action != nil {
-		root.Action(ctx, input)
-	}
+func (pred *SSEQPredicate) Eval(input DataMap) bool {
+	lhs, rhs, ok := pred.MetaPredicate.GetStringValues(input)
 
-	for _, child := range root.Children {
-		traverse(ctx, child, input, debug, logger)
+	return ok && lhs == rhs
+}
+
+// ** Builder:
+
+type SSEQBuilder struct{}
+
+func (bld *SSEQBuilder) Token() string {
+	return sseqToken
+}
+
+func (bld *SSEQBuilder) Build(key string, val any) Predicate {
+	return &SSEQPredicate{
+		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
 }
 
-// * node.go ends here.
+// * predicate_sseq.go ends here.

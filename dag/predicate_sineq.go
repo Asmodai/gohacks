@@ -1,8 +1,8 @@
 // -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
 //
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: NONE
 //
-// node.go --- Direct Acyclic Graph node type.
+// predicate_sineq.go --- SINEQ - String (Insensitive) Inequality.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,63 +31,56 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package dag
 
 // * Imports:
 
-import (
-	"context"
+import "strings"
 
-	"github.com/Asmodai/gohacks/logger"
+// * Constants:
+
+const (
+	sineqIsn   = "SINEQ"
+	sineqToken = "string-ci-not-equal" //nolint:gosec
 )
 
 // * Code:
 
-// Graph node type.
-type node struct {
-	Predicate Predicate // Predicate.
-	Children  []*node   // Child nodes.
-	Action    ActionFn  // Action to execute upon successful predicate.
+// ** Predicate:
+
+type SINEQPredicate struct {
+	MetaPredicate
 }
 
-// Traverse each child node in the given root node.
-//
-// If the node has an associated predicate then that is evaluated against
-// the given input.
-func traverse(ctx context.Context, root *node, input DataMap, debug bool, logger logger.Logger) {
-	if !root.Predicate.Eval(input) {
-		if debug {
-			logger.Debug(
-				"Eval failure",
-				"predicate", root.Predicate.String(),
-				"input", input,
-			)
-		}
-
-		return
+func (pred *SINEQPredicate) String() string {
+	val, ok := pred.MetaPredicate.val.(string)
+	if !ok {
+		return invalidTokenString
 	}
 
-	if debug {
-		logger.Debug(
-			"Eval success",
-			"predicate", root.Predicate.String(),
-			"input", input,
-		)
-	}
+	return FormatIsnf(sineqIsn, "%s %s %#v", pred.MetaPredicate.key, sineqToken, val)
+}
 
-	if root.Action != nil {
-		root.Action(ctx, input)
-	}
+func (pred *SINEQPredicate) Eval(input DataMap) bool {
+	lhs, rhs, ok := pred.MetaPredicate.GetStringValues(input)
 
-	for _, child := range root.Children {
-		traverse(ctx, child, input, debug, logger)
+	return ok && !strings.EqualFold(lhs, rhs)
+}
+
+// ** Builder:
+
+type SINEQBuilder struct{}
+
+func (bld *SINEQBuilder) Token() string {
+	return sineqToken
+}
+
+func (bld *SINEQBuilder) Build(key string, val any) Predicate {
+	return &SINEQPredicate{
+		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
 }
 
-// * node.go ends here.
+// * predicate_sineq.go ends here.

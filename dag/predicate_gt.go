@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// node.go --- Direct Acyclic Graph node type.
+// predicate_gt.go --- GT - Numeric Greater-Than.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,63 +31,58 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package dag
 
 // * Imports:
 
-import (
-	"context"
+import "github.com/Asmodai/gohacks/math/conversion"
 
-	"github.com/Asmodai/gohacks/logger"
+// * Constants:
+
+const (
+	gtIsn   = "GT"
+	gtToken = ">"
 )
+
+// * Variables:
 
 // * Code:
 
-// Graph node type.
-type node struct {
-	Predicate Predicate // Predicate.
-	Children  []*node   // Child nodes.
-	Action    ActionFn  // Action to execute upon successful predicate.
+// ** Predicate:
+
+type GTPredicate struct {
+	MetaPredicate
 }
 
-// Traverse each child node in the given root node.
-//
-// If the node has an associated predicate then that is evaluated against
-// the given input.
-func traverse(ctx context.Context, root *node, input DataMap, debug bool, logger logger.Logger) {
-	if !root.Predicate.Eval(input) {
-		if debug {
-			logger.Debug(
-				"Eval failure",
-				"predicate", root.Predicate.String(),
-				"input", input,
-			)
-		}
-
-		return
+func (pred *GTPredicate) String() string {
+	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
+	if !ok {
+		return invalidTokenString
 	}
 
-	if debug {
-		logger.Debug(
-			"Eval success",
-			"predicate", root.Predicate.String(),
-			"input", input,
-		)
-	}
+	return FormatIsnf(eqIsn, "%s %s %g", pred.MetaPredicate.key, gtToken, val)
+}
 
-	if root.Action != nil {
-		root.Action(ctx, input)
-	}
+func (pred *GTPredicate) Eval(input DataMap) bool {
+	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
 
-	for _, child := range root.Children {
-		traverse(ctx, child, input, debug, logger)
+	return ok && lhs > rhs
+}
+
+// ** Builder:
+
+type GTBuilder struct{}
+
+func (bld *GTBuilder) Token() string {
+	return gtToken
+}
+
+func (bld *GTBuilder) Build(key string, val any) Predicate {
+	return &GTPredicate{
+		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
 }
 
-// * node.go ends here.
+// * predicate_gt.go ends here.

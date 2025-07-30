@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// compiler.go --- DAG compiler.
+// actions_test.go --- Actions tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //

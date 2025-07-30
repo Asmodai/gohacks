@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate.go --- Predicates.
+// compiler_test.go --- Compiler tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -40,9 +40,11 @@ package dag
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"strings"
 	"testing"
 
+	"github.com/Asmodai/gohacks/contextdi"
 	"github.com/Asmodai/gohacks/logger"
 	mlogger "github.com/Asmodai/gohacks/mocks/logger"
 	"gitlab.com/tozd/go/errors"
@@ -163,6 +165,8 @@ func (obj *MockActions) logAction(params ActionParams) (afn ActionFn, err error)
 
 	err = nil
 	afn = func(ctx context.Context, input DataMap) {
+		log.Printf("LOG ACTION: Run with: %#v\n", input)
+
 		lgr := logger.MustGetLogger(ctx)
 		lgr.Info(
 			msg,
@@ -186,10 +190,14 @@ func TestCompiler(t *testing.T) {
 	mocker := gomock.NewController(t)
 	defer mocker.Finish()
 
+	stdlgr := logger.NewDefaultLogger()
 	lgr := mlogger.NewMockLogger(mocker)
 
 	lgr.EXPECT().
 		Error(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(message string, rest ...any) {
+			stdlgr.Error(message, rest...)
+		}).
 		MaxTimes(0)
 
 	lgr.EXPECT().
@@ -198,6 +206,16 @@ func TestCompiler(t *testing.T) {
 
 	lgr.EXPECT().
 		Info(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(message string, rest ...any) {
+			stdlgr.Info(message, rest...)
+		}).
+		AnyTimes()
+
+	lgr.EXPECT().
+		Debug(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(message string, rest ...any) {
+			stdlgr.Debug(message, rest...)
+		}).
 		AnyTimes()
 
 	mact := &MockActions{
@@ -207,6 +225,11 @@ func TestCompiler(t *testing.T) {
 	ctx, err := logger.SetLogger(context.TODO(), lgr)
 	if err != nil {
 		t.Fatalf("Could not set logger DI: %#v", err)
+	}
+
+	ctx, err = contextdi.SetDebugMode(ctx, true)
+	if err != nil {
+		t.Fatalf("Could not set debug flag to DI: %#v", err)
 	}
 
 	if err := json.Unmarshal([]byte(RulesJSON), &rules); err != nil {
@@ -250,7 +273,7 @@ func TestCompiler(t *testing.T) {
 		compiler.Evaluate(NormalWeather)
 
 		if mact.hasRunLog {
-			t.Error("Unexpected alert(s) triggered.")
+			t.Error("Unexpected alert(s) triggered!")
 		}
 	})
 }

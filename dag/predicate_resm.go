@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// node.go --- Direct Acyclic Graph node type.
+// predicate_resm.go --- RESM - Regular Expression (Sensitive) Match.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package dag
@@ -42,52 +38,70 @@ package dag
 // * Imports:
 
 import (
-	"context"
+	"regexp"
 
-	"github.com/Asmodai/gohacks/logger"
+	"gitlab.com/tozd/go/errors"
+)
+
+// * Constants:
+
+const (
+	resmIsn   = "RESM"
+	resmToken = "regex-match" //nolint:gosec
 )
 
 // * Code:
 
-// Graph node type.
-type node struct {
-	Predicate Predicate // Predicate.
-	Children  []*node   // Child nodes.
-	Action    ActionFn  // Action to execute upon successful predicate.
+// ** Predicate:
+
+type RESMPredicate struct {
+	MetaPredicate
+
+	compiled *regexp.Regexp
 }
 
-// Traverse each child node in the given root node.
-//
-// If the node has an associated predicate then that is evaluated against
-// the given input.
-func traverse(ctx context.Context, root *node, input DataMap, debug bool, logger logger.Logger) {
-	if !root.Predicate.Eval(input) {
-		if debug {
-			logger.Debug(
-				"Eval failure",
-				"predicate", root.Predicate.String(),
-				"input", input,
-			)
+func (pred *RESMPredicate) String() string {
+	val, ok := pred.MetaPredicate.val.(string)
+	if !ok {
+		return invalidTokenString
+	}
+
+	return FormatIsnf(resmIsn, "%s %s %#v", pred.MetaPredicate.key, resmToken, val)
+}
+
+func (pred *RESMPredicate) Eval(input DataMap) bool {
+	pattern, data, ok := pred.MetaPredicate.GetStringValues(input)
+	if !ok {
+		return false
+	}
+
+	if pred.compiled == nil {
+		result, err := regexp.Compile(pattern)
+		if err != nil {
+			panic(errors.WithMessagef(
+				err,
+				"regex compilation failed: %s",
+				err.Error()))
 		}
 
-		return
+		pred.compiled = result
 	}
 
-	if debug {
-		logger.Debug(
-			"Eval success",
-			"predicate", root.Predicate.String(),
-			"input", input,
-		)
-	}
+	return pred.compiled.MatchString(data)
+}
 
-	if root.Action != nil {
-		root.Action(ctx, input)
-	}
+// ** Builder:
 
-	for _, child := range root.Children {
-		traverse(ctx, child, input, debug, logger)
+type RESMBuilder struct{}
+
+func (bld *RESMBuilder) Token() string {
+	return resmToken
+}
+
+func (bld *RESMBuilder) Build(key string, val any) Predicate {
+	return &RESMPredicate{
+		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
 }
 
-// * node.go ends here.
+// * predicate_resm.go ends here.
