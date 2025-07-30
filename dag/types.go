@@ -67,25 +67,40 @@ type ActionFn func(context.Context, DataMap)
 
 // ** Abstract data types:
 
-// Condition specification.
-type ConditionSpec struct {
-	Attribute string `json:"attribute"` // Attribute to check.
-	Operator  string `json:"operator"`  // Predicate operator.
-	Value     any    `json:"value"`     // Value to check.
-}
-
 // Filter rule specification.
 type RuleSpec struct {
-	Name       string          `json:"name"`       // Rule name.
-	Conditions []ConditionSpec `json:"conditions"` // List of conditions.
-	Action     ActionSpec      `json:"action"`     // Action to evaluate.
+	// Rule name.
+	Name string `json:"name" yaml:"name"`
+
+	// List of conditions.
+	Conditions []ConditionSpec `json:"conditions" yaml:"conditions"`
+
+	// Action to evaluate.
+	Action ActionSpec `json:"action" yaml:"action"`
+}
+
+// Condition specification.
+type ConditionSpec struct {
+	// Attribute to check.
+	Attribute string `json:"attribute" yaml:"attribute"`
+
+	// Predicate operator.
+	Operator string `json:"operator" yaml:"operator"`
+
+	// Value to check.
+	Value any `json:"value" yaml:"value"`
 }
 
 // Action specification.
 type ActionSpec struct {
-	Name    string       `json:"name,omitempty"`    // Action name.
-	Perform string       `json:"perform,omitempty"` // Function to perform.
-	Params  ActionParams `json:"params,omitempty"`  // Parameters.
+	// Action name.
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// Function to perform.
+	Perform string `json:"perform,omitempty" yaml:"perform,omitempty"`
+
+	// Parameters.
+	Params ActionParams `json:"params,omitempty" yaml:"params,omitempty"`
 }
 
 // * types.go ends here.

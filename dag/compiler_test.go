@@ -54,7 +54,67 @@ import (
 // * Constants:
 
 const (
-	RulesJSON string = `[
+	rulesYAML string = `
+- name: warm_weather
+  conditions:
+    - attribute: type
+      operator: string-equal
+      value: weather
+    - attribute: temp
+      operator: '>='
+      value: 22
+  action:
+    name: warm_weather_action
+    perform: log
+    params:
+      message: It's warm!
+- name: cold_weather
+  conditions:
+    - attribute: type
+      operator: string-equal
+      value: weather
+    - attribute: temp
+      operator: '<='
+      value: 10
+  action:
+    name: cold_weather_action
+    perform: log
+    params:
+      message: It's cold!`
+
+	badRulesYAML string = `
+- name: derpy_weather
+  conditions:
+    - attribute: type
+      operator: dance-please
+      value: lots
+  action:
+    name: woo_woo
+    perform: dance
+    params:
+      type: fandango
+- name: chungus_weather
+  conditions:
+    - attribute: type
+      operator: string-equal
+      value: lots
+  action:
+    name: woo_woo
+    perform: dance
+    params:
+      type: fandango
+- name: blibble_weather
+  conditions:
+    - attribute: type
+      operator: string-equal
+      value: lots
+  action:
+    name: slibblewibbles
+    perform: log
+    params:
+      type: log`
+
+	rulesJSON string = `[
 		{
 			"name": "warm_weather",
 			"conditions": [
@@ -138,11 +198,7 @@ func (obj *MockActions) Builder(fn string, params ActionParams) (ActionFn, error
 		return obj.logAction(params)
 
 	default:
-		return nil, errors.WithMessagef(
-			ErrUnknownBuiltin,
-			"unknown builtin function '%s'",
-			fn,
-		)
+		return nil, errors.WithMessagef(ErrUnknownBuiltin, "%q", fn)
 	}
 }
 
@@ -150,7 +206,8 @@ func (obj *MockActions) logAction(params ActionParams) (afn ActionFn, err error)
 	msgparam, ok := params["message"]
 	if !ok {
 		afn = nil
-		err = errors.WithStack(ErrMissingParam)
+		err = errors.WithMessage(ErrMissingParam,
+			`Parameter "message"`)
 
 		return
 	}
@@ -232,7 +289,7 @@ func TestCompiler(t *testing.T) {
 		t.Fatalf("Could not set debug flag to DI: %#v", err)
 	}
 
-	if err := json.Unmarshal([]byte(RulesJSON), &rules); err != nil {
+	if err := json.Unmarshal([]byte(rulesJSON), &rules); err != nil {
 		t.Errorf("JSON: %v", err.Error())
 		return
 	}
@@ -274,6 +331,45 @@ func TestCompiler(t *testing.T) {
 
 		if mact.hasRunLog {
 			t.Error("Unexpected alert(s) triggered!")
+		}
+	})
+
+	t.Run("Test compiler warnings", func(t *testing.T) {
+		jank, err := ParseFromYAML(badRulesYAML)
+		if err != nil {
+			t.Fatalf("YAML: %#v", err)
+		}
+
+		compiler := NewCompiler(ctx, mact)
+		issues := compiler.Compile(jank)
+
+		if len(issues) == 0 {
+			t.Fatalf("How did this jank compile?")
+		}
+
+		if len(issues) > 3 {
+			t.Fatalf("Too many issues: %d != 3", len(issues))
+		}
+
+		t.Logf("Compiler issues:")
+		for idx := range issues {
+			t.Logf("%d: %s", idx+1, issues[idx])
+		}
+	})
+}
+
+func TestUtilities(t *testing.T) {
+	t.Run("ParseFromYAML", func(t *testing.T) {
+		_, err := ParseFromYAML(rulesYAML)
+		if err != nil {
+			t.Fatalf("YAML: %#v", err)
+		}
+	})
+
+	t.Run("ParseFromJSON", func(t *testing.T) {
+		_, err := ParseFromJSON(rulesJSON)
+		if err != nil {
+			t.Fatalf("YAML: %#v", err)
 		}
 	})
 }

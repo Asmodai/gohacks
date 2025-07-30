@@ -24,6 +24,13 @@ var (
 )
 ```
 
+#### func  DumpRulesToYAML
+
+```go
+func DumpRulesToYAML(rules []RuleSpec) (string, error)
+```
+Dump a slice of rule specifications to YAML format.
+
 #### func  FormatIsnf
 
 ```go
@@ -55,9 +62,14 @@ A map of key/value pairs that is passed to the action handler.
 
 ```go
 type ActionSpec struct {
-	Name    string       `json:"name,omitempty"`    // Action name.
-	Perform string       `json:"perform,omitempty"` // Function to perform.
-	Params  ActionParams `json:"params,omitempty"`  // Parameters.
+	// Action name.
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// Function to perform.
+	Perform string `json:"perform,omitempty" yaml:"perform,omitempty"`
+
+	// Parameters.
+	Params ActionParams `json:"params,omitempty" yaml:"params,omitempty"`
 }
 ```
 
@@ -115,9 +127,14 @@ func NewCompiler(ctx context.Context, builder Actions) Compiler
 
 ```go
 type ConditionSpec struct {
-	Attribute string `json:"attribute"` // Attribute to check.
-	Operator  string `json:"operator"`  // Predicate operator.
-	Value     any    `json:"value"`     // Value to check.
+	// Attribute to check.
+	Attribute string `json:"attribute" yaml:"attribute"`
+
+	// Predicate operator.
+	Operator string `json:"operator" yaml:"operator"`
+
+	// Value to check.
+	Value any `json:"value" yaml:"value"`
 }
 ```
 
@@ -656,13 +673,45 @@ func (pred *RESMPredicate) String() string
 
 ```go
 type RuleSpec struct {
-	Name       string          `json:"name"`       // Rule name.
-	Conditions []ConditionSpec `json:"conditions"` // List of conditions.
-	Action     ActionSpec      `json:"action"`     // Action to evaluate.
+	// Rule name.
+	Name string `json:"name" yaml:"name"`
+
+	// List of conditions.
+	Conditions []ConditionSpec `json:"conditions" yaml:"conditions"`
+
+	// Action to evaluate.
+	Action ActionSpec `json:"action" yaml:"action"`
 }
 ```
 
 Filter rule specification.
+
+#### func  ParseFromJSON
+
+```go
+func ParseFromJSON(data string) ([]RuleSpec, error)
+```
+
+#### func  ParseFromYAML
+
+```go
+func ParseFromYAML(data string) ([]RuleSpec, error)
+```
+Dump a slice of rule specifications to JSON format.
+
+#### func (*RuleSpec) DumpToJSON
+
+```go
+func (rs *RuleSpec) DumpToJSON() (string, error)
+```
+Dump the rule specification to JSON format.
+
+#### func (*RuleSpec) DumpToYAML
+
+```go
+func (rs *RuleSpec) DumpToYAML() (string, error)
+```
+Dump the rule specification to YAML format.
 
 #### type SIEQBuilder
 

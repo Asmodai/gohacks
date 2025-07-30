@@ -101,11 +101,7 @@ func (act *actions) Builder(funame string, params ActionParams) (ActionFn, error
 		return act.logAction(params)
 
 	default:
-		return nil, errors.WithMessagef(
-			ErrUnknownBuiltin,
-			"unknown builtin function '%s'",
-			funame,
-		)
+		return nil, errors.WithMessagef(ErrUnknownBuiltin, "%q", funame)
 	}
 }
 
@@ -134,7 +130,7 @@ func (act *actions) mutateAction(params ActionParams) (ActionFn, error) {
 	attr, okay := params["attribute"]
 	if !okay {
 		return nil, errors.WithMessage(ErrMissingParam,
-			"parameter 'attribute' missing")
+			`Parameter "attribute"`)
 	}
 
 	sattr, okay := attr.(string)
@@ -145,7 +141,7 @@ func (act *actions) mutateAction(params ActionParams) (ActionFn, error) {
 	val, okay := params["new_value"]
 	if !okay {
 		return nil, errors.WithMessage(ErrMissingParam,
-			"parameter 'new_value' missing")
+			`Parameter "new_value"`)
 	}
 
 	afn := func(ctx context.Context, input DataMap) {
@@ -192,7 +188,7 @@ func (act *actions) logAction(params ActionParams) (ActionFn, error) {
 	msg, okay := params["message"]
 	if !okay {
 		return nil, errors.WithMessage(ErrMissingParam,
-			"parameter 'message' missing")
+			`Parameter "message"`)
 	}
 
 	smsg, okay := msg.(string)

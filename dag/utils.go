@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_gt.go --- GT - Numeric Greater-Than.
+// utils.go --- Utilities.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,56 +31,87 @@
 
 // * Comments:
 
+//
+//
+//
+
 // * Package:
 
 package dag
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/math/conversion"
+import (
+	"encoding/json"
+
+	"gitlab.com/tozd/go/errors"
+	"gopkg.in/yaml.v3"
+)
 
 // * Constants:
 
 const (
-	gtIsn   = "GT"
-	gtToken = ">"
+	prefixJSON = ""
+	indentJSON = "    "
 )
+
+// * Variables:
 
 // * Code:
 
-// ** Predicate:
+// ** Methods:
 
-type GTPredicate struct {
-	MetaPredicate
-}
-
-func (pred *GTPredicate) String() string {
-	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
-	if !ok {
-		return FormatIsnf(gtIsn, invalidTokenString)
+// Dump the rule specification to YAML format.
+func (rs *RuleSpec) DumpToYAML() (string, error) {
+	raw, err := yaml.Marshal(rs)
+	if err != nil {
+		return "", errors.WithStack(err)
 	}
 
-	return FormatIsnf(gtIsn, "%s %s %g", pred.MetaPredicate.key, gtToken, val)
+	return string(raw), nil
 }
 
-func (pred *GTPredicate) Eval(input DataMap) bool {
-	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
-
-	return ok && lhs > rhs
-}
-
-// ** Builder:
-
-type GTBuilder struct{}
-
-func (bld *GTBuilder) Token() string {
-	return gtToken
-}
-
-func (bld *GTBuilder) Build(key string, val any) Predicate {
-	return &GTPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
+// Dump the rule specification to JSON format.
+func (rs *RuleSpec) DumpToJSON() (string, error) {
+	raw, err := json.MarshalIndent(rs, prefixJSON, indentJSON)
+	if err != nil {
+		return "", errors.WithStack(err)
 	}
+
+	return string(raw), nil
 }
 
-// * predicate_gt.go ends here.
+// Dump a slice of rule specifications to YAML format.
+func DumpRulesToYAML(rules []RuleSpec) (string, error) {
+	raw, err := yaml.Marshal(rules)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	return string(raw), nil
+}
+
+// Dump a slice of rule specifications to JSON format.
+func ParseFromYAML(data string) ([]RuleSpec, error) {
+	result := []RuleSpec{}
+	raw := []byte(data)
+
+	if err := yaml.Unmarshal(raw, &result); err != nil {
+		return []RuleSpec{}, errors.WithStack(err)
+	}
+
+	return result, nil
+}
+
+func ParseFromJSON(data string) ([]RuleSpec, error) {
+	result := []RuleSpec{}
+	raw := []byte(data)
+
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return []RuleSpec{}, errors.WithStack(err)
+	}
+
+	return result, nil
+}
+
+// * utils.go ends here.

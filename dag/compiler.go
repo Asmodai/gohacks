@@ -152,7 +152,10 @@ func (cmplr *compiler) compileRule(rule RuleSpec) error {
 	for _, cond := range rule.Conditions {
 		pred, key, err := cmplr.buildPredicate(cond)
 		if err != nil {
-			return err
+			return errors.WithMessagef(
+				err,
+				"Rule %q",
+				rule.Name)
 		}
 
 		next := cmplr.getOrCreateNode(pred, key)
@@ -161,7 +164,14 @@ func (cmplr *compiler) compileRule(rule RuleSpec) error {
 		current = next
 	}
 
-	return cmplr.attachAction(current, rule.Action)
+	if err := cmplr.attachAction(current, rule.Action); err != nil {
+		return errors.WithMessagef(
+			err,
+			"Rule %q",
+			rule.Name)
+	}
+
+	return nil
 }
 
 func (cmplr *compiler) buildPredicate(cond ConditionSpec) (Predicate, string, error) {
@@ -169,9 +179,8 @@ func (cmplr *compiler) buildPredicate(cond ConditionSpec) (Predicate, string, er
 	if !ok {
 		return nil, "", errors.WithMessagef(
 			ErrUnknownOperator,
-			"unknown operator: %q",
-			cond.Operator,
-		)
+			"Condition %q",
+			cond.Operator)
 	}
 
 	pred := builder.Build(cond.Attribute, cond.Value)
@@ -205,11 +214,9 @@ func (cmplr *compiler) attachAction(current *node, action ActionSpec) error {
 	compiled, err := cmplr.CompileAction(action)
 	if err != nil {
 		return errors.WithMessagef(
-			ErrRuleCompileFailed,
-			"rule '%s' compilation failed: %s",
-			action.Name,
-			err.Error(),
-		)
+			err,
+			"Action %q",
+			action.Name)
 	}
 
 	current.Action = compiled
