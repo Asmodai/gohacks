@@ -47,7 +47,7 @@ func TestNEQPredicate(t *testing.T) {
 		different int = 75
 	)
 
-	input := DataMap{"Numeric": value}
+	input := NewDataInputFromMap(map[string]any{"Numeric": value})
 	builder := &NEQBuilder{}
 	pred1 := builder.Build("Numeric", different)
 	pred2 := builder.Build("Numeric", value)

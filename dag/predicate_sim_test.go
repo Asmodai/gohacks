@@ -52,7 +52,7 @@ func TestSIMPredicate(t *testing.T) {
 		good         = "TWO"
 	)
 
-	input := DataMap{"Range": good}
+	input := NewDataInputFromMap(map[string]any{"Range": good})
 	builder := &SIMBuilder{}
 	pred1 := builder.Build("Range", goodHaystack)
 	pred2 := builder.Build("Range", badHaystack)

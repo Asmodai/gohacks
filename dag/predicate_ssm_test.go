@@ -52,7 +52,7 @@ func TestSSMPredicate(t *testing.T) {
 		good         = "two"
 	)
 
-	input := DataMap{"Range": good}
+	input := NewDataInputFromMap(map[string]any{"Range": good})
 	builder := &SSMBuilder{}
 	pred1 := builder.Build("Range", goodHaystack)
 	pred2 := builder.Build("Range", badHaystack)

@@ -41,12 +41,37 @@ import "context"
 
 // * Code:
 
-// ** Concrete types:
+// ** Interfaces:
 
-// Base data type.
+// Filterable interface.
 //
-// This is a map of key/value pairs.
-type DataMap map[string]any
+// This interface allows objects to be used with the direct acyclig graph
+// as input.
+//
+// A 'filterable' entity provides a means of getting at its field contents
+// so the DAG can look them up.
+//
+// A decision was made to avoid `reflect` as the DAG might be in a hot path
+// where reflection adds too big a performance hit.
+type Filterable interface {
+	// Get the given key from the filterable entity.
+	//
+	// If the key exists, it is returned along with `true`.
+	//
+	// If the key does not exist, `false` returned.
+	Get(string) (any, bool)
+
+	// Set the given key to the given value.
+	//
+	// The graph engine should not add new entries, so if an attempt is
+	// made to do so, then `false` is returned and nothing happens.
+	Set(string, any) bool
+
+	// Get a list of keys from the filterable entity.
+	Keys() []string
+}
+
+// ** Concrete types:
 
 // Action parameters type.
 //
@@ -63,7 +88,7 @@ type PredicateFn func(string, any) Predicate
 //
 // An action callback is a function that takes a single argument containing
 // the key/value pair map and returns no value.
-type ActionFn func(context.Context, DataMap)
+type ActionFn func(context.Context, Filterable)
 
 // ** Abstract data types:
 

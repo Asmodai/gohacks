@@ -48,7 +48,7 @@ func TestRESMPredicate(t *testing.T) {
 		bad   = "(?i)c([oa]*)ee"
 	)
 
-	input := DataMap{"Regex": value}
+	input := NewDataInputFromMap(map[string]any{"Regex": value})
 	builder := &RESMBuilder{}
 	pred1 := builder.Build("Regex", good)
 	pred2 := builder.Build("Regex", bad)

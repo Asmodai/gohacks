@@ -63,7 +63,7 @@ func (pred *GTEPredicate) String() string {
 	return FormatIsnf(gteIsn, "%s %s %g", pred.MetaPredicate.key, gteToken, val)
 }
 
-func (pred *GTEPredicate) Eval(input DataMap) bool {
+func (pred *GTEPredicate) Eval(input Filterable) bool {
 	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
 
 	return ok && lhs >= rhs

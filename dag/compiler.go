@@ -71,7 +71,7 @@ var (
 type Compiler interface {
 	CompileAction(ActionSpec) (ActionFn, error)
 	Compile([]RuleSpec) []error
-	Evaluate(DataMap)
+	Evaluate(Filterable)
 }
 
 // ** Types:
@@ -179,7 +179,7 @@ func (cmplr *compiler) buildPredicate(cond ConditionSpec) (Predicate, string, er
 	if !ok {
 		return nil, "", errors.WithMessagef(
 			ErrUnknownOperator,
-			"Condition %q",
+			"Condition operator %q",
 			cond.Operator)
 	}
 
@@ -224,7 +224,7 @@ func (cmplr *compiler) attachAction(current *node, action ActionSpec) error {
 	return nil
 }
 
-func (cmplr *compiler) Evaluate(input DataMap) {
+func (cmplr *compiler) Evaluate(input Filterable) {
 	traverse(cmplr.ctx, cmplr.root, input, cmplr.debugMode, cmplr.lgr)
 }
 

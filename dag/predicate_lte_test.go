@@ -48,7 +48,7 @@ func TestLTEPredicate(t *testing.T) {
 		bad   int = 10
 	)
 
-	input := DataMap{"Numeric": value}
+	input := NewDataInputFromMap(map[string]any{"Numeric": value})
 	builder := &LTEBuilder{}
 	pred1 := builder.Build("Numeric", good)
 	pred2 := builder.Build("Numeric", bad)

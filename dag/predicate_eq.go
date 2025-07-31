@@ -63,7 +63,7 @@ func (pred *EQPredicate) String() string {
 	return FormatIsnf(eqIsn, "%s %s %g", pred.MetaPredicate.key, eqToken, val)
 }
 
-func (pred *EQPredicate) Eval(input DataMap) bool {
+func (pred *EQPredicate) Eval(input Filterable) bool {
 	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
 
 	return ok && lhs == rhs

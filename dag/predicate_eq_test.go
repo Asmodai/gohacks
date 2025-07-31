@@ -47,7 +47,7 @@ func TestEQPredicate(t *testing.T) {
 		bad  int = 76
 	)
 
-	input := DataMap{"Numeric": float64(good)}
+	input := NewDataInputFromMap(map[string]any{"Numeric": float64(good)})
 	builder := &EQBuilder{}
 	pred1 := builder.Build("Numeric", good)
 	pred2 := builder.Build("Numeric", bad)

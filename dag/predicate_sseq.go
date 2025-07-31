@@ -59,7 +59,7 @@ func (pred *SSEQPredicate) String() string {
 	return FormatIsnf(sseqIsn, "%s %s %#v", pred.MetaPredicate.key, sseqToken, val)
 }
 
-func (pred *SSEQPredicate) Eval(input DataMap) bool {
+func (pred *SSEQPredicate) Eval(input Filterable) bool {
 	lhs, rhs, ok := pred.MetaPredicate.GetStringValues(input)
 
 	return ok && lhs == rhs

@@ -63,7 +63,7 @@ func (pred *SIMPredicate) String() string {
 		val)
 }
 
-func (pred *SIMPredicate) Eval(input DataMap) bool {
+func (pred *SIMPredicate) Eval(input Filterable) bool {
 	return pred.MetaPredicate.EvalStringMember(input, true)
 }
 

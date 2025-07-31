@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_neq.go --- NEQ - Numeric Inequality.
+// datainput.go --- DAG input structure.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,50 +37,65 @@ package dag
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/math/conversion"
-
 // * Constants:
 
-const (
-	neqIsn   = "NEQ"
-	neqToken = "!="
-)
+// * Variables:
 
 // * Code:
 
-// ** Predicate:
+// ** Types:
 
-type NEQPredicate struct {
-	MetaPredicate
+type DataInput struct {
+	fields map[string]any
 }
 
-func (pred *NEQPredicate) String() string {
-	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
+// ** Methods:
+
+func (input *DataInput) Get(key string) (any, bool) {
+	val, ok := input.fields[key]
 	if !ok {
-		return FormatIsnf(neqIsn, invalidTokenString)
+		return nil, false
 	}
 
-	return FormatIsnf(neqIsn, "%s %s %g", pred.MetaPredicate.key, neqToken, val)
+	return val, true
 }
 
-func (pred *NEQPredicate) Eval(input Filterable) bool {
-	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
+func (input *DataInput) Keys() []string {
+	result := make([]string, 0, len(input.fields))
 
-	return ok && lhs != rhs
-}
-
-// ** Builder:
-
-type NEQBuilder struct{}
-
-func (bld *NEQBuilder) Token() string {
-	return neqToken
-}
-
-func (bld *NEQBuilder) Build(key string, val any) Predicate {
-	return &NEQPredicate{
-		MetaPredicate{key: key, val: val},
+	for key := range input.fields {
+		result = append(result, key)
 	}
+
+	return result
 }
 
-// * predicate_neq.go ends here.
+func (input *DataInput) Set(key string, value any) bool {
+	_, found := input.fields[key]
+	if !found {
+		return false
+	}
+
+	input.fields[key] = value
+
+	return true
+}
+
+// ** Functions
+
+func NewDataInput() *DataInput {
+	return &DataInput{fields: map[string]any{}}
+}
+
+// Create a new `DataInput` object with a copy of the provided input map.
+func NewDataInputFromMap(input map[string]any) *DataInput {
+	copyMap := make(map[string]any, len(input))
+
+	for key, val := range input {
+		copyMap[key] = val
+	}
+
+	return &DataInput{fields: copyMap}
+}
+
+// * datainput.go ends here.

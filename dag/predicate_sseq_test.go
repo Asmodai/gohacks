@@ -48,7 +48,7 @@ func TestSSEQPredicate(t *testing.T) {
 		bad   = "GooD StrinG"
 	)
 
-	input := DataMap{"String": value}
+	input := NewDataInputFromMap(map[string]any{"String": value})
 	builder := &SSEQBuilder{}
 	pred1 := builder.Build("String", good)
 	pred2 := builder.Build("String", bad)

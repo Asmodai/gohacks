@@ -59,7 +59,7 @@ func (pred *IIRPredicate) String() string {
 	return FormatIsnf(iirIsn, "%s %s %g", pred.MetaPredicate.key, iirToken, val)
 }
 
-func (pred *IIRPredicate) Eval(input DataMap) bool {
+func (pred *IIRPredicate) Eval(input Filterable) bool {
 	return pred.MetaPredicate.EvalInclusiveRange(input)
 }
 

@@ -33,6 +33,10 @@
 
 // * Comments:
 
+//
+// It might be nice if we allowed multiple actions to be attached to a rule.
+//
+
 // * Package:
 
 package dag
@@ -67,7 +71,7 @@ var (
 // into explicit function objects
 //
 // The resulting action is a function that takes `context.Context` and
-// `DataMap` arguments and then performs some sort of user-defined action.
+// `Filterable` arguments and then performs some sort of user-defined action.
 //
 // There are two default builtins provided for you:
 //
@@ -109,7 +113,7 @@ func (act *actions) Builder(funame string, params ActionParams) (ActionFn, error
 //
 // Required parameters are:
 //
-//	`attribute`: The attribute within `DataMap` that is to be mutated.
+//	`attribute`: The attribute within `Filterable` that is to be mutated.
 //	`new_value`: The value to be stored in the given attribute.
 //
 // If no valid parameters are provided then `ErrExpectedParams` is returned.
@@ -144,7 +148,7 @@ func (act *actions) mutateAction(params ActionParams) (ActionFn, error) {
 			`Parameter "new_value"`)
 	}
 
-	afn := func(ctx context.Context, input DataMap) {
+	afn := func(ctx context.Context, input Filterable) {
 		lgr := logger.MustGetLogger(ctx)
 
 		dbg, err := contextdi.GetDebugMode(ctx)
@@ -160,7 +164,7 @@ func (act *actions) mutateAction(params ActionParams) (ActionFn, error) {
 				"new_value", val)
 		}
 
-		input[sattr] = val
+		input.Set(sattr, val)
 	}
 
 	return afn, nil
@@ -196,7 +200,7 @@ func (act *actions) logAction(params ActionParams) (ActionFn, error) {
 		return nil, errors.WithStack(ErrExpectedString)
 	}
 
-	afn := func(ctx context.Context, input DataMap) {
+	afn := func(ctx context.Context, input Filterable) {
 		lgr := logger.MustGetLogger(ctx)
 
 		lgr.Info(

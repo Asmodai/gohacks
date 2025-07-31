@@ -60,7 +60,7 @@ const (
 // * Code:
 
 func TestActions(t *testing.T) {
-	var fn func(context.Context, DataMap)
+	var fn func(context.Context, Filterable)
 	acts := &actions{}
 
 	mocker := gomock.NewController(t)
@@ -140,15 +140,22 @@ func TestActions(t *testing.T) {
 		})
 
 		t.Run("Executes", func(t *testing.T) {
-			data := DataMap{}
-			data[MutateAttr] = MutateOldVal
+			data := NewDataInput()
+			data.fields[MutateAttr] = MutateOldVal
 
 			fn(ctx, data)
 
-			if data[MutateAttr] != MutateNewVal {
+			value, ok := data.Get(MutateAttr)
+			if !ok {
+				t.Fatalf("Could not find %q in map.  %#v",
+					MutateAttr,
+					data)
+			}
+
+			if value != MutateNewVal {
 				t.Errorf(
-					"Unexpected value: %s != %s",
-					data[MutateAttr],
+					"Unexpected value: %#v != %#v",
+					value,
 					MutateNewVal,
 				)
 
@@ -208,7 +215,7 @@ func TestActions(t *testing.T) {
 		})
 
 		t.Run("Executes", func(t *testing.T) {
-			data := DataMap{}
+			data := NewDataInput()
 
 			lgr.EXPECT().
 				Info(gomock.Any(), gomock.Any()).

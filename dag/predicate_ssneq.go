@@ -59,7 +59,7 @@ func (pred *SSNEQPredicate) String() string {
 	return FormatIsnf(ssneqIsn, "%s %s %#v", pred.MetaPredicate.key, ssneqToken, val)
 }
 
-func (pred *SSNEQPredicate) Eval(input DataMap) bool {
+func (pred *SSNEQPredicate) Eval(input Filterable) bool {
 	lhs, rhs, ok := pred.MetaPredicate.GetStringValues(input)
 
 	return ok && lhs != rhs

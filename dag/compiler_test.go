@@ -221,7 +221,7 @@ func (obj *MockActions) logAction(params ActionParams) (afn ActionFn, err error)
 	}
 
 	err = nil
-	afn = func(ctx context.Context, input DataMap) {
+	afn = func(ctx context.Context, input Filterable) {
 		log.Printf("LOG ACTION: Run with: %#v\n", input)
 
 		lgr := logger.MustGetLogger(ctx)
@@ -307,7 +307,8 @@ func TestCompiler(t *testing.T) {
 	t.Run("Warm alert", func(t *testing.T) {
 		mact.hasRunLog = false
 
-		compiler.Evaluate(WarmWeather)
+		input := NewDataInputFromMap(WarmWeather)
+		compiler.Evaluate(input)
 
 		if !mact.hasRunLog {
 			t.Error("Warm alert was not triggered.")
@@ -317,7 +318,8 @@ func TestCompiler(t *testing.T) {
 	t.Run("Cold alert", func(t *testing.T) {
 		mact.hasRunLog = false
 
-		compiler.Evaluate(ColdWeather)
+		input := NewDataInputFromMap(ColdWeather)
+		compiler.Evaluate(input)
 
 		if !mact.hasRunLog {
 			t.Error("Cold alert was not triggered.")
@@ -327,7 +329,8 @@ func TestCompiler(t *testing.T) {
 	t.Run("No alert", func(t *testing.T) {
 		mact.hasRunLog = false
 
-		compiler.Evaluate(NormalWeather)
+		input := NewDataInputFromMap(NormalWeather)
+		compiler.Evaluate(input)
 
 		if mact.hasRunLog {
 			t.Error("Unexpected alert(s) triggered!")

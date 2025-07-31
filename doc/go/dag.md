@@ -40,7 +40,7 @@ func FormatIsnf(isn, message string, rest ...any) string
 #### type ActionFn
 
 ```go
-type ActionFn func(context.Context, DataMap)
+type ActionFn func(context.Context, Filterable)
 ```
 
 Action function callback type.
@@ -89,7 +89,7 @@ Action builder interface.
 The action builder provides a means of compiling JSON or YAML actions into
 explicit function objects
 
-The resulting action is a function that takes `context.Context` and `DataMap`
+The resulting action is a function that takes `context.Context` and `Filterable`
 arguments and then performs some sort of user-defined action.
 
 There are two default builtins provided for you:
@@ -112,7 +112,7 @@ func NewDefaultActions() Actions
 type Compiler interface {
 	CompileAction(ActionSpec) (ActionFn, error)
 	Compile([]RuleSpec) []error
-	Evaluate(DataMap)
+	Evaluate(Filterable)
 }
 ```
 
@@ -140,15 +140,44 @@ type ConditionSpec struct {
 
 Condition specification.
 
-#### type DataMap
+#### type DataInput
 
 ```go
-type DataMap map[string]any
+type DataInput struct {
+}
 ```
 
-Base data type.
 
-This is a map of key/value pairs.
+#### func  NewDataInput
+
+```go
+func NewDataInput() *DataInput
+```
+
+#### func  NewDataInputFromMap
+
+```go
+func NewDataInputFromMap(input map[string]any) *DataInput
+```
+Create a new `DataInput` object with a copy of the provided input map.
+
+#### func (*DataInput) Get
+
+```go
+func (input *DataInput) Get(key string) (any, bool)
+```
+
+#### func (*DataInput) Keys
+
+```go
+func (input *DataInput) Keys() []string
+```
+
+#### func (*DataInput) Set
+
+```go
+func (input *DataInput) Set(key string, value any) bool
+```
 
 #### type EIRBuilder
 
@@ -181,7 +210,7 @@ type EIRPredicate struct {
 #### func (*EIRPredicate) Eval
 
 ```go
-func (pred *EIRPredicate) Eval(input DataMap) bool
+func (pred *EIRPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*EIRPredicate) String
@@ -221,7 +250,7 @@ type EQPredicate struct {
 #### func (*EQPredicate) Eval
 
 ```go
-func (pred *EQPredicate) Eval(input DataMap) bool
+func (pred *EQPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*EQPredicate) String
@@ -229,6 +258,38 @@ func (pred *EQPredicate) Eval(input DataMap) bool
 ```go
 func (pred *EQPredicate) String() string
 ```
+
+#### type Filterable
+
+```go
+type Filterable interface {
+	// Get the given key from the filterable entity.
+	//
+	// If the key exists, it is returned along with `true`.
+	//
+	// If the key does not exist, `false` returned.
+	Get(string) (any, bool)
+
+	// Set the given key to the given value.
+	//
+	// The graph engine should not add new entries, so if an attempt is
+	// made to do so, then `false` is returned and nothing happens.
+	Set(string, any) bool
+
+	// Get a list of keys from the filterable entity.
+	Keys() []string
+}
+```
+
+Filterable interface.
+
+This interface allows objects to be used with the direct acyclig graph as input.
+
+A 'filterable' entity provides a means of getting at its field contents so the
+DAG can look them up.
+
+A decision was made to avoid `reflect` as the DAG might be in a hot path where
+reflection adds too big a performance hit.
 
 #### type GTBuilder
 
@@ -280,7 +341,7 @@ type GTEPredicate struct {
 #### func (*GTEPredicate) Eval
 
 ```go
-func (pred *GTEPredicate) Eval(input DataMap) bool
+func (pred *GTEPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*GTEPredicate) String
@@ -301,7 +362,7 @@ type GTPredicate struct {
 #### func (*GTPredicate) Eval
 
 ```go
-func (pred *GTPredicate) Eval(input DataMap) bool
+func (pred *GTPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*GTPredicate) String
@@ -341,7 +402,7 @@ type IIRPredicate struct {
 #### func (*IIRPredicate) Eval
 
 ```go
-func (pred *IIRPredicate) Eval(input DataMap) bool
+func (pred *IIRPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*IIRPredicate) String
@@ -400,7 +461,7 @@ type LTEPredicate struct {
 #### func (*LTEPredicate) Eval
 
 ```go
-func (pred *LTEPredicate) Eval(input DataMap) bool
+func (pred *LTEPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*LTEPredicate) String
@@ -421,7 +482,7 @@ type LTPredicate struct {
 #### func (*LTPredicate) Eval
 
 ```go
-func (pred *LTPredicate) Eval(input DataMap) bool
+func (pred *LTPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*LTPredicate) String
@@ -441,31 +502,31 @@ type MetaPredicate struct {
 #### func (*MetaPredicate) EvalExclusiveRange
 
 ```go
-func (meta *MetaPredicate) EvalExclusiveRange(input DataMap) bool
+func (meta *MetaPredicate) EvalExclusiveRange(input Filterable) bool
 ```
 
 #### func (*MetaPredicate) EvalInclusiveRange
 
 ```go
-func (meta *MetaPredicate) EvalInclusiveRange(input DataMap) bool
+func (meta *MetaPredicate) EvalInclusiveRange(input Filterable) bool
 ```
 
 #### func (*MetaPredicate) EvalStringMember
 
 ```go
-func (meta *MetaPredicate) EvalStringMember(input DataMap, insens bool) bool
+func (meta *MetaPredicate) EvalStringMember(input Filterable, insens bool) bool
 ```
 
 #### func (*MetaPredicate) GetFloatValueFromInput
 
 ```go
-func (meta *MetaPredicate) GetFloatValueFromInput(input DataMap) (float64, bool)
+func (meta *MetaPredicate) GetFloatValueFromInput(input Filterable) (float64, bool)
 ```
 
 #### func (*MetaPredicate) GetFloatValues
 
 ```go
-func (meta *MetaPredicate) GetFloatValues(input DataMap) (float64, float64, bool)
+func (meta *MetaPredicate) GetFloatValues(input Filterable) (float64, float64, bool)
 ```
 
 #### func (*MetaPredicate) GetPredicateFloatArray
@@ -483,7 +544,7 @@ func (meta *MetaPredicate) GetPredicateStringArray() ([]string, bool)
 #### func (*MetaPredicate) GetStringValues
 
 ```go
-func (meta *MetaPredicate) GetStringValues(input DataMap) (string, string, bool)
+func (meta *MetaPredicate) GetStringValues(input Filterable) (string, string, bool)
 ```
 
 #### type NEQBuilder
@@ -517,7 +578,7 @@ type NEQPredicate struct {
 #### func (*NEQPredicate) Eval
 
 ```go
-func (pred *NEQPredicate) Eval(input DataMap) bool
+func (pred *NEQPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*NEQPredicate) String
@@ -536,7 +597,7 @@ type NOOPPredicate struct{}
 #### func (*NOOPPredicate) Eval
 
 ```go
-func (pred *NOOPPredicate) Eval(_ DataMap) bool
+func (pred *NOOPPredicate) Eval(_ Filterable) bool
 ```
 
 #### func (*NOOPPredicate) String
@@ -549,7 +610,7 @@ func (pred *NOOPPredicate) String() string
 
 ```go
 type Predicate interface {
-	Eval(DataMap) bool
+	Eval(Filterable) bool
 	String() string
 }
 ```
@@ -620,7 +681,7 @@ type REIMPredicate struct {
 #### func (*REIMPredicate) Eval
 
 ```go
-func (pred *REIMPredicate) Eval(input DataMap) bool
+func (pred *REIMPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*REIMPredicate) String
@@ -660,7 +721,7 @@ type RESMPredicate struct {
 #### func (*RESMPredicate) Eval
 
 ```go
-func (pred *RESMPredicate) Eval(input DataMap) bool
+func (pred *RESMPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*RESMPredicate) String
@@ -744,7 +805,7 @@ type SIEQPredicate struct {
 #### func (*SIEQPredicate) Eval
 
 ```go
-func (pred *SIEQPredicate) Eval(input DataMap) bool
+func (pred *SIEQPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*SIEQPredicate) String
@@ -784,7 +845,7 @@ type SIMPredicate struct {
 #### func (*SIMPredicate) Eval
 
 ```go
-func (pred *SIMPredicate) Eval(input DataMap) bool
+func (pred *SIMPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*SIMPredicate) String
@@ -824,7 +885,7 @@ type SINEQPredicate struct {
 #### func (*SINEQPredicate) Eval
 
 ```go
-func (pred *SINEQPredicate) Eval(input DataMap) bool
+func (pred *SINEQPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*SINEQPredicate) String
@@ -864,7 +925,7 @@ type SSEQPredicate struct {
 #### func (*SSEQPredicate) Eval
 
 ```go
-func (pred *SSEQPredicate) Eval(input DataMap) bool
+func (pred *SSEQPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*SSEQPredicate) String
@@ -904,7 +965,7 @@ type SSMPredicate struct {
 #### func (*SSMPredicate) Eval
 
 ```go
-func (pred *SSMPredicate) Eval(input DataMap) bool
+func (pred *SSMPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*SSMPredicate) String
@@ -944,7 +1005,7 @@ type SSNEQPredicate struct {
 #### func (*SSNEQPredicate) Eval
 
 ```go
-func (pred *SSNEQPredicate) Eval(input DataMap) bool
+func (pred *SSNEQPredicate) Eval(input Filterable) bool
 ```
 
 #### func (*SSNEQPredicate) String

@@ -63,7 +63,7 @@ func (pred *LTPredicate) String() string {
 	return FormatIsnf(ltIsn, "%s %s %g", pred.MetaPredicate.key, ltToken, val)
 }
 
-func (pred *LTPredicate) Eval(input DataMap) bool {
+func (pred *LTPredicate) Eval(input Filterable) bool {
 	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
 
 	return ok && lhs < rhs

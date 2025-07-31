@@ -83,7 +83,7 @@ func (pred *REIMPredicate) compilePattern(pattern string) {
 	})
 }
 
-func (pred *REIMPredicate) Eval(input DataMap) bool {
+func (pred *REIMPredicate) Eval(input Filterable) bool {
 	data, pattern, ok := pred.MetaPredicate.GetStringValues(input)
 	if !ok {
 		return false

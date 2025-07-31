@@ -63,7 +63,7 @@ func (pred *SIEQPredicate) String() string {
 	return FormatIsnf(sieqIsn, "%s %s %#v", pred.MetaPredicate.key, sieqToken, val)
 }
 
-func (pred *SIEQPredicate) Eval(input DataMap) bool {
+func (pred *SIEQPredicate) Eval(input Filterable) bool {
 	lhs, rhs, ok := pred.MetaPredicate.GetStringValues(input)
 
 	return ok && strings.EqualFold(lhs, rhs)

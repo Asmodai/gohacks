@@ -48,7 +48,7 @@ func TestSSNEQPredicate(t *testing.T) {
 		bad   = "good string"
 	)
 
-	input := DataMap{"String": value}
+	input := NewDataInputFromMap(map[string]any{"String": value})
 	builder := &SSNEQBuilder{}
 	pred1 := builder.Build("String", good)
 	pred2 := builder.Build("String", bad)

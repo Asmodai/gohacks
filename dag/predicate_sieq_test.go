@@ -48,7 +48,7 @@ func TestSIEQPredicate(t *testing.T) {
 		bad   = "Bad string"
 	)
 
-	input := DataMap{"String": value}
+	input := NewDataInputFromMap(map[string]any{"String": value})
 	builder := &SIEQBuilder{}
 	pred1 := builder.Build("String", good)
 	pred2 := builder.Build("String", bad)

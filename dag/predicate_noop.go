@@ -49,7 +49,7 @@ const (
 
 type NOOPPredicate struct{}
 
-func (pred *NOOPPredicate) String() string      { return FormatIsnf(noopIsn, "noop") }
-func (pred *NOOPPredicate) Eval(_ DataMap) bool { return true }
+func (pred *NOOPPredicate) String() string         { return FormatIsnf(noopIsn, "noop") }
+func (pred *NOOPPredicate) Eval(_ Filterable) bool { return true }
 
 // * predicate_noop.go ends here.

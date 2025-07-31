@@ -48,7 +48,7 @@ func TestGTEPredicate(t *testing.T) {
 		bad   int = 50
 	)
 
-	input := DataMap{"Numeric": value}
+	input := NewDataInputFromMap(map[string]any{"Numeric": value})
 	builder := &GTEBuilder{}
 	pred1 := builder.Build("Numeric", good)
 	pred2 := builder.Build("Numeric", bad)

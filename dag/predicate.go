@@ -60,7 +60,7 @@ const (
 // ** Interface:
 
 type Predicate interface {
-	Eval(DataMap) bool
+	Eval(Filterable) bool
 	String() string
 }
 
@@ -80,15 +80,16 @@ type MetaPredicate struct {
 	val any
 }
 
-func (meta *MetaPredicate) GetFloatValueFromInput(input DataMap) (float64, bool) {
-	data, dataOk := input[meta.key]
+func (meta *MetaPredicate) GetFloatValueFromInput(input Filterable) (float64, bool) {
+	data, dataOk := input.Get(meta.key)
+
 	val, valOk := conversion.ToFloat64(data)
 
 	return val, dataOk && valOk
 }
 
-func (meta *MetaPredicate) GetFloatValues(input DataMap) (float64, float64, bool) {
-	data, dataOk := input[meta.key]
+func (meta *MetaPredicate) GetFloatValues(input Filterable) (float64, float64, bool) {
+	data, dataOk := input.Get(meta.key)
 
 	lhs, lhsOk := conversion.ToFloat64(data)
 	rhs, rhsOk := conversion.ToFloat64(meta.val)
@@ -96,8 +97,8 @@ func (meta *MetaPredicate) GetFloatValues(input DataMap) (float64, float64, bool
 	return lhs, rhs, dataOk && lhsOk && rhsOk
 }
 
-func (meta *MetaPredicate) GetStringValues(input DataMap) (string, string, bool) {
-	data, dataOk := input[meta.key]
+func (meta *MetaPredicate) GetStringValues(input Filterable) (string, string, bool) {
+	data, dataOk := input.Get(meta.key)
 
 	lhs, lhsOk := conversion.ToString(data)
 	rhs, rhsOk := conversion.ToString(meta.val)
@@ -113,7 +114,7 @@ func (meta *MetaPredicate) GetPredicateStringArray() ([]string, bool) {
 	return conversion.AnyArrayToStringArray(meta.val)
 }
 
-func (meta *MetaPredicate) EvalExclusiveRange(input DataMap) bool {
+func (meta *MetaPredicate) EvalExclusiveRange(input Filterable) bool {
 	array, arrayOk := meta.GetPredicateFloatArray()
 	val, valOk := meta.GetFloatValueFromInput(input)
 
@@ -133,7 +134,7 @@ func (meta *MetaPredicate) EvalExclusiveRange(input DataMap) bool {
 }
 
 //nolint:mnd
-func (meta *MetaPredicate) EvalInclusiveRange(input DataMap) bool {
+func (meta *MetaPredicate) EvalInclusiveRange(input Filterable) bool {
 	array, arrayOk := meta.GetPredicateFloatArray()
 	val, valOk := meta.GetFloatValueFromInput(input)
 
@@ -152,8 +153,8 @@ func (meta *MetaPredicate) EvalInclusiveRange(input DataMap) bool {
 	return (first <= val) && (val <= second)
 }
 
-func (meta *MetaPredicate) EvalStringMember(input DataMap, insens bool) bool {
-	valueRaw, okay := input[meta.key]
+func (meta *MetaPredicate) EvalStringMember(input Filterable, insens bool) bool {
+	valueRaw, okay := input.Get(meta.key)
 	if !okay {
 		return false
 	}

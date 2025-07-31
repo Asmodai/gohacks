@@ -41,7 +41,7 @@ func (m *MockPredicate) EXPECT() *MockPredicateMockRecorder {
 }
 
 // Eval mocks base method.
-func (m *MockPredicate) Eval(arg0 dag.DataMap) bool {
+func (m *MockPredicate) Eval(arg0 dag.Filterable) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Eval", arg0)
 	ret0, _ := ret[0].(bool)

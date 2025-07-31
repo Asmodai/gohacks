@@ -52,7 +52,7 @@ func TestIIRPredicate(t *testing.T) {
 		good         int   = 4
 	)
 
-	input := DataMap{"Range": good}
+	input := NewDataInputFromMap(map[string]any{"Range": good})
 	builder := &IIRBuilder{}
 	pred1 := builder.Build("Range", goodHaystack)
 	pred2 := builder.Build("Range", badHaystack)

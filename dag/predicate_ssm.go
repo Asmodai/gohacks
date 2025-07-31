@@ -63,7 +63,7 @@ func (pred *SSMPredicate) String() string {
 		val)
 }
 
-func (pred *SSMPredicate) Eval(input DataMap) bool {
+func (pred *SSMPredicate) Eval(input Filterable) bool {
 	return pred.MetaPredicate.EvalStringMember(input, false)
 }
 
