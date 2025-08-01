@@ -82,6 +82,18 @@ func TiBToB(b uint64) uint64
 ```
 Convert tebibytes to bytes.
 
+#### func  ToBool
+
+```go
+func ToBool(value any) (bool, bool)
+```
+
+#### func  ToComplex128
+
+```go
+func ToComplex128(value any) (complex128, bool)
+```
+
 #### func  ToFloat64
 
 ```go
@@ -89,12 +101,24 @@ func ToFloat64(val any) (float64, bool)
 ```
 Convert a value to a 64-bit floating-point value.
 
+#### func  ToInt64
+
+```go
+func ToInt64(value any) (int64, bool)
+```
+
 #### func  ToString
 
 ```go
 func ToString(value any) (string, bool)
 ```
 Convert a value to a string.
+
+#### func  ToUint64
+
+```go
+func ToUint64(value any) (uint64, bool)
+```
 
 #### type Number
 

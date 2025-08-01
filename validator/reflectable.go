@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float.go --- Floating-point conversion functions.
+// reflectable.go --- `Reflectable` interface.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,61 +31,46 @@
 
 // * Comments:
 
+//
+//
+//
+
 // * Package:
 
-package conversion
+package validator
+
+// * Imports:
+
+import "reflect"
 
 // * Code:
 
-func ToComplex128(value any) (complex128, bool) {
-	switch val := value.(type) {
-	case complex64:
-		return complex128(val), true
-
-	case complex128:
-		return val, true
-
-	default:
-		return 0, false
-	}
+type Reflectable interface {
+	// Return the reflected type for a given object.
+	//
+	// An example of how this could work is:
+	//
+	// ```go
+	//     var (
+	//         typeForYourStruct reflect.Type
+	//         onceForYourStruct sync.Once
+	//     )
+	//
+	//     type YourStruct struct {
+	//         // ...
+	//     }
+	//
+	//     func (ys *YourStruct) ReflectType() reflect.Type {
+	//         onceForYourStruct.Do(func() {
+	//             typeForYourStruct = reflect.TypeOf(ys).Elem()
+	//         })
+	//
+	//         return typeForYourStruct
+	//     }
+	// ```
+	//
+	// You might need to do things differently for non-pointer types.
+	ReflectType() reflect.Type
 }
 
-// Convert a value to a 64-bit floating-point value.
-//
-//nolint:cyclop,varnamelen
-func ToFloat64(val any) (float64, bool) {
-	switch v := val.(type) {
-	case float64:
-		return v, true
-
-	case float32:
-		return float64(v), true
-
-	case int:
-		return float64(v), true
-	case int8:
-		return float64(v), true
-	case int16:
-		return float64(v), true
-	case int32:
-		return float64(v), true
-	case int64:
-		return float64(v), true
-
-	case uint:
-		return float64(v), true
-	case uint8:
-		return float64(v), true
-	case uint16:
-		return float64(v), true
-	case uint32:
-		return float64(v), true
-	case uint64:
-		return float64(v), true
-
-	default:
-		return 0, false
-	}
-}
-
-// * float.go ends here.
+// * reflectable.go ends here.

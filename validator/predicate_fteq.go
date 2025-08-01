@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float.go --- Floating-point conversion functions.
+// predicate_fteq.go --- FTEQ - Field Type Equals.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,59 +33,69 @@
 
 // * Package:
 
-package conversion
+package validator
+
+// * Imports:
+
+import (
+	"strings"
+
+	"github.com/Asmodai/gohacks/dag"
+)
+
+// * Constants:
+
+const (
+	fteqIsn   = "FTEQ"
+	fteqToken = "field-type-equal"
+)
 
 // * Code:
 
-func ToComplex128(value any) (complex128, bool) {
-	switch val := value.(type) {
-	case complex64:
-		return complex128(val), true
+// ** Predicate:
 
-	case complex128:
-		return val, true
+type FTEQPredicate struct {
+	MetaPredicate
+}
 
-	default:
-		return 0, false
+func (pred *FTEQPredicate) String() string {
+	val, ok := pred.MetaPredicate.GetValueAsString()
+	if !ok {
+		return dag.FormatIsnf(fteqIsn, invalidTokenString)
+	}
+
+	return dag.FormatIsnf(
+		fteqIsn,
+		"%q %s %q",
+		pred.MetaPredicate.key,
+		fteqToken,
+		val,
+	)
+}
+
+func (pred *FTEQPredicate) Eval(input dag.Filterable) bool {
+	want, wantOk := pred.MetaPredicate.GetValueAsString()
+	fInfo, fInfoOk := pred.MetaPredicate.GetKeyAsFieldInfo(input)
+
+	if !(wantOk && fInfoOk) {
+		return false
+	}
+
+	return strings.EqualFold(want, fInfo.TypeName)
+}
+
+// ** Builder:
+
+type FTEQBuilder struct{}
+
+func (bld *FTEQBuilder) Token() string {
+	return fteqToken
+}
+
+func (bld *FTEQBuilder) Build(key string, val any) dag.Predicate {
+	return &FTEQPredicate{
+		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
 }
 
-// Convert a value to a 64-bit floating-point value.
-//
-//nolint:cyclop,varnamelen
-func ToFloat64(val any) (float64, bool) {
-	switch v := val.(type) {
-	case float64:
-		return v, true
-
-	case float32:
-		return float64(v), true
-
-	case int:
-		return float64(v), true
-	case int8:
-		return float64(v), true
-	case int16:
-		return float64(v), true
-	case int32:
-		return float64(v), true
-	case int64:
-		return float64(v), true
-
-	case uint:
-		return float64(v), true
-	case uint8:
-		return float64(v), true
-	case uint16:
-		return float64(v), true
-	case uint32:
-		return float64(v), true
-	case uint64:
-		return float64(v), true
-
-	default:
-		return 0, false
-	}
-}
-
-// * float.go ends here.
+// * predicate_fteq.go ends here.

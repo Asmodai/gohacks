@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float.go --- Floating-point conversion functions.
+// bound.go --- Bound objects.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,59 +33,57 @@
 
 // * Package:
 
-package conversion
+package validator
+
+// * Imports:
+
+// * Constants:
+
+// * Variables:
 
 // * Code:
 
-func ToComplex128(value any) (complex128, bool) {
-	switch val := value.(type) {
-	case complex64:
-		return complex128(val), true
+// ** Types:
 
-	case complex128:
-		return val, true
-
-	default:
-		return 0, false
-	}
+type BoundObject struct {
+	Descriptor *StructDescriptor
+	Binding    any
 }
 
-// Convert a value to a 64-bit floating-point value.
+// Get the value for the given key from the bound object.
 //
-//nolint:cyclop,varnamelen
-func ToFloat64(val any) (float64, bool) {
-	switch v := val.(type) {
-	case float64:
-		return v, true
-
-	case float32:
-		return float64(v), true
-
-	case int:
-		return float64(v), true
-	case int8:
-		return float64(v), true
-	case int16:
-		return float64(v), true
-	case int32:
-		return float64(v), true
-	case int64:
-		return float64(v), true
-
-	case uint:
-		return float64(v), true
-	case uint8:
-		return float64(v), true
-	case uint16:
-		return float64(v), true
-	case uint32:
-		return float64(v), true
-	case uint64:
-		return float64(v), true
-
-	default:
-		return 0, false
+// This works by using the accessor obtained via reflection during the
+// predicate building phase.
+func (bo *BoundObject) GetValue(key string) (any, bool) {
+	field, ok := bo.Descriptor.Get(key)
+	if !ok {
+		return nil, false
 	}
+
+	finfo, finfoOk := field.(*FieldInfo)
+	if !finfoOk {
+		return nil, false
+	}
+
+	val := finfo.Accessor(bo.Binding)
+
+	return val, true
 }
 
-// * float.go ends here.
+func (bo *BoundObject) Get(key string) (any, bool) {
+	return bo.Descriptor.Get(key)
+}
+
+func (bo *BoundObject) Set(_ string, _ any) bool {
+	return false
+}
+
+func (bo *BoundObject) Keys() []string {
+	return bo.Descriptor.Keys()
+}
+
+func (bo *BoundObject) String() string {
+	return bo.Descriptor.String()
+}
+
+// * bound.go ends here.

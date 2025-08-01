@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float.go --- Floating-point conversion functions.
+// integer.go --- Integer conversions.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -35,57 +35,104 @@
 
 package conversion
 
+import "math"
+
+// * Imports:
+
+// * Constants:
+
+// * Variables:
+
 // * Code:
 
-func ToComplex128(value any) (complex128, bool) {
-	switch val := value.(type) {
-	case complex64:
-		return complex128(val), true
+func safeInt64ToUint64(val int64) (uint64, bool) {
+	if val < 0 {
+		return 0, false
+	}
 
-	case complex128:
+	return uint64(val), true
+}
+
+func safeUint64ToInt64(val uint64) (int64, bool) {
+	if val > math.MaxInt64 {
+		return 0, false
+	}
+
+	return int64(val), true
+}
+
+//nolint:cyclop
+func ToInt64(value any) (int64, bool) {
+	switch val := value.(type) {
+	case int:
+		return int64(val), true
+	case int8:
+		return int64(val), true
+	case int16:
+		return int64(val), true
+	case int32:
+		return int64(val), true
+	case int64:
 		return val, true
 
+	case uint:
+		return safeUint64ToInt64(uint64(val))
+	case uint8:
+		return safeUint64ToInt64(uint64(val))
+	case uint16:
+		return safeUint64ToInt64(uint64(val))
+	case uint32:
+		return safeUint64ToInt64(uint64(val))
+	case uint64:
+		return safeUint64ToInt64(val)
+
+	case bool:
+		if val {
+			return 1, true
+		}
+
+		return 0, true
+
 	default:
 		return 0, false
 	}
 }
 
-// Convert a value to a 64-bit floating-point value.
-//
-//nolint:cyclop,varnamelen
-func ToFloat64(val any) (float64, bool) {
-	switch v := val.(type) {
-	case float64:
-		return v, true
-
-	case float32:
-		return float64(v), true
-
+//nolint:cyclop
+func ToUint64(value any) (uint64, bool) {
+	switch val := value.(type) {
 	case int:
-		return float64(v), true
+		return safeInt64ToUint64(int64(val))
 	case int8:
-		return float64(v), true
+		return safeInt64ToUint64(int64(val))
 	case int16:
-		return float64(v), true
+		return safeInt64ToUint64(int64(val))
 	case int32:
-		return float64(v), true
+		return safeInt64ToUint64(int64(val))
 	case int64:
-		return float64(v), true
+		return safeInt64ToUint64(val)
 
 	case uint:
-		return float64(v), true
+		return uint64(val), true
 	case uint8:
-		return float64(v), true
+		return uint64(val), true
 	case uint16:
-		return float64(v), true
+		return uint64(val), true
 	case uint32:
-		return float64(v), true
+		return uint64(val), true
 	case uint64:
-		return float64(v), true
+		return val, true
+
+	case bool:
+		if val {
+			return 1, true
+		}
+
+		return 0, true
 
 	default:
 		return 0, false
 	}
 }
 
-// * float.go ends here.
+// * integer.go ends here.

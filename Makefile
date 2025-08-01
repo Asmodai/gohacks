@@ -73,7 +73,8 @@ MODULES = amqp            \
 	  sysinfo         \
 	  timedcache      \
 	  types           \
-	  utils
+	  utils           \
+	  validator
 
 # Binaries.
 PROTOC          ?= protoc

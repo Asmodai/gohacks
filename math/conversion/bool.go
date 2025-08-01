@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float.go --- Floating-point conversion functions.
+// bool.go --- Boolean conversion.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -35,57 +35,89 @@
 
 package conversion
 
+import "strings"
+
+// * Imports:
+
 // * Code:
 
-func ToComplex128(value any) (complex128, bool) {
-	switch val := value.(type) {
-	case complex64:
-		return complex128(val), true
+func booliseInt64(value int64) (bool, bool) {
+	if value == 0 {
+		return false, true
+	} else if value == 1 {
+		return true, true
+	}
 
-	case complex128:
+	return false, false
+}
+
+func booliseUint64(value uint64) (bool, bool) {
+	if value == 0 {
+		return false, true
+	} else if value == 1 {
+		return true, true
+	}
+
+	return false, false
+}
+
+func booliseFloat64(value float64) (bool, bool) {
+	if value == 0 {
+		return false, true
+	} else if value == 1 {
+		return true, true
+	}
+
+	return false, false
+}
+
+//nolint:cyclop
+func ToBool(value any) (bool, bool) {
+	switch val := value.(type) {
+	case bool:
 		return val, true
 
-	default:
-		return 0, false
-	}
-}
-
-// Convert a value to a 64-bit floating-point value.
-//
-//nolint:cyclop,varnamelen
-func ToFloat64(val any) (float64, bool) {
-	switch v := val.(type) {
-	case float64:
-		return v, true
-
-	case float32:
-		return float64(v), true
-
 	case int:
-		return float64(v), true
+		return booliseInt64(int64(val))
 	case int8:
-		return float64(v), true
+		return booliseInt64(int64(val))
 	case int16:
-		return float64(v), true
+		return booliseInt64(int64(val))
 	case int32:
-		return float64(v), true
+		return booliseInt64(int64(val))
 	case int64:
-		return float64(v), true
+		return booliseInt64(val)
 
 	case uint:
-		return float64(v), true
+		return booliseUint64(uint64(val))
 	case uint8:
-		return float64(v), true
+		return booliseUint64(uint64(val))
 	case uint16:
-		return float64(v), true
+		return booliseUint64(uint64(val))
 	case uint32:
-		return float64(v), true
+		return booliseUint64(uint64(val))
 	case uint64:
-		return float64(v), true
+		return booliseUint64(val)
+
+	case float32:
+		return booliseFloat64(float64(val))
+
+	case float64:
+		return booliseFloat64(val)
+
+	case string:
+		lower := strings.ToLower(val)
+		if lower == "true" || lower == "yes" {
+			return true, true
+		} else if lower == "false" || lower == "no" {
+			return false, true
+		}
+
+		return false, false
 
 	default:
-		return 0, false
+		return false, false
 	}
 }
 
-// * float.go ends here.
+// * bool.go ends here.

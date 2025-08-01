@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float_test.go --- Floating-point conversion tests.
+// bool_test.go --- Boolean conversion tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -45,36 +45,39 @@ import (
 
 // ** Types:
 
-type expectedFloat64 struct {
+type expectedBool struct {
 	name string
 	val  any
-	want float64
+	want bool
 }
 
 // ** Tests:
 
-func TestToFloat64(t *testing.T) {
-	want := []expectedFloat64{
-		expectedFloat64{"float64", float64(42.0), float64(42.0)},
-		expectedFloat64{"float32", float32(42.0), float64(42.0)},
-		expectedFloat64{"int", int(42), float64(42.0)},
-		expectedFloat64{"int8", int8(42), float64(42.0)},
-		expectedFloat64{"int16", int16(42), float64(42.0)},
-		expectedFloat64{"int32", int32(42), float64(42.0)},
-		expectedFloat64{"int64", int64(42), float64(42.0)},
-		expectedFloat64{"uint", uint(42), float64(42.0)},
-		expectedFloat64{"uint8", uint8(42), float64(42.0)},
-		expectedFloat64{"uint16", uint16(42), float64(42.0)},
-		expectedFloat64{"uint32", uint32(42), float64(42.0)},
-		expectedFloat64{"uint64", uint64(42), float64(42.0)},
+func TestToBool(t *testing.T) {
+	want := []expectedBool{
+		expectedBool{"bool", true, true},
+		expectedBool{"float64", float64(1), true},
+		expectedBool{"float32", float32(0), false},
+		expectedBool{"int", int(1), true},
+		expectedBool{"int8", int8(0), false},
+		expectedBool{"int16", int16(1), true},
+		expectedBool{"int32", int32(0), false},
+		expectedBool{"int64", int64(1), true},
+		expectedBool{"uint", uint(0), false},
+		expectedBool{"uint8", uint8(1), true},
+		expectedBool{"uint16", uint16(0), false},
+		expectedBool{"uint32", uint32(1), true},
+		expectedBool{"uint64", uint64(0), false},
+		expectedBool{"string", "true", true},
+		expectedBool{"string", "no", false},
 	}
 
 	t.Run("Numeric types", func(t *testing.T) {
 		for idx := range want {
-			res, ok := ToFloat64(want[idx].val)
+			res, ok := ToBool(want[idx].val)
 
 			if !ok {
-				t.Fatalf("'%s' value not ok", want[idx].name)
+				t.Errorf("'%s' value not ok", want[idx].name)
 			}
 
 			if res != want[idx].want {
@@ -102,12 +105,12 @@ func TestToFloat64(t *testing.T) {
 
 // ** Benchmarks:
 
-func BenchmarkToFloat64(b *testing.B) {
+func BenchmarkToBool(b *testing.B) {
 	b.ReportAllocs()
 
 	for val := range b.N {
-		ToFloat64(val)
+		ToBool(val)
 	}
 }
 
-// * float_test.go ends here.
+// * bool_test.go ends here.

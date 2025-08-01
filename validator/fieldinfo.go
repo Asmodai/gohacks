@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float.go --- Floating-point conversion functions.
+// fieldinfo.go --- Field information.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,61 +31,69 @@
 
 // * Comments:
 
+//
+//
+//
+
 // * Package:
 
-package conversion
+package validator
+
+// * Imports:
+
+import (
+	"fmt"
+	"reflect"
+
+	"github.com/Asmodai/gohacks/debug"
+)
 
 // * Code:
 
-func ToComplex128(value any) (complex128, bool) {
-	switch val := value.(type) {
-	case complex64:
-		return complex128(val), true
+// ** Types:
 
-	case complex128:
-		return val, true
+type FieldAccessorFn func(any) any
 
-	default:
-		return 0, false
-	}
+type FieldInfo struct {
+	Name        string
+	Type        reflect.Type
+	TypeKind    reflect.Kind
+	TypeName    string
+	Accessor    FieldAccessorFn
+	Tags        reflect.StructTag
+	Kind        FieldKind
+	ElementType reflect.Type
+	ElementKind FieldKind
 }
 
-// Convert a value to a 64-bit floating-point value.
-//
-//nolint:cyclop,varnamelen
-func ToFloat64(val any) (float64, bool) {
-	switch v := val.(type) {
-	case float64:
-		return v, true
+// ** Methods:
 
-	case float32:
-		return float64(v), true
-
-	case int:
-		return float64(v), true
-	case int8:
-		return float64(v), true
-	case int16:
-		return float64(v), true
-	case int32:
-		return float64(v), true
-	case int64:
-		return float64(v), true
-
-	case uint:
-		return float64(v), true
-	case uint8:
-		return float64(v), true
-	case uint16:
-		return float64(v), true
-	case uint32:
-		return float64(v), true
-	case uint64:
-		return float64(v), true
-
-	default:
-		return 0, false
-	}
+func (fi *FieldInfo) String() string {
+	return fmt.Sprintf("%s:%s", fi.Name, fi.TypeName)
 }
 
-// * float.go ends here.
+func (fi *FieldInfo) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug(fi.Name)
+
+	dbg.Init(params...)
+	dbg.Printf("Name:         %s", fi.Name)
+	dbg.Printf("Kind:         %s", KindToString(fi.Kind))
+	dbg.Printf("Type:         %s", fi.TypeName)
+	dbg.Printf("Tags:         (%v)", fi.Tags)
+	dbg.Printf("")
+
+	if fi.ElementType != nil {
+		dbg.Printf("Element kind: %s", KindToString(fi.ElementKind))
+		dbg.Printf("Element type: %s", fi.ElementType.Name())
+	}
+
+	dbg.End()
+
+	dbg.Print()
+
+	return dbg
+}
+
+// ** Functions:
+
+// * fieldinfo.go ends here.
