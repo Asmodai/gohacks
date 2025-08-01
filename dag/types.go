@@ -69,6 +69,9 @@ type Filterable interface {
 
 	// Get a list of keys from the filterable entity.
 	Keys() []string
+
+	// Return a string representation.
+	String() string
 }
 
 // ** Concrete types:

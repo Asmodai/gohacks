@@ -66,7 +66,7 @@ func traverse(ctx context.Context, root *node, input Filterable, debug bool, log
 			logger.Debug(
 				"Eval failure",
 				"predicate", root.Predicate.String(),
-				"input", input,
+				"input", input.String(),
 			)
 		}
 
@@ -77,7 +77,7 @@ func traverse(ctx context.Context, root *node, input Filterable, debug bool, log
 		logger.Debug(
 			"Eval success",
 			"predicate", root.Predicate.String(),
-			"input", input,
+			"input", input.String(),
 		)
 	}
 

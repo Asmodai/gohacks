@@ -120,7 +120,17 @@ type Compiler interface {
 #### func  NewCompiler
 
 ```go
-func NewCompiler(ctx context.Context, builder Actions) Compiler
+func NewCompiler(ctx context.Context, build Actions) Compiler
+```
+
+#### func  NewCompilerWithPredicates
+
+```go
+func NewCompilerWithPredicates(
+	ctx context.Context,
+	builder Actions,
+	predicates PredicateDict,
+) Compiler
 ```
 
 #### type ConditionSpec
@@ -177,6 +187,12 @@ func (input *DataInput) Keys() []string
 
 ```go
 func (input *DataInput) Set(key string, value any) bool
+```
+
+#### func (*DataInput) String
+
+```go
+func (input *DataInput) String() string
 ```
 
 #### type EIRBuilder
@@ -278,6 +294,9 @@ type Filterable interface {
 
 	// Get a list of keys from the filterable entity.
 	Keys() []string
+
+	// Return a string representation.
+	String() string
 }
 ```
 

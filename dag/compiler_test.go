@@ -40,6 +40,7 @@ package dag
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 	"testing"
@@ -179,6 +180,47 @@ var (
 )
 
 // * Code:
+
+// ** Test structure:
+
+type BenchTest struct {
+	one int
+	two string
+}
+
+func (bt *BenchTest) Get(key string) (any, bool) {
+	switch key {
+	case "One":
+		return bt.one, true
+	case "Two":
+		return bt.two, true
+	default:
+		return nil, false
+	}
+}
+
+func (bt *BenchTest) Set(key string, val any) bool {
+	switch key {
+	case "One":
+		bt.one = val.(int)
+		return true
+
+	case "Two":
+		bt.two = val.(string)
+		return true
+
+	default:
+		return false
+	}
+}
+
+func (bt *BenchTest) Keys() []string {
+	return []string{"One", "Two"}
+}
+
+func (bt *BenchTest) String() string {
+	return fmt.Sprintf("One:%v  Two:%v", bt.one, bt.two)
+}
 
 // ** Mock actions:
 
@@ -373,6 +415,48 @@ func TestUtilities(t *testing.T) {
 		_, err := ParseFromJSON(rulesJSON)
 		if err != nil {
 			t.Fatalf("YAML: %#v", err)
+		}
+	})
+}
+
+// ** Benchmarks:
+
+func BenchmarkCompiler(b *testing.B) {
+	data := &BenchTest{one: 42, two: "Foo"}
+
+	mocker := gomock.NewController(b)
+	defer mocker.Finish()
+
+	lgr := mlogger.NewMockLogger(mocker)
+	ctx, err := logger.SetLogger(context.TODO(), lgr)
+	if err != nil {
+		b.Fatalf("Could not set logger DI: %#v", err)
+	}
+
+	rules, err := ParseFromYAML(rulesYAML)
+	if err != nil {
+		b.Fatalf("YAML: %#v", err)
+	}
+
+	mact := &MockActions{
+		hasRunLog: false,
+	}
+
+	compiler := NewCompiler(ctx, mact)
+
+	b.Run("Compile()", func(b *testing.B) {
+		b.ReportAllocs()
+
+		for range b.N {
+			compiler.Compile(rules)
+		}
+	})
+
+	b.Run("Evaluate()", func(b *testing.B) {
+		b.ReportAllocs()
+
+		for range b.N {
+			compiler.Evaluate(data)
 		}
 	})
 }

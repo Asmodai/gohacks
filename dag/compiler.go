@@ -118,7 +118,9 @@ func (cmplr *compiler) CompileAction(spec ActionSpec) (ActionFn, error) {
 }
 
 func (cmplr *compiler) initPredicates() {
-	cmplr.predicates = BuildPredicateDict()
+	if cmplr.predicates == nil {
+		cmplr.predicates = BuildPredicateDict()
+	}
 }
 
 // Compile a rule spec into a DAG graph.
@@ -230,7 +232,15 @@ func (cmplr *compiler) Evaluate(input Filterable) {
 
 // ** Functions:
 
-func NewCompiler(ctx context.Context, builder Actions) Compiler {
+func NewCompiler(ctx context.Context, build Actions) Compiler {
+	return NewCompilerWithPredicates(ctx, build, BuildPredicateDict())
+}
+
+func NewCompilerWithPredicates(
+	ctx context.Context,
+	builder Actions,
+	predicates PredicateDict,
+) Compiler {
 	lgr := logger.MustGetLogger(ctx)
 
 	dbg, err := contextdi.GetDebugMode(ctx)
@@ -239,12 +249,13 @@ func NewCompiler(ctx context.Context, builder Actions) Compiler {
 	}
 
 	return &compiler{
-		nodeCache: make(map[string]*node, initialNodeCacheSize),
-		actions:   make(map[string]ActionFn, initialActionsSize),
-		ctx:       ctx,
-		lgr:       lgr,
-		debugMode: dbg,
-		builder:   builder,
+		nodeCache:  make(map[string]*node, initialNodeCacheSize),
+		actions:    make(map[string]ActionFn, initialActionsSize),
+		ctx:        ctx,
+		lgr:        lgr,
+		debugMode:  dbg,
+		builder:    builder,
+		predicates: predicates,
 	}
 }
 

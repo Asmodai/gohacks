@@ -37,6 +37,8 @@ package dag
 
 // * Imports:
 
+import "fmt"
+
 // * Constants:
 
 // * Variables:
@@ -79,6 +81,10 @@ func (input *DataInput) Set(key string, value any) bool {
 	input.fields[key] = value
 
 	return true
+}
+
+func (input *DataInput) String() string {
+	return fmt.Sprintf("%v", input.fields)
 }
 
 // ** Functions
