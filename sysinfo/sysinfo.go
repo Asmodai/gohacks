@@ -44,7 +44,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Asmodai/gohacks/math/conversion"
+	"github.com/Asmodai/gohacks/conversion"
 )
 
 // * Code:

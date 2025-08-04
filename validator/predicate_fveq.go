@@ -177,10 +177,12 @@ func (bld *FVEQBuilder) Token() string {
 	return fveqToken
 }
 
-func (bld *FVEQBuilder) Build(key string, val any) dag.Predicate {
-	return &FVEQPredicate{
+func (bld *FVEQBuilder) Build(key string, val any) (dag.Predicate, error) {
+	pred := &FVEQPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // ** Functions:

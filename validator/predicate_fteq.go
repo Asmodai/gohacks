@@ -208,10 +208,12 @@ func (bld *FTEQBuilder) Token() string {
 	return fteqToken
 }
 
-func (bld *FTEQBuilder) Build(key string, val any) dag.Predicate {
-	return &FTEQPredicate{
+func (bld *FTEQBuilder) Build(key string, val any) (dag.Predicate, error) {
+	pred := &FTEQPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_fteq.go ends here.

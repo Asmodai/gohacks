@@ -77,10 +77,12 @@ func (bld *SINEQBuilder) Token() string {
 	return sineqToken
 }
 
-func (bld *SINEQBuilder) Build(key string, val any) Predicate {
-	return &SINEQPredicate{
+func (bld *SINEQBuilder) Build(key string, val any) (Predicate, error) {
+	pred := &SINEQPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_sineq.go ends here.

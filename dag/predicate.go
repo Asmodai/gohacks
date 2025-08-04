@@ -43,7 +43,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Asmodai/gohacks/math/conversion"
+	"github.com/Asmodai/gohacks/conversion"
 	"github.com/Asmodai/gohacks/utils"
 )
 
@@ -66,7 +66,7 @@ type Predicate interface {
 
 type PredicateBuilder interface {
 	Token() string
-	Build(string, any) Predicate
+	Build(string, any) (Predicate, error)
 }
 
 // ** Types:

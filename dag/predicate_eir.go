@@ -71,10 +71,12 @@ func (bld *EIRBuilder) Token() string {
 	return eirToken
 }
 
-func (bld *EIRBuilder) Build(key string, val any) Predicate {
-	return &EIRPredicate{
+func (bld *EIRBuilder) Build(key string, val any) (Predicate, error) {
+	pred := &EIRPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_eir.go ends here.

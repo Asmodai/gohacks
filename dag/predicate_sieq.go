@@ -77,10 +77,12 @@ func (bld *SIEQBuilder) Token() string {
 	return sieqToken
 }
 
-func (bld *SIEQBuilder) Build(key string, val any) Predicate {
-	return &SIEQPredicate{
+func (bld *SIEQBuilder) Build(key string, val any) (Predicate, error) {
+	pred := &SIEQPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_sieq.go ends here.

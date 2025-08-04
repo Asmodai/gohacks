@@ -75,10 +75,12 @@ func (bld *SSMBuilder) Token() string {
 	return ssmToken
 }
 
-func (bld *SSMBuilder) Build(key string, val any) Predicate {
-	return &SSMPredicate{
+func (bld *SSMBuilder) Build(key string, val any) (Predicate, error) {
+	pred := &SSMPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_ssm.go ends here.

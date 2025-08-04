@@ -157,7 +157,7 @@ func TestFVEQPredicate(t *testing.T) {
 
 	for idx, tt := range tests {
 		t.Run(fmt.Sprintf("%02d FVEQ(%s)", idx, tt.field), func(t *testing.T) {
-			pred := (&FVEQBuilder{}).Build(tt.field, tt.value)
+			pred, _ := (&FVEQBuilder{}).Build(tt.field, tt.value)
 			result := pred.Eval(obj)
 			if result != tt.want {
 				t.Errorf("FVEQ(%s == %#v) = %v, want %v",

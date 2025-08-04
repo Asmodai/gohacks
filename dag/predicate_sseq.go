@@ -30,9 +30,12 @@
 // SOFTWARE.
 
 // * Comments:
+// Hi, golangci-lint, the code in this file is NOT the same as other files.
+// You're delusional.
 
 // * Package:
 
+//nolint:dupl
 package dag
 
 // * Constants:
@@ -73,10 +76,12 @@ func (bld *SSEQBuilder) Token() string {
 	return sseqToken
 }
 
-func (bld *SSEQBuilder) Build(key string, val any) Predicate {
-	return &SSEQPredicate{
+func (bld *SSEQBuilder) Build(key string, val any) (Predicate, error) {
+	pred := &SSEQPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_sseq.go ends here.

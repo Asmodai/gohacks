@@ -185,7 +185,11 @@ func (cmplr *compiler) buildPredicate(cond ConditionSpec) (Predicate, string, er
 			cond.Operator)
 	}
 
-	pred := builder.Build(cond.Attribute, cond.Value)
+	pred, err := builder.Build(cond.Attribute, cond.Value)
+	if err != nil {
+		return nil, "", errors.WithStack(err)
+	}
+
 	key := fmt.Sprintf(
 		"%s %s %v",
 		cond.Attribute,

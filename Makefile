@@ -51,6 +51,7 @@ MODULES = amqp            \
 	  config          \
 	  contextdi       \
 	  contextext      \
+	  conversion      \
 	  crypto          \
 	  dag             \
 	  database        \
@@ -61,7 +62,6 @@ MODULES = amqp            \
 	  generics        \
 	  logger          \
 	  math            \
-	  math/conversion \
 	  memoise         \
 	  process         \
 	  responder       \

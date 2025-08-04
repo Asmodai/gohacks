@@ -50,8 +50,8 @@ func TestREIMPredicate(t *testing.T) {
 
 	input := NewDataInputFromMap(map[string]any{"Regex": value})
 	builder := &REIMBuilder{}
-	pred1 := builder.Build("Regex", good)
-	pred2 := builder.Build("Regex", bad)
+	pred1, _ := builder.Build("Regex", good)
+	pred2, _ := builder.Build("Regex", bad)
 
 	t.Run(pred1.String(), func(t *testing.T) {
 		if !pred1.Eval(input) {

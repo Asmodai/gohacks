@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_lte.go --- LTE - Numeric Less-Than-or-Equal-To.
+// canonicalise.go --- Canonicalise values.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -30,64 +30,46 @@
 // SOFTWARE.
 
 // * Comments:
-// Hi, golangci-lint, the code in this file is NOT the same as other files.
-// You're delusional.
+
+//
+//
+//
 
 // * Package:
 
-//nolint:dupl
-package dag
+package conversion
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/conversion"
-
 // * Constants:
-
-const (
-	lteIsn   = "LTE"
-	lteToken = "<="
-)
 
 // * Variables:
 
 // * Code:
 
-// ** Predicate:
+// Canonicalise a value to a standard type for that value.
+//
+// e.g. `int` becomes `int64`.
+func Canonicalise(value any) (any, bool) {
+	switch val := value.(type) {
+	case int, int8, int16, int32, int64:
+		return ToInt64(val)
 
-type LTEPredicate struct {
-	MetaPredicate
-}
+	case uint, uint8, uint16, uint32, uint64:
+		return ToUint64(val)
 
-func (pred *LTEPredicate) String() string {
-	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
-	if !ok {
-		return FormatIsnf(lteIsn, invalidTokenString)
+	case float32, float64:
+		return ToFloat64(val)
+
+	case string:
+		return val, true
+
+	case bool:
+		return val, true
+
+	default:
+		return val, false
 	}
-
-	return FormatIsnf(lteIsn, "%s %s %g", pred.MetaPredicate.key, lteToken, val)
 }
 
-func (pred *LTEPredicate) Eval(input Filterable) bool {
-	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
-
-	return ok && lhs <= rhs
-}
-
-// ** Builder:
-
-type LTEBuilder struct{}
-
-func (bld *LTEBuilder) Token() string {
-	return lteToken
-}
-
-func (bld *LTEBuilder) Build(key string, val any) (Predicate, error) {
-	pred := &LTEPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
-	}
-
-	return pred, nil
-}
-
-// * predicate_lte.go ends here.
+// * canonicalise.go ends here.

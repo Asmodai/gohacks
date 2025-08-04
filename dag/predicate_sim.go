@@ -75,10 +75,12 @@ func (bld *SIMBuilder) Token() string {
 	return simToken
 }
 
-func (bld *SIMBuilder) Build(key string, val any) Predicate {
-	return &SIMPredicate{
+func (bld *SIMBuilder) Build(key string, val any) (Predicate, error) {
+	pred := &SIMPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_sim.go ends here.

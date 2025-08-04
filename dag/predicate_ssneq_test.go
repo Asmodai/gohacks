@@ -50,8 +50,8 @@ func TestSSNEQPredicate(t *testing.T) {
 
 	input := NewDataInputFromMap(map[string]any{"String": value})
 	builder := &SSNEQBuilder{}
-	pred1 := builder.Build("String", good)
-	pred2 := builder.Build("String", bad)
+	pred1, _ := builder.Build("String", good)
+	pred2, _ := builder.Build("String", bad)
 
 	t.Run(pred1.String(), func(t *testing.T) {
 		if !pred1.Eval(input) {

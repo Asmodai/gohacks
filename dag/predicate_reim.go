@@ -109,10 +109,12 @@ func (bld *REIMBuilder) Token() string {
 	return reimToken
 }
 
-func (bld *REIMBuilder) Build(key string, val any) Predicate {
-	return &REIMPredicate{
+func (bld *REIMBuilder) Build(key string, val any) (Predicate, error) {
+	pred := &REIMPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_reim.go ends here.

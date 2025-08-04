@@ -93,11 +93,12 @@ func (m *MockPredicateBuilder) EXPECT() *MockPredicateBuilderMockRecorder {
 }
 
 // Build mocks base method.
-func (m *MockPredicateBuilder) Build(arg0 string, arg1 any) dag.Predicate {
+func (m *MockPredicateBuilder) Build(arg0 string, arg1 any) (dag.Predicate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Build", arg0, arg1)
 	ret0, _ := ret[0].(dag.Predicate)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Build indicates an expected call of Build.

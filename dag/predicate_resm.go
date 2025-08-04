@@ -104,10 +104,12 @@ func (bld *RESMBuilder) Token() string {
 	return resmToken
 }
 
-func (bld *RESMBuilder) Build(key string, val any) Predicate {
-	return &RESMPredicate{
+func (bld *RESMBuilder) Build(key string, val any) (Predicate, error) {
+	pred := &RESMPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_resm.go ends here.

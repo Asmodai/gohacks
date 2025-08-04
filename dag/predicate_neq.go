@@ -37,7 +37,7 @@ package dag
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/math/conversion"
+import "github.com/Asmodai/gohacks/conversion"
 
 // * Constants:
 
@@ -77,10 +77,12 @@ func (bld *NEQBuilder) Token() string {
 	return neqToken
 }
 
-func (bld *NEQBuilder) Build(key string, val any) Predicate {
-	return &NEQPredicate{
+func (bld *NEQBuilder) Build(key string, val any) (Predicate, error) {
+	pred := &NEQPredicate{
 		MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_neq.go ends here.

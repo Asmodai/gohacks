@@ -48,6 +48,15 @@ func BToTiB(b uint64) uint64
 ```
 Convert bytes to tebibytes.
 
+#### func  Canonicalise
+
+```go
+func Canonicalise(value any) (any, bool)
+```
+Canonicalise a value to a standard type for that value.
+
+e.g. `int` becomes `int64`.
+
 #### func  GiBToB
 
 ```go

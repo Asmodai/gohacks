@@ -49,8 +49,8 @@ func TestNEQPredicate(t *testing.T) {
 
 	input := NewDataInputFromMap(map[string]any{"Numeric": value})
 	builder := &NEQBuilder{}
-	pred1 := builder.Build("Numeric", different)
-	pred2 := builder.Build("Numeric", value)
+	pred1, _ := builder.Build("Numeric", different)
+	pred2, _ := builder.Build("Numeric", value)
 
 	t.Run(pred1.String(), func(t *testing.T) {
 		if !pred1.Eval(input) {

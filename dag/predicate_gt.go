@@ -30,14 +30,17 @@
 // SOFTWARE.
 
 // * Comments:
+// Hi, golangci-lint, the code in this file is NOT the same as other files.
+// You're delusional.
 
 // * Package:
 
+//nolint:dupl
 package dag
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/math/conversion"
+import "github.com/Asmodai/gohacks/conversion"
 
 // * Constants:
 
@@ -77,10 +80,12 @@ func (bld *GTBuilder) Token() string {
 	return gtToken
 }
 
-func (bld *GTBuilder) Build(key string, val any) Predicate {
-	return &GTPredicate{
+func (bld *GTBuilder) Build(key string, val any) (Predicate, error) {
+	pred := &GTPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_gt.go ends here.

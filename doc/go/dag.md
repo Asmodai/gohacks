@@ -205,7 +205,7 @@ type EIRBuilder struct{}
 #### func (*EIRBuilder) Build
 
 ```go
-func (bld *EIRBuilder) Build(key string, val any) Predicate
+func (bld *EIRBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*EIRBuilder) Token
@@ -245,7 +245,7 @@ type EQBuilder struct{}
 #### func (*EQBuilder) Build
 
 ```go
-func (bld *EQBuilder) Build(key string, val any) Predicate
+func (bld *EQBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*EQBuilder) Token
@@ -320,7 +320,7 @@ type GTBuilder struct{}
 #### func (*GTBuilder) Build
 
 ```go
-func (bld *GTBuilder) Build(key string, val any) Predicate
+func (bld *GTBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*GTBuilder) Token
@@ -339,7 +339,7 @@ type GTEBuilder struct{}
 #### func (*GTEBuilder) Build
 
 ```go
-func (bld *GTEBuilder) Build(key string, val any) Predicate
+func (bld *GTEBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*GTEBuilder) Token
@@ -400,7 +400,7 @@ type IIRBuilder struct{}
 #### func (*IIRBuilder) Build
 
 ```go
-func (bld *IIRBuilder) Build(key string, val any) Predicate
+func (bld *IIRBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*IIRBuilder) Token
@@ -440,7 +440,7 @@ type LTBuilder struct{}
 #### func (*LTBuilder) Build
 
 ```go
-func (bld *LTBuilder) Build(key string, val any) Predicate
+func (bld *LTBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*LTBuilder) Token
@@ -459,7 +459,7 @@ type LTEBuilder struct{}
 #### func (*LTEBuilder) Build
 
 ```go
-func (bld *LTEBuilder) Build(key string, val any) Predicate
+func (bld *LTEBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*LTEBuilder) Token
@@ -576,7 +576,7 @@ type NEQBuilder struct{}
 #### func (*NEQBuilder) Build
 
 ```go
-func (bld *NEQBuilder) Build(key string, val any) Predicate
+func (bld *NEQBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*NEQBuilder) Token
@@ -640,7 +640,7 @@ type Predicate interface {
 ```go
 type PredicateBuilder interface {
 	Token() string
-	Build(string, any) Predicate
+	Build(string, any) (Predicate, error)
 }
 ```
 
@@ -679,7 +679,7 @@ type REIMBuilder struct{}
 #### func (*REIMBuilder) Build
 
 ```go
-func (bld *REIMBuilder) Build(key string, val any) Predicate
+func (bld *REIMBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*REIMBuilder) Token
@@ -719,7 +719,7 @@ type RESMBuilder struct{}
 #### func (*RESMBuilder) Build
 
 ```go
-func (bld *RESMBuilder) Build(key string, val any) Predicate
+func (bld *RESMBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*RESMBuilder) Token
@@ -803,7 +803,7 @@ type SIEQBuilder struct{}
 #### func (*SIEQBuilder) Build
 
 ```go
-func (bld *SIEQBuilder) Build(key string, val any) Predicate
+func (bld *SIEQBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*SIEQBuilder) Token
@@ -843,7 +843,7 @@ type SIMBuilder struct{}
 #### func (*SIMBuilder) Build
 
 ```go
-func (bld *SIMBuilder) Build(key string, val any) Predicate
+func (bld *SIMBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*SIMBuilder) Token
@@ -883,7 +883,7 @@ type SINEQBuilder struct{}
 #### func (*SINEQBuilder) Build
 
 ```go
-func (bld *SINEQBuilder) Build(key string, val any) Predicate
+func (bld *SINEQBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*SINEQBuilder) Token
@@ -923,7 +923,7 @@ type SSEQBuilder struct{}
 #### func (*SSEQBuilder) Build
 
 ```go
-func (bld *SSEQBuilder) Build(key string, val any) Predicate
+func (bld *SSEQBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*SSEQBuilder) Token
@@ -963,7 +963,7 @@ type SSMBuilder struct{}
 #### func (*SSMBuilder) Build
 
 ```go
-func (bld *SSMBuilder) Build(key string, val any) Predicate
+func (bld *SSMBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*SSMBuilder) Token
@@ -1003,7 +1003,7 @@ type SSNEQBuilder struct{}
 #### func (*SSNEQBuilder) Build
 
 ```go
-func (bld *SSNEQBuilder) Build(key string, val any) Predicate
+func (bld *SSNEQBuilder) Build(key string, val any) (Predicate, error)
 ```
 
 #### func (*SSNEQBuilder) Token

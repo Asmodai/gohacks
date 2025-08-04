@@ -30,14 +30,17 @@
 // SOFTWARE.
 
 // * Comments:
+// Hi, golangci-lint, the code in this file is NOT the same as other files.
+// You're delusional.
 
 // * Package:
 
+//nolint:dupl
 package dag
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/math/conversion"
+import "github.com/Asmodai/gohacks/conversion"
 
 // * Constants:
 
@@ -77,10 +80,12 @@ func (bld *EQBuilder) Token() string {
 	return eqToken
 }
 
-func (bld *EQBuilder) Build(key string, val any) Predicate {
-	return &EQPredicate{
+func (bld *EQBuilder) Build(key string, val any) (Predicate, error) {
+	pred := &EQPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
 	}
+
+	return pred, nil
 }
 
 // * predicate_eq.go ends here.

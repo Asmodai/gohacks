@@ -54,8 +54,8 @@ func TestEIRPredicate(t *testing.T) {
 
 	input := NewDataInputFromMap(map[string]any{"Range": good})
 	builder := &EIRBuilder{}
-	pred1 := builder.Build("Range", goodHaystack)
-	pred2 := builder.Build("Range", badHaystack)
+	pred1, _ := builder.Build("Range", goodHaystack)
+	pred2, _ := builder.Build("Range", badHaystack)
 
 	t.Run(pred1.String(), func(t *testing.T) {
 		if !pred1.Eval(input) {
