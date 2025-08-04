@@ -41,8 +41,6 @@ import (
 	"math"
 	"reflect"
 	"strings"
-	"sync"
-	"unsafe"
 
 	"github.com/Asmodai/gohacks/dag"
 )
@@ -59,17 +57,39 @@ const (
 // * Variables:
 
 var (
-	//nolint:gochecknoglobals
-	wordSize uintptr
-
-	//nolint:gochecknoglobals
-	wordSizeOnce sync.Once
+	//nolint:gochecknoglobals,gomnd,mnd
+	intSizeMap = map[reflect.Kind]int{
+		reflect.Int8:      8,
+		reflect.Int16:     16,
+		reflect.Int32:     32,
+		reflect.Int64:     64,
+		reflect.Int:       wordSize,
+		reflect.Uint8:     8,
+		reflect.Uint16:    16,
+		reflect.Uint32:    32,
+		reflect.Uint64:    64,
+		reflect.Uint:      wordSize,
+		reflect.Interface: -1,
+	}
 )
 
 // * Code:
 
 // ** Predicate:
 
+// Field Value Equality.
+//
+// This predicate compares the value to that in the structure.  If they
+// are equal then the predicate returns true.
+//
+// The predicate will take various circumstances into consideration while
+// checking the value:
+//
+// If the field is `any` then the comparison will match just the type of
+// the value rather than using the type of the field along with the value.
+//
+// If the field is integer, then the structure's field must have a bid
+// width large enough to hold the value.
 type FVEQPredicate struct {
 	MetaPredicate
 }
@@ -89,197 +109,6 @@ func (pred *FVEQPredicate) String() string {
 	)
 }
 
-func (pred *FVEQPredicate) checkInt64(want, have int64) bool {
-	return want == have
-}
-
-func (pred *FVEQPredicate) checkUint64(want, have uint64) bool {
-	return want == have
-}
-
-func (pred *FVEQPredicate) checkFloat64(want, have float64) bool {
-	const epsilon = 1e-9
-
-	diff := math.Abs(want - have)
-
-	return diff < epsilon
-}
-
-func (pred *FVEQPredicate) checkComplex128(want, have complex128) bool {
-	rwant := pred.checkFloat64(real(want), real(have))
-	rhave := pred.checkFloat64(imag(want), imag(have))
-
-	return rwant && rhave
-}
-
-func (pred *FVEQPredicate) checkString(want, have string) bool {
-	return strings.EqualFold(want, have)
-}
-
-func (pred *FVEQPredicate) checkBool(want, have bool) bool {
-	return want == have
-}
-
-// Obtain the native word size of the host machine.
-//
-// XXX This could probably live elsewhere.
-//
-//nolint:mnd,gomnd
-func (pred *FVEQPredicate) wordSize() uintptr {
-	wordSizeOnce.Do(func() {
-		//nolint:mnd
-		wordSize = unsafe.Sizeof(uintptr(0)) * 8 // 8 = bits per byte
-	})
-
-	return wordSize
-}
-
-// Dispatches the right signed integer comparator for the given integer.
-//
-// This is hairy.  This will check the type of the given value and then
-// the type of the structure field.  If the structure field can fit the
-// type of the value, then a comparison is performed.
-//
-// The TL;DR of this is that it ensures that whatever value you're comparing
-// against is either smaller or the same size as the value in the structure.
-//
-//nolint:cyclop,dupl,gocyclo
-func (pred *FVEQPredicate) dispatchSignedInt(kind reflect.Kind, value any) bool {
-	// My kingdom for a Duff's Device in Go.
-	switch val := value.(type) {
-	case int:
-		valid := (kind == reflect.Int ||
-			kind == reflect.Int8 ||
-			kind == reflect.Int16 ||
-			kind == reflect.Int32)
-
-		//nolint:mnd
-		if pred.wordSize() == 64 { // 64 = word size
-			valid = valid || kind == reflect.Int64
-		}
-
-		have, ok := pred.MetaPredicate.GetValueAsInt64()
-
-		return valid && ok && pred.checkInt64(have, int64(val))
-
-	case int8:
-		valid := kind == reflect.Int8
-		have, ok := pred.MetaPredicate.GetValueAsInt64()
-
-		return valid && ok && pred.checkInt64(have, int64(val))
-
-	case int16:
-		valid := (kind == reflect.Int8 ||
-			kind == reflect.Int16)
-		have, ok := pred.MetaPredicate.GetValueAsInt64()
-
-		return valid && ok && pred.checkInt64(have, int64(val))
-	case int32:
-		valid := (kind == reflect.Int8 ||
-			kind == reflect.Int16 ||
-			kind == reflect.Int32)
-
-		//nolint:mnd
-		if pred.wordSize() == 32 { // 32 = word size
-			valid = valid || kind == reflect.Int
-		}
-
-		have, ok := pred.MetaPredicate.GetValueAsInt64()
-
-		return valid && ok && pred.checkInt64(have, int64(val))
-	case int64:
-		valid := (kind == reflect.Int8 ||
-			kind == reflect.Int16 ||
-			kind == reflect.Int32 ||
-			kind == reflect.Int64)
-
-		//nolint:mnd
-		if pred.wordSize() == 64 { // 64 = word size
-			valid = valid || kind == reflect.Int
-		}
-
-		have, ok := pred.MetaPredicate.GetValueAsInt64()
-
-		return valid && ok && pred.checkInt64(have, val)
-
-	default:
-		return false
-	}
-}
-
-// Dispatches the right unsigned integer comparator for the given integer.
-//
-// This is hairy.  This will check the type of the given value and then
-// the type of the structure field.  If the structure field can fit the
-// type of the value, then a comparison is performed.
-//
-// The TL;DR of this is that it ensures that whatever value you're comparing
-// against is either smaller or the same size as the value in the structure.
-//
-//nolint:cyclop,dupl,gocyclo
-func (pred *FVEQPredicate) dispatchUnsignedInt(kind reflect.Kind, value any) bool {
-	// My kingdom for a Duff's Device in Go.
-	switch val := value.(type) {
-	case uint:
-		valid := (kind == reflect.Uint ||
-			kind == reflect.Uint8 ||
-			kind == reflect.Uint16 ||
-			kind == reflect.Uint32)
-
-		//nolint:mnd
-		if pred.wordSize() == 64 { // 64 = word size
-			valid = valid || kind == reflect.Uint64
-		}
-
-		have, ok := pred.MetaPredicate.GetValueAsUint64()
-
-		return valid && ok && pred.checkUint64(have, uint64(val))
-
-	case uint8:
-		valid := kind == reflect.Uint8
-		have, ok := pred.MetaPredicate.GetValueAsUint64()
-
-		return valid && ok && pred.checkUint64(have, uint64(val))
-
-	case uint16:
-		valid := (kind == reflect.Uint8 ||
-			kind == reflect.Uint16)
-		have, ok := pred.MetaPredicate.GetValueAsUint64()
-
-		return valid && ok && pred.checkUint64(have, uint64(val))
-	case uint32:
-		valid := (kind == reflect.Uint8 ||
-			kind == reflect.Uint16 ||
-			kind == reflect.Uint32)
-
-		//nolint:mnd
-		if pred.wordSize() == 32 { // 32 = word size
-			valid = valid || kind == reflect.Uint
-		}
-
-		have, ok := pred.MetaPredicate.GetValueAsUint64()
-
-		return valid && ok && pred.checkUint64(have, uint64(val))
-	case uint64:
-		valid := (kind == reflect.Uint8 ||
-			kind == reflect.Uint16 ||
-			kind == reflect.Uint32 ||
-			kind == reflect.Uint64)
-
-		//nolint:mnd
-		if pred.wordSize() == 64 { // 64 = word size
-			valid = valid || kind == reflect.Uint
-		}
-
-		have, ok := pred.MetaPredicate.GetValueAsUint64()
-
-		return valid && ok && pred.checkUint64(have, val)
-
-	default:
-		return false
-	}
-}
-
 //nolint:cyclop
 func (pred *FVEQPredicate) Eval(input dag.Filterable) bool {
 	value, valueOk := pred.MetaPredicate.GetKeyAsValue(input)
@@ -295,46 +124,45 @@ func (pred *FVEQPredicate) Eval(input dag.Filterable) bool {
 	// Dispatch on the type of the value in the condition.
 	switch val := value.(type) {
 	case int, int8, int16, int32, int64:
-		return pred.dispatchSignedInt(field.TypeKind, val)
+		return dispatchInt(pred, field.TypeKind, val)
 
 	case uint, uint8, uint16, uint32, uint64:
-		return pred.dispatchUnsignedInt(field.TypeKind, val)
+		return dispatchUint(pred, field.TypeKind, val)
 
 	case float32:
-		valid := field.TypeKind == reflect.Float32
-		have, ok := pred.MetaPredicate.GetValueAsFloat64()
-
-		return valid && ok && pred.checkFloat64(have, float64(val))
+		return checkFloat(pred,
+			field.TypeKind,
+			reflect.Float32,
+			float64(val))
 
 	case float64:
-		valid := field.TypeKind == reflect.Float64
-		have, ok := pred.MetaPredicate.GetValueAsFloat64()
-
-		return valid && ok && pred.checkFloat64(have, float64(val))
+		return checkFloat(pred,
+			field.TypeKind,
+			reflect.Float64,
+			val)
 
 	case complex64:
-		valid := field.TypeKind == reflect.Complex64
-		have, ok := pred.MetaPredicate.GetValueAsComplex128()
-
-		return valid && ok && pred.checkComplex128(have, complex128(val))
+		return checkComplex(pred,
+			field.TypeKind,
+			reflect.Complex64,
+			complex128(val))
 
 	case complex128:
-		valid := field.TypeKind == reflect.Complex128
-		have, ok := pred.MetaPredicate.GetValueAsComplex128()
-
-		return valid && ok && pred.checkComplex128(have, complex128(val))
-
+		return checkComplex(pred,
+			field.TypeKind,
+			reflect.Complex128,
+			val)
 	case string:
-		valid := field.TypeKind == reflect.String
-		have, ok := pred.MetaPredicate.GetValueAsString()
-
-		return valid && ok && pred.checkString(have, val)
+		return checkString(pred,
+			field.TypeKind,
+			reflect.String,
+			val)
 
 	case bool:
-		valid := field.TypeKind == reflect.Bool
-		have, ok := pred.MetaPredicate.GetValueAsBool()
-
-		return valid && ok && pred.checkBool(have, val)
+		return checkBool(pred,
+			field.TypeKind,
+			reflect.Bool,
+			val)
 
 	default:
 		return false
@@ -352,6 +180,182 @@ func (bld *FVEQBuilder) Token() string {
 func (bld *FVEQBuilder) Build(key string, val any) dag.Predicate {
 	return &FVEQPredicate{
 		MetaPredicate: MetaPredicate{key: key, val: val},
+	}
+}
+
+// ** Functions:
+
+// Compare two floating-point numbers.
+func compareFloat64(want, have float64) bool {
+	const epsilon = 1e-9
+
+	diff := math.Abs(want - have)
+
+	return math.Nextafter(want, have) == have || diff < epsilon
+}
+
+// Compare two complex numbers.
+func compareComplex128(want, have complex128) bool {
+	rwant := compareFloat64(real(want), real(have))
+	rhave := compareFloat64(imag(want), imag(have))
+
+	return rwant && rhave
+}
+
+// Check that the variable's declared type is big enough for a given
+// integer type.
+func checkBitWidth(kind reflect.Kind, bits int) bool {
+	width, ok := intSizeMap[kind]
+	if !ok {
+		return false
+	}
+
+	// If width == -1, then it is `any`.
+	return width == -1 || width >= bits
+}
+
+// Ensure that the underlying type is the same as the given type.
+//
+// This will also match fields of type `any`.
+func checkType(kind, want reflect.Kind) bool {
+	return kind == reflect.Interface || kind == want
+}
+
+// Perform a check on a boolean.
+func checkBool(pred *FVEQPredicate, kind, want reflect.Kind, value bool) bool {
+	if !checkType(kind, want) {
+		return false
+	}
+
+	have, ok := pred.MetaPredicate.GetValueAsBool()
+	if !ok {
+		return false
+	}
+
+	return have == value
+}
+
+// Perform a check on an string.
+func checkString(pred *FVEQPredicate, kind, want reflect.Kind, value string) bool {
+	if !checkType(kind, want) {
+		return false
+	}
+
+	have, ok := pred.MetaPredicate.GetValueAsString()
+	if !ok {
+		return false
+	}
+
+	return strings.EqualFold(have, value)
+}
+
+// Perform a check on a floating-point number.
+func checkFloat(pred *FVEQPredicate, kind, want reflect.Kind, value float64) bool {
+	if !checkType(kind, want) {
+		return false
+	}
+
+	have, ok := pred.MetaPredicate.GetValueAsFloat64()
+	if !ok {
+		return false
+	}
+
+	return compareFloat64(have, value)
+}
+
+// Perform a check on a complex number.
+func checkComplex(pred *FVEQPredicate, kind, want reflect.Kind, value complex128) bool {
+	if !checkType(kind, want) {
+		return false
+	}
+
+	have, ok := pred.MetaPredicate.GetValueAsComplex128()
+	if !ok {
+		return false
+	}
+
+	return compareComplex128(have, value)
+}
+
+// Perform a check on the unsigned integer value.
+//
+// This checks that the type of the structure's field is big enough.
+func checkUint(pred *FVEQPredicate, kind reflect.Kind, value uint64, bits int) bool {
+	if !checkBitWidth(kind, bits) {
+		return false
+	}
+
+	have, ok := pred.MetaPredicate.GetValueAsUint64()
+	if !ok {
+		return false
+	}
+
+	return have == value
+}
+
+// Perform a check on the signed integer value.
+//
+// This checks that the type of the structure's field is big enough.
+func checkInt(pred *FVEQPredicate, kind reflect.Kind, value int64, bits int) bool {
+	if !checkBitWidth(kind, bits) {
+		return false
+	}
+
+	have, ok := pred.MetaPredicate.GetValueAsInt64()
+	if !ok {
+		return false
+	}
+
+	return have == value
+}
+
+// Dispatch on signed integer type and check the value accordingly.
+//
+//nolint:mnd,gomnd
+func dispatchInt(pred *FVEQPredicate, kind reflect.Kind, value any) bool {
+	switch val := value.(type) {
+	case int:
+		return checkInt(pred, kind, int64(val), wordSize)
+
+	case int8:
+		return checkInt(pred, kind, int64(val), 8)
+
+	case int16:
+		return checkInt(pred, kind, int64(val), 16)
+
+	case int32:
+		return checkInt(pred, kind, int64(val), 32)
+
+	case int64:
+		return checkInt(pred, kind, val, 64)
+
+	default:
+		return false
+	}
+}
+
+// Dispatch on unsigned integer type and check the value accordingly.
+//
+//nolint:mnd,gomnd
+func dispatchUint(pred *FVEQPredicate, kind reflect.Kind, value any) bool {
+	switch val := value.(type) {
+	case uint:
+		return checkUint(pred, kind, uint64(val), wordSize)
+
+	case uint8:
+		return checkUint(pred, kind, uint64(val), 8)
+
+	case uint16:
+		return checkUint(pred, kind, uint64(val), 16)
+
+	case uint32:
+		return checkUint(pred, kind, uint64(val), 32)
+
+	case uint64:
+		return checkUint(pred, kind, val, 64)
+
+	default:
+		return false
 	}
 }
 

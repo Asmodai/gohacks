@@ -80,7 +80,7 @@ var (
 // ** Test structure:
 
 type DummyStructure struct {
-	One int64          `json:"one"`
+	One any            `json:"one"`
 	Two map[string]int `json:"name_to_id"`
 }
 
@@ -219,7 +219,7 @@ func TestShit(t *testing.T) {
 	}
 
 	bindings := NewBindings()
-	inst := &DummyStructure{One: 42, Two: map[string]int{}}
+	inst := &DummyStructure{One: int64(42), Two: map[string]int{}}
 
 	_, ok := bindings.Build(inst)
 	if !ok {
@@ -234,7 +234,7 @@ func TestShit(t *testing.T) {
 // ** Benchmarks:
 
 func BenchmarkCompiler(b *testing.B) {
-	inst := &DummyStructure{One: 42, Two: map[string]int{}}
+	inst := &DummyStructure{One: int64(42), Two: map[string]int{}}
 	data := BuildDescriptor(reflect.TypeOf(&DummyStructure{}))
 	bound := &BoundObject{
 		Descriptor: data,

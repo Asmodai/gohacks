@@ -38,6 +38,7 @@ package validator
 // * Imports:
 
 import (
+	"reflect"
 	"strings"
 
 	"github.com/Asmodai/gohacks/dag"
@@ -54,6 +55,10 @@ const (
 
 // ** Predicate:
 
+// Field Type Equality.
+//
+// This predicate compares the type of the structure's field.  If it is
+// equal then the predicate returns true.
 type FTEQPredicate struct {
 	MetaPredicate
 }
@@ -73,12 +78,123 @@ func (pred *FTEQPredicate) String() string {
 	)
 }
 
+func (pred *FTEQPredicate) checkSigned(value any, want string) bool {
+	switch value.(type) {
+	case int:
+		return strings.EqualFold(want, "int")
+
+	case int8:
+		return strings.EqualFold(want, "int8")
+
+	case int16:
+		return strings.EqualFold(want, "int16")
+
+	case int32:
+		return strings.EqualFold(want, "int32")
+
+	case int64:
+		return strings.EqualFold(want, "int64")
+
+	default:
+		return false
+	}
+}
+
+func (pred *FTEQPredicate) checkUnsigned(value any, want string) bool {
+	switch value.(type) {
+	case uint:
+		return strings.EqualFold(want, "uint")
+
+	case uint8:
+		return strings.EqualFold(want, "uint8")
+
+	case uint16:
+		return strings.EqualFold(want, "uint16")
+
+	case uint32:
+		return strings.EqualFold(want, "uint32")
+
+	case uint64:
+		return strings.EqualFold(want, "uint64")
+
+	default:
+		return false
+	}
+}
+
+func (pred *FTEQPredicate) checkFloat(value any, want string) bool {
+	switch value.(type) {
+	case float32:
+		return strings.EqualFold(want, "float32")
+
+	case float64:
+		return strings.EqualFold(want, "float64")
+	default:
+		return false
+	}
+}
+
+func (pred *FTEQPredicate) checkComplex(value any, want string) bool {
+	switch value.(type) {
+	case complex64:
+		return strings.EqualFold(want, "complex64")
+
+	case complex128:
+		return strings.EqualFold(want, "complex128")
+	default:
+		return false
+	}
+}
+
+//nolint:cyclop
+func (pred *FTEQPredicate) resolveAny(value any, want string) bool {
+	switch value.(type) {
+	case int, int8, int16, int32, int64:
+		return pred.checkSigned(value, want)
+
+	case uint, uint8, uint16, uint32, uint64:
+		return pred.checkUnsigned(value, want)
+
+	case float32, float64:
+		return pred.checkFloat(value, want)
+
+	case complex64, complex128:
+		return pred.checkComplex(value, want)
+
+	case bool:
+		return strings.EqualFold(want, "bool")
+
+	case string:
+		return strings.EqualFold(want, "string")
+
+	case []byte:
+		return strings.EqualFold(want, "[]byte")
+
+	case []any:
+		return strings.EqualFold(want, "[]any")
+
+	case any:
+		return strings.EqualFold(want, "any")
+
+	default:
+		return false
+	}
+}
+
 func (pred *FTEQPredicate) Eval(input dag.Filterable) bool {
 	want, wantOk := pred.MetaPredicate.GetValueAsString()
 	fInfo, fInfoOk := pred.MetaPredicate.GetKeyAsFieldInfo(input)
 
 	if !(wantOk && fInfoOk) {
 		return false
+	}
+
+	if fInfo.TypeKind == reflect.Interface {
+		val, valok := pred.MetaPredicate.GetKeyAsValue(input)
+
+		if valok {
+			return pred.resolveAny(val, want)
+		}
 	}
 
 	return strings.EqualFold(want, fInfo.TypeName)

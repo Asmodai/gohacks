@@ -136,6 +136,10 @@ type FTEQPredicate struct {
 }
 ```
 
+Field Type Equality.
+
+This predicate compares the type of the structure's field. If it is equal then
+the predicate returns true.
 
 #### func (*FTEQPredicate) Eval
 
@@ -176,6 +180,19 @@ type FVEQPredicate struct {
 }
 ```
 
+Field Value Equality.
+
+This predicate compares the value to that in the structure. If they are equal
+then the predicate returns true.
+
+The predicate will take various circumstances into consideration while checking
+the value:
+
+If the field is `any` then the comparison will match just the type of the value
+rather than using the type of the field along with the value.
+
+If the field is integer, then the structure's field must have a bid width large
+enough to hold the value.
 
 #### func (*FVEQPredicate) Eval
 

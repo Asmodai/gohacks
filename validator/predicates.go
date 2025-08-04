@@ -38,6 +38,8 @@ package validator
 // * Imports:
 
 import (
+	"unsafe"
+
 	"github.com/Asmodai/gohacks/dag"
 	"github.com/Asmodai/gohacks/math/conversion"
 )
@@ -49,6 +51,11 @@ const (
 )
 
 // * Variables:
+
+var (
+	//nolint:gochecknoglobals,mnd
+	wordSize = int(unsafe.Sizeof(uintptr(0)) * 8) // 8 = bits per byte.
+)
 
 // * Code:
 
