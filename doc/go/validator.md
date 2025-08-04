@@ -8,6 +8,14 @@
 
 ## Usage
 
+```go
+var (
+	ErrInvalidSlice       = errors.Base("invalid slice")
+	ErrNotCanonicalisable = errors.Base("value cannot be canonicalised")
+	ErrNotComparable      = errors.Base("value cannot be compared")
+)
+```
+
 #### func  BuildPredicateDict
 
 ```go
@@ -119,7 +127,7 @@ type FTEQBuilder struct{}
 #### func (*FTEQBuilder) Build
 
 ```go
-func (bld *FTEQBuilder) Build(key string, val any) dag.Predicate
+func (bld *FTEQBuilder) Build(key string, val any) (dag.Predicate, error)
 ```
 
 #### func (*FTEQBuilder) Token
@@ -163,7 +171,7 @@ type FVEQBuilder struct{}
 #### func (*FVEQBuilder) Build
 
 ```go
-func (bld *FVEQBuilder) Build(key string, val any) dag.Predicate
+func (bld *FVEQBuilder) Build(key string, val any) (dag.Predicate, error)
 ```
 
 #### func (*FVEQBuilder) Token
@@ -204,6 +212,50 @@ func (pred *FVEQPredicate) Eval(input dag.Filterable) bool
 
 ```go
 func (pred *FVEQPredicate) String() string
+```
+
+#### type FVINBuilder
+
+```go
+type FVINBuilder struct{}
+```
+
+
+#### func (*FVINBuilder) Build
+
+```go
+func (bld *FVINBuilder) Build(key string, val any) (dag.Predicate, error)
+```
+
+#### func (*FVINBuilder) Token
+
+```go
+func (bld *FVINBuilder) Token() string
+```
+
+#### type FVINPredicate
+
+```go
+type FVINPredicate struct {
+	MetaPredicate
+}
+```
+
+Field Value In.
+
+This predicate returns true if the value in the structure is one of the provided
+values in the predicate.
+
+#### func (*FVINPredicate) Eval
+
+```go
+func (pred *FVINPredicate) Eval(input dag.Filterable) bool
+```
+
+#### func (*FVINPredicate) String
+
+```go
+func (pred *FVINPredicate) String() string
 ```
 
 #### type FieldAccessorFn

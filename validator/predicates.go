@@ -40,8 +40,8 @@ package validator
 import (
 	"unsafe"
 
+	"github.com/Asmodai/gohacks/conversion"
 	"github.com/Asmodai/gohacks/dag"
-	"github.com/Asmodai/gohacks/math/conversion"
 )
 
 // * Constants:
@@ -146,6 +146,7 @@ func BuildPredicateDict() dag.PredicateDict {
 	preds := []dag.PredicateBuilder{
 		&FTEQBuilder{},
 		&FVEQBuilder{},
+		&FVINBuilder{},
 	}
 
 	for idx := range preds {

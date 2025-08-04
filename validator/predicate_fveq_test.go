@@ -53,15 +53,15 @@ import (
 // * Variables:
 
 var (
-	testStructType reflect.Type
-	testStructOnce sync.Once
+	testFVEQStructType reflect.Type
+	testFVEQStructOnce sync.Once
 )
 
 // * Code:
 
 // ** Tests:
 
-type testStruct struct {
+type testFVEQStruct struct {
 	I    int
 	I8   int8
 	I16  int16
@@ -81,16 +81,16 @@ type testStruct struct {
 	Any  any
 }
 
-func (t *testStruct) ReflectType() reflect.Type {
-	testStructOnce.Do(func() {
-		testStructType = reflect.TypeOf(t).Elem()
+func (t *testFVEQStruct) ReflectType() reflect.Type {
+	testFVEQStructOnce.Do(func() {
+		testFVEQStructType = reflect.TypeOf(t).Elem()
 	})
 
-	return testStructType
+	return testFVEQStructType
 }
 
 func TestFVEQPredicate(t *testing.T) {
-	input := &testStruct{
+	input := &testFVEQStruct{
 		I:    42,
 		I8:   42,
 		I16:  42,
@@ -150,7 +150,7 @@ func TestFVEQPredicate(t *testing.T) {
 		{"I64", "not an int", false}, // type mismatch
 	}
 
-	inst := &testStruct{}
+	inst := &testFVEQStruct{}
 	bindings := NewBindings()
 	bindings.Build(inst)
 	obj, _ := bindings.Bind(input)
@@ -159,6 +159,7 @@ func TestFVEQPredicate(t *testing.T) {
 		t.Run(fmt.Sprintf("%02d FVEQ(%s)", idx, tt.field), func(t *testing.T) {
 			pred, _ := (&FVEQBuilder{}).Build(tt.field, tt.value)
 			result := pred.Eval(obj)
+
 			if result != tt.want {
 				t.Errorf("FVEQ(%s == %#v) = %v, want %v",
 					tt.field,
