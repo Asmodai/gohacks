@@ -185,7 +185,29 @@ func (bld *FVEQBuilder) Build(key string, val any) dag.Predicate {
 
 // ** Functions:
 
-// Compare two floating-point numbers.
+// Return true if two `float32` values are approximately equal, using
+// relative error comparison.
+//
+// This method avoids false negatives caused by `float32` rounding and scale.
+// The comparison is tolerant to small relative differences, but should catch
+// genuinely different values.
+func compareFloat32(want, have float32) bool {
+	const epsilon = 1e-6
+
+	diff := math.Abs(float64(want) - float64(have))
+	maxAbs := math.Max(math.Abs(float64(want)), math.Abs(float64(have)))
+
+	return diff < epsilon*maxAbs
+}
+
+// Returns true if two `float64` values are approximately equal, using both
+// absolute error and a ULP-based "next representable value" check.
+//
+// This comparison allows for very small absolute difference (under epsilon)
+// and also considers values that differ by just one floating-point step.
+//
+// It's suitable for high-precision float comparisons where minor rounding
+// differences are expected.
 func compareFloat64(want, have float64) bool {
 	const epsilon = 1e-9
 
@@ -194,7 +216,15 @@ func compareFloat64(want, have float64) bool {
 	return math.Nextafter(want, have) == have || diff < epsilon
 }
 
-// Compare two complex numbers.
+// Compare two 64 bit complex numbers.
+func compareComplex64(want, have complex64) bool {
+	rwant := compareFloat32(real(want), real(have))
+	rhave := compareFloat32(imag(want), imag(have))
+
+	return rwant && rhave
+}
+
+// Compare two 128 bit complex numbers.
 func compareComplex128(want, have complex128) bool {
 	rwant := compareFloat64(real(want), real(have))
 	rhave := compareFloat64(imag(want), imag(have))
@@ -260,6 +290,10 @@ func checkFloat(pred *FVEQPredicate, kind, want reflect.Kind, value float64) boo
 		return false
 	}
 
+	if want == reflect.Float32 {
+		return compareFloat32(float32(have), float32(value))
+	}
+
 	return compareFloat64(have, value)
 }
 
@@ -272,6 +306,10 @@ func checkComplex(pred *FVEQPredicate, kind, want reflect.Kind, value complex128
 	have, ok := pred.MetaPredicate.GetValueAsComplex128()
 	if !ok {
 		return false
+	}
+
+	if want == reflect.Complex64 {
+		return compareComplex64(complex64(have), complex64(value))
 	}
 
 	return compareComplex128(have, value)
