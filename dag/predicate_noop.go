@@ -49,6 +49,11 @@ const (
 
 // ** Predicates:
 
+// NOOP - No operation.
+//
+// This predicate is used internally to represent the root node.
+//
+// It always returns true.
 type NOOPPredicate struct{}
 
 func (pred *NOOPPredicate) String() string {

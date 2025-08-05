@@ -58,6 +58,10 @@ const (
 
 // ** Predicate:
 
+// LTE - Numeric Less-Than-or-Equal-To predicate.
+//
+// Returns true if the input value is lesser than or equal to the filter
+// value.
 type LTEPredicate struct {
 	MetaPredicate
 }

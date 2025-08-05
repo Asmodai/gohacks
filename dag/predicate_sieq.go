@@ -55,6 +55,11 @@ const (
 
 // ** Predicate:
 
+// SIEG - String (Insensitive) Equality predicate.
+//
+// Returns true if the filter value matches the input value.
+//
+// This predicate does not care about case.
 type SIEQPredicate struct {
 	MetaPredicate
 }

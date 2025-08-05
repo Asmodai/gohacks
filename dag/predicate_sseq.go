@@ -55,6 +55,9 @@ const (
 
 // ** Predicate:
 
+// SSEQ - String (Sensitive) Equality predicate.
+//
+// Returns true if the input value is the same as the filter value.
 type SSEQPredicate struct {
 	MetaPredicate
 }

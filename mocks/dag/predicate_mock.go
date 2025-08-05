@@ -95,18 +95,18 @@ func (m *MockPredicateBuilder) EXPECT() *MockPredicateBuilderMockRecorder {
 }
 
 // Build mocks base method.
-func (m *MockPredicateBuilder) Build(arg0 string, arg1 any, arg2 logger.Logger, arg3 bool) (dag.Predicate, error) {
+func (m *MockPredicateBuilder) Build(field string, data any, lgr logger.Logger, dbg bool) (dag.Predicate, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Build", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "Build", field, data, lgr, dbg)
 	ret0, _ := ret[0].(dag.Predicate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Build indicates an expected call of Build.
-func (mr *MockPredicateBuilderMockRecorder) Build(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockPredicateBuilderMockRecorder) Build(field, data, lgr, dbg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Build", reflect.TypeOf((*MockPredicateBuilder)(nil).Build), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Build", reflect.TypeOf((*MockPredicateBuilder)(nil).Build), field, data, lgr, dbg)
 }
 
 // Token mocks base method.

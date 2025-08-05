@@ -55,6 +55,10 @@ const (
 
 // ** Predicate:
 
+// SIM - String (Insensitive) Member predicate.
+//
+// Returns true if the input value is a member of the string array in the
+// filter value.
 type SIMPredicate struct {
 	MetaPredicate
 }

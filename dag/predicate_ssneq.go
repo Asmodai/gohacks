@@ -55,6 +55,9 @@ const (
 
 // ** Predicate:
 
+// SSNEQ - String (Sensitive) Inequality predicate.
+//
+// Returns true if the input value is different to the filter value.
 type SSNEQPredicate struct {
 	MetaPredicate
 }

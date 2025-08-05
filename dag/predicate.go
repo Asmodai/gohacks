@@ -61,22 +61,50 @@ const (
 
 // ** Interface:
 
+// Predicate interface.
+//
+// All predicates must adhere to this interface.
 type Predicate interface {
+	// Evaluate the predicate against the given `Filterable` object.
+	//
+	// Returns the result of the predicate.
 	Eval(context.Context, Filterable) bool
+
+	// Return the string representation of the predicate.
 	String() string
 }
 
+// Predicate builder interface.
+//
+// All predicate builders must adhere to this interface.
 type PredicateBuilder interface {
+	// Return the token name for the predicate.
+	//
+	// This isn't used in the current version of the directed acyclic
+	// graph, but the theory is that this could be used in a tokeniser
+	// or as opcode.
+	//
+	// The value this returns must be unique.
 	Token() string
-	Build(string, any, logger.Logger, bool) (Predicate, error)
+
+	// Build a new predicate.
+	//
+	// This will create a predicate that operates on the given field
+	// and data.
+	Build(field string, data any, lgr logger.Logger, dbg bool) (Predicate, error)
 }
 
 // ** Types:
 
+// Dictionary of available predicate builders.
 type PredicateDict map[string]PredicateBuilder
 
 // *** Meta predicate:
 
+// A `meta` predicate used by all predicates.
+//
+// The meta preducate presents common fields and methods so as to avoid
+// duplicate code.
 type MetaPredicate struct {
 	key    string
 	val    any
@@ -84,6 +112,9 @@ type MetaPredicate struct {
 	debug  bool
 }
 
+// Return the predicate's input value as a 64-bit float.
+//
+// This will return the value for the key on which the predicate operates.
 func (meta *MetaPredicate) GetFloatValueFromInput(input Filterable) (float64, bool) {
 	data, dataOk := input.Get(meta.key)
 
@@ -92,6 +123,8 @@ func (meta *MetaPredicate) GetFloatValueFromInput(input Filterable) (float64, bo
 	return val, dataOk && valOk
 }
 
+// Return both the predicate's input value and filter value as a 64-bit
+// float.
 func (meta *MetaPredicate) GetFloatValues(input Filterable) (float64, float64, bool) {
 	data, dataOk := input.Get(meta.key)
 
@@ -101,6 +134,7 @@ func (meta *MetaPredicate) GetFloatValues(input Filterable) (float64, float64, b
 	return lhs, rhs, dataOk && lhsOk && rhsOk
 }
 
+// Return both the predicate's input value and filter value as a string.
 func (meta *MetaPredicate) GetStringValues(input Filterable) (string, string, bool) {
 	data, dataOk := input.Get(meta.key)
 
@@ -110,14 +144,18 @@ func (meta *MetaPredicate) GetStringValues(input Filterable) (string, string, bo
 	return lhs, rhs, dataOk && lhsOk && rhsOk
 }
 
+// Return the predicate's filter value as an array of 64-bit floats.
 func (meta *MetaPredicate) GetPredicateFloatArray() ([]float64, bool) {
 	return conversion.AnyArrayToFloat64Array(meta.val)
 }
 
+// Return the predicate's filter value as an array of strings.
 func (meta *MetaPredicate) GetPredicateStringArray() ([]string, bool) {
 	return conversion.AnyArrayToStringArray(meta.val)
 }
 
+// Does the predicate's input value fall within the exclusive range defined
+// in the predicate's filter value?
 func (meta *MetaPredicate) EvalExclusiveRange(input Filterable) bool {
 	array, arrayOk := meta.GetPredicateFloatArray()
 	val, valOk := meta.GetFloatValueFromInput(input)
@@ -137,6 +175,9 @@ func (meta *MetaPredicate) EvalExclusiveRange(input Filterable) bool {
 	return (first < val) && (val < second)
 }
 
+// Does the predicate's input value fall within the inclusive range defined
+// in the predicate's filter value?
+//
 //nolint:mnd
 func (meta *MetaPredicate) EvalInclusiveRange(input Filterable) bool {
 	array, arrayOk := meta.GetPredicateFloatArray()
@@ -157,6 +198,8 @@ func (meta *MetaPredicate) EvalInclusiveRange(input Filterable) bool {
 	return (first <= val) && (val <= second)
 }
 
+// Is the predicate's input value a member of the array of strings in the
+// predicate's filter value?
 func (meta *MetaPredicate) EvalStringMember(input Filterable, insens bool) bool {
 	valueRaw, okay := input.Get(meta.key)
 	if !okay {
@@ -188,6 +231,7 @@ func (meta *MetaPredicate) EvalStringMember(input Filterable, insens bool) bool 
 
 // ** Functions:
 
+// Build the predicate dictionary for the directed acyclic graph filter.
 func BuildPredicateDict() PredicateDict {
 	result := make(PredicateDict)
 	preds := []PredicateBuilder{
@@ -215,6 +259,7 @@ func BuildPredicateDict() PredicateDict {
 	return result
 }
 
+// Pretty-print a predicate's token.
 func FormatIsnf(isn, message string, rest ...any) string {
 	padded := utils.Pad(isn, isnWidth)
 

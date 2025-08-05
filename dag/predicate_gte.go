@@ -56,6 +56,10 @@ const (
 
 // ** Predicate:
 
+// GTE - Numeric Greater-Than-or-Equal-To predicate.
+//
+// Returns true if the input value is greater than or equal to the filter
+// value.
 type GTEPredicate struct {
 	MetaPredicate
 }

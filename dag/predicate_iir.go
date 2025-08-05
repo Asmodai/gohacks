@@ -54,6 +54,10 @@ const (
 
 // ** Predicate:
 
+// IIR - Inclusive In Range predicate.
+//
+// Returns true if the input value is in the range defined in the filter
+// inclusive.
 type IIRPredicate struct {
 	MetaPredicate
 }

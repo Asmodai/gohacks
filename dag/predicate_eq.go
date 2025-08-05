@@ -56,6 +56,9 @@ const (
 
 // ** Predicate:
 
+// EQ - Numeric equality predicate.
+//
+// Returns true if the input value matches the filter value.
 type EQPredicate struct {
 	MetaPredicate
 }

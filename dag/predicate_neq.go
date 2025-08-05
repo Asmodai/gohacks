@@ -55,6 +55,9 @@ const (
 
 // ** Predicate:
 
+// NEQ - Numeric Inequality predicate.
+//
+// Returns true if the input value is not equal to the filter value.
 type NEQPredicate struct {
 	MetaPredicate
 }

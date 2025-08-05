@@ -57,6 +57,12 @@ const (
 
 // ** Predicate:
 
+// RESM - Regular Expression (Sensitive) Match predicate.
+//
+// Returns true if the regular expression in the filter value matches against
+// the input value.
+//
+// The regular expression will not be forced into being case-insensitive.
 type RESMPredicate struct {
 	MetaPredicate
 

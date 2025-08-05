@@ -39,20 +39,22 @@ package dag
 
 import "fmt"
 
-// * Constants:
-
-// * Variables:
-
 // * Code:
 
 // ** Types:
 
+// Data Input.
+//
+// This structure holds the data against which we wish to filter.
+//
+// It is passed to functions such as `Compiler.Evaluate` as the input.
 type DataInput struct {
-	fields map[string]any
+	fields map[string]any // Field map.
 }
 
 // ** Methods:
 
+// Get the value of a field.
 func (input *DataInput) Get(key string) (any, bool) {
 	val, ok := input.fields[key]
 	if !ok {
@@ -62,6 +64,7 @@ func (input *DataInput) Get(key string) (any, bool) {
 	return val, true
 }
 
+// Return a list of field names as keys.
 func (input *DataInput) Keys() []string {
 	result := make([]string, 0, len(input.fields))
 
@@ -72,6 +75,7 @@ func (input *DataInput) Keys() []string {
 	return result
 }
 
+// Set the value of the given field to the given value.
 func (input *DataInput) Set(key string, value any) bool {
 	_, found := input.fields[key]
 	if !found {
@@ -83,12 +87,14 @@ func (input *DataInput) Set(key string, value any) bool {
 	return true
 }
 
+// Returns the string representation.
 func (input *DataInput) String() string {
 	return fmt.Sprintf("%v", input.fields)
 }
 
 // ** Functions
 
+// Create a new empty `DataInput` object.
 func NewDataInput() *DataInput {
 	return &DataInput{fields: map[string]any{}}
 }

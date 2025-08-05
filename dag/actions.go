@@ -214,6 +214,7 @@ func (act *actions) logAction(params ActionParams) (ActionFn, error) {
 
 // ** Functions
 
+// Create a new empty `Actions` object.
 func NewDefaultActions() Actions {
 	return &actions{}
 }

@@ -55,6 +55,11 @@ const (
 
 // ** Predicate:
 
+// SINEQ - String (Insensitive) Inequality predicate.
+//
+// Returns true if the input string is not the same as the filter string.
+//
+// Case is not taken into account.
 type SINEQPredicate struct {
 	MetaPredicate
 }

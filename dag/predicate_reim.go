@@ -58,6 +58,13 @@ const (
 
 // ** Predicate:
 
+// REIM - Regular Expression (Insensitive) Match predicate.
+//
+// Returns true if the regular expression in the filter matches against the
+// input value.
+//
+// The regular expression will be compiled with a prefix denoting that it
+// does not care about case.
 type REIMPredicate struct {
 	MetaPredicate
 

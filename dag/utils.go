@@ -91,7 +91,7 @@ func DumpRulesToYAML(rules []RuleSpec) (string, error) {
 	return string(raw), nil
 }
 
-// Dump a slice of rule specifications to JSON format.
+// Parse a rule specification from a string containing YAML.
 func ParseFromYAML(data string) ([]RuleSpec, error) {
 	result := []RuleSpec{}
 	raw := []byte(data)
@@ -103,6 +103,7 @@ func ParseFromYAML(data string) ([]RuleSpec, error) {
 	return result, nil
 }
 
+// Parse a rule specification from a string containing JSON.
 func ParseFromJSON(data string) ([]RuleSpec, error) {
 	result := []RuleSpec{}
 	raw := []byte(data)

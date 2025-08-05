@@ -56,6 +56,9 @@ const (
 
 // ** Predicate:
 
+// LT - Numeric Less-Than predicate.
+//
+// Returns true if the input value is lesser than the filter value.
 type LTPredicate struct {
 	MetaPredicate
 }

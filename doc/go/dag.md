@@ -36,6 +36,7 @@ Dump a slice of rule specifications to YAML format.
 ```go
 func FormatIsnf(isn, message string, rest ...any) string
 ```
+Pretty-print a predicate's token.
 
 #### type ActionFn
 
@@ -105,6 +106,7 @@ context used with the DAG. For this, you can see `logger.SetLogger`.
 ```go
 func NewDefaultActions() Actions
 ```
+Create a new empty `Actions` object.
 
 #### type Compiler
 
@@ -157,12 +159,18 @@ type DataInput struct {
 }
 ```
 
+Data Input.
+
+This structure holds the data against which we wish to filter.
+
+It is passed to functions such as `Compiler.Evaluate` as the input.
 
 #### func  NewDataInput
 
 ```go
 func NewDataInput() *DataInput
 ```
+Create a new empty `DataInput` object.
 
 #### func  NewDataInputFromMap
 
@@ -176,24 +184,28 @@ Create a new `DataInput` object with a copy of the provided input map.
 ```go
 func (input *DataInput) Get(key string) (any, bool)
 ```
+Get the value of a field.
 
 #### func (*DataInput) Keys
 
 ```go
 func (input *DataInput) Keys() []string
 ```
+Return a list of field names as keys.
 
 #### func (*DataInput) Set
 
 ```go
 func (input *DataInput) Set(key string, value any) bool
 ```
+Set the value of the given field to the given value.
 
 #### func (*DataInput) String
 
 ```go
 func (input *DataInput) String() string
 ```
+Returns the string representation.
 
 #### type EIRBuilder
 
@@ -222,6 +234,9 @@ type EIRPredicate struct {
 }
 ```
 
+EIR - Exclusive In Range predicate.
+
+Returne true if the input value is in the filter range inclusive.
 
 #### func (*EIRPredicate) Eval
 
@@ -262,6 +277,9 @@ type EQPredicate struct {
 }
 ```
 
+EQ - Numeric equality predicate.
+
+Returns true if the input value matches the filter value.
 
 #### func (*EQPredicate) Eval
 
@@ -356,6 +374,9 @@ type GTEPredicate struct {
 }
 ```
 
+GTE - Numeric Greater-Than-or-Equal-To predicate.
+
+Returns true if the input value is greater than or equal to the filter value.
 
 #### func (*GTEPredicate) Eval
 
@@ -377,6 +398,9 @@ type GTPredicate struct {
 }
 ```
 
+GT - Numeric Greater-Than predicate.
+
+Returns true of the input value is greater than the filter value.
 
 #### func (*GTPredicate) Eval
 
@@ -417,6 +441,9 @@ type IIRPredicate struct {
 }
 ```
 
+IIR - Inclusive In Range predicate.
+
+Returns true if the input value is in the range defined in the filter inclusive.
 
 #### func (*IIRPredicate) Eval
 
@@ -476,6 +503,9 @@ type LTEPredicate struct {
 }
 ```
 
+LTE - Numeric Less-Than-or-Equal-To predicate.
+
+Returns true if the input value is lesser than or equal to the filter value.
 
 #### func (*LTEPredicate) Eval
 
@@ -497,6 +527,9 @@ type LTPredicate struct {
 }
 ```
 
+LT - Numeric Less-Than predicate.
+
+Returns true if the input value is lesser than the filter value.
 
 #### func (*LTPredicate) Eval
 
@@ -517,54 +550,71 @@ type MetaPredicate struct {
 }
 ```
 
+A `meta` predicate used by all predicates.
+
+The meta preducate presents common fields and methods so as to avoid duplicate
+code.
 
 #### func (*MetaPredicate) EvalExclusiveRange
 
 ```go
 func (meta *MetaPredicate) EvalExclusiveRange(input Filterable) bool
 ```
+Does the predicate's input value fall within the exclusive range defined in the
+predicate's filter value?
 
 #### func (*MetaPredicate) EvalInclusiveRange
 
 ```go
 func (meta *MetaPredicate) EvalInclusiveRange(input Filterable) bool
 ```
+Does the predicate's input value fall within the inclusive range defined in the
+predicate's filter value?
 
 #### func (*MetaPredicate) EvalStringMember
 
 ```go
 func (meta *MetaPredicate) EvalStringMember(input Filterable, insens bool) bool
 ```
+Is the predicate's input value a member of the array of strings in the
+predicate's filter value?
 
 #### func (*MetaPredicate) GetFloatValueFromInput
 
 ```go
 func (meta *MetaPredicate) GetFloatValueFromInput(input Filterable) (float64, bool)
 ```
+Return the predicate's input value as a 64-bit float.
+
+This will return the value for the key on which the predicate operates.
 
 #### func (*MetaPredicate) GetFloatValues
 
 ```go
 func (meta *MetaPredicate) GetFloatValues(input Filterable) (float64, float64, bool)
 ```
+Return both the predicate's input value and filter value as a 64-bit float.
 
 #### func (*MetaPredicate) GetPredicateFloatArray
 
 ```go
 func (meta *MetaPredicate) GetPredicateFloatArray() ([]float64, bool)
 ```
+Return the predicate's filter value as an array of 64-bit floats.
 
 #### func (*MetaPredicate) GetPredicateStringArray
 
 ```go
 func (meta *MetaPredicate) GetPredicateStringArray() ([]string, bool)
 ```
+Return the predicate's filter value as an array of strings.
 
 #### func (*MetaPredicate) GetStringValues
 
 ```go
 func (meta *MetaPredicate) GetStringValues(input Filterable) (string, string, bool)
 ```
+Return both the predicate's input value and filter value as a string.
 
 #### type NEQBuilder
 
@@ -593,6 +643,9 @@ type NEQPredicate struct {
 }
 ```
 
+NEQ - Numeric Inequality predicate.
+
+Returns true if the input value is not equal to the filter value.
 
 #### func (*NEQPredicate) Eval
 
@@ -612,6 +665,11 @@ func (pred *NEQPredicate) String() string
 type NOOPPredicate struct{}
 ```
 
+NOOP - No operation.
+
+This predicate is used internally to represent the root node.
+
+It always returns true.
 
 #### func (*NOOPPredicate) Eval
 
@@ -629,21 +687,44 @@ func (pred *NOOPPredicate) String() string
 
 ```go
 type Predicate interface {
+	// Evaluate the predicate against the given `Filterable` object.
+	//
+	// Returns the result of the predicate.
 	Eval(context.Context, Filterable) bool
+
+	// Return the string representation of the predicate.
 	String() string
 }
 ```
 
+Predicate interface.
+
+All predicates must adhere to this interface.
 
 #### type PredicateBuilder
 
 ```go
 type PredicateBuilder interface {
+	// Return the token name for the predicate.
+	//
+	// This isn't used in the current version of the directed acyclic
+	// graph, but the theory is that this could be used in a tokeniser
+	// or as opcode.
+	//
+	// The value this returns must be unique.
 	Token() string
-	Build(string, any, logger.Logger, bool) (Predicate, error)
+
+	// Build a new predicate.
+	//
+	// This will create a predicate that operates on the given field
+	// and data.
+	Build(field string, data any, lgr logger.Logger, dbg bool) (Predicate, error)
 }
 ```
 
+Predicate builder interface.
+
+All predicate builders must adhere to this interface.
 
 #### type PredicateDict
 
@@ -651,12 +732,14 @@ type PredicateBuilder interface {
 type PredicateDict map[string]PredicateBuilder
 ```
 
+Dictionary of available predicate builders.
 
 #### func  BuildPredicateDict
 
 ```go
 func BuildPredicateDict() PredicateDict
 ```
+Build the predicate dictionary for the directed acyclic graph filter.
 
 #### type PredicateFn
 
@@ -696,6 +779,13 @@ type REIMPredicate struct {
 }
 ```
 
+REIM - Regular Expression (Insensitive) Match predicate.
+
+Returns true if the regular expression in the filter matches against the input
+value.
+
+The regular expression will be compiled with a prefix denoting that it does not
+care about case.
 
 #### func (*REIMPredicate) Eval
 
@@ -736,6 +826,12 @@ type RESMPredicate struct {
 }
 ```
 
+RESM - Regular Expression (Sensitive) Match predicate.
+
+Returns true if the regular expression in the filter value matches against the
+input value.
+
+The regular expression will not be forced into being case-insensitive.
 
 #### func (*RESMPredicate) Eval
 
@@ -771,13 +867,14 @@ Filter rule specification.
 ```go
 func ParseFromJSON(data string) ([]RuleSpec, error)
 ```
+Parse a rule specification from a string containing JSON.
 
 #### func  ParseFromYAML
 
 ```go
 func ParseFromYAML(data string) ([]RuleSpec, error)
 ```
-Dump a slice of rule specifications to JSON format.
+Parse a rule specification from a string containing YAML.
 
 #### func (*RuleSpec) DumpToJSON
 
@@ -820,6 +917,11 @@ type SIEQPredicate struct {
 }
 ```
 
+SIEG - String (Insensitive) Equality predicate.
+
+Returns true if the filter value matches the input value.
+
+This predicate does not care about case.
 
 #### func (*SIEQPredicate) Eval
 
@@ -860,6 +962,10 @@ type SIMPredicate struct {
 }
 ```
 
+SIM - String (Insensitive) Member predicate.
+
+Returns true if the input value is a member of the string array in the filter
+value.
 
 #### func (*SIMPredicate) Eval
 
@@ -900,6 +1006,11 @@ type SINEQPredicate struct {
 }
 ```
 
+SINEQ - String (Insensitive) Inequality predicate.
+
+Returns true if the input string is not the same as the filter string.
+
+Case is not taken into account.
 
 #### func (*SINEQPredicate) Eval
 
@@ -940,6 +1051,9 @@ type SSEQPredicate struct {
 }
 ```
 
+SSEQ - String (Sensitive) Equality predicate.
+
+Returns true if the input value is the same as the filter value.
 
 #### func (*SSEQPredicate) Eval
 
@@ -980,6 +1094,10 @@ type SSMPredicate struct {
 }
 ```
 
+SSM - String (Sensitive) Member predicate.
+
+Returns true if the input value is a member of the string array in the filter
+value.
 
 #### func (*SSMPredicate) Eval
 
@@ -1020,6 +1138,9 @@ type SSNEQPredicate struct {
 }
 ```
 
+SSNEQ - String (Sensitive) Inequality predicate.
+
+Returns true if the input value is different to the filter value.
 
 #### func (*SSNEQPredicate) Eval
 

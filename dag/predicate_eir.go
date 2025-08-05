@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_eir.go --- EIR - Exclusive In range.
+// predicate_eir.go --- EIR - Exclusive In Range.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -54,6 +54,9 @@ const (
 
 // ** Predicate:
 
+// EIR - Exclusive In Range predicate.
+//
+// Returne true if the input value is in the filter range inclusive.
 type EIRPredicate struct {
 	MetaPredicate
 }

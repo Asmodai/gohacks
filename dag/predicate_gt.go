@@ -56,6 +56,9 @@ const (
 
 // ** Predicate:
 
+// GT - Numeric Greater-Than predicate.
+//
+// Returns true of the input value is greater than the filter value.
 type GTPredicate struct {
 	MetaPredicate
 }
