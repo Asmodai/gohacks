@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_ftin_test.go --- FTIN tests.
+// predicate_fvnil_test.go --- FVNIL tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,6 +31,10 @@
 
 // * Comments:
 
+//
+//
+//
+
 // * Package:
 
 package validator
@@ -48,68 +52,75 @@ import (
 // * Variables:
 
 var (
-	testFTINStructType reflect.Type
-	testFTINStructOnce sync.Once
+	testFVNILStructType reflect.Type
+	testFVNILStructOnce sync.Once
 )
 
 // * Code:
 
 // ** Types:
 
-type testFTINStruct struct {
-	IntField    int
-	Int64Field  int64
-	StringField string
-	AnyField    any
+type testFVNILSubStruct struct {
+	Unused bool
 }
 
-func (t *testFTINStruct) ReflectType() reflect.Type {
-	testFTINStructOnce.Do(func() {
-		testFTINStructType = reflect.TypeOf(t).Elem()
+type testFVNILStruct struct {
+	Primitive int
+	Map1      map[int]string
+	Map2      map[int]string
+	Slice1    []int
+	Slice2    []int
+	Struct1   *testFVNILSubStruct
+	Struct2   *testFVNILSubStruct
+}
+
+func (t *testFVNILStruct) ReflectType() reflect.Type {
+	testFVNILStructOnce.Do(func() {
+		testFVNILStructType = reflect.TypeOf(t).Elem()
 	})
 
-	return testFTINStructType
+	return testFVNILStructType
 }
 
 // ** Tests:
 
-func TestFTINPredicate(t *testing.T) {
-	input := &testFTINStruct{
-		IntField:    42,
-		Int64Field:  9001,
-		StringField: "Hello",
-		AnyField:    uint64(654321),
+func TestFVNILPredicate(t *testing.T) {
+	input := &testFVNILStruct{
+		Primitive: 42,
+		Map1:      map[int]string{},
+		Map2:      nil,
+		Slice1:    []int{},
+		Slice2:    nil,
+		Struct1:   &testFVNILSubStruct{},
+		Struct2:   nil,
 	}
 
 	tests := []struct {
 		field string
-		types []any
 		want  bool
 	}{
-		{"IntField", []any{"int"}, true},
-		{"IntField", []any{"uint", "uint32", "uint64"}, false},
-		{"IntField", []any{"int16", "int32", "int64"}, false},
-		{"StringField", []any{"string"}, true},
-		{"StringField", []any{"any", "uint64"}, false},
-		{"AnyField", []any{"string", "bool", "uint32"}, false},
-		{"AnyField", []any{"uint8", "uint16", "uint32", "uint64"}, true},
-		{"AnyField", []any{"any"}, true},
+		{"Primitive", false},
+		{"Map1", false},
+		{"Map2", true},
+		{"Slice1", false},
+		{"Slice2", true},
+		{"Struct1", false},
+		{"Struct2", true},
 	}
 
-	inst := &testFTINStruct{}
+	inst := &testFVNILStruct{}
 	bindings := NewBindings()
 	bindings.Build(inst)
 	obj, _ := bindings.Bind(input)
 
 	for idx, tt := range tests {
-		t.Run(fmt.Sprintf("%02d FTIN(%s)", idx, tt.field), func(t *testing.T) {
-			pred, _ := (&FTINBuilder{}).Build(tt.field, tt.types, nil, false)
+		t.Run(fmt.Sprintf("%02d FVNIL(%s)", idx, tt.field), func(t *testing.T) {
+			pred, _ := (&FVNILBuilder{}).Build(tt.field, nil, nil, false)
 			result := pred.Eval(context.TODO(), obj)
 
 			if result != tt.want {
-				t.Errorf("FTIN(%s IN %#v) = %v, want %v",
+				t.Errorf("FVNIL(%s) = %v, want %v",
 					tt.field,
-					tt.types,
 					result,
 					tt.want)
 			}
@@ -119,26 +130,24 @@ func TestFTINPredicate(t *testing.T) {
 
 // ** Benchmarks:
 
-func BenchmarkFTINPredicate(b *testing.B) {
-	input := &testFTINStruct{
-		IntField:    42,
-		Int64Field:  9001,
-		StringField: "Hello",
-		AnyField:    uint64(654321),
+func BenchmarkFVNILPredicate(b *testing.B) {
+	input := &testFVNILStruct{
+		Primitive: 42,
+		Map1:      map[int]string{},
+		Map2:      nil,
+		Slice1:    []int{},
+		Slice2:    nil,
+		Struct1:   &testFVNILSubStruct{},
+		Struct2:   nil,
 	}
 
-	field := "AnyField"
-	vals := []any{
-		"uint", "uint8", "uint16", "uint32", "uint64",
-		"int", "int8", "int16", "int32", "int64",
-		"string", "[]byte",
-	}
+	field := "Struct2"
 
-	inst := &testFTINStruct{}
+	inst := &testFVNILStruct{}
 	bindings := NewBindings()
 	bindings.Build(inst)
 
-	pred, err := (&FTINBuilder{}).Build(field, vals, nil, false)
+	pred, err := (&FVNILBuilder{}).Build(field, nil, nil, false)
 	if err != nil {
 		b.Fatal(err.Error())
 	}
@@ -151,4 +160,4 @@ func BenchmarkFTINPredicate(b *testing.B) {
 	})
 }
 
-// * predicate_ftin_test.go ends here.
+// * predicate_fvnil_test.go ends here.

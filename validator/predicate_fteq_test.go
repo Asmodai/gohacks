@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_ftin_test.go --- FTIN tests.
+// predicate_fteq_test.go --- FTEQ tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -48,33 +48,33 @@ import (
 // * Variables:
 
 var (
-	testFTINStructType reflect.Type
-	testFTINStructOnce sync.Once
+	testFTEQStructType reflect.Type
+	testFTEQStructOnce sync.Once
 )
 
 // * Code:
 
 // ** Types:
 
-type testFTINStruct struct {
+type testFTEQStruct struct {
 	IntField    int
 	Int64Field  int64
 	StringField string
 	AnyField    any
 }
 
-func (t *testFTINStruct) ReflectType() reflect.Type {
-	testFTINStructOnce.Do(func() {
-		testFTINStructType = reflect.TypeOf(t).Elem()
+func (t *testFTEQStruct) ReflectType() reflect.Type {
+	testFTEQStructOnce.Do(func() {
+		testFTEQStructType = reflect.TypeOf(t).Elem()
 	})
 
-	return testFTINStructType
+	return testFTEQStructType
 }
 
 // ** Tests:
 
-func TestFTINPredicate(t *testing.T) {
-	input := &testFTINStruct{
+func TestFTEQPredicate(t *testing.T) {
+	input := &testFTEQStruct{
 		IntField:    42,
 		Int64Field:  9001,
 		StringField: "Hello",
@@ -83,31 +83,32 @@ func TestFTINPredicate(t *testing.T) {
 
 	tests := []struct {
 		field string
-		types []any
+		types any
 		want  bool
 	}{
-		{"IntField", []any{"int"}, true},
-		{"IntField", []any{"uint", "uint32", "uint64"}, false},
-		{"IntField", []any{"int16", "int32", "int64"}, false},
-		{"StringField", []any{"string"}, true},
-		{"StringField", []any{"any", "uint64"}, false},
-		{"AnyField", []any{"string", "bool", "uint32"}, false},
-		{"AnyField", []any{"uint8", "uint16", "uint32", "uint64"}, true},
-		{"AnyField", []any{"any"}, true},
+		{"IntField", "int", true},
+		{"IntField", "uint64", false},
+		{"Int64Field", "int", false},
+		{"Int64Field", "int64", true},
+		{"StringField", "string", true},
+		{"StringField", "any", false},
+		{"AnyField", "uint32", false},
+		{"AnyField", "uint64", true},
+		{"AnyField", "any", true},
 	}
 
-	inst := &testFTINStruct{}
+	inst := &testFTEQStruct{}
 	bindings := NewBindings()
 	bindings.Build(inst)
 	obj, _ := bindings.Bind(input)
 
 	for idx, tt := range tests {
-		t.Run(fmt.Sprintf("%02d FTIN(%s)", idx, tt.field), func(t *testing.T) {
-			pred, _ := (&FTINBuilder{}).Build(tt.field, tt.types, nil, false)
+		t.Run(fmt.Sprintf("%02d FTEQ(%s)", idx, tt.field), func(t *testing.T) {
+			pred, _ := (&FTEQBuilder{}).Build(tt.field, tt.types, nil, false)
 			result := pred.Eval(context.TODO(), obj)
 
 			if result != tt.want {
-				t.Errorf("FTIN(%s IN %#v) = %v, want %v",
+				t.Errorf("FTEQ(%s IN %#v) = %v, want %v",
 					tt.field,
 					tt.types,
 					result,
@@ -119,8 +120,8 @@ func TestFTINPredicate(t *testing.T) {
 
 // ** Benchmarks:
 
-func BenchmarkFTINPredicate(b *testing.B) {
-	input := &testFTINStruct{
+func BenchmarkFTEQPredicate(b *testing.B) {
+	input := &testFTEQStruct{
 		IntField:    42,
 		Int64Field:  9001,
 		StringField: "Hello",
@@ -128,17 +129,13 @@ func BenchmarkFTINPredicate(b *testing.B) {
 	}
 
 	field := "AnyField"
-	vals := []any{
-		"uint", "uint8", "uint16", "uint32", "uint64",
-		"int", "int8", "int16", "int32", "int64",
-		"string", "[]byte",
-	}
+	vals := "uint64"
 
-	inst := &testFTINStruct{}
+	inst := &testFTEQStruct{}
 	bindings := NewBindings()
 	bindings.Build(inst)
 
-	pred, err := (&FTINBuilder{}).Build(field, vals, nil, false)
+	pred, err := (&FTEQBuilder{}).Build(field, vals, nil, false)
 	if err != nil {
 		b.Fatal(err.Error())
 	}
@@ -151,4 +148,4 @@ func BenchmarkFTINPredicate(b *testing.B) {
 	})
 }
 
-// * predicate_ftin_test.go ends here.
+// * predicate_fteq_test.go ends here.

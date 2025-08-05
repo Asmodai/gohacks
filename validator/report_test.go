@@ -70,6 +70,9 @@ const (
     - attribute: one
       operator: field-value-in
       value: [40, 41, 42, 43]
+    - attribute: one
+      operator: field-type-in
+      value: [int8, int16, int32, int64]
   action:
     perform: ignore`
 )

@@ -147,10 +147,16 @@ func (meta *MetaPredicate) GetKeyAsString(input dag.Filterable) (string, bool) {
 func BuildPredicateDict() dag.PredicateDict {
 	result := make(dag.PredicateDict)
 	preds := []dag.PredicateBuilder{
-		&FTEQBuilder{},
-		&FVEQBuilder{},
-		&FVNEQBuilder{},
-		&FVINBuilder{},
+		//
+		// Field type predicates.
+		&FTEQBuilder{}, // Field Type Equals.
+		&FTINBuilder{}, // Field Type In.
+
+		//
+		// Field value predicates.
+		&FVEQBuilder{},  // Field Value Equals.
+		&FVNEQBuilder{}, // Field Value Not Equals.
+		&FVINBuilder{},  // Field Value In.
 	}
 
 	for idx := range preds {

@@ -348,6 +348,57 @@ func (pred *FVNEQPredicate) Eval(ctx context.Context, input dag.Filterable) bool
 func (pred *FVNEQPredicate) String() string
 ```
 
+#### type FVNILBuilder
+
+```go
+type FVNILBuilder struct{}
+```
+
+
+#### func (*FVNILBuilder) Build
+
+```go
+func (bld *FVNILBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
+```
+
+#### func (*FVNILBuilder) Token
+
+```go
+func (bld *FVNILBuilder) Token() string
+```
+
+#### type FVNILPredicate
+
+```go
+type FVNILPredicate struct {
+	MetaPredicate
+}
+```
+
+Field Value Is Nil.
+
+This predicate returns true if and only if the **reference** value of the
+filtered field is `nil`.
+
+If the field value is a concrete type (e.g. string, int, float, bool etc), then
+the predicate will return false.
+
+It only applies to types that can be `nil` in Go--e.g. pointers, slices, maps,
+interfaces, et al. If you're looking to test whether a field is "logically nil"
+(e.g. zero, false, empty) then consider using `FVFALSE` instead.
+
+#### func (*FVNILPredicate) Eval
+
+```go
+func (pred *FVNILPredicate) Eval(_ context.Context, input dag.Filterable) bool
+```
+
+#### func (*FVNILPredicate) String
+
+```go
+func (pred *FVNILPredicate) String() string
+```
+
 #### type FieldAccessorFn
 
 ```go

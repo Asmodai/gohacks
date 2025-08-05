@@ -54,7 +54,7 @@ var (
 
 // * Code:
 
-// ** Tests:
+// ** Types:
 
 type testFVEQStruct struct {
 	I    int
@@ -83,6 +83,8 @@ func (t *testFVEQStruct) ReflectType() reflect.Type {
 
 	return testFVEQStructType
 }
+
+// ** Tests:
 
 func TestFVEQPredicate(t *testing.T) {
 	input := &testFVEQStruct{
@@ -164,6 +166,49 @@ func TestFVEQPredicate(t *testing.T) {
 			}
 		})
 	}
+}
+
+// ** Benchmarks:
+
+func BenchmarkFVEQPredicate(b *testing.B) {
+	input := &testFVEQStruct{
+		I:    42,
+		I8:   42,
+		I16:  42,
+		I32:  42,
+		I64:  42,
+		U:    42,
+		U8:   42,
+		U16:  42,
+		U32:  42,
+		U64:  42,
+		F32:  3.14159,
+		F64:  3.14159,
+		C64:  complex64(3.14 + 1.72i),
+		C128: complex128(3.0 + 1.0i),
+		S:    "Hello",
+		B:    true,
+		Any:  int(42),
+	}
+
+	field := "C128"
+	vals := complex128(3.0 + 1.0i)
+
+	inst := &testFVEQStruct{}
+	bindings := NewBindings()
+	bindings.Build(inst)
+
+	pred, err := (&FVEQBuilder{}).Build(field, vals, nil, false)
+	if err != nil {
+		b.Fatal(err.Error())
+	}
+
+	b.Run("Eval", func(b *testing.B) {
+		b.ReportAllocs()
+
+		obj, _ := bindings.Bind(input)
+		_ = pred.Eval(context.TODO(), obj)
+	})
 }
 
 // * predicate_fveq_test.go ends here.

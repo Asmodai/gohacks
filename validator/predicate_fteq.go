@@ -96,6 +96,11 @@ func (pred *FTEQPredicate) Eval(_ context.Context, input dag.Filterable) bool {
 	}
 
 	if fInfo.TypeKind == reflect.Interface {
+		if want == "any" || want == "interface {}" {
+			// We want an `any`, so don't bother with the rest.
+			return true
+		}
+
 		val, valok := pred.MetaPredicate.GetKeyAsValue(input)
 		if valok {
 			tname, valid := resolveAnyType(val)
@@ -143,9 +148,15 @@ func (bld *FTEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) 
 // ** Functions:
 
 func normaliseTypeName(name string) string {
+	const (
+		anyStr    = "any"
+		iface1Str = "interface{}"
+		iface2Str = "interface {}"
+	)
+
 	switch strings.ToLower(strings.TrimSpace(name)) {
-	case "any", "interface{}", "interface {}":
-		return "interface {}"
+	case anyStr, iface1Str, iface2Str:
+		return iface2Str
 	}
 
 	return name

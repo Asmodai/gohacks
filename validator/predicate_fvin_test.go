@@ -54,6 +54,8 @@ var (
 
 // * Code:
 
+// ** Types:
+
 type testFVINStruct struct {
 	IntVal   int
 	Int64Val int64
@@ -69,6 +71,8 @@ func (t *testFVINStruct) ReflectType() reflect.Type {
 
 	return testFVINStructType
 }
+
+// ** Tests:
 
 func TestFVINPredicate(t *testing.T) {
 	input := &testFVINStruct{
