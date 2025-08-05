@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float.go --- Floating-point conversion functions.
+// complex.go --- Complex conversions.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,42 +37,18 @@ package conversion
 
 // * Code:
 
-// Convert a value to a 64-bit floating-point value.
-//
-//nolint:cyclop,varnamelen
-func ToFloat64(val any) (float64, bool) {
-	switch v := val.(type) {
-	case float64:
-		return v, true
+// Convert a value to a 128-bit complex number.
+func ToComplex128(value any) (complex128, bool) {
+	switch val := value.(type) {
+	case complex64:
+		return complex128(val), true
 
-	case float32:
-		return float64(v), true
-
-	case int:
-		return float64(v), true
-	case int8:
-		return float64(v), true
-	case int16:
-		return float64(v), true
-	case int32:
-		return float64(v), true
-	case int64:
-		return float64(v), true
-
-	case uint:
-		return float64(v), true
-	case uint8:
-		return float64(v), true
-	case uint16:
-		return float64(v), true
-	case uint32:
-		return float64(v), true
-	case uint64:
-		return float64(v), true
+	case complex128:
+		return val, true
 
 	default:
 		return 0, false
 	}
 }
 
-// * float.go ends here.
+// * complex.go ends here.

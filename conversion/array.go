@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package conversion
@@ -46,10 +42,6 @@ import (
 
 	"golang.org/x/exp/constraints"
 )
-
-// * Constants:
-
-// * Variables:
 
 // * Code:
 

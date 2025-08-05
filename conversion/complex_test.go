@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float_test.go --- Floating-point conversion tests.
+// complex_test.go --- Complex conversion tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,46 +37,28 @@ package conversion
 
 // * Imports:
 
-import (
-	"testing"
-)
+import "testing"
 
 // * Code:
 
-// ** Types:
-
-type expectedFloat64 struct {
-	name string
-	val  any
-	want float64
-}
-
 // ** Tests:
 
-func TestToFloat64(t *testing.T) {
+func TestToComplex128(t *testing.T) {
 	want := []struct {
 		name   string
 		val    any
-		want   float64
+		want   complex128
 		result bool
 	}{
-		{"float64", float64(42.0), float64(42.0), true},
-		{"float32", float32(42.0), float64(42.0), true},
-		{"int", int(42), float64(42.0), true},
-		{"int8", int8(42), float64(42.0), true},
-		{"int16", int16(42), float64(42.0), true},
-		{"int32", int32(42), float64(42.0), true},
-		{"int64", int64(42), float64(42.0), true},
-		{"uint", uint(42), float64(42.0), true},
-		{"uint8", uint8(42), float64(42.0), true},
-		{"uint16", uint16(42), float64(42.0), true},
-		{"uint32", uint32(42), float64(42.0), true},
-		{"uint64", uint64(42), float64(42.0), true},
+		{"float64", float64(42.0), 0, false},
+		{"int64", int64(42), 0, false},
+		{"complex64", complex64(42 + 1i), complex128(42 + 1i), true},
+		{"complex128", complex128(42 + 1i), complex128(42 + 1i), true},
 	}
 
 	t.Run("Numeric types", func(t *testing.T) {
 		for idx := range want {
-			res, ok := ToFloat64(want[idx].val)
+			res, ok := ToComplex128(want[idx].val)
 
 			if ok != want[idx].result {
 				t.Fatalf("%q: ok != %#v",
@@ -86,8 +68,7 @@ func TestToFloat64(t *testing.T) {
 			}
 
 			if res != want[idx].want {
-				t.Fatalf(
-					"%q: %#v != %#v",
+				t.Fatalf("%q: %#v != %#v",
 					want[idx].name,
 					want[idx].want,
 					res,
@@ -97,7 +78,7 @@ func TestToFloat64(t *testing.T) {
 	})
 
 	t.Run("Non-numeric types", func(t *testing.T) {
-		res, ok := ToFloat64("Huh?")
+		res, ok := ToComplex128("Huh?")
 
 		if ok {
 			t.Error("Unexpectedly ok!")
@@ -109,14 +90,4 @@ func TestToFloat64(t *testing.T) {
 	})
 }
 
-// ** Benchmarks:
-
-func BenchmarkToFloat64(b *testing.B) {
-	b.ReportAllocs()
-
-	for val := range b.N {
-		ToFloat64(val)
-	}
-}
-
-// * float_test.go ends here.
+// * complex_test.go ends here.

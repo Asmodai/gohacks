@@ -35,13 +35,9 @@
 
 package conversion
 
-import "math"
-
 // * Imports:
 
-// * Constants:
-
-// * Variables:
+import "math"
 
 // * Code:
 

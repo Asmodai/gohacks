@@ -35,9 +35,9 @@
 
 package conversion
 
-import "strings"
-
 // * Imports:
+
+import "strings"
 
 // * Code:
 

@@ -102,6 +102,7 @@ func ToBool(value any) (bool, bool)
 ```go
 func ToComplex128(value any) (complex128, bool)
 ```
+Convert a value to a 128-bit complex number.
 
 #### func  ToFloat64
 

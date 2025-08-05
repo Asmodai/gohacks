@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package conversion
@@ -56,13 +52,13 @@ func TestKiB(t *testing.T) {
 	r1 := BToKiB(b)
 	r2 := KiBToB(r1)
 
-	t.Log("Does B -> KiB -> B conversion work?")
-	if r1 == kib && r2 == b {
-		t.Log("Yes.")
-		return
+	if r1 != kib {
+		t.Fatalf("KiB: %#v != %#v", r1, kib)
 	}
 
-	t.Error("No.")
+	if r2 != b {
+		t.Fatalf("b: %#v != %#v", r2, b)
+	}
 }
 
 func TestMiB(t *testing.T) {
@@ -72,13 +68,13 @@ func TestMiB(t *testing.T) {
 	r1 := BToMiB(b)
 	r2 := MiBToB(r1)
 
-	t.Log("Does B -> MiB -> B conversion work?")
-	if r1 == mib && r2 == b {
-		t.Log("Yes.")
-		return
+	if r1 != mib {
+		t.Fatalf("MiB: %#v != %#v", r1, mib)
 	}
 
-	t.Error("No.")
+	if r2 != b {
+		t.Fatalf("b: %#v != %#v", r2, b)
+	}
 }
 
 func TestGiB(t *testing.T) {
@@ -88,13 +84,13 @@ func TestGiB(t *testing.T) {
 	r1 := BToGiB(b)
 	r2 := GiBToB(r1)
 
-	t.Log("Does B -> GiB -> B conversion work?")
-	if r1 == gib && r2 == b {
-		t.Log("Yes.")
-		return
+	if r1 != gib {
+		t.Fatalf("GiB: %#v != %#v", r1, gib)
 	}
 
-	t.Error("No.")
+	if r2 != b {
+		t.Fatalf("b: %#v != %#v", r2, b)
+	}
 }
 
 func TestTiB(t *testing.T) {
@@ -104,13 +100,13 @@ func TestTiB(t *testing.T) {
 	r1 := BToTiB(b)
 	r2 := TiBToB(r1)
 
-	t.Log("Does B -> TiB -> B conversion work?")
-	if r1 == tib && r2 == b {
-		t.Log("Yes.")
-		return
+	if r1 != tib {
+		t.Fatalf("TiB: %#v != %#v", r1, tib)
 	}
 
-	t.Error("No.")
+	if r2 != b {
+		t.Fatalf("b: %#v != %#v", r2, b)
+	}
 }
 
 // * bytes_test.go ends here.

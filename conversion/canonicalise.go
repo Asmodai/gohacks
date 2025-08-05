@@ -31,19 +31,9 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package conversion
-
-// * Imports:
-
-// * Constants:
-
-// * Variables:
 
 // * Code:
 
@@ -60,6 +50,9 @@ func Canonicalise(value any) (any, bool) {
 
 	case float32, float64:
 		return ToFloat64(val)
+
+	case complex64, complex128:
+		return ToComplex128(val)
 
 	case string:
 		return val, true

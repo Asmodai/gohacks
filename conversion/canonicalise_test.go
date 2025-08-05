@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// float_test.go --- Floating-point conversion tests.
+// canonicalise_test.go --- Canonicalisation tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,86 +37,46 @@ package conversion
 
 // * Imports:
 
-import (
-	"testing"
-)
+import "testing"
 
 // * Code:
 
-// ** Types:
-
-type expectedFloat64 struct {
-	name string
-	val  any
-	want float64
-}
-
 // ** Tests:
 
-func TestToFloat64(t *testing.T) {
+func TestCanonicalise(t *testing.T) {
 	want := []struct {
 		name   string
 		val    any
-		want   float64
+		want   any
 		result bool
 	}{
-		{"float64", float64(42.0), float64(42.0), true},
-		{"float32", float32(42.0), float64(42.0), true},
-		{"int", int(42), float64(42.0), true},
-		{"int8", int8(42), float64(42.0), true},
-		{"int16", int16(42), float64(42.0), true},
-		{"int32", int32(42), float64(42.0), true},
-		{"int64", int64(42), float64(42.0), true},
-		{"uint", uint(42), float64(42.0), true},
-		{"uint8", uint8(42), float64(42.0), true},
-		{"uint16", uint16(42), float64(42.0), true},
-		{"uint32", uint32(42), float64(42.0), true},
-		{"uint64", uint64(42), float64(42.0), true},
+		{"float32", float32(42), float64(42), true},
+		{"uint16", uint16(42), uint64(42), true},
+		{"int32", int32(-42), int64(-42), true},
+		{"complex64", complex64(42 + 1i), complex128(42 + 1i), true},
+		{"string", "foo", "foo", true},
+		{"bool", true, true, true},
 	}
 
-	t.Run("Numeric types", func(t *testing.T) {
-		for idx := range want {
-			res, ok := ToFloat64(want[idx].val)
+	for idx := range want {
+		res, ok := Canonicalise(want[idx].val)
 
-			if ok != want[idx].result {
-				t.Fatalf("%q: ok != %#v",
-					want[idx].name,
-					want[idx].result,
-				)
-			}
-
-			if res != want[idx].want {
-				t.Fatalf(
-					"%q: %#v != %#v",
-					want[idx].name,
-					want[idx].want,
-					res,
-				)
-			}
-		}
-	})
-
-	t.Run("Non-numeric types", func(t *testing.T) {
-		res, ok := ToFloat64("Huh?")
-
-		if ok {
-			t.Error("Unexpectedly ok!")
+		if ok != want[idx].result {
+			t.Fatalf("%q: ok != %#v",
+				want[idx].name,
+				want[idx].result,
+			)
 		}
 
-		if res != 0 {
-			t.Errorf("Value mismatch: %#v != 0", res)
+		if res != want[idx].want {
+			t.Fatalf("%q: %#v != %#v",
+				want[idx].name,
+				want[idx].result,
+				res,
+			)
 		}
-	})
-}
-
-// ** Benchmarks:
-
-func BenchmarkToFloat64(b *testing.B) {
-	b.ReportAllocs()
-
-	for val := range b.N {
-		ToFloat64(val)
 	}
+
 }
 
-// * float_test.go ends here.
+// * canonicalise_test.go ends here.
