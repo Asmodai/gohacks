@@ -16,6 +16,12 @@ var (
 )
 ```
 
+```go
+var (
+	ErrValueNotString = errors.Base("value is not a string")
+)
+```
+
 #### func  BuildPredicateDict
 
 ```go
@@ -159,6 +165,50 @@ func (pred *FTEQPredicate) Eval(_ context.Context, input dag.Filterable) bool
 
 ```go
 func (pred *FTEQPredicate) String() string
+```
+
+#### type FTINBuilder
+
+```go
+type FTINBuilder struct{}
+```
+
+
+#### func (*FTINBuilder) Build
+
+```go
+func (bld *FTINBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
+```
+
+#### func (*FTINBuilder) Token
+
+```go
+func (bld *FTINBuilder) Token() string
+```
+
+#### type FTINPredicate
+
+```go
+type FTINPredicate struct {
+	MetaPredicate
+}
+```
+
+Field Type In.
+
+This predicate returns true of the type of a field in the input structure is one
+of the provided values in the predicate.
+
+#### func (*FTINPredicate) Eval
+
+```go
+func (pred *FTINPredicate) Eval(_ context.Context, input dag.Filterable) bool
+```
+
+#### func (*FTINPredicate) String
+
+```go
+func (pred *FTINPredicate) String() string
 ```
 
 #### type FVEQBuilder

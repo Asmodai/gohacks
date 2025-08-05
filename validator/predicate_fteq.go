@@ -42,8 +42,10 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Asmodai/gohacks/conversion"
 	"github.com/Asmodai/gohacks/dag"
 	"github.com/Asmodai/gohacks/logger"
+	"gitlab.com/tozd/go/errors"
 )
 
 // * Constants:
@@ -51,6 +53,12 @@ import (
 const (
 	fteqIsn   = "FTEQ"
 	fteqToken = "field-type-equal"
+)
+
+// * Variables:
+
+var (
+	ErrValueNotString = errors.Base("value is not a string")
 )
 
 // * Code:
@@ -79,109 +87,6 @@ func (pred *FTEQPredicate) String() string {
 	return dag.FormatIsnf(fteqIsn, invalidTokenString)
 }
 
-func (pred *FTEQPredicate) checkSigned(value any, want string) bool {
-	switch value.(type) {
-	case int:
-		return strings.EqualFold(want, "int")
-
-	case int8:
-		return strings.EqualFold(want, "int8")
-
-	case int16:
-		return strings.EqualFold(want, "int16")
-
-	case int32:
-		return strings.EqualFold(want, "int32")
-
-	case int64:
-		return strings.EqualFold(want, "int64")
-
-	default:
-		return false
-	}
-}
-
-func (pred *FTEQPredicate) checkUnsigned(value any, want string) bool {
-	switch value.(type) {
-	case uint:
-		return strings.EqualFold(want, "uint")
-
-	case uint8:
-		return strings.EqualFold(want, "uint8")
-
-	case uint16:
-		return strings.EqualFold(want, "uint16")
-
-	case uint32:
-		return strings.EqualFold(want, "uint32")
-
-	case uint64:
-		return strings.EqualFold(want, "uint64")
-
-	default:
-		return false
-	}
-}
-
-func (pred *FTEQPredicate) checkFloat(value any, want string) bool {
-	switch value.(type) {
-	case float32:
-		return strings.EqualFold(want, "float32")
-
-	case float64:
-		return strings.EqualFold(want, "float64")
-	default:
-		return false
-	}
-}
-
-func (pred *FTEQPredicate) checkComplex(value any, want string) bool {
-	switch value.(type) {
-	case complex64:
-		return strings.EqualFold(want, "complex64")
-
-	case complex128:
-		return strings.EqualFold(want, "complex128")
-	default:
-		return false
-	}
-}
-
-//nolint:cyclop
-func (pred *FTEQPredicate) resolveAny(value any, want string) bool {
-	switch value.(type) {
-	case int, int8, int16, int32, int64:
-		return pred.checkSigned(value, want)
-
-	case uint, uint8, uint16, uint32, uint64:
-		return pred.checkUnsigned(value, want)
-
-	case float32, float64:
-		return pred.checkFloat(value, want)
-
-	case complex64, complex128:
-		return pred.checkComplex(value, want)
-
-	case bool:
-		return strings.EqualFold(want, "bool")
-
-	case string:
-		return strings.EqualFold(want, "string")
-
-	case []byte:
-		return strings.EqualFold(want, "[]byte")
-
-	case []any:
-		return strings.EqualFold(want, "[]any")
-
-	case any:
-		return strings.EqualFold(want, "any")
-
-	default:
-		return false
-	}
-}
-
 func (pred *FTEQPredicate) Eval(_ context.Context, input dag.Filterable) bool {
 	want, wantOk := pred.MetaPredicate.GetValueAsString()
 	fInfo, fInfoOk := pred.MetaPredicate.GetKeyAsFieldInfo(input)
@@ -192,9 +97,13 @@ func (pred *FTEQPredicate) Eval(_ context.Context, input dag.Filterable) bool {
 
 	if fInfo.TypeKind == reflect.Interface {
 		val, valok := pred.MetaPredicate.GetKeyAsValue(input)
-
 		if valok {
-			return pred.resolveAny(val, want)
+			tname, valid := resolveAnyType(val)
+			if !valid {
+				return false
+			}
+
+			return strings.EqualFold(want, tname)
 		}
 	}
 
@@ -210,16 +119,87 @@ func (bld *FTEQBuilder) Token() string {
 }
 
 func (bld *FTEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error) {
+	sval, svalOk := conversion.ToString(val)
+	if !svalOk {
+		return nil, errors.WithMessagef(
+			ErrValueNotString,
+			"%s: value %q",
+			fteqToken,
+			val)
+	}
+
 	pred := &FTEQPredicate{
 		MetaPredicate: MetaPredicate{
 			key:    key,
-			val:    val,
+			val:    normaliseTypeName(sval),
 			logger: lgr,
 			debug:  dbg,
 		},
 	}
 
 	return pred, nil
+}
+
+// ** Functions:
+
+func normaliseTypeName(name string) string {
+	switch strings.ToLower(strings.TrimSpace(name)) {
+	case "any", "interface{}", "interface {}":
+		return "interface {}"
+	}
+
+	return name
+}
+
+//nolint:cyclop,funlen
+func resolveAnyType(value any) (string, bool) {
+	switch value.(type) {
+	case int:
+		return "int", true
+	case int8:
+		return "int8", true
+	case int16:
+		return "int16", true
+	case int32:
+		return "int32", true
+	case int64:
+		return "int64", true
+	case uint:
+		return "uint", true
+	case uint8:
+		return "uint8", true
+	case uint16:
+		return "uint16", true
+	case uint32:
+		return "uint32", true
+	case uint64:
+		return "uint64", true
+	case float32:
+		return "float32", true
+	case float64:
+		return "float64", true
+	case complex64:
+		return "complex64", true
+	case complex128:
+		return "complex128", true
+	case bool:
+		return "bool", true
+
+	case string:
+		return "string", true
+
+	case []byte:
+		return "[]byte", true
+
+	case []any:
+		return "[]any", true
+
+	case any:
+		return "any", true
+
+	default:
+		return "", false
+	}
 }
 
 // * predicate_fteq.go ends here.

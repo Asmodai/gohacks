@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_fvin.go --- Field Value In.
+// predicate_ftin.go --- FTIN - Field Type In.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -39,8 +39,8 @@ package validator
 
 import (
 	"context"
+	"reflect"
 
-	"github.com/Asmodai/gohacks/conversion"
 	"github.com/Asmodai/gohacks/dag"
 	"github.com/Asmodai/gohacks/logger"
 	"gitlab.com/tozd/go/errors"
@@ -49,103 +49,111 @@ import (
 // * Constants:
 
 const (
-	fvinIsn   = "FVIN"
-	fvinToken = "field-value-in"
-)
-
-// * Variables:
-
-var (
-	ErrInvalidSlice       = errors.Base("invalid slice")
-	ErrNotCanonicalisable = errors.Base("value cannot be canonicalised")
-	ErrNotComparable      = errors.Base("value cannot be compared")
+	ftinIsn   = "FTIN"
+	ftinToken = "field-type-in"
 )
 
 // * Code:
 
 // ** Predicate:
 
-// Field Value In.
+// Field Type In.
 //
-// This predicate returns true if the value in the structure is one of the
-// provided values in the predicate.
-type FVINPredicate struct {
+// This predicate returns true of the type of a field in the input structure
+// is one of the provided values in the predicate.
+type FTINPredicate struct {
 	MetaPredicate
 
-	valueSet map[any]struct{}
+	valueSet map[string]struct{}
 }
 
-func (pred *FVINPredicate) String() string {
+func (pred *FTINPredicate) String() string {
 	if val, ok := pred.MetaPredicate.GetValueAsAny(); ok {
 		return dag.FormatIsnf(
-			fvinIsn,
+			ftinIsn,
 			"%q %s %v",
 			pred.MetaPredicate.key,
-			fvinToken,
+			ftinToken,
 			val,
 		)
 	}
 
-	return dag.FormatIsnf(fvinIsn, invalidTokenString)
+	return dag.FormatIsnf(ftinIsn, invalidTokenString)
 }
 
-func (pred *FVINPredicate) Eval(_ context.Context, input dag.Filterable) bool {
-	have, haveOk := pred.MetaPredicate.GetKeyAsValue(input)
+func (pred *FTINPredicate) Eval(_ context.Context, input dag.Filterable) bool {
+	have, haveOk := pred.MetaPredicate.GetKeyAsFieldInfo(input)
 	if !haveOk {
 		return false
 	}
 
-	canon, canonOk := conversion.Canonicalise(have)
-	if !canonOk {
-		return false
+	typeName := have.TypeName
+
+	// If the field is `any`, then look at the actual value of the data.
+	if have.TypeKind == reflect.Interface {
+		if _, haveAny := pred.valueSet["interface {}"]; haveAny {
+			// We match `any`, so we don't need to do more.
+			return true
+		}
+
+		// Get the real value.
+		value, valueOk := pred.MetaPredicate.GetKeyAsValue(input)
+		if !valueOk {
+			return false
+		}
+
+		// Resolve it.
+		actual, actualOk := resolveAnyType(value)
+		if !actualOk {
+			return false
+		}
+
+		// Use it.
+		typeName = actual
 	}
 
-	_, exists := pred.valueSet[canon]
+	_, exists := pred.valueSet[typeName]
 
 	return exists
 }
 
 // ** Builder:
 
-type FVINBuilder struct{}
+type FTINBuilder struct{}
 
-func (bld *FVINBuilder) Token() string {
-	return fvinToken
+func (bld *FTINBuilder) Token() string {
+	return ftinToken
 }
 
-func (bld *FVINBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error) {
+func (bld *FTINBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error) {
 	valSlice, sliceOk := val.([]any)
 	if !sliceOk {
 		return nil, errors.WithMessagef(
 			ErrInvalidSlice,
 			"%s: syntax error",
-			fvinToken)
+			ftinToken)
 	}
 
-	valMap := make(map[any]struct{}, len(valSlice))
+	valMap := make(map[string]struct{}, len(valSlice))
 
+	// Iterate over all the values and coerce them to string.
 	for _, elt := range valSlice {
-		if !isComparable(elt) {
+		// NOTE: We are not using `conversion.ToString()` here as
+		// we don't want to coerce non-strings to string.
+		typeName, converted := elt.(string)
+		if !converted {
 			return nil, errors.WithMessagef(
-				ErrNotComparable,
+				ErrValueNotString,
 				"%s: value %q",
-				fvinToken,
+				ftinToken,
 				elt)
 		}
 
-		canon, canonOk := conversion.Canonicalise(elt)
-		if !canonOk {
-			return nil, errors.WithMessagef(
-				ErrNotCanonicalisable,
-				"%s: value %q",
-				fvinToken,
-				elt)
-		}
-
-		valMap[canon] = struct{}{}
+		typeName = normaliseTypeName(typeName)
+		valMap[typeName] = struct{}{}
 	}
 
-	pred := &FVINPredicate{
+	pred := &FTINPredicate{
 		MetaPredicate: MetaPredicate{
 			key:    key,
 			val:    val,
@@ -158,17 +166,4 @@ func (bld *FVINBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) 
 	return pred, nil
 }
 
-// ** Functions:
-
-//nolint:errcheck
-func isComparable(val any) bool {
-	defer func() {
-		recover()
-	}()
-
-	_ = map[any]struct{}{val: {}}
-
-	return true
-}
-
-// * predicate_fvin.go ends here.
+// * predicate_ftin.go ends here.
