@@ -127,7 +127,7 @@ type FTEQBuilder struct{}
 #### func (*FTEQBuilder) Build
 
 ```go
-func (bld *FTEQBuilder) Build(key string, val any) (dag.Predicate, error)
+func (bld *FTEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
 ```
 
 #### func (*FTEQBuilder) Token
@@ -152,7 +152,7 @@ the predicate returns true.
 #### func (*FTEQPredicate) Eval
 
 ```go
-func (pred *FTEQPredicate) Eval(input dag.Filterable) bool
+func (pred *FTEQPredicate) Eval(_ context.Context, input dag.Filterable) bool
 ```
 
 #### func (*FTEQPredicate) String
@@ -171,7 +171,7 @@ type FVEQBuilder struct{}
 #### func (*FVEQBuilder) Build
 
 ```go
-func (bld *FVEQBuilder) Build(key string, val any) (dag.Predicate, error)
+func (bld *FVEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
 ```
 
 #### func (*FVEQBuilder) Token
@@ -205,7 +205,7 @@ enough to hold the value.
 #### func (*FVEQPredicate) Eval
 
 ```go
-func (pred *FVEQPredicate) Eval(input dag.Filterable) bool
+func (pred *FVEQPredicate) Eval(_ context.Context, input dag.Filterable) bool
 ```
 
 #### func (*FVEQPredicate) String
@@ -224,7 +224,7 @@ type FVINBuilder struct{}
 #### func (*FVINBuilder) Build
 
 ```go
-func (bld *FVINBuilder) Build(key string, val any) (dag.Predicate, error)
+func (bld *FVINBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
 ```
 
 #### func (*FVINBuilder) Token
@@ -249,13 +249,53 @@ values in the predicate.
 #### func (*FVINPredicate) Eval
 
 ```go
-func (pred *FVINPredicate) Eval(input dag.Filterable) bool
+func (pred *FVINPredicate) Eval(_ context.Context, input dag.Filterable) bool
 ```
 
 #### func (*FVINPredicate) String
 
 ```go
 func (pred *FVINPredicate) String() string
+```
+
+#### type FVNEQBuilder
+
+```go
+type FVNEQBuilder struct{}
+```
+
+
+#### func (*FVNEQBuilder) Build
+
+```go
+func (bld *FVNEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
+```
+
+#### func (*FVNEQBuilder) Token
+
+```go
+func (bld *FVNEQBuilder) Token() string
+```
+
+#### type FVNEQPredicate
+
+```go
+type FVNEQPredicate struct {
+	FVEQPredicate
+}
+```
+
+
+#### func (*FVNEQPredicate) Eval
+
+```go
+func (pred *FVNEQPredicate) Eval(ctx context.Context, input dag.Filterable) bool
+```
+
+#### func (*FVNEQPredicate) String
+
+```go
+func (pred *FVNEQPredicate) String() string
 ```
 
 #### type FieldAccessorFn

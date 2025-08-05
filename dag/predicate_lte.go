@@ -30,8 +30,6 @@
 // SOFTWARE.
 
 // * Comments:
-// Hi, golangci-lint, the code in this file is NOT the same as other files.
-// You're delusional.
 
 // * Package:
 
@@ -40,7 +38,12 @@ package dag
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/conversion"
+import (
+	"context"
+
+	"github.com/Asmodai/gohacks/conversion"
+	"github.com/Asmodai/gohacks/logger"
+)
 
 // * Constants:
 
@@ -60,15 +63,18 @@ type LTEPredicate struct {
 }
 
 func (pred *LTEPredicate) String() string {
-	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
-	if !ok {
-		return FormatIsnf(lteIsn, invalidTokenString)
+	if val, ok := conversion.ToFloat64(pred.MetaPredicate.val); ok {
+		return FormatIsnf(lteIsn,
+			"%s %s %g",
+			pred.MetaPredicate.key,
+			lteToken,
+			val)
 	}
 
-	return FormatIsnf(lteIsn, "%s %s %g", pred.MetaPredicate.key, lteToken, val)
+	return FormatIsnf(lteIsn, invalidTokenString)
 }
 
-func (pred *LTEPredicate) Eval(input Filterable) bool {
+func (pred *LTEPredicate) Eval(_ context.Context, input Filterable) bool {
 	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
 
 	return ok && lhs <= rhs
@@ -82,9 +88,14 @@ func (bld *LTEBuilder) Token() string {
 	return lteToken
 }
 
-func (bld *LTEBuilder) Build(key string, val any) (Predicate, error) {
+func (bld *LTEBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error) {
 	pred := &LTEPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
+		MetaPredicate: MetaPredicate{
+			key:    key,
+			val:    val,
+			logger: lgr,
+			debug:  dbg,
+		},
 	}
 
 	return pred, nil

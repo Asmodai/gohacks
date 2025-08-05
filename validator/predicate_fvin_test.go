@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package validator
@@ -42,13 +38,12 @@ package validator
 // * Imports:
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"sync"
 	"testing"
 )
-
-// * Constants:
 
 // * Variables:
 
@@ -105,8 +100,8 @@ func TestFVINPredicate(t *testing.T) {
 
 	for idx, tt := range tests {
 		t.Run(fmt.Sprintf("%02d FVIN(%s)", idx, tt.field), func(t *testing.T) {
-			pred, _ := (&FVINBuilder{}).Build(tt.field, tt.vals)
-			result := pred.Eval(obj)
+			pred, _ := (&FVINBuilder{}).Build(tt.field, tt.vals, nil, false)
+			result := pred.Eval(context.TODO(), obj)
 
 			if result != tt.want {
 				t.Errorf("FVIN(%s IN %#v) = %v, want %v",

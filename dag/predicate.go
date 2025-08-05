@@ -40,10 +40,12 @@ package dag
 // * Imports:
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/Asmodai/gohacks/conversion"
+	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/utils"
 )
 
@@ -60,13 +62,13 @@ const (
 // ** Interface:
 
 type Predicate interface {
-	Eval(Filterable) bool
+	Eval(context.Context, Filterable) bool
 	String() string
 }
 
 type PredicateBuilder interface {
 	Token() string
-	Build(string, any) (Predicate, error)
+	Build(string, any, logger.Logger, bool) (Predicate, error)
 }
 
 // ** Types:
@@ -76,8 +78,10 @@ type PredicateDict map[string]PredicateBuilder
 // *** Meta predicate:
 
 type MetaPredicate struct {
-	key string
-	val any
+	key    string
+	val    any
+	logger logger.Logger
+	debug  bool
 }
 
 func (meta *MetaPredicate) GetFloatValueFromInput(input Filterable) (float64, bool) {

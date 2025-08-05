@@ -37,7 +37,10 @@ package dag
 
 // * Imports:
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 // * Code:
 
@@ -50,11 +53,11 @@ func TestLTPredicate(t *testing.T) {
 
 	input := NewDataInputFromMap(map[string]any{"Numeric": value})
 	builder := &LTBuilder{}
-	pred1, _ := builder.Build("Numeric", good)
-	pred2, _ := builder.Build("Numeric", bad)
+	pred1, _ := builder.Build("Numeric", good, nil, false)
+	pred2, _ := builder.Build("Numeric", bad, nil, false)
 
 	t.Run(pred1.String(), func(t *testing.T) {
-		if !pred1.Eval(input) {
+		if !pred1.Eval(context.TODO(), input) {
 			t.Errorf("[%s] failed.  %v >= %v",
 				pred1.String(),
 				value,
@@ -63,7 +66,7 @@ func TestLTPredicate(t *testing.T) {
 	})
 
 	t.Run(pred2.String(), func(t *testing.T) {
-		if pred2.Eval(input) {
+		if pred2.Eval(context.TODO(), input) {
 			t.Errorf("[%s] failed.  %v < %v",
 				pred2.String(),
 				value,

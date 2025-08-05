@@ -205,7 +205,7 @@ type EIRBuilder struct{}
 #### func (*EIRBuilder) Build
 
 ```go
-func (bld *EIRBuilder) Build(key string, val any) (Predicate, error)
+func (bld *EIRBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*EIRBuilder) Token
@@ -226,7 +226,7 @@ type EIRPredicate struct {
 #### func (*EIRPredicate) Eval
 
 ```go
-func (pred *EIRPredicate) Eval(input Filterable) bool
+func (pred *EIRPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*EIRPredicate) String
@@ -245,7 +245,7 @@ type EQBuilder struct{}
 #### func (*EQBuilder) Build
 
 ```go
-func (bld *EQBuilder) Build(key string, val any) (Predicate, error)
+func (bld *EQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*EQBuilder) Token
@@ -266,7 +266,7 @@ type EQPredicate struct {
 #### func (*EQPredicate) Eval
 
 ```go
-func (pred *EQPredicate) Eval(input Filterable) bool
+func (pred *EQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*EQPredicate) String
@@ -320,7 +320,7 @@ type GTBuilder struct{}
 #### func (*GTBuilder) Build
 
 ```go
-func (bld *GTBuilder) Build(key string, val any) (Predicate, error)
+func (bld *GTBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*GTBuilder) Token
@@ -339,7 +339,7 @@ type GTEBuilder struct{}
 #### func (*GTEBuilder) Build
 
 ```go
-func (bld *GTEBuilder) Build(key string, val any) (Predicate, error)
+func (bld *GTEBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*GTEBuilder) Token
@@ -360,7 +360,7 @@ type GTEPredicate struct {
 #### func (*GTEPredicate) Eval
 
 ```go
-func (pred *GTEPredicate) Eval(input Filterable) bool
+func (pred *GTEPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*GTEPredicate) String
@@ -381,7 +381,7 @@ type GTPredicate struct {
 #### func (*GTPredicate) Eval
 
 ```go
-func (pred *GTPredicate) Eval(input Filterable) bool
+func (pred *GTPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*GTPredicate) String
@@ -400,7 +400,7 @@ type IIRBuilder struct{}
 #### func (*IIRBuilder) Build
 
 ```go
-func (bld *IIRBuilder) Build(key string, val any) (Predicate, error)
+func (bld *IIRBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*IIRBuilder) Token
@@ -421,7 +421,7 @@ type IIRPredicate struct {
 #### func (*IIRPredicate) Eval
 
 ```go
-func (pred *IIRPredicate) Eval(input Filterable) bool
+func (pred *IIRPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*IIRPredicate) String
@@ -440,7 +440,7 @@ type LTBuilder struct{}
 #### func (*LTBuilder) Build
 
 ```go
-func (bld *LTBuilder) Build(key string, val any) (Predicate, error)
+func (bld *LTBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*LTBuilder) Token
@@ -459,7 +459,7 @@ type LTEBuilder struct{}
 #### func (*LTEBuilder) Build
 
 ```go
-func (bld *LTEBuilder) Build(key string, val any) (Predicate, error)
+func (bld *LTEBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*LTEBuilder) Token
@@ -480,7 +480,7 @@ type LTEPredicate struct {
 #### func (*LTEPredicate) Eval
 
 ```go
-func (pred *LTEPredicate) Eval(input Filterable) bool
+func (pred *LTEPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*LTEPredicate) String
@@ -501,7 +501,7 @@ type LTPredicate struct {
 #### func (*LTPredicate) Eval
 
 ```go
-func (pred *LTPredicate) Eval(input Filterable) bool
+func (pred *LTPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*LTPredicate) String
@@ -576,7 +576,7 @@ type NEQBuilder struct{}
 #### func (*NEQBuilder) Build
 
 ```go
-func (bld *NEQBuilder) Build(key string, val any) (Predicate, error)
+func (bld *NEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*NEQBuilder) Token
@@ -597,7 +597,7 @@ type NEQPredicate struct {
 #### func (*NEQPredicate) Eval
 
 ```go
-func (pred *NEQPredicate) Eval(input Filterable) bool
+func (pred *NEQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*NEQPredicate) String
@@ -616,7 +616,7 @@ type NOOPPredicate struct{}
 #### func (*NOOPPredicate) Eval
 
 ```go
-func (pred *NOOPPredicate) Eval(_ Filterable) bool
+func (pred *NOOPPredicate) Eval(_ context.Context, _ Filterable) bool
 ```
 
 #### func (*NOOPPredicate) String
@@ -629,7 +629,7 @@ func (pred *NOOPPredicate) String() string
 
 ```go
 type Predicate interface {
-	Eval(Filterable) bool
+	Eval(context.Context, Filterable) bool
 	String() string
 }
 ```
@@ -640,7 +640,7 @@ type Predicate interface {
 ```go
 type PredicateBuilder interface {
 	Token() string
-	Build(string, any) (Predicate, error)
+	Build(string, any, logger.Logger, bool) (Predicate, error)
 }
 ```
 
@@ -679,7 +679,7 @@ type REIMBuilder struct{}
 #### func (*REIMBuilder) Build
 
 ```go
-func (bld *REIMBuilder) Build(key string, val any) (Predicate, error)
+func (bld *REIMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*REIMBuilder) Token
@@ -700,7 +700,7 @@ type REIMPredicate struct {
 #### func (*REIMPredicate) Eval
 
 ```go
-func (pred *REIMPredicate) Eval(input Filterable) bool
+func (pred *REIMPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*REIMPredicate) String
@@ -719,7 +719,7 @@ type RESMBuilder struct{}
 #### func (*RESMBuilder) Build
 
 ```go
-func (bld *RESMBuilder) Build(key string, val any) (Predicate, error)
+func (bld *RESMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*RESMBuilder) Token
@@ -740,7 +740,7 @@ type RESMPredicate struct {
 #### func (*RESMPredicate) Eval
 
 ```go
-func (pred *RESMPredicate) Eval(input Filterable) bool
+func (pred *RESMPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*RESMPredicate) String
@@ -803,7 +803,7 @@ type SIEQBuilder struct{}
 #### func (*SIEQBuilder) Build
 
 ```go
-func (bld *SIEQBuilder) Build(key string, val any) (Predicate, error)
+func (bld *SIEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*SIEQBuilder) Token
@@ -824,7 +824,7 @@ type SIEQPredicate struct {
 #### func (*SIEQPredicate) Eval
 
 ```go
-func (pred *SIEQPredicate) Eval(input Filterable) bool
+func (pred *SIEQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*SIEQPredicate) String
@@ -843,7 +843,7 @@ type SIMBuilder struct{}
 #### func (*SIMBuilder) Build
 
 ```go
-func (bld *SIMBuilder) Build(key string, val any) (Predicate, error)
+func (bld *SIMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*SIMBuilder) Token
@@ -864,7 +864,7 @@ type SIMPredicate struct {
 #### func (*SIMPredicate) Eval
 
 ```go
-func (pred *SIMPredicate) Eval(input Filterable) bool
+func (pred *SIMPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*SIMPredicate) String
@@ -883,7 +883,7 @@ type SINEQBuilder struct{}
 #### func (*SINEQBuilder) Build
 
 ```go
-func (bld *SINEQBuilder) Build(key string, val any) (Predicate, error)
+func (bld *SINEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*SINEQBuilder) Token
@@ -904,7 +904,7 @@ type SINEQPredicate struct {
 #### func (*SINEQPredicate) Eval
 
 ```go
-func (pred *SINEQPredicate) Eval(input Filterable) bool
+func (pred *SINEQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*SINEQPredicate) String
@@ -923,7 +923,7 @@ type SSEQBuilder struct{}
 #### func (*SSEQBuilder) Build
 
 ```go
-func (bld *SSEQBuilder) Build(key string, val any) (Predicate, error)
+func (bld *SSEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*SSEQBuilder) Token
@@ -944,7 +944,7 @@ type SSEQPredicate struct {
 #### func (*SSEQPredicate) Eval
 
 ```go
-func (pred *SSEQPredicate) Eval(input Filterable) bool
+func (pred *SSEQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*SSEQPredicate) String
@@ -963,7 +963,7 @@ type SSMBuilder struct{}
 #### func (*SSMBuilder) Build
 
 ```go
-func (bld *SSMBuilder) Build(key string, val any) (Predicate, error)
+func (bld *SSMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*SSMBuilder) Token
@@ -984,7 +984,7 @@ type SSMPredicate struct {
 #### func (*SSMPredicate) Eval
 
 ```go
-func (pred *SSMPredicate) Eval(input Filterable) bool
+func (pred *SSMPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*SSMPredicate) String
@@ -1003,7 +1003,7 @@ type SSNEQBuilder struct{}
 #### func (*SSNEQBuilder) Build
 
 ```go
-func (bld *SSNEQBuilder) Build(key string, val any) (Predicate, error)
+func (bld *SSNEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error)
 ```
 
 #### func (*SSNEQBuilder) Token
@@ -1024,7 +1024,7 @@ type SSNEQPredicate struct {
 #### func (*SSNEQPredicate) Eval
 
 ```go
-func (pred *SSNEQPredicate) Eval(input Filterable) bool
+func (pred *SSNEQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
 #### func (*SSNEQPredicate) String

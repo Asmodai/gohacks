@@ -33,7 +33,16 @@
 
 // * Package:
 
+//nolint:dupl
 package dag
+
+// * Imports:
+
+import (
+	"context"
+
+	"github.com/Asmodai/gohacks/logger"
+)
 
 // * Constants:
 
@@ -51,19 +60,18 @@ type SSMPredicate struct {
 }
 
 func (pred *SSMPredicate) String() string {
-	val, ok := pred.MetaPredicate.GetPredicateStringArray()
-	if !ok {
-		return FormatIsnf(ssmIsn, invalidTokenString)
+	if val, ok := pred.MetaPredicate.GetPredicateStringArray(); ok {
+		return FormatIsnf(ssmIsn,
+			"%s %s %#v",
+			pred.MetaPredicate.key,
+			ssmToken,
+			val)
 	}
 
-	return FormatIsnf(ssmIsn,
-		"%s %s %#v",
-		pred.MetaPredicate.key,
-		ssmToken,
-		val)
+	return FormatIsnf(ssmIsn, invalidTokenString)
 }
 
-func (pred *SSMPredicate) Eval(input Filterable) bool {
+func (pred *SSMPredicate) Eval(_ context.Context, input Filterable) bool {
 	return pred.MetaPredicate.EvalStringMember(input, false)
 }
 
@@ -75,9 +83,14 @@ func (bld *SSMBuilder) Token() string {
 	return ssmToken
 }
 
-func (bld *SSMBuilder) Build(key string, val any) (Predicate, error) {
+func (bld *SSMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error) {
 	pred := &SSMPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
+		MetaPredicate: MetaPredicate{
+			key:    key,
+			val:    val,
+			logger: lgr,
+			debug:  dbg,
+		},
 	}
 
 	return pred, nil

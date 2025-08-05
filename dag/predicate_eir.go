@@ -35,6 +35,14 @@
 
 package dag
 
+// ** Imports:
+
+import (
+	"context"
+
+	"github.com/Asmodai/gohacks/logger"
+)
+
 // * Constants:
 
 const (
@@ -51,15 +59,18 @@ type EIRPredicate struct {
 }
 
 func (pred *EIRPredicate) String() string {
-	val, ok := pred.MetaPredicate.GetPredicateFloatArray()
-	if !ok {
-		return FormatIsnf(eirIsn, invalidTokenString)
+	if val, ok := pred.MetaPredicate.GetPredicateFloatArray(); ok {
+		return FormatIsnf(eirIsn,
+			"%s %s %g",
+			pred.MetaPredicate.key,
+			eirToken,
+			val)
 	}
 
-	return FormatIsnf(eirIsn, "%s %s %g", pred.MetaPredicate.key, eirToken, val)
+	return FormatIsnf(eirIsn, invalidTokenString)
 }
 
-func (pred *EIRPredicate) Eval(input Filterable) bool {
+func (pred *EIRPredicate) Eval(_ context.Context, input Filterable) bool {
 	return pred.MetaPredicate.EvalExclusiveRange(input)
 }
 
@@ -71,9 +82,14 @@ func (bld *EIRBuilder) Token() string {
 	return eirToken
 }
 
-func (bld *EIRBuilder) Build(key string, val any) (Predicate, error) {
+func (bld *EIRBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error) {
 	pred := &EIRPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
+		MetaPredicate: MetaPredicate{
+			key:    key,
+			val:    val,
+			logger: lgr,
+			debug:  dbg,
+		},
 	}
 
 	return pred, nil

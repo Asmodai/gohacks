@@ -37,7 +37,12 @@ package dag
 
 // * Imports:
 
-import "strings"
+import (
+	"context"
+	"strings"
+
+	"github.com/Asmodai/gohacks/logger"
+)
 
 // * Constants:
 
@@ -55,15 +60,18 @@ type SIEQPredicate struct {
 }
 
 func (pred *SIEQPredicate) String() string {
-	val, ok := pred.MetaPredicate.val.(string)
-	if !ok {
-		return FormatIsnf(sieqIsn, invalidTokenString)
+	if val, ok := pred.MetaPredicate.val.(string); ok {
+		return FormatIsnf(sieqIsn,
+			"%s %s %#v",
+			pred.MetaPredicate.key,
+			sieqToken,
+			val)
 	}
 
-	return FormatIsnf(sieqIsn, "%s %s %#v", pred.MetaPredicate.key, sieqToken, val)
+	return FormatIsnf(sieqIsn, invalidTokenString)
 }
 
-func (pred *SIEQPredicate) Eval(input Filterable) bool {
+func (pred *SIEQPredicate) Eval(_ context.Context, input Filterable) bool {
 	lhs, rhs, ok := pred.MetaPredicate.GetStringValues(input)
 
 	return ok && strings.EqualFold(lhs, rhs)
@@ -77,9 +85,14 @@ func (bld *SIEQBuilder) Token() string {
 	return sieqToken
 }
 
-func (bld *SIEQBuilder) Build(key string, val any) (Predicate, error) {
+func (bld *SIEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error) {
 	pred := &SIEQPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
+		MetaPredicate: MetaPredicate{
+			key:    key,
+			val:    val,
+			logger: lgr,
+			debug:  dbg,
+		},
 	}
 
 	return pred, nil

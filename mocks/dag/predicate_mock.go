@@ -10,9 +10,11 @@
 package dag
 
 import (
+	context "context"
 	reflect "reflect"
 
 	dag "github.com/Asmodai/gohacks/dag"
+	logger "github.com/Asmodai/gohacks/logger"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -41,17 +43,17 @@ func (m *MockPredicate) EXPECT() *MockPredicateMockRecorder {
 }
 
 // Eval mocks base method.
-func (m *MockPredicate) Eval(arg0 dag.Filterable) bool {
+func (m *MockPredicate) Eval(arg0 context.Context, arg1 dag.Filterable) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Eval", arg0)
+	ret := m.ctrl.Call(m, "Eval", arg0, arg1)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // Eval indicates an expected call of Eval.
-func (mr *MockPredicateMockRecorder) Eval(arg0 any) *gomock.Call {
+func (mr *MockPredicateMockRecorder) Eval(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Eval", reflect.TypeOf((*MockPredicate)(nil).Eval), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Eval", reflect.TypeOf((*MockPredicate)(nil).Eval), arg0, arg1)
 }
 
 // String mocks base method.
@@ -93,18 +95,18 @@ func (m *MockPredicateBuilder) EXPECT() *MockPredicateBuilderMockRecorder {
 }
 
 // Build mocks base method.
-func (m *MockPredicateBuilder) Build(arg0 string, arg1 any) (dag.Predicate, error) {
+func (m *MockPredicateBuilder) Build(arg0 string, arg1 any, arg2 logger.Logger, arg3 bool) (dag.Predicate, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Build", arg0, arg1)
+	ret := m.ctrl.Call(m, "Build", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(dag.Predicate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Build indicates an expected call of Build.
-func (mr *MockPredicateBuilderMockRecorder) Build(arg0, arg1 any) *gomock.Call {
+func (mr *MockPredicateBuilderMockRecorder) Build(arg0, arg1, arg2, arg3 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Build", reflect.TypeOf((*MockPredicateBuilder)(nil).Build), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Build", reflect.TypeOf((*MockPredicateBuilder)(nil).Build), arg0, arg1, arg2, arg3)
 }
 
 // Token mocks base method.

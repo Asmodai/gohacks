@@ -33,7 +33,16 @@
 
 // * Package:
 
+//nolint:dupl
 package dag
+
+// * Imports:
+
+import (
+	"context"
+
+	"github.com/Asmodai/gohacks/logger"
+)
 
 // * Constants:
 
@@ -51,19 +60,18 @@ type SIMPredicate struct {
 }
 
 func (pred *SIMPredicate) String() string {
-	val, ok := pred.MetaPredicate.GetPredicateStringArray()
-	if !ok {
-		return FormatIsnf(simIsn, invalidTokenString)
+	if val, ok := pred.MetaPredicate.GetPredicateStringArray(); ok {
+		return FormatIsnf(simIsn,
+			"%s %s %#v",
+			pred.MetaPredicate.key,
+			simToken,
+			val)
 	}
 
-	return FormatIsnf(simIsn,
-		"%s %s %#v",
-		pred.MetaPredicate.key,
-		simToken,
-		val)
+	return FormatIsnf(simIsn, invalidTokenString)
 }
 
-func (pred *SIMPredicate) Eval(input Filterable) bool {
+func (pred *SIMPredicate) Eval(_ context.Context, input Filterable) bool {
 	return pred.MetaPredicate.EvalStringMember(input, true)
 }
 
@@ -75,9 +83,14 @@ func (bld *SIMBuilder) Token() string {
 	return simToken
 }
 
-func (bld *SIMBuilder) Build(key string, val any) (Predicate, error) {
+func (bld *SIMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error) {
 	pred := &SIMPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
+		MetaPredicate: MetaPredicate{
+			key:    key,
+			val:    val,
+			logger: lgr,
+			debug:  dbg,
+		},
 	}
 
 	return pred, nil

@@ -37,7 +37,10 @@ package dag
 
 // * Imports:
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 // * Code:
 
@@ -50,11 +53,11 @@ func TestSSEQPredicate(t *testing.T) {
 
 	input := NewDataInputFromMap(map[string]any{"String": value})
 	builder := &SSEQBuilder{}
-	pred1, _ := builder.Build("String", good)
-	pred2, _ := builder.Build("String", bad)
+	pred1, _ := builder.Build("String", good, nil, false)
+	pred2, _ := builder.Build("String", bad, nil, false)
 
 	t.Run(pred1.String(), func(t *testing.T) {
-		if !pred1.Eval(input) {
+		if !pred1.Eval(context.TODO(), input) {
 			t.Errorf("%s - failed.  %v != %v",
 				pred1.String(),
 				value,
@@ -63,7 +66,7 @@ func TestSSEQPredicate(t *testing.T) {
 	})
 
 	t.Run(pred2.String(), func(t *testing.T) {
-		if pred2.Eval(input) {
+		if pred2.Eval(context.TODO(), input) {
 			t.Errorf("%s - failed.  %v == %v",
 				pred2.String(),
 				value,

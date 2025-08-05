@@ -42,6 +42,7 @@ import (
 
 	"github.com/Asmodai/gohacks/conversion"
 	"github.com/Asmodai/gohacks/dag"
+	"github.com/Asmodai/gohacks/logger"
 )
 
 // * Constants:
@@ -62,8 +63,10 @@ var (
 // ** Types:
 
 type MetaPredicate struct {
-	key string
-	val any
+	key    string
+	val    any
+	logger logger.Logger
+	debug  bool
 }
 
 // ** Methods:
@@ -146,6 +149,7 @@ func BuildPredicateDict() dag.PredicateDict {
 	preds := []dag.PredicateBuilder{
 		&FTEQBuilder{},
 		&FVEQBuilder{},
+		&FVNEQBuilder{},
 		&FVINBuilder{},
 	}
 

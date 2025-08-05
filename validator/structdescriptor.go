@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package validator
@@ -49,10 +45,6 @@ import (
 
 	"github.com/Asmodai/gohacks/debug"
 )
-
-// * Constants:
-
-// * Variables:
 
 // * Code:
 

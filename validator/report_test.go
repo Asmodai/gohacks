@@ -65,6 +65,9 @@ const (
       operator: field-value-equal
       value: 42
     - attribute: one
+      operator: field-value-not-equal
+      value: 9001
+    - attribute: one
       operator: field-value-in
       value: [40, 41, 42, 43]
   action:

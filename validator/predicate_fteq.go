@@ -38,10 +38,12 @@ package validator
 // * Imports:
 
 import (
+	"context"
 	"reflect"
 	"strings"
 
 	"github.com/Asmodai/gohacks/dag"
+	"github.com/Asmodai/gohacks/logger"
 )
 
 // * Constants:
@@ -64,18 +66,17 @@ type FTEQPredicate struct {
 }
 
 func (pred *FTEQPredicate) String() string {
-	val, ok := pred.MetaPredicate.GetValueAsString()
-	if !ok {
-		return dag.FormatIsnf(fteqIsn, invalidTokenString)
+	if val, ok := pred.MetaPredicate.GetValueAsString(); ok {
+		return dag.FormatIsnf(
+			fteqIsn,
+			"%q %s %q",
+			pred.MetaPredicate.key,
+			fteqToken,
+			val,
+		)
 	}
 
-	return dag.FormatIsnf(
-		fteqIsn,
-		"%q %s %q",
-		pred.MetaPredicate.key,
-		fteqToken,
-		val,
-	)
+	return dag.FormatIsnf(fteqIsn, invalidTokenString)
 }
 
 func (pred *FTEQPredicate) checkSigned(value any, want string) bool {
@@ -181,7 +182,7 @@ func (pred *FTEQPredicate) resolveAny(value any, want string) bool {
 	}
 }
 
-func (pred *FTEQPredicate) Eval(input dag.Filterable) bool {
+func (pred *FTEQPredicate) Eval(_ context.Context, input dag.Filterable) bool {
 	want, wantOk := pred.MetaPredicate.GetValueAsString()
 	fInfo, fInfoOk := pred.MetaPredicate.GetKeyAsFieldInfo(input)
 
@@ -208,9 +209,14 @@ func (bld *FTEQBuilder) Token() string {
 	return fteqToken
 }
 
-func (bld *FTEQBuilder) Build(key string, val any) (dag.Predicate, error) {
+func (bld *FTEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error) {
 	pred := &FTEQPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
+		MetaPredicate: MetaPredicate{
+			key:    key,
+			val:    val,
+			logger: lgr,
+			debug:  dbg,
+		},
 	}
 
 	return pred, nil

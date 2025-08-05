@@ -37,7 +37,10 @@ package dag
 
 // * Imports:
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 // * Code:
 
@@ -49,11 +52,11 @@ func TestNEQPredicate(t *testing.T) {
 
 	input := NewDataInputFromMap(map[string]any{"Numeric": value})
 	builder := &NEQBuilder{}
-	pred1, _ := builder.Build("Numeric", different)
-	pred2, _ := builder.Build("Numeric", value)
+	pred1, _ := builder.Build("Numeric", different, nil, false)
+	pred2, _ := builder.Build("Numeric", value, nil, false)
 
 	t.Run(pred1.String(), func(t *testing.T) {
-		if !pred1.Eval(input) {
+		if !pred1.Eval(context.TODO(), input) {
 			t.Errorf("[%s] failed.  %v == %v",
 				pred1.String(),
 				value,
@@ -62,7 +65,7 @@ func TestNEQPredicate(t *testing.T) {
 	})
 
 	t.Run(pred2.String(), func(t *testing.T) {
-		if pred2.Eval(input) {
+		if pred2.Eval(context.TODO(), input) {
 			t.Errorf("[%s] failed.  %v != %v",
 				pred2.String(),
 				value,

@@ -31,17 +31,16 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package dag
 
 // * Imports:
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 // * Code:
 
@@ -54,11 +53,11 @@ func TestSIMPredicate(t *testing.T) {
 
 	input := NewDataInputFromMap(map[string]any{"Range": good})
 	builder := &SIMBuilder{}
-	pred1, _ := builder.Build("Range", goodHaystack)
-	pred2, _ := builder.Build("Range", badHaystack)
+	pred1, _ := builder.Build("Range", goodHaystack, nil, false)
+	pred2, _ := builder.Build("Range", badHaystack, nil, false)
 
 	t.Run(pred1.String(), func(t *testing.T) {
-		if !pred1.Eval(input) {
+		if !pred1.Eval(context.TODO(), input) {
 			t.Errorf("%s - failed.  ! %v in %v",
 				pred1.String(),
 				good,
@@ -67,7 +66,7 @@ func TestSIMPredicate(t *testing.T) {
 	})
 
 	t.Run(pred2.String(), func(t *testing.T) {
-		if pred2.Eval(input) {
+		if pred2.Eval(context.TODO(), input) {
 			t.Errorf("%s - failed.  %v in %v",
 				pred1.String(),
 				good,

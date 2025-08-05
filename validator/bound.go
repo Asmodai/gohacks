@@ -35,12 +35,6 @@
 
 package validator
 
-// * Imports:
-
-// * Constants:
-
-// * Variables:
-
 // * Code:
 
 // ** Types:

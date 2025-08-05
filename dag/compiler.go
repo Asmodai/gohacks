@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package dag
@@ -185,7 +181,11 @@ func (cmplr *compiler) buildPredicate(cond ConditionSpec) (Predicate, string, er
 			cond.Operator)
 	}
 
-	pred, err := builder.Build(cond.Attribute, cond.Value)
+	pred, err := builder.Build(
+		cond.Attribute,
+		cond.Value,
+		cmplr.lgr, cmplr.debugMode,
+	)
 	if err != nil {
 		return nil, "", errors.WithStack(err)
 	}

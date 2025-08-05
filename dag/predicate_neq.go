@@ -37,7 +37,12 @@ package dag
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/conversion"
+import (
+	"context"
+
+	"github.com/Asmodai/gohacks/conversion"
+	"github.com/Asmodai/gohacks/logger"
+)
 
 // * Constants:
 
@@ -55,15 +60,18 @@ type NEQPredicate struct {
 }
 
 func (pred *NEQPredicate) String() string {
-	val, ok := conversion.ToFloat64(pred.MetaPredicate.val)
-	if !ok {
-		return FormatIsnf(neqIsn, invalidTokenString)
+	if val, ok := conversion.ToFloat64(pred.MetaPredicate.val); ok {
+		return FormatIsnf(neqIsn,
+			"%s %s %g",
+			pred.MetaPredicate.key,
+			neqToken,
+			val)
 	}
 
-	return FormatIsnf(neqIsn, "%s %s %g", pred.MetaPredicate.key, neqToken, val)
+	return FormatIsnf(neqIsn, invalidTokenString)
 }
 
-func (pred *NEQPredicate) Eval(input Filterable) bool {
+func (pred *NEQPredicate) Eval(_ context.Context, input Filterable) bool {
 	lhs, rhs, ok := pred.MetaPredicate.GetFloatValues(input)
 
 	return ok && lhs != rhs
@@ -77,9 +85,14 @@ func (bld *NEQBuilder) Token() string {
 	return neqToken
 }
 
-func (bld *NEQBuilder) Build(key string, val any) (Predicate, error) {
+func (bld *NEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error) {
 	pred := &NEQPredicate{
-		MetaPredicate{key: key, val: val},
+		MetaPredicate{
+			key:    key,
+			val:    val,
+			logger: lgr,
+			debug:  dbg,
+		},
 	}
 
 	return pred, nil

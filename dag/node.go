@@ -61,7 +61,7 @@ type node struct {
 // If the node has an associated predicate then that is evaluated against
 // the given input.
 func traverse(ctx context.Context, root *node, input Filterable, debug bool, logger logger.Logger) {
-	if !root.Predicate.Eval(input) {
+	if !root.Predicate.Eval(ctx, input) {
 		if debug {
 			logger.Debug(
 				"Eval failure",

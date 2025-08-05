@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package validator
@@ -45,10 +41,6 @@ import (
 	"reflect"
 	"sync"
 )
-
-// * Constants:
-
-// * Variables:
 
 // * Code:
 

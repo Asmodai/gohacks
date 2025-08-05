@@ -30,13 +30,19 @@
 // SOFTWARE.
 
 // * Comments:
-// Hi, golangci-lint, the code in this file is NOT the same as other files.
-// You're delusional.
 
 // * Package:
 
 //nolint:dupl
 package dag
+
+// * Imports:
+
+import (
+	"context"
+
+	"github.com/Asmodai/gohacks/logger"
+)
 
 // * Constants:
 
@@ -54,15 +60,18 @@ type SSNEQPredicate struct {
 }
 
 func (pred *SSNEQPredicate) String() string {
-	val, ok := pred.MetaPredicate.val.(string)
-	if !ok {
-		return FormatIsnf(ssneqIsn, invalidTokenString)
+	if val, ok := pred.MetaPredicate.val.(string); ok {
+		return FormatIsnf(ssneqIsn,
+			"%s %s %#v",
+			pred.MetaPredicate.key,
+			ssneqToken,
+			val)
 	}
 
-	return FormatIsnf(ssneqIsn, "%s %s %#v", pred.MetaPredicate.key, ssneqToken, val)
+	return FormatIsnf(ssneqIsn, invalidTokenString)
 }
 
-func (pred *SSNEQPredicate) Eval(input Filterable) bool {
+func (pred *SSNEQPredicate) Eval(_ context.Context, input Filterable) bool {
 	lhs, rhs, ok := pred.MetaPredicate.GetStringValues(input)
 
 	return ok && lhs != rhs
@@ -76,9 +85,14 @@ func (bld *SSNEQBuilder) Token() string {
 	return ssneqToken
 }
 
-func (bld *SSNEQBuilder) Build(key string, val any) (Predicate, error) {
+func (bld *SSNEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error) {
 	pred := &SSNEQPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
+		MetaPredicate: MetaPredicate{
+			key:    key,
+			val:    val,
+			logger: lgr,
+			debug:  dbg,
+		},
 	}
 
 	return pred, nil

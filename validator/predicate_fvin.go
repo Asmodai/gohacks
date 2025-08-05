@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package validator
@@ -42,8 +38,11 @@ package validator
 // * Imports:
 
 import (
+	"context"
+
 	"github.com/Asmodai/gohacks/conversion"
 	"github.com/Asmodai/gohacks/dag"
+	"github.com/Asmodai/gohacks/logger"
 	"gitlab.com/tozd/go/errors"
 )
 
@@ -78,21 +77,20 @@ type FVINPredicate struct {
 }
 
 func (pred *FVINPredicate) String() string {
-	val, ok := pred.MetaPredicate.GetValueAsAny()
-	if !ok {
-		return dag.FormatIsnf(fvinIsn, invalidTokenString)
+	if val, ok := pred.MetaPredicate.GetValueAsAny(); ok {
+		return dag.FormatIsnf(
+			fvinIsn,
+			"%q %s %v",
+			pred.MetaPredicate.key,
+			fvinToken,
+			val,
+		)
 	}
 
-	return dag.FormatIsnf(
-		fvinIsn,
-		"%q %s %v",
-		pred.MetaPredicate.key,
-		fvinToken,
-		val,
-	)
+	return dag.FormatIsnf(fvinIsn, invalidTokenString)
 }
 
-func (pred *FVINPredicate) Eval(input dag.Filterable) bool {
+func (pred *FVINPredicate) Eval(_ context.Context, input dag.Filterable) bool {
 	have, haveOk := pred.MetaPredicate.GetKeyAsValue(input)
 	if !haveOk {
 		return false
@@ -116,7 +114,7 @@ func (bld *FVINBuilder) Token() string {
 	return fvinToken
 }
 
-func (bld *FVINBuilder) Build(key string, val any) (dag.Predicate, error) {
+func (bld *FVINBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error) {
 	valSlice, sliceOk := val.([]any)
 	if !sliceOk {
 		return nil, errors.WithMessagef(
@@ -149,8 +147,13 @@ func (bld *FVINBuilder) Build(key string, val any) (dag.Predicate, error) {
 	}
 
 	pred := &FVINPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
-		valueSet:      valMap,
+		MetaPredicate: MetaPredicate{
+			key:    key,
+			val:    val,
+			logger: lgr,
+			debug:  dbg,
+		},
+		valueSet: valMap,
 	}
 
 	return pred, nil

@@ -38,10 +38,12 @@ package dag
 // * Imports:
 
 import (
+	"context"
 	"regexp"
 	"strings"
 	"sync"
 
+	"github.com/Asmodai/gohacks/logger"
 	"gitlab.com/tozd/go/errors"
 )
 
@@ -65,12 +67,15 @@ type REIMPredicate struct {
 }
 
 func (pred *REIMPredicate) String() string {
-	val, ok := pred.MetaPredicate.val.(string)
-	if !ok {
-		return FormatIsnf(reimIsn, invalidTokenString)
+	if val, ok := pred.MetaPredicate.val.(string); ok {
+		return FormatIsnf(reimIsn,
+			"%s %s %#v",
+			pred.MetaPredicate.key,
+			reimToken,
+			val)
 	}
 
-	return FormatIsnf(reimIsn, "%s %s %#v", pred.MetaPredicate.key, reimToken, val)
+	return FormatIsnf(reimIsn, invalidTokenString)
 }
 
 func (pred *REIMPredicate) compilePattern(pattern string) {
@@ -83,7 +88,7 @@ func (pred *REIMPredicate) compilePattern(pattern string) {
 	})
 }
 
-func (pred *REIMPredicate) Eval(input Filterable) bool {
+func (pred *REIMPredicate) Eval(_ context.Context, input Filterable) bool {
 	data, pattern, ok := pred.MetaPredicate.GetStringValues(input)
 	if !ok {
 		return false
@@ -109,9 +114,14 @@ func (bld *REIMBuilder) Token() string {
 	return reimToken
 }
 
-func (bld *REIMBuilder) Build(key string, val any) (Predicate, error) {
+func (bld *REIMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error) {
 	pred := &REIMPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
+		MetaPredicate: MetaPredicate{
+			key:    key,
+			val:    val,
+			logger: lgr,
+			debug:  dbg,
+		},
 	}
 
 	return pred, nil

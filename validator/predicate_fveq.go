@@ -38,11 +38,14 @@ package validator
 // * Imports:
 
 import (
+	"context"
 	"math"
 	"reflect"
 	"strings"
 
+	"github.com/Asmodai/gohacks/conversion"
 	"github.com/Asmodai/gohacks/dag"
+	"github.com/Asmodai/gohacks/logger"
 )
 
 // * Constants:
@@ -95,22 +98,21 @@ type FVEQPredicate struct {
 }
 
 func (pred *FVEQPredicate) String() string {
-	val, ok := pred.MetaPredicate.GetValueAsAny()
-	if !ok {
-		return dag.FormatIsnf(fveqIsn, invalidTokenString)
+	if val, ok := pred.MetaPredicate.GetValueAsAny(); ok {
+		return dag.FormatIsnf(
+			fveqIsn,
+			"%q %s %#v",
+			pred.MetaPredicate.key,
+			fveqToken,
+			val,
+		)
 	}
 
-	return dag.FormatIsnf(
-		fveqIsn,
-		"%q %s %#v",
-		pred.MetaPredicate.key,
-		fveqToken,
-		val,
-	)
+	return dag.FormatIsnf(fveqIsn, invalidTokenString)
 }
 
-//nolint:cyclop
-func (pred *FVEQPredicate) Eval(input dag.Filterable) bool {
+//nolint:cyclop,funlen
+func (pred *FVEQPredicate) Eval(_ context.Context, input dag.Filterable) bool {
 	value, valueOk := pred.MetaPredicate.GetKeyAsValue(input)
 	if !valueOk {
 		return false
@@ -121,50 +123,61 @@ func (pred *FVEQPredicate) Eval(input dag.Filterable) bool {
 		return false
 	}
 
+	check, checkOk := pred.MetaPredicate.GetValueAsAny()
+	if !checkOk {
+		return false
+	}
+
 	// Dispatch on the type of the value in the condition.
 	switch val := value.(type) {
 	case int, int8, int16, int32, int64:
-		return dispatchInt(pred, field.TypeKind, val)
+		return dispatchInt(field.TypeKind, check, val)
 
 	case uint, uint8, uint16, uint32, uint64:
-		return dispatchUint(pred, field.TypeKind, val)
+		return dispatchUint(field.TypeKind, check, val)
 
 	case float32:
-		return checkFloat(pred,
-			field.TypeKind,
+		return checkFloat(field.TypeKind,
 			reflect.Float32,
+			check,
 			float64(val))
 
 	case float64:
-		return checkFloat(pred,
-			field.TypeKind,
+		return checkFloat(field.TypeKind,
 			reflect.Float64,
+			check,
 			val)
 
 	case complex64:
-		return checkComplex(pred,
-			field.TypeKind,
+		return checkComplex(field.TypeKind,
 			reflect.Complex64,
+			check,
 			complex128(val))
 
 	case complex128:
-		return checkComplex(pred,
-			field.TypeKind,
+		return checkComplex(field.TypeKind,
 			reflect.Complex128,
+			check,
 			val)
 	case string:
-		return checkString(pred,
-			field.TypeKind,
+		return checkString(field.TypeKind,
 			reflect.String,
+			check,
 			val)
 
 	case bool:
-		return checkBool(pred,
-			field.TypeKind,
+		return checkBool(field.TypeKind,
 			reflect.Bool,
+			check,
 			val)
 
 	default:
+		if pred.MetaPredicate.debug {
+			pred.MetaPredicate.logger.Debug(
+				"Unhandled value type.",
+				"type", val)
+		}
+
 		return false
 	}
 }
@@ -177,9 +190,14 @@ func (bld *FVEQBuilder) Token() string {
 	return fveqToken
 }
 
-func (bld *FVEQBuilder) Build(key string, val any) (dag.Predicate, error) {
+func (bld *FVEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error) {
 	pred := &FVEQPredicate{
-		MetaPredicate: MetaPredicate{key: key, val: val},
+		MetaPredicate: MetaPredicate{
+			key:    key,
+			val:    val,
+			logger: lgr,
+			debug:  dbg,
+		},
 	}
 
 	return pred, nil
@@ -254,12 +272,12 @@ func checkType(kind, want reflect.Kind) bool {
 }
 
 // Perform a check on a boolean.
-func checkBool(pred *FVEQPredicate, kind, want reflect.Kind, value bool) bool {
+func checkBool(kind, want reflect.Kind, check any, value bool) bool {
 	if !checkType(kind, want) {
 		return false
 	}
 
-	have, ok := pred.MetaPredicate.GetValueAsBool()
+	have, ok := conversion.ToBool(check)
 	if !ok {
 		return false
 	}
@@ -268,12 +286,12 @@ func checkBool(pred *FVEQPredicate, kind, want reflect.Kind, value bool) bool {
 }
 
 // Perform a check on an string.
-func checkString(pred *FVEQPredicate, kind, want reflect.Kind, value string) bool {
+func checkString(kind, want reflect.Kind, check any, value string) bool {
 	if !checkType(kind, want) {
 		return false
 	}
 
-	have, ok := pred.MetaPredicate.GetValueAsString()
+	have, ok := conversion.ToString(check)
 	if !ok {
 		return false
 	}
@@ -282,12 +300,12 @@ func checkString(pred *FVEQPredicate, kind, want reflect.Kind, value string) boo
 }
 
 // Perform a check on a floating-point number.
-func checkFloat(pred *FVEQPredicate, kind, want reflect.Kind, value float64) bool {
+func checkFloat(kind, want reflect.Kind, check any, value float64) bool {
 	if !checkType(kind, want) {
 		return false
 	}
 
-	have, ok := pred.MetaPredicate.GetValueAsFloat64()
+	have, ok := conversion.ToFloat64(check)
 	if !ok {
 		return false
 	}
@@ -300,12 +318,12 @@ func checkFloat(pred *FVEQPredicate, kind, want reflect.Kind, value float64) boo
 }
 
 // Perform a check on a complex number.
-func checkComplex(pred *FVEQPredicate, kind, want reflect.Kind, value complex128) bool {
+func checkComplex(kind, want reflect.Kind, check any, value complex128) bool {
 	if !checkType(kind, want) {
 		return false
 	}
 
-	have, ok := pred.MetaPredicate.GetValueAsComplex128()
+	have, ok := conversion.ToComplex128(check)
 	if !ok {
 		return false
 	}
@@ -320,12 +338,12 @@ func checkComplex(pred *FVEQPredicate, kind, want reflect.Kind, value complex128
 // Perform a check on the unsigned integer value.
 //
 // This checks that the type of the structure's field is big enough.
-func checkUint(pred *FVEQPredicate, kind reflect.Kind, value uint64, bits int) bool {
+func checkUint(kind reflect.Kind, check any, value uint64, bits int) bool {
 	if !checkBitWidth(kind, bits) {
 		return false
 	}
 
-	have, ok := pred.MetaPredicate.GetValueAsUint64()
+	have, ok := conversion.ToUint64(check)
 	if !ok {
 		return false
 	}
@@ -336,12 +354,12 @@ func checkUint(pred *FVEQPredicate, kind reflect.Kind, value uint64, bits int) b
 // Perform a check on the signed integer value.
 //
 // This checks that the type of the structure's field is big enough.
-func checkInt(pred *FVEQPredicate, kind reflect.Kind, value int64, bits int) bool {
+func checkInt(kind reflect.Kind, check any, value int64, bits int) bool {
 	if !checkBitWidth(kind, bits) {
 		return false
 	}
 
-	have, ok := pred.MetaPredicate.GetValueAsInt64()
+	have, ok := conversion.ToInt64(check)
 	if !ok {
 		return false
 	}
@@ -352,22 +370,22 @@ func checkInt(pred *FVEQPredicate, kind reflect.Kind, value int64, bits int) boo
 // Dispatch on signed integer type and check the value accordingly.
 //
 //nolint:mnd,gomnd
-func dispatchInt(pred *FVEQPredicate, kind reflect.Kind, value any) bool {
+func dispatchInt(kind reflect.Kind, check any, value any) bool {
 	switch val := value.(type) {
 	case int:
-		return checkInt(pred, kind, int64(val), wordSize)
+		return checkInt(kind, check, int64(val), wordSize)
 
 	case int8:
-		return checkInt(pred, kind, int64(val), 8)
+		return checkInt(kind, check, int64(val), 8)
 
 	case int16:
-		return checkInt(pred, kind, int64(val), 16)
+		return checkInt(kind, check, int64(val), 16)
 
 	case int32:
-		return checkInt(pred, kind, int64(val), 32)
+		return checkInt(kind, check, int64(val), 32)
 
 	case int64:
-		return checkInt(pred, kind, val, 64)
+		return checkInt(kind, check, val, 64)
 
 	default:
 		return false
@@ -377,22 +395,22 @@ func dispatchInt(pred *FVEQPredicate, kind reflect.Kind, value any) bool {
 // Dispatch on unsigned integer type and check the value accordingly.
 //
 //nolint:mnd,gomnd
-func dispatchUint(pred *FVEQPredicate, kind reflect.Kind, value any) bool {
+func dispatchUint(kind reflect.Kind, check any, value any) bool {
 	switch val := value.(type) {
 	case uint:
-		return checkUint(pred, kind, uint64(val), wordSize)
+		return checkUint(kind, check, uint64(val), wordSize)
 
 	case uint8:
-		return checkUint(pred, kind, uint64(val), 8)
+		return checkUint(kind, check, uint64(val), 8)
 
 	case uint16:
-		return checkUint(pred, kind, uint64(val), 16)
+		return checkUint(kind, check, uint64(val), 16)
 
 	case uint32:
-		return checkUint(pred, kind, uint64(val), 32)
+		return checkUint(kind, check, uint64(val), 32)
 
 	case uint64:
-		return checkUint(pred, kind, val, 64)
+		return checkUint(kind, check, val, 64)
 
 	default:
 		return false

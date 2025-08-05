@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_noop.go --- NOOP - No Operation.
+// predicate_fvneq.go --- FVNEQ - Field Value Inequality.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,30 +33,71 @@
 
 // * Package:
 
-package dag
+package validator
 
 // * Imports:
 
-import "context"
+import (
+	"context"
+
+	"github.com/Asmodai/gohacks/dag"
+	"github.com/Asmodai/gohacks/logger"
+)
 
 // * Constants:
 
 const (
-	noopIsn = "NOOP"
+	fvneqIsn   = "FVNEQ"
+	fvneqToken = "field-value-not-equal"
 )
 
 // * Code:
 
-// ** Predicates:
+// ** Predicate:
 
-type NOOPPredicate struct{}
-
-func (pred *NOOPPredicate) String() string {
-	return FormatIsnf(noopIsn, "noop")
+type FVNEQPredicate struct {
+	FVEQPredicate
 }
 
-func (pred *NOOPPredicate) Eval(_ context.Context, _ Filterable) bool {
-	return true
+func (pred *FVNEQPredicate) String() string {
+	if val, ok := pred.FVEQPredicate.MetaPredicate.GetValueAsAny(); ok {
+		return dag.FormatIsnf(
+			fvneqIsn,
+			"%q %s %#v",
+			pred.FVEQPredicate.MetaPredicate.key,
+			fvneqToken,
+			val,
+		)
+	}
+
+	return dag.FormatIsnf(fveqIsn, invalidTokenString)
 }
 
-// * predicate_noop.go ends here.
+func (pred *FVNEQPredicate) Eval(ctx context.Context, input dag.Filterable) bool {
+	return !pred.FVEQPredicate.Eval(ctx, input)
+}
+
+// ** Builder:
+
+type FVNEQBuilder struct{}
+
+func (bld *FVNEQBuilder) Token() string {
+	return fvneqToken
+}
+
+func (bld *FVNEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error) {
+	pred := &FVNEQPredicate{
+		FVEQPredicate: FVEQPredicate{
+			MetaPredicate: MetaPredicate{
+				key:    key,
+				val:    val,
+				logger: lgr,
+				debug:  dbg,
+			},
+		},
+	}
+
+	return pred, nil
+}
+
+// * predicate_fvneq.go ends here.
