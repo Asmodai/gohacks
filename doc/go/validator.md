@@ -264,6 +264,67 @@ func (pred *FVEQPredicate) Eval(_ context.Context, input dag.Filterable) bool
 func (pred *FVEQPredicate) String() string
 ```
 
+#### type FVFALSEBuilder
+
+```go
+type FVFALSEBuilder struct{}
+```
+
+
+#### func (*FVFALSEBuilder) Build
+
+```go
+func (bld *FVFALSEBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
+```
+
+#### func (*FVFALSEBuilder) Token
+
+```go
+func (bld *FVFALSEBuilder) Token() string
+```
+
+#### type FVFALSEPredicate
+
+```go
+type FVFALSEPredicate struct {
+	MetaPredicate
+}
+```
+
+Field Value is Logically False.
+
+This predicate returns true if the value of the filtered field is logically
+false.
+
+A logical false value is any value that is empty or zero. The following are
+examples of this:
+
+    "" string, 0 numeric, [] array
+
+Logical falsehood is not the same as `nil`, so if you are looking for nil values
+then you should look at `FVNIL` instead.
+
+Structures are a special case. They are never logically false. This is because
+the validator does not recurse into structures. If you wish to deal with
+structures within structures, then those sub-structures require validation by
+themselves. How you do that is up to you.
+
+Interfaces are also a special case. An interface can be considered logically
+false if it is `nil`, but it can also be considered logically false if the
+wrapped value is zero or empty.
+
+#### func (*FVFALSEPredicate) Eval
+
+```go
+func (pred *FVFALSEPredicate) Eval(_ context.Context, input dag.Filterable) bool
+```
+
+#### func (*FVFALSEPredicate) String
+
+```go
+func (pred *FVFALSEPredicate) String() string
+```
+
 #### type FVINBuilder
 
 ```go
@@ -448,6 +509,7 @@ const (
 	KindStruct
 	KindSlice
 	KindMap
+	KindInterface
 	KindUnknown
 )
 ```

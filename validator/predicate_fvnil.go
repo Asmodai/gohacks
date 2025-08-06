@@ -97,7 +97,13 @@ func (pred *FVNILPredicate) Eval(_ context.Context, input dag.Filterable) bool {
 	}
 
 	if val, valOk := pred.MetaPredicate.GetKeyAsValue(input); valOk {
-		return reflect.ValueOf(val).IsNil()
+		valOf := reflect.ValueOf(val)
+
+		if finfo.TypeKind == reflect.Interface && !valOf.IsValid() {
+			return false
+		}
+
+		return valOf.IsNil()
 	}
 
 	return false

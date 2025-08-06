@@ -49,6 +49,7 @@ const (
 	KindStruct
 	KindSlice
 	KindMap
+	KindInterface
 	KindUnknown
 )
 
@@ -61,6 +62,7 @@ var (
 		KindStruct:    "Structure",
 		KindSlice:     "Slice",
 		KindMap:       "Map",
+		KindInterface: "Interface",
 		KindUnknown:   "Unknown",
 	}
 
@@ -95,6 +97,9 @@ func isDerivedFrom(t, base reflect.Type) bool {
 //nolint:exhaustive
 func classifyField(typ reflect.Type) FieldKind {
 	switch typ.Kind() {
+	case reflect.Interface:
+		return KindInterface
+
 	case reflect.Struct:
 		switch {
 		case isDerivedFrom(typ, baseTypeTimeType):

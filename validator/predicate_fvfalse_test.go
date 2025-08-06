@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_fvnil_test.go --- FVNIL tests.
+// predicate_fvfalse_test.go --- FVFALSE tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -48,74 +48,92 @@ import (
 // * Variables:
 
 var (
-	testFVNILStructType reflect.Type
-	testFVNILStructOnce sync.Once
+	testFVFALSEStructType reflect.Type
+	testFVFALSEStructOnce sync.Once
 )
 
 // * Code:
 
 // ** Types:
 
-type testFVNILSubStruct struct {
+type testFVFALSESubStruct struct {
 	Unused bool
 }
 
-type testFVNILStruct struct {
-	Primitive int
-	Map1      map[int]string
-	Map2      map[int]string
-	Slice1    []int
-	Slice2    []int
-	Struct1   *testFVNILSubStruct
-	Struct2   *testFVNILSubStruct
+type testFVFALSEStruct struct {
+	Primitive1 int
+	Primitive2 int64
+	String1    string
+	String2    string
+	Map1       map[int]string
+	Map2       map[int]string
+	Slice1     []int
+	Slice2     []int
+	Interface1 any
+	Interface2 any
+	Interface3 any
+	Interface4 any
+	Struct1    *testFVFALSESubStruct
 }
 
-func (t *testFVNILStruct) ReflectType() reflect.Type {
-	testFVNILStructOnce.Do(func() {
-		testFVNILStructType = reflect.TypeOf(t).Elem()
+func (t *testFVFALSEStruct) ReflectType() reflect.Type {
+	testFVFALSEStructOnce.Do(func() {
+		testFVFALSEStructType = reflect.TypeOf(t).Elem()
 	})
 
-	return testFVNILStructType
+	return testFVFALSEStructType
 }
 
 // ** Tests:
 
-func TestFVNILPredicate(t *testing.T) {
-	input := &testFVNILStruct{
-		Primitive: 42,
-		Map1:      map[int]string{},
-		Map2:      nil,
-		Slice1:    []int{},
-		Slice2:    nil,
-		Struct1:   &testFVNILSubStruct{},
-		Struct2:   nil,
+func TestFVFALSEPredicate(t *testing.T) {
+	input := &testFVFALSEStruct{
+		Primitive1: 42,
+		Primitive2: 0,
+		String1:    "Hello",
+		String2:    "",
+		Map1:       map[int]string{1: "Hello", 2: "World"},
+		Map2:       map[int]string{},
+		Slice1:     []int{1, 2, 3},
+		Slice2:     []int{},
+		Interface1: uint64(42),
+		Interface2: nil,
+		Interface3: []int{1, 2, 3},
+		Interface4: map[int]string{},
+		Struct1:    &testFVFALSESubStruct{},
 	}
 
 	tests := []struct {
 		field string
 		want  bool
 	}{
-		{"Primitive", false},
+		{"Primitive1", false},
+		{"Primitive2", true},
+		{"String1", false},
+		{"String2", true},
 		{"Map1", false},
 		{"Map2", true},
 		{"Slice1", false},
 		{"Slice2", true},
+		{"Interface1", false},
+		{"Interface2", true},
+		{"Interface3", false},
+		{"Interface4", true},
 		{"Struct1", false},
-		{"Struct2", true},
 	}
 
-	inst := &testFVNILStruct{}
+	inst := &testFVFALSEStruct{}
 	bindings := NewBindings()
 	bindings.Build(inst)
 	obj, _ := bindings.Bind(input)
 
 	for idx, tt := range tests {
-		t.Run(fmt.Sprintf("%02d FVNIL(%s)", idx, tt.field), func(t *testing.T) {
-			pred, _ := (&FVNILBuilder{}).Build(tt.field, nil, nil, false)
+		t.Run(fmt.Sprintf("%02d FVFALSE(%s)", idx, tt.field), func(t *testing.T) {
+			pred, _ := (&FVFALSEBuilder{}).Build(tt.field, nil, nil, false)
 			result := pred.Eval(context.TODO(), obj)
 
 			if result != tt.want {
-				t.Errorf("FVNIL(%s) = %v, want %v",
+				t.Errorf("FVFALSE(%s) = %v, want %v",
 					tt.field,
 					result,
 					tt.want)
@@ -124,36 +142,4 @@ func TestFVNILPredicate(t *testing.T) {
 	}
 }
 
-// ** Benchmarks:
-
-func BenchmarkFVNILPredicate(b *testing.B) {
-	input := &testFVNILStruct{
-		Primitive: 42,
-		Map1:      map[int]string{},
-		Map2:      nil,
-		Slice1:    []int{},
-		Slice2:    nil,
-		Struct1:   &testFVNILSubStruct{},
-		Struct2:   nil,
-	}
-
-	field := "Struct2"
-
-	inst := &testFVNILStruct{}
-	bindings := NewBindings()
-	bindings.Build(inst)
-
-	pred, err := (&FVNILBuilder{}).Build(field, nil, nil, false)
-	if err != nil {
-		b.Fatal(err.Error())
-	}
-
-	b.Run("Eval", func(b *testing.B) {
-		b.ReportAllocs()
-
-		obj, _ := bindings.Bind(input)
-		_ = pred.Eval(context.TODO(), obj)
-	})
-}
-
-// * predicate_fvnil_test.go ends here.
+// * predicate_fvfalse_test.go ends here.
