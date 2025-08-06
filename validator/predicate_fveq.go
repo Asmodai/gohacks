@@ -91,7 +91,7 @@ var (
 // If the field is `any` then the comparison will match just the type of
 // the value rather than using the type of the field along with the value.
 //
-// If the field is integer, then the structure's field must have a bid
+// If the field is integer, then the structure's field must have a bit
 // width large enough to hold the value.
 type FVEQPredicate struct {
 	MetaPredicate

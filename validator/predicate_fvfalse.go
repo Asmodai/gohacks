@@ -62,7 +62,7 @@ const (
 // logically false.
 //
 // A logical false value is any value that is empty or zero.  The following
-// are  examples of this:
+// are examples of this:
 //
 //	"" string, 0 numeric, [] array
 //

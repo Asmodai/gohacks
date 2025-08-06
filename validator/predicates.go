@@ -154,9 +154,12 @@ func BuildPredicateDict() dag.PredicateDict {
 
 		//
 		// Field value predicates.
-		&FVEQBuilder{},  // Field Value Equals.
-		&FVNEQBuilder{}, // Field Value Not Equals.
-		&FVINBuilder{},  // Field Value In.
+		&FVNILBuilder{},   // Field Value Is Nill.
+		&FVTRUEBuilder{},  // Field Value is Logically True.
+		&FVFALSEBuilder{}, // Field Value is Logically False.
+		&FVEQBuilder{},    // Field Value Equals.
+		&FVNEQBuilder{},   // Field Value Not Equals.
+		&FVINBuilder{},    // Field Value In.
 	}
 
 	for idx := range preds {

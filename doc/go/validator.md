@@ -249,7 +249,7 @@ the value:
 If the field is `any` then the comparison will match just the type of the value
 rather than using the type of the field along with the value.
 
-If the field is integer, then the structure's field must have a bid width large
+If the field is integer, then the structure's field must have a bit width large
 enough to hold the value.
 
 #### func (*FVEQPredicate) Eval
@@ -396,6 +396,19 @@ type FVNEQPredicate struct {
 }
 ```
 
+Field Valie Inequality.
+
+This predicate compares the value to that in the structure. If they are not
+equal then the predicate returns true.
+
+The predicate will take various circumstances into consideration while checking
+the value:
+
+If the field is `any` then the comparison will match just the type of the value
+rather than using the type of the field along with the value.
+
+If the field is integer then the structure's field must have a bit width large
+enough to hold the value.
 
 #### func (*FVNEQPredicate) Eval
 
@@ -458,6 +471,54 @@ func (pred *FVNILPredicate) Eval(_ context.Context, input dag.Filterable) bool
 
 ```go
 func (pred *FVNILPredicate) String() string
+```
+
+#### type FVTRUEBuilder
+
+```go
+type FVTRUEBuilder struct{}
+```
+
+
+#### func (*FVTRUEBuilder) Build
+
+```go
+func (bld *FVTRUEBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
+```
+
+#### func (*FVTRUEBuilder) Token
+
+```go
+func (bld *FVTRUEBuilder) Token() string
+```
+
+#### type FVTRUEPredicate
+
+```go
+type FVTRUEPredicate struct {
+	FVFALSEPredicate
+}
+```
+
+Field Value is Logically True.
+
+This predicate returns true if the value of the filtered field is logically
+true.
+
+A logical true value is any value that is not empty or zero.
+
+For more details on how this works, see `FVFALSE`.
+
+#### func (*FVTRUEPredicate) Eval
+
+```go
+func (pred *FVTRUEPredicate) Eval(ctx context.Context, input dag.Filterable) bool
+```
+
+#### func (*FVTRUEPredicate) String
+
+```go
+func (pred *FVTRUEPredicate) String() string
 ```
 
 #### type FieldAccessorFn

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_fvneq.go --- FVNEQ - Field Value Inequality.
+// predicate_fvtrue.go --- FVTRUE - Field Value is Logically True.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -39,6 +39,7 @@ package validator
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/Asmodai/gohacks/dag"
 	"github.com/Asmodai/gohacks/logger"
@@ -47,60 +48,77 @@ import (
 // * Constants:
 
 const (
-	fvneqIsn   = "FVNEQ"
-	fvneqToken = "field-value-not-equal"
+	fvtrueIsn   = "FVTRUE"
+	fvtrueToken = "field-value-is-true" //nolint:gosec
 )
 
 // * Code:
 
 // ** Predicate:
 
-// Field Valie Inequality.
+// Field Value is Logically True.
 //
-// This predicate compares the value to that in the structure. If they are
-// not equal then the predicate returns true.
+// This predicate returns true if the value of the filtered field is
+// logically true.
 //
-// The predicate will take various circumstances into consideration while
-// checking the value:
+// A logical true value is any value that is not empty or zero.
 //
-// If the field is `any` then the comparison will match just the type of the
-// value rather than using the type of the field along with the value.
-//
-// If the field is integer then the structure's field must have a bit
-// width large enough to hold the value.
-type FVNEQPredicate struct {
-	FVEQPredicate
+// For more details on how this works, see `FVFALSE`.
+type FVTRUEPredicate struct {
+	FVFALSEPredicate
 }
 
-func (pred *FVNEQPredicate) String() string {
-	if val, ok := pred.FVEQPredicate.MetaPredicate.GetValueAsAny(); ok {
+func (pred *FVTRUEPredicate) String() string {
+	if val, ok := pred.MetaPredicate.GetValueAsString(); ok {
 		return dag.FormatIsnf(
-			fvneqIsn,
-			"%q %s %#v",
-			pred.FVEQPredicate.MetaPredicate.key,
-			fvneqToken,
-			val,
-		)
+			fvtrueIsn,
+			"%q %s %v",
+			pred.MetaPredicate.key,
+			fvtrueToken,
+			val)
 	}
 
-	return dag.FormatIsnf(fveqIsn, invalidTokenString)
+	return dag.FormatIsnf(fvtrueIsn, invalidTokenString)
 }
 
-func (pred *FVNEQPredicate) Eval(ctx context.Context, input dag.Filterable) bool {
-	return !pred.FVEQPredicate.Eval(ctx, input)
+func (pred *FVTRUEPredicate) Eval(ctx context.Context, input dag.Filterable) bool {
+	finfo, finfoOk := pred.MetaPredicate.GetKeyAsFieldInfo(input)
+	if !finfoOk {
+		return false
+	}
+
+	// Structure... never true.
+	if finfo.Kind == KindStruct || finfo.TypeKind == reflect.Struct {
+		return false
+	}
+
+	// We also need to check the value to make sure it's not a
+	// structure.
+	val, valOk := pred.MetaPredicate.GetKeyAsValue(input)
+	if !valOk {
+		return false
+	}
+
+	kindOf := reflect.ValueOf(val).Kind()
+	if kindOf == reflect.Struct || kindOf == reflect.Ptr {
+		return false
+	}
+
+	// Simply negate the result of FVFALSE now.
+	return !pred.FVFALSEPredicate.Eval(ctx, input)
 }
 
 // ** Builder:
 
-type FVNEQBuilder struct{}
+type FVTRUEBuilder struct{}
 
-func (bld *FVNEQBuilder) Token() string {
-	return fvneqToken
+func (bld *FVTRUEBuilder) Token() string {
+	return fvtrueToken
 }
 
-func (bld *FVNEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error) {
-	pred := &FVNEQPredicate{
-		FVEQPredicate: FVEQPredicate{
+func (bld *FVTRUEBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error) {
+	pred := &FVTRUEPredicate{
+		FVFALSEPredicate: FVFALSEPredicate{
 			MetaPredicate: MetaPredicate{
 				key:    key,
 				val:    val,
@@ -113,4 +131,4 @@ func (bld *FVNEQBuilder) Build(key string, val any, lgr logger.Logger, dbg bool)
 	return pred, nil
 }
 
-// * predicate_fvneq.go ends here.
+// * predicate_fvtrue.go ends here.

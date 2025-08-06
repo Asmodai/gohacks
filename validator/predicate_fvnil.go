@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_fvnil.go --- FVNIL - Field Valie Is Nil.
+// predicate_fvnil.go --- FVNIL - Field Value Is Nil.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
