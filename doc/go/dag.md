@@ -24,6 +24,14 @@ var (
 )
 ```
 
+```go
+var (
+	ErrInvalidRegexp  = errors.Base("invalid regexp")
+	ErrRegexpParse    = errors.Base("error parsing regexp")
+	ErrValueNotString = errors.Base("value is not a string")
+)
+```
+
 #### func  DumpRulesToYAML
 
 ```go

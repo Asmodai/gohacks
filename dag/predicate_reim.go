@@ -41,7 +41,6 @@ import (
 	"context"
 	"regexp"
 	"strings"
-	"sync"
 
 	"github.com/Asmodai/gohacks/logger"
 	"gitlab.com/tozd/go/errors"
@@ -69,8 +68,6 @@ type REIMPredicate struct {
 	MetaPredicate
 
 	compiled *regexp.Regexp
-	once     sync.Once
-	err      error
 }
 
 func (pred *REIMPredicate) String() string {
@@ -85,29 +82,10 @@ func (pred *REIMPredicate) String() string {
 	return FormatIsnf(reimIsn, invalidTokenString)
 }
 
-func (pred *REIMPredicate) compilePattern(pattern string) {
-	pred.once.Do(func() {
-		if !strings.HasPrefix(pattern, "(?i)") {
-			pattern = "(?i)" + pattern
-		}
-
-		pred.compiled, pred.err = regexp.Compile(pattern)
-	})
-}
-
 func (pred *REIMPredicate) Eval(_ context.Context, input Filterable) bool {
-	data, pattern, ok := pred.MetaPredicate.GetStringValues(input)
+	data, _, ok := pred.MetaPredicate.GetStringValues(input)
 	if !ok {
 		return false
-	}
-
-	pred.compilePattern(pattern)
-
-	if pred.err != nil {
-		panic(errors.WithMessagef(
-			pred.err,
-			"regex compilation failed: %s",
-			pred.err.Error()))
 	}
 
 	return pred.compiled.MatchString(data)
@@ -122,6 +100,37 @@ func (bld *REIMBuilder) Token() string {
 }
 
 func (bld *REIMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error) {
+	strVal, strOk := val.(string)
+	if !strOk {
+		return nil, errors.WithMessagef(
+			ErrValueNotString,
+			"%s: value %q",
+			resmToken,
+			val)
+	}
+
+	if len(strVal) == 0 {
+		return nil, errors.WithMessagef(
+			ErrInvalidRegexp,
+			"%s: %q",
+			resmToken,
+			strVal)
+	}
+
+	if !strings.HasPrefix(strVal, "(?i)") {
+		strVal = "(?i)" + strVal
+	}
+
+	compiled, err := regexp.Compile(strVal)
+	if err != nil {
+		return nil, errors.WithMessagef(
+			errors.WrapWith(err, ErrRegexpParse),
+			"%s: regex %q: %s",
+			resmToken,
+			strVal,
+			err.Error())
+	}
+
 	pred := &REIMPredicate{
 		MetaPredicate: MetaPredicate{
 			key:    key,
@@ -129,6 +138,7 @@ func (bld *REIMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) 
 			logger: lgr,
 			debug:  dbg,
 		},
+		compiled: compiled,
 	}
 
 	return pred, nil

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// predicate_resm.go --- RESM - Regular Expression (Sensitive) Match.
+// predicate_fvrem.go --- FVREM - Field Value Regular Expression Match.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,7 +33,7 @@
 
 // * Package:
 
-package dag
+package validator
 
 // * Imports:
 
@@ -41,6 +41,7 @@ import (
 	"context"
 	"regexp"
 
+	"github.com/Asmodai/gohacks/dag"
 	"github.com/Asmodai/gohacks/logger"
 	"gitlab.com/tozd/go/errors"
 )
@@ -48,49 +49,43 @@ import (
 // * Constants:
 
 const (
-	resmIsn   = "RESM"
-	resmToken = "regex-match" //nolint:gosec
+	fvremIsn   = "FVREM"
+	fvremToken = "field-value-regex-match" //nolint:gosec
 )
 
 // * Variables:
 
 var (
-	ErrInvalidRegexp  = errors.Base("invalid regexp")
-	ErrRegexpParse    = errors.Base("error parsing regexp")
-	ErrValueNotString = errors.Base("value is not a string")
+	ErrInvalidRegexp = errors.Base("invalid regexp")
+	ErrRegexpParse   = errors.Base("error parsing regexp")
 )
 
 // * Code:
 
 // ** Predicate:
 
-// RESM - Regular Expression (Sensitive) Match predicate.
-//
-// Returns true if the regular expression in the filter value matches against
-// the input value.
-//
-// The regular expression will not be forced into being case-insensitive.
-type RESMPredicate struct {
+type FVREMPredicate struct {
 	MetaPredicate
 
 	compiled *regexp.Regexp
 }
 
-func (pred *RESMPredicate) String() string {
-	if val, ok := pred.MetaPredicate.val.(string); ok {
-		return FormatIsnf(resmIsn,
-			"%s %s %#v",
+func (pred *FVREMPredicate) String() string {
+	if val, ok := pred.MetaPredicate.GetValueAsString(); ok {
+		return dag.FormatIsnf(
+			fvremIsn,
+			"%q %s %v",
 			pred.MetaPredicate.key,
-			resmToken,
+			fvremToken,
 			val)
 	}
 
-	return FormatIsnf(resmIsn, invalidTokenString)
+	return dag.FormatIsnf(fvremIsn, invalidTokenString)
 }
 
-func (pred *RESMPredicate) Eval(_ context.Context, input Filterable) bool {
-	data, _, ok := pred.MetaPredicate.GetStringValues(input) // TODO: simplify.
-	if !ok {
+func (pred *FVREMPredicate) Eval(_ context.Context, input dag.Filterable) bool {
+	data, dataOk := pred.MetaPredicate.GetKeyAsString(input)
+	if !dataOk {
 		return false
 	}
 
@@ -99,19 +94,19 @@ func (pred *RESMPredicate) Eval(_ context.Context, input Filterable) bool {
 
 // ** Builder:
 
-type RESMBuilder struct{}
+type FVREMBuilder struct{}
 
-func (bld *RESMBuilder) Token() string {
-	return resmToken
+func (bld *FVREMBuilder) Token() string {
+	return fvremToken
 }
 
-func (bld *RESMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (Predicate, error) {
+func (bld *FVREMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error) {
 	strVal, strOk := val.(string)
 	if !strOk {
 		return nil, errors.WithMessagef(
 			ErrValueNotString,
 			"%s: value %q",
-			resmToken,
+			fvremToken,
 			val)
 	}
 
@@ -119,7 +114,7 @@ func (bld *RESMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) 
 		return nil, errors.WithMessagef(
 			ErrInvalidRegexp,
 			"%s: %q",
-			resmToken,
+			fvremToken,
 			strVal)
 	}
 
@@ -128,12 +123,12 @@ func (bld *RESMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) 
 		return nil, errors.WithMessagef(
 			errors.WrapWith(err, ErrRegexpParse),
 			"%s: regex %q: %s",
-			resmToken,
+			fvremToken,
 			strVal,
 			err.Error())
 	}
 
-	pred := &RESMPredicate{
+	pred := &FVREMPredicate{
 		MetaPredicate: MetaPredicate{
 			key:    key,
 			val:    val,
@@ -146,4 +141,4 @@ func (bld *RESMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) 
 	return pred, nil
 }
 
-// * predicate_resm.go ends here.
+// * predicate_fvrem.go ends here.
