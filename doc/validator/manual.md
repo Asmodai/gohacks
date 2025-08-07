@@ -31,28 +31,24 @@ The `predicate` is a symbolic operator used to evaluate the value of a field.
 
 These predicates inspect the *declared type* of a field.
 
-### `FTEQ` — Field Type Equals
+### `field-type-equal` — Field Type Equals
 
-**Token:** `field-type-equal`
-**Description:** Returns true if the field's Go type name matches the given
-string.
+**Description:**
+Returns true if the field's Go type name matches the given string.
 
 **Example:**
-
 ```yaml
 field: "status"
 predicate: "field-type-equal"
 value: "string"
 ```
 
-### `FTIN` — Field Type In
+### `field-type-in` — Field Type In
 
-**Token:** `field-type-in`
-**Description:** Returns true if the field's type is in the list of accepted
-types.
+**Description:**
+Returns true if the field's type is in the list of accepted types.
 
 **Example:**
-
 ```yaml
 field: "payload"
 predicate: "field-type-in"
@@ -63,44 +59,43 @@ value: ["map[string]any", "[]byte"]
 
 These compare the *runtime value* of a field.
 
-### `FVEQ` — Field Value Equals
+### `field-value-equal` — Field Value Equals
 
-**Token:** `field-value-equal`
-**Description:** Returns true if the value equals the expected value. Supports
-`int`, `float`, `complex`, `string`, `bool`.
+**Description:**
+Returns true if the value equals the expected value. Supports `int`, `float`,
+`complex`, `string`, `bool`.
 
-### `FVNEQ` — Field Value Not Equal
+### `field-value-not-equal` — Field Value Not Equal
 
-**Token:** `field-value-not-equal`
-**Description:** Logical inverse of `FVEQ`. Returns true if values differ.
+**Description:**
+Logical inverse of `FVEQ`. Returns true if values differ.
 
-### `FVLT` — Field Value Less Than
+### `field-value-<` — Field Value Less Than
 
-**Token:** `field-value-<`
-**Description:** Field's value is less than the predicate's value.
+**Description:**
+Field's value is less than the predicate's value.
 
-### `FVLTE` — Field Value Less Than or Equal
+### `field-value-<=` — Field Value Less Than or Equal
 
-**Token:** `field-value-<=`
-**Description:** Field's value is less than or equal to the predicate's value.
+**Description:**
+Field's value is less than or equal to the predicate's value.
 
-### `FVGT` — Field Value Greater Than
+### `field-value->` — Field Value Greater Than
 
-**Token:** `field-value->`
-**Description:** Field's value is greater than the predicate's value.
+**Description:**
+Field's value is greater than the predicate's value.
 
-### `FVGTE` — Field Value Greater Than or Equal
+### `field-value->=` — Field Value Greater Than or Equal
 
-**Token:** `field-value->=`
-**Description:** Field's value is greater than or equal to the predicate's value.
+**Description:**
+Field's value is greater than or equal to the predicate's value.
 
-### `FVIN` — Field Value In
+### `field-value-in` — Field Value In
 
-**Token:** `field-value-in`
-**Description:** Returns true if the value is present in the provided list.
+**Description:**
+Returns true if the value is present in the provided list.
 
 **Example:**
-
 ```yaml
 field: "mode"
 predicate: "field-value-in"
@@ -109,13 +104,12 @@ value: ["safe", "dry_run", "check"]
 
 ## 🔍 String / Regex Predicates
 
-### `FVREM` — Field Value Regex Match
+### `field-value-regex-match` — Field Value Regex Match
 
-**Token:** `field-value-regex-match`
-**Description:** Returns true if the string value matches the provided regex.
+**Description:**
+Returns true if the string value matches the provided regex.
 
 **Example:**
-
 ```yaml
 field: "email"
 predicate: "field-value-regex-match"
@@ -124,24 +118,26 @@ value: "^[a-z0-9._%+-]+@example\.com$"
 
 ## ⚖ Logical Predicates
 
-### `FVTRUE` — Field Value Is Logically True
+### `field-value-is-true` — Field Value Is Logically True
 
-**Token:** `field-value-is-true`
-**Description:** Returns true if the field's value is non-zero/non-empty.
+**Description:**
+Returns true if the field's value is non-zero/non-empty.
 
-Structures are **never** considered logically true.
+> Structures are **never** considered logically true.
 
-### `FVFALSE` — Field Value Is Logically False
+### `field-value-is-false` — Field Value Is Logically False
 
-**Token:** `field-value-is-false`
-**Description:** Returns true if the value is zero, empty, or `false`.
-Equivalent to Go’s `reflect.Value.IsZero()` in most cases.
+**Description:**
+Returns true if the value is zero, empty, or `false`.
 
-### `FVNIL` — Field Value Is Nil
+> Equivalent to Go’s `reflect.Value.IsZero()` in most cases.
 
-**Token:** `field-value-is-nil`
-**Description:** Returns true only if the field’s reference value is `nil`.
-This does not match zero values like empty strings or zero numbers.
+### `field-value-is-nil` — Field Value Is Nil
+
+**Description:**
+Returns true only if the field’s reference value is `nil`.
+
+> This does not match zero values like empty strings or zero numbers.
 
 ---
 
