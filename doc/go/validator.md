@@ -25,6 +25,12 @@ var (
 
 ```go
 var (
+	ErrFailInvoked = errors.Base("fail action was invoked")
+)
+```
+
+```go
+var (
 	ErrValueNotString = errors.Base("value is not a string")
 )
 ```
@@ -40,6 +46,13 @@ func BuildPredicateDict() dag.PredicateDict
 ```go
 func KindToString(kind FieldKind) string
 ```
+
+#### func  NewValidator
+
+```go
+func NewValidator(ctx context.Context) dag.Compiler
+```
+Create a new validator with the default action set and predicate list.
 
 #### type Bindings
 

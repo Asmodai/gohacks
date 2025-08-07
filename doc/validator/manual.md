@@ -145,6 +145,72 @@ This does not match zero values like empty strings or zero numbers.
 
 ---
 
+# 🛠 Validator Actions
+
+These are built-in actions that can be triggered during validation when a
+predicate chain evaluates to `true`.
+They conform to the `dag.ActionFn` function signature and are compiled by the
+`actions.Builder()` method.
+
+## ✨ `none`
+
+This action does nothing.
+
+### Parameters
+
+None.
+
+### Example
+
+```yaml
+perform: "none"
+params: {}
+```
+
+## 📢 `log`
+
+This action writes a structured log message to the current DAG context logger.
+
+### Parameters
+
+| Name      | Type     | Required | Description                     |
+|-----------|----------|----------|---------------------------------|
+| `message` | `string` | ✅       | The message to print to the log |
+
+### Example
+
+```yaml
+perform: "log"
+params:
+  message: "Validation path hit: status is critical"
+```
+
+**Output (at INFO level):**
+
+```json
+{
+    "message": "Validation path hit: status is critical",
+    "src": "log_action",
+    "structure": { ...input fields... }
+}
+```
+
+If the `message` parameter is missing or not a string, the action fails to
+compile.
+
+---
+
+# ➕ Adding Custom Actions
+
+To extend the validator, implement the `dag.Actions` interface and pass your
+handler into:
+
+```go
+compiler := dag.NewCompilerWithPredicates(ctx, &yourCustomActions{}, dag.BuildPredicateDict())
+```
+
+---
+
 # 💡 Examples
 
 Let's consider the following Go structure:
@@ -231,9 +297,9 @@ We can define the YAML rules thusly:
     perform: ignore
 ```
 
-In this case, I am using the special action `ignore` that is only available
-inside the unit tests, but for production rules you would want to use one of
-the predefined actions available to the validator.
+In this case, I am using the special action `none` which simply results in
+no action being performed.  In the future there is a possibility there will
+be more actions one can do with the validator.
 
 ## Visualisation
 
@@ -254,6 +320,6 @@ the predefined actions available to the validator.
 
 # 🧑 See Also
 
- * [dag/manual.md](dag/manual.md)
+ * [../dag/manual.md](../dag/manual.md)
  * [validator/predicates.go](../../validator/predicates.go)
- * [validator/README.md](../../validator/README.md)
+ * [../go/validator.md](../go/validator.md)
