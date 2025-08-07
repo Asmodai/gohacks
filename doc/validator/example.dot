@@ -5,21 +5,21 @@ digraph DAG {
   edge [color="#666666"];
   n0 [label="{<f0> NOOP | <f1> \<no operation\>}" fillcolor="#f0f0f0", fontcolor="#000000", color="#999999"];
   n1 [label="{<f0> FTIN | <f1> \"one\" field-type-in \[int8 int16 int32 int64\]}" fillcolor="#d8eaf8", fontcolor="#003366", color="#6699cc"];
-  n2 [label="{<f0> FVIN | <f1> \"one\" field-value-in \[40 41 42 43\] | <f2> Action: ignore}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
+  n2 [label="{<f0> FVIN | <f1> \"one\" field-value-in \[40 41 42 43\] | <f2> Action: none}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
   n1 -> n2 [color="#4CAF50", style=bold];
   n0 -> n1 [color="#4CAF50", style=bold];
   n3 [label="{<f0> FTEQ | <f1> \"two\" field-type-equal map\[string\]int}" fillcolor="#d8eaf8", fontcolor="#003366", color="#6699cc"];
-  n4 [label="{<f0> FVTRUE | <f1> \"two\" field-value-is-true | <f2> Action: ignore}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
+  n4 [label="{<f0> FVTRUE | <f1> \"two\" field-value-is-true | <f2> Action: none}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
   n3 -> n4 [color="#4CAF50", style=bold];
   n0 -> n3 [color="#4CAF50", style=bold];
-  n5 [label="{<f0> FVNIL | <f1> \"three\" field-value-is-nil | <f2> Action: ignore}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
+  n5 [label="{<f0> FVNIL | <f1> \"three\" field-value-is-nil | <f2> Action: none}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
   n0 -> n5 [color="#4CAF50", style=bold];
   n6 [label="{<f0> FTEQ | <f1> \"four\" field-type-equal string}" fillcolor="#d8eaf8", fontcolor="#003366", color="#6699cc"];
-  n7 [label="{<f0> FVIN | <f1> \"four\" field-value-in \[OK CRITICAL WARNING\] | <f2> Action: ignore}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
+  n7 [label="{<f0> FVIN | <f1> \"four\" field-value-in \[OK CRITICAL WARNING\] | <f2> Action: none}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
   n6 -> n7 [color="#4CAF50", style=bold];
   n0 -> n6 [color="#4CAF50", style=bold];
   n8 [label="{<f0> FTEQ | <f1> \"five\" field-type-equal string}" fillcolor="#d8eaf8", fontcolor="#003366", color="#6699cc"];
-  n9 [label="{<f0> FVREM | <f1> \"five\" field-value-regex-match .*coffee.* | <f2> Action: ignore}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
+  n9 [label="{<f0> FVREM | <f1> \"five\" field-value-regex-match .*coffee.* | <f2> Action: none}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
   n8 -> n9 [color="#4CAF50", style=bold];
   n0 -> n8 [color="#4CAF50", style=bold];
 }

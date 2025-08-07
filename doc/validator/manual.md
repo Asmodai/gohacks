@@ -213,8 +213,8 @@ Let's consider the following Go structure:
 
 ``` go
     type DummyStructure struct {
-        One   any            `json:"one"`
-        Two   map[string]int `json:"name_to_id"`
+        One   any
+        Two   map[string]int
         Three any
         Four  string
         Five  string
@@ -251,7 +251,7 @@ We can define the YAML rules thusly:
       operator: field-value-in
       value: [40, 41, 42, 43]
   action:
-    perform: ignore
+    perform: none
 
 - name: "'Two' must be map[string]int and not empty"
   conditions:
@@ -261,14 +261,14 @@ We can define the YAML rules thusly:
     - attribute: two
       operator: field-value-is-true
   action:
-    perform: ignore
+    perform: none
 
 - name: "'three' must be nil"
   conditions:
     - attribute: three
       operator: field-value-is-nil
   action:
-    perform: ignore
+    perform: none
 
 - name: "'four' must be string and member"
   conditions:
@@ -279,7 +279,7 @@ We can define the YAML rules thusly:
       operator: field-value-in
       value: [OK, CRITICAL, WARNING]
   action:
-    perform: ignore
+    perform: none
 
 - name: "'five' must match regex"
   conditions:
@@ -290,7 +290,7 @@ We can define the YAML rules thusly:
       operator: field-value-regex-match
       value: ".*coffee.*"
   action:
-    perform: ignore
+    perform: none
 ```
 
 In this case, I am using the special action `none` which simply results in
