@@ -1,0 +1,17 @@
+digraph DAG {
+  graph [bgcolor=transparent];
+  node [shape=box, style="rounded,filled", fontname="monospace", fontsize=10];
+  edge [color="#666666"];
+
+  // Root node
+  n0 [label="NOOP : noop", fillcolor="#F0F0F0", fontcolor="#000000", color="#999999"];
+
+  // Condition
+  n1 [label="SSEQ : type == \"weather\"", fillcolor="#D8EAF8", fontcolor="#003366", color="#6699CC"];
+  n2 [label="GTE : temp >= 22\nAction: warm_weather_action", fillcolor="#E8F6E0", fontcolor="#003300", color="#66CC66"];
+  n3 [label="LTE : temp <= 10\nAction: cold_weather_action", fillcolor="#E8F6E0", fontcolor="#003300", color="#66CC66"];
+
+  n0 -> n1;
+  n1 -> n2 [color="#4CAF50", style=bold];
+  n1 -> n3 [color="#4CAF50", style=bold];
+}

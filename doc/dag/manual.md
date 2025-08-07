@@ -315,6 +315,10 @@ What follows are rules for the above, represented in both YAML and JSON.
 ]
 ```
 
+## Visualisation
+
+![Example graph visualisation](./weather.png "Example graph visualisation")
+
 ---
 
 # 🧠 Design Goals
@@ -331,3 +335,4 @@ What follows are rules for the above, represented in both YAML and JSON.
  * [dag/compiler.go](dag/compiler.go)
  * [dag/predicates.go](dag/predicates.go)
  * [dag/actions.go](dag/actions.go)
+ * [../go/dag.md](../go/dag.md)
