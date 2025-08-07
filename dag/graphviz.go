@@ -47,9 +47,14 @@ import (
 
 // Generate a Graphviz visualisation of the DAG starting from the given node.
 func ExportToDOT(writer io.Writer, root *node) {
+	//
+	// XXX This is ugly and should be re-written to not be ugly.
+	//
 	fmt.Fprintln(writer, "digraph DAG {")
+	fmt.Fprintln(writer, "  graph [bgcolor=transparent];")
 	fmt.Fprintln(writer, "  rankdir=TB;")
-	fmt.Fprintln(writer, `  node [shape=record, fontname="monospace", fontsize=10];`)
+	fmt.Fprintln(writer, `  node [shape=record, style="rounded,filled", fontname="monospace", fontsize=10];`)
+	fmt.Fprintln(writer, `  edge [color="#666666"];`)
 
 	visited := make(map[*node]string)
 	counter := 0
@@ -78,9 +83,15 @@ func exportNodeDOT(writer io.Writer, node *node, visited map[*node]string, count
 		"<f1> " + escapeDOT(pred),
 	}
 
-	color := "#ddeeff"
+	color := "#6699cc"
+	fillColor := "#d8eaf8"
+	fontColor := "#003366"
+	arrowColor := "#4CAF50"
+
 	if kind == noopIsn {
-		color = "#eeeeee"
+		color = "#999999"
+		fillColor = "#f0f0f0"
+		fontColor = "#000000"
 	}
 
 	if len(node.ActionName) > 0 {
@@ -88,22 +99,32 @@ func exportNodeDOT(writer io.Writer, node *node, visited map[*node]string, count
 			parts,
 			"<f2> Action: "+node.ActionName,
 		)
-		color = "#ccffcc"
+		color = "#66cc66"
+		fillColor = "#e8f6e0"
+		fontColor = "#003300"
 	}
 
 	// Generate the node.
 	fmt.Fprintf(
 		writer,
-		`  %s [label="{%s}" style=filled fillcolor="%s"];`+"\n",
+		`  %s [label="{%s}" fillcolor="%s", fontcolor="%s", color="%s"];`+"\n",
 		nodeID,
 		strings.Join(parts, " | "),
+		fillColor,
+		fontColor,
 		color,
 	)
 
 	// Link the node to its children.
 	for _, child := range node.Children {
 		childID := exportNodeDOT(writer, child, visited, counter)
-		fmt.Fprintf(writer, "  %s -> %s;\n", nodeID, childID)
+		fmt.Fprintf(
+			writer,
+			"  %s -> %s [color=%q, style=bold];\n",
+			nodeID,
+			childID,
+			arrowColor,
+		)
 	}
 
 	return nodeID

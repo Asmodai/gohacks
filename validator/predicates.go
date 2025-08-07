@@ -145,10 +145,17 @@ func (meta *MetaPredicate) GetKeyAsValue(input dag.Filterable) (any, bool) {
 }
 
 func (meta *MetaPredicate) GetKeyAsString(input dag.Filterable) (string, bool) {
-	data, dataOk := input.Get(meta.key)
+	data, dataOk := meta.GetKeyAsValue(input)
 	str, strOk := conversion.ToString(data)
 
 	return str, dataOk && strOk
+}
+
+func (meta *MetaPredicate) GetKeyAsFloat64(input dag.Filterable) (float64, bool) {
+	data, dataOk := meta.GetKeyAsValue(input)
+	flt, fltOk := conversion.ToFloat64(data)
+
+	return flt, dataOk && fltOk
 }
 
 // ** Functions:
@@ -163,6 +170,10 @@ func BuildPredicateDict() dag.PredicateDict {
 
 		//
 		// Field value predicates.
+		&FVLTBuilder{},    // Field Value is Lesser Than.
+		&FVGTBuilder{},    // Field Value is Greater Than.
+		&FVLTEBuilder{},   // Field Value is Lesser or Equal To.
+		&FVGTEBuilder{},   // Field Value is Greater or Equal To.
 		&FVNILBuilder{},   // Field Value Is Nill.
 		&FVTRUEBuilder{},  // Field Value is Logically True.
 		&FVFALSEBuilder{}, // Field Value is Logically False.

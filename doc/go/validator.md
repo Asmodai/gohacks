@@ -404,6 +404,122 @@ func (pred *FVFALSEPredicate) String() string
 func (pred *FVFALSEPredicate) Token() string
 ```
 
+#### type FVGTBuilder
+
+```go
+type FVGTBuilder struct{}
+```
+
+
+#### func (*FVGTBuilder) Build
+
+```go
+func (bld *FVGTBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
+```
+
+#### func (*FVGTBuilder) Token
+
+```go
+func (bld *FVGTBuilder) Token() string
+```
+
+#### type FVGTEBuilder
+
+```go
+type FVGTEBuilder struct{}
+```
+
+
+#### func (*FVGTEBuilder) Build
+
+```go
+func (bld *FVGTEBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
+```
+
+#### func (*FVGTEBuilder) Token
+
+```go
+func (bld *FVGTEBuilder) Token() string
+```
+
+#### type FVGTEPredicate
+
+```go
+type FVGTEPredicate struct {
+	MetaPredicate
+}
+```
+
+
+#### func (*FVGTEPredicate) Debug
+
+```go
+func (pred *FVGTEPredicate) Debug() string
+```
+
+#### func (*FVGTEPredicate) Eval
+
+```go
+func (pred *FVGTEPredicate) Eval(_ context.Context, input dag.Filterable) bool
+```
+
+#### func (*FVGTEPredicate) Instruction
+
+```go
+func (pred *FVGTEPredicate) Instruction() string
+```
+
+#### func (*FVGTEPredicate) String
+
+```go
+func (pred *FVGTEPredicate) String() string
+```
+
+#### func (*FVGTEPredicate) Token
+
+```go
+func (pred *FVGTEPredicate) Token() string
+```
+
+#### type FVGTPredicate
+
+```go
+type FVGTPredicate struct {
+	MetaPredicate
+}
+```
+
+
+#### func (*FVGTPredicate) Debug
+
+```go
+func (pred *FVGTPredicate) Debug() string
+```
+
+#### func (*FVGTPredicate) Eval
+
+```go
+func (pred *FVGTPredicate) Eval(_ context.Context, input dag.Filterable) bool
+```
+
+#### func (*FVGTPredicate) Instruction
+
+```go
+func (pred *FVGTPredicate) Instruction() string
+```
+
+#### func (*FVGTPredicate) String
+
+```go
+func (pred *FVGTPredicate) String() string
+```
+
+#### func (*FVGTPredicate) Token
+
+```go
+func (pred *FVGTPredicate) Token() string
+```
+
 #### type FVINBuilder
 
 ```go
@@ -464,6 +580,122 @@ func (pred *FVINPredicate) String() string
 
 ```go
 func (pred *FVINPredicate) Token() string
+```
+
+#### type FVLTBuilder
+
+```go
+type FVLTBuilder struct{}
+```
+
+
+#### func (*FVLTBuilder) Build
+
+```go
+func (bld *FVLTBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
+```
+
+#### func (*FVLTBuilder) Token
+
+```go
+func (bld *FVLTBuilder) Token() string
+```
+
+#### type FVLTEBuilder
+
+```go
+type FVLTEBuilder struct{}
+```
+
+
+#### func (*FVLTEBuilder) Build
+
+```go
+func (bld *FVLTEBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
+```
+
+#### func (*FVLTEBuilder) Token
+
+```go
+func (bld *FVLTEBuilder) Token() string
+```
+
+#### type FVLTEPredicate
+
+```go
+type FVLTEPredicate struct {
+	MetaPredicate
+}
+```
+
+
+#### func (*FVLTEPredicate) Debug
+
+```go
+func (pred *FVLTEPredicate) Debug() string
+```
+
+#### func (*FVLTEPredicate) Eval
+
+```go
+func (pred *FVLTEPredicate) Eval(_ context.Context, input dag.Filterable) bool
+```
+
+#### func (*FVLTEPredicate) Instruction
+
+```go
+func (pred *FVLTEPredicate) Instruction() string
+```
+
+#### func (*FVLTEPredicate) String
+
+```go
+func (pred *FVLTEPredicate) String() string
+```
+
+#### func (*FVLTEPredicate) Token
+
+```go
+func (pred *FVLTEPredicate) Token() string
+```
+
+#### type FVLTPredicate
+
+```go
+type FVLTPredicate struct {
+	MetaPredicate
+}
+```
+
+
+#### func (*FVLTPredicate) Debug
+
+```go
+func (pred *FVLTPredicate) Debug() string
+```
+
+#### func (*FVLTPredicate) Eval
+
+```go
+func (pred *FVLTPredicate) Eval(_ context.Context, input dag.Filterable) bool
+```
+
+#### func (*FVLTPredicate) Instruction
+
+```go
+func (pred *FVLTPredicate) Instruction() string
+```
+
+#### func (*FVLTPredicate) String
+
+```go
+func (pred *FVLTPredicate) String() string
+```
+
+#### func (*FVLTPredicate) Token
+
+```go
+func (pred *FVLTPredicate) Token() string
 ```
 
 #### type FVNEQBuilder
@@ -806,6 +1038,12 @@ func (meta *MetaPredicate) GetKeyAsFieldInfo(input dag.Filterable) (*FieldInfo, 
 Return the `Filterable`'s field information.
 
 This is directed through to `BoundObject.Description.Fields`.
+
+#### func (*MetaPredicate) GetKeyAsFloat64
+
+```go
+func (meta *MetaPredicate) GetKeyAsFloat64(input dag.Filterable) (float64, bool)
+```
 
 #### func (*MetaPredicate) GetKeyAsString
 

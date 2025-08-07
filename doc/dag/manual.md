@@ -330,7 +330,7 @@ What follows are rules for the above, represented in both YAML and JSON.
 
 ---
 
-# 🧑‍ See Also
+# 🧑 See Also
 
  * [dag/compiler.go](dag/compiler.go)
  * [dag/predicates.go](dag/predicates.go)
