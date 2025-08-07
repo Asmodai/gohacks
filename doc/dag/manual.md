@@ -211,7 +211,32 @@ If an unknown action is referenced, rule compilation will fail with
 
 # 💡 Examples
 
+Consider the following events:
+
+``` json
+{ "type": "weather", "temp": 8  }
+{ "type": "weather", "temp": 27 }
+{ "type": "weather", "temp": 19 }
+```
+
+We can define rules that will inform us whether it's cold or it's warm.
+
+We want two rules:
+ * Temperature 22 degrees or higher? Then it's warm!
+ * Temperature 10 degrees or lower? Then it's cold.
+
+We do that by defining two rules: `warm_weather` and `cold_weather`.
+
+We then chain conditions together to match when `type` is "weather" and
+when `temp` matches a given numeric condition.
+
+For now we wish to keep things simple, so we only log when the condition
+matches.
+
+What follows are rules for the above, represented in both YAML and JSON.
+
 ## YAML
+
 ``` yaml
 - name: warm_weather
   conditions:
