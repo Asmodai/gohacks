@@ -70,17 +70,20 @@ type FVREMPredicate struct {
 	compiled *regexp.Regexp
 }
 
-func (pred *FVREMPredicate) String() string {
-	if val, ok := pred.MetaPredicate.GetValueAsString(); ok {
-		return dag.FormatIsnf(
-			fvremIsn,
-			"%q %s %v",
-			pred.MetaPredicate.key,
-			fvremToken,
-			val)
-	}
+func (pred *FVREMPredicate) Instruction() string {
+	return fvremIsn
+}
 
-	return dag.FormatIsnf(fvremIsn, invalidTokenString)
+func (pred *FVREMPredicate) Token() string {
+	return fvremToken
+}
+
+func (pred *FVREMPredicate) String() string {
+	return pred.MetaPredicate.String(fvremToken)
+}
+
+func (pred *FVREMPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(fvremIsn, fvremToken)
 }
 
 func (pred *FVREMPredicate) Eval(_ context.Context, input dag.Filterable) bool {

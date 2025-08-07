@@ -81,17 +81,20 @@ type FVFALSEPredicate struct {
 	MetaPredicate
 }
 
-func (pred *FVFALSEPredicate) String() string {
-	if val, ok := pred.MetaPredicate.GetValueAsString(); ok {
-		return dag.FormatIsnf(
-			fvfalseIsn,
-			"%q %s %v",
-			pred.MetaPredicate.key,
-			fvfalseToken,
-			val)
-	}
+func (pred *FVFALSEPredicate) Instruction() string {
+	return fvfalseIsn
+}
 
-	return dag.FormatIsnf(fvfalseIsn, invalidTokenString)
+func (pred *FVFALSEPredicate) Token() string {
+	return fvfalseToken
+}
+
+func (pred *FVFALSEPredicate) String() string {
+	return pred.MetaPredicate.String(fvfalseToken)
+}
+
+func (pred *FVFALSEPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(fvfalseIsn, fvfalseToken)
 }
 
 //nolint:cyclop,exhaustive

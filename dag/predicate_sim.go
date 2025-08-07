@@ -48,7 +48,7 @@ import (
 
 const (
 	simIsn   = "SIM"
-	simToken = "<"
+	simToken = "string-ci-member"
 )
 
 // * Code:
@@ -63,16 +63,20 @@ type SIMPredicate struct {
 	MetaPredicate
 }
 
-func (pred *SIMPredicate) String() string {
-	if val, ok := pred.MetaPredicate.GetPredicateStringArray(); ok {
-		return FormatIsnf(simIsn,
-			"%s %s %#v",
-			pred.MetaPredicate.key,
-			simToken,
-			val)
-	}
+func (pred *SIMPredicate) Instruction() string {
+	return simIsn
+}
 
-	return FormatIsnf(simIsn, invalidTokenString)
+func (pred *SIMPredicate) Token() string {
+	return simToken
+}
+
+func (pred *SIMPredicate) String() string {
+	return pred.MetaPredicate.String(simToken)
+}
+
+func (pred *SIMPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(simIsn, simToken)
 }
 
 func (pred *SIMPredicate) Eval(_ context.Context, input Filterable) bool {

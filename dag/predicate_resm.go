@@ -76,16 +76,20 @@ type RESMPredicate struct {
 	compiled *regexp.Regexp
 }
 
-func (pred *RESMPredicate) String() string {
-	if val, ok := pred.MetaPredicate.val.(string); ok {
-		return FormatIsnf(resmIsn,
-			"%s %s %#v",
-			pred.MetaPredicate.key,
-			resmToken,
-			val)
-	}
+func (pred *RESMPredicate) Instruction() string {
+	return resmIsn
+}
 
-	return FormatIsnf(resmIsn, invalidTokenString)
+func (pred *RESMPredicate) Token() string {
+	return resmToken
+}
+
+func (pred *RESMPredicate) String() string {
+	return pred.MetaPredicate.String(resmToken)
+}
+
+func (pred *RESMPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(resmIsn, resmToken)
 }
 
 func (pred *RESMPredicate) Eval(_ context.Context, input Filterable) bool {

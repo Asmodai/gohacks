@@ -75,18 +75,20 @@ type FVINPredicate struct {
 	valueSet map[any]struct{}
 }
 
-func (pred *FVINPredicate) String() string {
-	if val, ok := pred.MetaPredicate.GetValueAsAny(); ok {
-		return dag.FormatIsnf(
-			fvinIsn,
-			"%q %s %v",
-			pred.MetaPredicate.key,
-			fvinToken,
-			val,
-		)
-	}
+func (pred *FVINPredicate) Instruction() string {
+	return fvinIsn
+}
 
-	return dag.FormatIsnf(fvinIsn, invalidTokenString)
+func (pred *FVINPredicate) Token() string {
+	return fvinToken
+}
+
+func (pred *FVINPredicate) String() string {
+	return pred.MetaPredicate.String(fvinToken)
+}
+
+func (pred *FVINPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(fvinIsn, fvinToken)
 }
 
 func (pred *FVINPredicate) Eval(_ context.Context, input dag.Filterable) bool {

@@ -97,18 +97,20 @@ type FVEQPredicate struct {
 	MetaPredicate
 }
 
-func (pred *FVEQPredicate) String() string {
-	if val, ok := pred.MetaPredicate.GetValueAsAny(); ok {
-		return dag.FormatIsnf(
-			fveqIsn,
-			"%q %s %#v",
-			pred.MetaPredicate.key,
-			fveqToken,
-			val,
-		)
-	}
+func (pred *FVEQPredicate) Instruction() string {
+	return fveqIsn
+}
 
-	return dag.FormatIsnf(fveqIsn, invalidTokenString)
+func (pred *FVEQPredicate) Token() string {
+	return fveqToken
+}
+
+func (pred *FVEQPredicate) String() string {
+	return pred.MetaPredicate.String(fveqToken)
+}
+
+func (pred *FVEQPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(fveqIsn, fveqToken)
 }
 
 //nolint:cyclop,funlen

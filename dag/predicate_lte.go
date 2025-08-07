@@ -41,7 +41,6 @@ package dag
 import (
 	"context"
 
-	"github.com/Asmodai/gohacks/conversion"
 	"github.com/Asmodai/gohacks/logger"
 )
 
@@ -66,16 +65,20 @@ type LTEPredicate struct {
 	MetaPredicate
 }
 
-func (pred *LTEPredicate) String() string {
-	if val, ok := conversion.ToFloat64(pred.MetaPredicate.val); ok {
-		return FormatIsnf(lteIsn,
-			"%s %s %g",
-			pred.MetaPredicate.key,
-			lteToken,
-			val)
-	}
+func (pred *LTEPredicate) Instruction() string {
+	return lteIsn
+}
 
-	return FormatIsnf(lteIsn, invalidTokenString)
+func (pred *LTEPredicate) Token() string {
+	return lteToken
+}
+
+func (pred *LTEPredicate) String() string {
+	return pred.MetaPredicate.String(lteToken)
+}
+
+func (pred *LTEPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(lteIsn, lteToken)
 }
 
 func (pred *LTEPredicate) Eval(_ context.Context, input Filterable) bool {

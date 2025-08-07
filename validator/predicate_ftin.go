@@ -67,18 +67,20 @@ type FTINPredicate struct {
 	valueSet map[string]struct{}
 }
 
-func (pred *FTINPredicate) String() string {
-	if val, ok := pred.MetaPredicate.GetValueAsAny(); ok {
-		return dag.FormatIsnf(
-			ftinIsn,
-			"%q %s %v",
-			pred.MetaPredicate.key,
-			ftinToken,
-			val,
-		)
-	}
+func (pred *FTINPredicate) Instruction() string {
+	return ftinIsn
+}
 
-	return dag.FormatIsnf(ftinIsn, invalidTokenString)
+func (pred *FTINPredicate) Token() string {
+	return ftinToken
+}
+
+func (pred *FTINPredicate) String() string {
+	return pred.MetaPredicate.String(ftinToken)
+}
+
+func (pred *FTINPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(ftinIsn, ftinToken)
 }
 
 func (pred *FTINPredicate) Eval(_ context.Context, input dag.Filterable) bool {

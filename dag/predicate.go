@@ -52,8 +52,6 @@ import (
 // * Constants:
 
 const (
-	invalidTokenString = "<invalid!>"
-
 	isnWidth = 8
 )
 
@@ -72,6 +70,23 @@ type Predicate interface {
 
 	// Return the string representation of the predicate.
 	String() string
+
+	// Return the instruction name for the predicate.
+	//
+	// This isn't used in the current version of the directed acyclic
+	// graph, but the theory is that this could be used in a tokeniser
+	// or as opcode.
+	//
+	// The value this returns must be unique.
+	Instruction() string
+
+	// Return the token name for the predicate.
+	//
+	// This is the string value used in the action specification.
+	Token() string
+
+	// Return a string representation for debugging.
+	Debug() string
 }
 
 // Predicate builder interface.
@@ -110,6 +125,20 @@ type MetaPredicate struct {
 	val    any
 	logger logger.Logger
 	debug  bool
+}
+
+func (meta *MetaPredicate) Debug(isn, token string) string {
+	return isn + ": " + meta.String(token)
+}
+
+func (meta *MetaPredicate) String(token string) string {
+	var match string
+
+	if meta.val != nil {
+		match = fmt.Sprintf(" %#v", meta.val)
+	}
+
+	return fmt.Sprintf("%q %s%s", meta.key, token, match)
 }
 
 // Return the predicate's input value as a 64-bit float.
@@ -259,11 +288,18 @@ func BuildPredicateDict() PredicateDict {
 	return result
 }
 
-// Pretty-print a predicate's token.
-func FormatIsnf(isn, message string, rest ...any) string {
+// Pretty-print predicate information for debugging.
+//
+// This includes the token.
+func FormatDebugIsnf(isn, message string, rest ...any) string {
 	padded := utils.Pad(isn, isnWidth)
 
 	return fmt.Sprintf("%s: %s", padded, fmt.Sprintf(message, rest...))
+}
+
+// Pretty-print a predicate.
+func FormatIsnf(message string, rest ...any) string {
+	return fmt.Sprintf(message, rest...)
 }
 
 // * predicate.go ends here.

@@ -38,17 +38,12 @@ package validator
 // * Imports:
 
 import (
+	"fmt"
 	"unsafe"
 
 	"github.com/Asmodai/gohacks/conversion"
 	"github.com/Asmodai/gohacks/dag"
 	"github.com/Asmodai/gohacks/logger"
-)
-
-// * Constants:
-
-const (
-	invalidTokenString = "<invalid!>"
 )
 
 // * Variables:
@@ -79,6 +74,20 @@ type MetaPredicate struct {
 //
 // Maybe via pointers (or references) or whatever.
 //
+
+func (meta *MetaPredicate) Debug(isn, token string) string {
+	return isn + ": " + meta.String(token)
+}
+
+func (meta *MetaPredicate) String(token string) string {
+	var match string
+
+	if meta.val != nil {
+		match = fmt.Sprintf(" %v", meta.val)
+	}
+
+	return fmt.Sprintf("%q %s%s", meta.key, token, match)
+}
 
 func (meta *MetaPredicate) GetValueAsAny() (any, bool) {
 	return meta.val, true
@@ -160,6 +169,7 @@ func BuildPredicateDict() dag.PredicateDict {
 		&FVEQBuilder{},    // Field Value Equals.
 		&FVNEQBuilder{},   // Field Value Not Equals.
 		&FVINBuilder{},    // Field Value In.
+		&FVREMBuilder{},   // Field Value Regex Match.
 	}
 
 	for idx := range preds {

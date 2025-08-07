@@ -42,6 +42,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"testing"
 
@@ -338,6 +339,8 @@ func TestCompiler(t *testing.T) {
 
 	compiler := NewCompiler(ctx, mact)
 	issues := compiler.Compile(rules)
+
+	compiler.Export(os.Stdout)
 
 	if len(issues) > 0 {
 		t.Logf("Compiler issues:")

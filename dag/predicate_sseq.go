@@ -62,16 +62,20 @@ type SSEQPredicate struct {
 	MetaPredicate
 }
 
-func (pred *SSEQPredicate) String() string {
-	if val, ok := pred.MetaPredicate.val.(string); ok {
-		return FormatIsnf(sseqIsn,
-			"%s %s %#v",
-			pred.MetaPredicate.key,
-			sseqToken,
-			val)
-	}
+func (pred *SSEQPredicate) Instruction() string {
+	return sseqIsn
+}
 
-	return FormatIsnf(sseqIsn, invalidTokenString)
+func (pred *SSEQPredicate) Token() string {
+	return sseqToken
+}
+
+func (pred *SSEQPredicate) String() string {
+	return pred.MetaPredicate.String(sseqToken)
+}
+
+func (pred *SSEQPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(sseqIsn, sseqToken)
 }
 
 func (pred *SSEQPredicate) Eval(_ context.Context, input Filterable) bool {

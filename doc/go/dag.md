@@ -39,12 +39,28 @@ func DumpRulesToYAML(rules []RuleSpec) (string, error)
 ```
 Dump a slice of rule specifications to YAML format.
 
+#### func  ExportToDOT
+
+```go
+func ExportToDOT(writer io.Writer, root *node)
+```
+Generate a Graphviz visualisation of the DAG starting from the given node.
+
+#### func  FormatDebugIsnf
+
+```go
+func FormatDebugIsnf(isn, message string, rest ...any) string
+```
+Pretty-print predicate information for debugging.
+
+This includes the token.
+
 #### func  FormatIsnf
 
 ```go
-func FormatIsnf(isn, message string, rest ...any) string
+func FormatIsnf(message string, rest ...any) string
 ```
-Pretty-print a predicate's token.
+Pretty-print a predicate.
 
 #### type ActionFn
 
@@ -123,6 +139,7 @@ type Compiler interface {
 	CompileAction(ActionSpec) (ActionFn, error)
 	Compile([]RuleSpec) []error
 	Evaluate(Filterable)
+	Export(io.Writer)
 }
 ```
 
@@ -246,16 +263,34 @@ EIR - Exclusive In Range predicate.
 
 Returne true if the input value is in the filter range inclusive.
 
+#### func (*EIRPredicate) Debug
+
+```go
+func (pred *EIRPredicate) Debug() string
+```
+
 #### func (*EIRPredicate) Eval
 
 ```go
 func (pred *EIRPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*EIRPredicate) Instruction
+
+```go
+func (pred *EIRPredicate) Instruction() string
+```
+
 #### func (*EIRPredicate) String
 
 ```go
 func (pred *EIRPredicate) String() string
+```
+
+#### func (*EIRPredicate) Token
+
+```go
+func (pred *EIRPredicate) Token() string
 ```
 
 #### type EQBuilder
@@ -289,16 +324,34 @@ EQ - Numeric equality predicate.
 
 Returns true if the input value matches the filter value.
 
+#### func (*EQPredicate) Debug
+
+```go
+func (pred *EQPredicate) Debug() string
+```
+
 #### func (*EQPredicate) Eval
 
 ```go
 func (pred *EQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*EQPredicate) Instruction
+
+```go
+func (pred *EQPredicate) Instruction() string
+```
+
 #### func (*EQPredicate) String
 
 ```go
 func (pred *EQPredicate) String() string
+```
+
+#### func (*EQPredicate) Token
+
+```go
+func (pred *EQPredicate) Token() string
 ```
 
 #### type Filterable
@@ -386,16 +439,34 @@ GTE - Numeric Greater-Than-or-Equal-To predicate.
 
 Returns true if the input value is greater than or equal to the filter value.
 
+#### func (*GTEPredicate) Debug
+
+```go
+func (pred *GTEPredicate) Debug() string
+```
+
 #### func (*GTEPredicate) Eval
 
 ```go
 func (pred *GTEPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*GTEPredicate) Instruction
+
+```go
+func (pred *GTEPredicate) Instruction() string
+```
+
 #### func (*GTEPredicate) String
 
 ```go
 func (pred *GTEPredicate) String() string
+```
+
+#### func (*GTEPredicate) Token
+
+```go
+func (pred *GTEPredicate) Token() string
 ```
 
 #### type GTPredicate
@@ -410,16 +481,34 @@ GT - Numeric Greater-Than predicate.
 
 Returns true of the input value is greater than the filter value.
 
+#### func (*GTPredicate) Debug
+
+```go
+func (pred *GTPredicate) Debug() string
+```
+
 #### func (*GTPredicate) Eval
 
 ```go
 func (pred *GTPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*GTPredicate) Instruction
+
+```go
+func (pred *GTPredicate) Instruction() string
+```
+
 #### func (*GTPredicate) String
 
 ```go
 func (pred *GTPredicate) String() string
+```
+
+#### func (*GTPredicate) Token
+
+```go
+func (pred *GTPredicate) Token() string
 ```
 
 #### type IIRBuilder
@@ -453,16 +542,34 @@ IIR - Inclusive In Range predicate.
 
 Returns true if the input value is in the range defined in the filter inclusive.
 
+#### func (*IIRPredicate) Debug
+
+```go
+func (pred *IIRPredicate) Debug() string
+```
+
 #### func (*IIRPredicate) Eval
 
 ```go
 func (pred *IIRPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*IIRPredicate) Instruction
+
+```go
+func (pred *IIRPredicate) Instruction() string
+```
+
 #### func (*IIRPredicate) String
 
 ```go
 func (pred *IIRPredicate) String() string
+```
+
+#### func (*IIRPredicate) Token
+
+```go
+func (pred *IIRPredicate) Token() string
 ```
 
 #### type LTBuilder
@@ -515,16 +622,34 @@ LTE - Numeric Less-Than-or-Equal-To predicate.
 
 Returns true if the input value is lesser than or equal to the filter value.
 
+#### func (*LTEPredicate) Debug
+
+```go
+func (pred *LTEPredicate) Debug() string
+```
+
 #### func (*LTEPredicate) Eval
 
 ```go
 func (pred *LTEPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*LTEPredicate) Instruction
+
+```go
+func (pred *LTEPredicate) Instruction() string
+```
+
 #### func (*LTEPredicate) String
 
 ```go
 func (pred *LTEPredicate) String() string
+```
+
+#### func (*LTEPredicate) Token
+
+```go
+func (pred *LTEPredicate) Token() string
 ```
 
 #### type LTPredicate
@@ -539,16 +664,34 @@ LT - Numeric Less-Than predicate.
 
 Returns true if the input value is lesser than the filter value.
 
+#### func (*LTPredicate) Debug
+
+```go
+func (pred *LTPredicate) Debug() string
+```
+
 #### func (*LTPredicate) Eval
 
 ```go
 func (pred *LTPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*LTPredicate) Instruction
+
+```go
+func (pred *LTPredicate) Instruction() string
+```
+
 #### func (*LTPredicate) String
 
 ```go
 func (pred *LTPredicate) String() string
+```
+
+#### func (*LTPredicate) Token
+
+```go
+func (pred *LTPredicate) Token() string
 ```
 
 #### type MetaPredicate
@@ -562,6 +705,12 @@ A `meta` predicate used by all predicates.
 
 The meta preducate presents common fields and methods so as to avoid duplicate
 code.
+
+#### func (*MetaPredicate) Debug
+
+```go
+func (meta *MetaPredicate) Debug(isn, token string) string
+```
 
 #### func (*MetaPredicate) EvalExclusiveRange
 
@@ -624,6 +773,12 @@ func (meta *MetaPredicate) GetStringValues(input Filterable) (string, string, bo
 ```
 Return both the predicate's input value and filter value as a string.
 
+#### func (*MetaPredicate) String
+
+```go
+func (meta *MetaPredicate) String(token string) string
+```
+
 #### type NEQBuilder
 
 ```go
@@ -655,16 +810,34 @@ NEQ - Numeric Inequality predicate.
 
 Returns true if the input value is not equal to the filter value.
 
+#### func (*NEQPredicate) Debug
+
+```go
+func (pred *NEQPredicate) Debug() string
+```
+
 #### func (*NEQPredicate) Eval
 
 ```go
 func (pred *NEQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*NEQPredicate) Instruction
+
+```go
+func (pred *NEQPredicate) Instruction() string
+```
+
 #### func (*NEQPredicate) String
 
 ```go
 func (pred *NEQPredicate) String() string
+```
+
+#### func (*NEQPredicate) Token
+
+```go
+func (pred *NEQPredicate) Token() string
 ```
 
 #### type NOOPPredicate
@@ -679,16 +852,34 @@ This predicate is used internally to represent the root node.
 
 It always returns true.
 
+#### func (*NOOPPredicate) Debug
+
+```go
+func (pred *NOOPPredicate) Debug() string
+```
+
 #### func (*NOOPPredicate) Eval
 
 ```go
 func (pred *NOOPPredicate) Eval(_ context.Context, _ Filterable) bool
 ```
 
+#### func (*NOOPPredicate) Instruction
+
+```go
+func (pred *NOOPPredicate) Instruction() string
+```
+
 #### func (*NOOPPredicate) String
 
 ```go
 func (pred *NOOPPredicate) String() string
+```
+
+#### func (*NOOPPredicate) Token
+
+```go
+func (pred *NOOPPredicate) Token() string
 ```
 
 #### type Predicate
@@ -702,6 +893,23 @@ type Predicate interface {
 
 	// Return the string representation of the predicate.
 	String() string
+
+	// Return the instruction name for the predicate.
+	//
+	// This isn't used in the current version of the directed acyclic
+	// graph, but the theory is that this could be used in a tokeniser
+	// or as opcode.
+	//
+	// The value this returns must be unique.
+	Instruction() string
+
+	// Return the token name for the predicate.
+	//
+	// This is the string value used in the action specification.
+	Token() string
+
+	// Return a string representation for debugging.
+	Debug() string
 }
 ```
 
@@ -795,16 +1003,34 @@ value.
 The regular expression will be compiled with a prefix denoting that it does not
 care about case.
 
+#### func (*REIMPredicate) Debug
+
+```go
+func (pred *REIMPredicate) Debug() string
+```
+
 #### func (*REIMPredicate) Eval
 
 ```go
 func (pred *REIMPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*REIMPredicate) Instruction
+
+```go
+func (pred *REIMPredicate) Instruction() string
+```
+
 #### func (*REIMPredicate) String
 
 ```go
 func (pred *REIMPredicate) String() string
+```
+
+#### func (*REIMPredicate) Token
+
+```go
+func (pred *REIMPredicate) Token() string
 ```
 
 #### type RESMBuilder
@@ -841,16 +1067,34 @@ input value.
 
 The regular expression will not be forced into being case-insensitive.
 
+#### func (*RESMPredicate) Debug
+
+```go
+func (pred *RESMPredicate) Debug() string
+```
+
 #### func (*RESMPredicate) Eval
 
 ```go
 func (pred *RESMPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*RESMPredicate) Instruction
+
+```go
+func (pred *RESMPredicate) Instruction() string
+```
+
 #### func (*RESMPredicate) String
 
 ```go
 func (pred *RESMPredicate) String() string
+```
+
+#### func (*RESMPredicate) Token
+
+```go
+func (pred *RESMPredicate) Token() string
 ```
 
 #### type RuleSpec
@@ -931,16 +1175,34 @@ Returns true if the filter value matches the input value.
 
 This predicate does not care about case.
 
+#### func (*SIEQPredicate) Debug
+
+```go
+func (pred *SIEQPredicate) Debug() string
+```
+
 #### func (*SIEQPredicate) Eval
 
 ```go
 func (pred *SIEQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*SIEQPredicate) Instruction
+
+```go
+func (pred *SIEQPredicate) Instruction() string
+```
+
 #### func (*SIEQPredicate) String
 
 ```go
 func (pred *SIEQPredicate) String() string
+```
+
+#### func (*SIEQPredicate) Token
+
+```go
+func (pred *SIEQPredicate) Token() string
 ```
 
 #### type SIMBuilder
@@ -975,16 +1237,34 @@ SIM - String (Insensitive) Member predicate.
 Returns true if the input value is a member of the string array in the filter
 value.
 
+#### func (*SIMPredicate) Debug
+
+```go
+func (pred *SIMPredicate) Debug() string
+```
+
 #### func (*SIMPredicate) Eval
 
 ```go
 func (pred *SIMPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*SIMPredicate) Instruction
+
+```go
+func (pred *SIMPredicate) Instruction() string
+```
+
 #### func (*SIMPredicate) String
 
 ```go
 func (pred *SIMPredicate) String() string
+```
+
+#### func (*SIMPredicate) Token
+
+```go
+func (pred *SIMPredicate) Token() string
 ```
 
 #### type SINEQBuilder
@@ -1020,16 +1300,34 @@ Returns true if the input string is not the same as the filter string.
 
 Case is not taken into account.
 
+#### func (*SINEQPredicate) Debug
+
+```go
+func (pred *SINEQPredicate) Debug() string
+```
+
 #### func (*SINEQPredicate) Eval
 
 ```go
 func (pred *SINEQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*SINEQPredicate) Instruction
+
+```go
+func (pred *SINEQPredicate) Instruction() string
+```
+
 #### func (*SINEQPredicate) String
 
 ```go
 func (pred *SINEQPredicate) String() string
+```
+
+#### func (*SINEQPredicate) Token
+
+```go
+func (pred *SINEQPredicate) Token() string
 ```
 
 #### type SSEQBuilder
@@ -1063,16 +1361,34 @@ SSEQ - String (Sensitive) Equality predicate.
 
 Returns true if the input value is the same as the filter value.
 
+#### func (*SSEQPredicate) Debug
+
+```go
+func (pred *SSEQPredicate) Debug() string
+```
+
 #### func (*SSEQPredicate) Eval
 
 ```go
 func (pred *SSEQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*SSEQPredicate) Instruction
+
+```go
+func (pred *SSEQPredicate) Instruction() string
+```
+
 #### func (*SSEQPredicate) String
 
 ```go
 func (pred *SSEQPredicate) String() string
+```
+
+#### func (*SSEQPredicate) Token
+
+```go
+func (pred *SSEQPredicate) Token() string
 ```
 
 #### type SSMBuilder
@@ -1107,16 +1423,34 @@ SSM - String (Sensitive) Member predicate.
 Returns true if the input value is a member of the string array in the filter
 value.
 
+#### func (*SSMPredicate) Debug
+
+```go
+func (pred *SSMPredicate) Debug() string
+```
+
 #### func (*SSMPredicate) Eval
 
 ```go
 func (pred *SSMPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*SSMPredicate) Instruction
+
+```go
+func (pred *SSMPredicate) Instruction() string
+```
+
 #### func (*SSMPredicate) String
 
 ```go
 func (pred *SSMPredicate) String() string
+```
+
+#### func (*SSMPredicate) Token
+
+```go
+func (pred *SSMPredicate) Token() string
 ```
 
 #### type SSNEQBuilder
@@ -1150,14 +1484,32 @@ SSNEQ - String (Sensitive) Inequality predicate.
 
 Returns true if the input value is different to the filter value.
 
+#### func (*SSNEQPredicate) Debug
+
+```go
+func (pred *SSNEQPredicate) Debug() string
+```
+
 #### func (*SSNEQPredicate) Eval
 
 ```go
 func (pred *SSNEQPredicate) Eval(_ context.Context, input Filterable) bool
 ```
 
+#### func (*SSNEQPredicate) Instruction
+
+```go
+func (pred *SSNEQPredicate) Instruction() string
+```
+
 #### func (*SSNEQPredicate) String
 
 ```go
 func (pred *SSNEQPredicate) String() string
+```
+
+#### func (*SSNEQPredicate) Token
+
+```go
+func (pred *SSNEQPredicate) Token() string
 ```

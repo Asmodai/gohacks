@@ -68,17 +68,20 @@ type FVTRUEPredicate struct {
 	FVFALSEPredicate
 }
 
-func (pred *FVTRUEPredicate) String() string {
-	if val, ok := pred.MetaPredicate.GetValueAsString(); ok {
-		return dag.FormatIsnf(
-			fvtrueIsn,
-			"%q %s %v",
-			pred.MetaPredicate.key,
-			fvtrueToken,
-			val)
-	}
+func (pred *FVTRUEPredicate) Instruction() string {
+	return fvtrueIsn
+}
 
-	return dag.FormatIsnf(fvtrueIsn, invalidTokenString)
+func (pred *FVTRUEPredicate) Token() string {
+	return fvtrueToken
+}
+
+func (pred *FVTRUEPredicate) String() string {
+	return pred.MetaPredicate.String(fvtrueToken)
+}
+
+func (pred *FVTRUEPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(fvtrueIsn, fvtrueToken)
 }
 
 func (pred *FVTRUEPredicate) Eval(ctx context.Context, input dag.Filterable) bool {

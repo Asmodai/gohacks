@@ -42,7 +42,8 @@ import "context"
 // * Constants:
 
 const (
-	noopIsn = "NOOP"
+	noopIsn   = "NOOP"
+	noopToken = "<no operation>"
 )
 
 // * Code:
@@ -56,8 +57,20 @@ const (
 // It always returns true.
 type NOOPPredicate struct{}
 
+func (pred *NOOPPredicate) Instruction() string {
+	return noopIsn
+}
+
+func (pred *NOOPPredicate) Token() string {
+	return noopToken
+}
+
 func (pred *NOOPPredicate) String() string {
-	return FormatIsnf(noopIsn, "noop")
+	return noopToken
+}
+
+func (pred *NOOPPredicate) Debug() string {
+	return noopIsn + ": " + noopToken
 }
 
 func (pred *NOOPPredicate) Eval(_ context.Context, _ Filterable) bool {

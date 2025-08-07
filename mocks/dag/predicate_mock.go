@@ -42,6 +42,20 @@ func (m *MockPredicate) EXPECT() *MockPredicateMockRecorder {
 	return m.recorder
 }
 
+// Debug mocks base method.
+func (m *MockPredicate) Debug() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Debug")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Debug indicates an expected call of Debug.
+func (mr *MockPredicateMockRecorder) Debug() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockPredicate)(nil).Debug))
+}
+
 // Eval mocks base method.
 func (m *MockPredicate) Eval(arg0 context.Context, arg1 dag.Filterable) bool {
 	m.ctrl.T.Helper()
@@ -56,6 +70,20 @@ func (mr *MockPredicateMockRecorder) Eval(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Eval", reflect.TypeOf((*MockPredicate)(nil).Eval), arg0, arg1)
 }
 
+// Instruction mocks base method.
+func (m *MockPredicate) Instruction() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Instruction")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Instruction indicates an expected call of Instruction.
+func (mr *MockPredicateMockRecorder) Instruction() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Instruction", reflect.TypeOf((*MockPredicate)(nil).Instruction))
+}
+
 // String mocks base method.
 func (m *MockPredicate) String() string {
 	m.ctrl.T.Helper()
@@ -68,6 +96,20 @@ func (m *MockPredicate) String() string {
 func (mr *MockPredicateMockRecorder) String() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockPredicate)(nil).String))
+}
+
+// Token mocks base method.
+func (m *MockPredicate) Token() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Token")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Token indicates an expected call of Token.
+func (mr *MockPredicateMockRecorder) Token() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Token", reflect.TypeOf((*MockPredicate)(nil).Token))
 }
 
 // MockPredicateBuilder is a mock of PredicateBuilder interface.

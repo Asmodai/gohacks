@@ -41,7 +41,6 @@ package dag
 import (
 	"context"
 
-	"github.com/Asmodai/gohacks/conversion"
 	"github.com/Asmodai/gohacks/logger"
 )
 
@@ -63,16 +62,20 @@ type EQPredicate struct {
 	MetaPredicate
 }
 
-func (pred *EQPredicate) String() string {
-	if val, ok := conversion.ToFloat64(pred.MetaPredicate.val); ok {
-		return FormatIsnf(eqIsn,
-			"%s %s %g",
-			pred.MetaPredicate.key,
-			eqToken,
-			val)
-	}
+func (pred *EQPredicate) Instruction() string {
+	return eqIsn
+}
 
-	return FormatIsnf(eqIsn, invalidTokenString)
+func (pred *EQPredicate) Token() string {
+	return eqToken
+}
+
+func (pred *EQPredicate) String() string {
+	return pred.MetaPredicate.String(eqToken)
+}
+
+func (pred *EQPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(eqIsn, eqToken)
 }
 
 func (pred *EQPredicate) Eval(_ context.Context, input Filterable) bool {

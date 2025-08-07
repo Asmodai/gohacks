@@ -40,7 +40,6 @@ package dag
 import (
 	"context"
 
-	"github.com/Asmodai/gohacks/conversion"
 	"github.com/Asmodai/gohacks/logger"
 )
 
@@ -62,16 +61,20 @@ type NEQPredicate struct {
 	MetaPredicate
 }
 
-func (pred *NEQPredicate) String() string {
-	if val, ok := conversion.ToFloat64(pred.MetaPredicate.val); ok {
-		return FormatIsnf(neqIsn,
-			"%s %s %g",
-			pred.MetaPredicate.key,
-			neqToken,
-			val)
-	}
+func (pred *NEQPredicate) Instruction() string {
+	return neqIsn
+}
 
-	return FormatIsnf(neqIsn, invalidTokenString)
+func (pred *NEQPredicate) Token() string {
+	return neqToken
+}
+
+func (pred *NEQPredicate) String() string {
+	return pred.MetaPredicate.String(neqToken)
+}
+
+func (pred *NEQPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(neqIsn, neqToken)
 }
 
 func (pred *NEQPredicate) Eval(_ context.Context, input Filterable) bool {

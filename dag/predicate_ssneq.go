@@ -62,16 +62,20 @@ type SSNEQPredicate struct {
 	MetaPredicate
 }
 
-func (pred *SSNEQPredicate) String() string {
-	if val, ok := pred.MetaPredicate.val.(string); ok {
-		return FormatIsnf(ssneqIsn,
-			"%s %s %#v",
-			pred.MetaPredicate.key,
-			ssneqToken,
-			val)
-	}
+func (pred *SSNEQPredicate) Instruction() string {
+	return ssneqIsn
+}
 
-	return FormatIsnf(ssneqIsn, invalidTokenString)
+func (pred *SSNEQPredicate) Token() string {
+	return ssneqToken
+}
+
+func (pred *SSNEQPredicate) String() string {
+	return pred.MetaPredicate.String(ssneqToken)
+}
+
+func (pred *SSNEQPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(ssneqIsn, ssneqToken)
 }
 
 func (pred *SSNEQPredicate) Eval(_ context.Context, input Filterable) bool {

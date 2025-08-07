@@ -40,6 +40,7 @@ package dag
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/Asmodai/gohacks/contextdi"
 	"github.com/Asmodai/gohacks/logger"
@@ -68,6 +69,7 @@ type Compiler interface {
 	CompileAction(ActionSpec) (ActionFn, error)
 	Compile([]RuleSpec) []error
 	Evaluate(Filterable)
+	Export(io.Writer)
 }
 
 // ** Types:
@@ -225,6 +227,12 @@ func (cmplr *compiler) attachAction(current *node, action ActionSpec) error {
 			action.Name)
 	}
 
+	if len(action.Name) > 0 {
+		current.ActionName = action.Name
+	} else {
+		current.ActionName = action.Perform
+	}
+
 	current.Action = compiled
 
 	return nil
@@ -232,6 +240,10 @@ func (cmplr *compiler) attachAction(current *node, action ActionSpec) error {
 
 func (cmplr *compiler) Evaluate(input Filterable) {
 	traverse(cmplr.ctx, cmplr.root, input, cmplr.debugMode, cmplr.lgr)
+}
+
+func (cmplr *compiler) Export(writer io.Writer) {
+	ExportToDOT(writer, cmplr.root)
 }
 
 // ** Functions:

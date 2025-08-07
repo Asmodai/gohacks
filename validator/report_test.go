@@ -39,6 +39,7 @@ package validator
 
 import (
 	"context"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -62,19 +63,75 @@ const (
       operator: field-type-equal
       value: int64
     - attribute: one
-      operator: field-value-equal
-      value: 42
-    - attribute: one
-      operator: field-value-not-equal
-      value: 9001
-    - attribute: one
       operator: field-value-in
       value: [40, 41, 42, 43]
     - attribute: one
       operator: field-type-in
       value: [int8, int16, int32, int64]
   action:
-    perform: ignore`
+    perform: ignore
+
+- name: "'One' must equal 42"
+  conditions:
+    - attribute: one
+      operator: field-type-equal
+      value: int64
+    - attribute: one
+      operator: field-value-equal
+      value: 42
+  action:
+    perform: ignore
+
+- name: "'One' must not equal 9001"
+  conditions:
+    - attribute: one
+      operator: field-type-equal
+      value: int64
+    - attribute: one
+      operator: field-value-not-equal
+      value: 9001
+  action:
+    perform: ignore
+
+- name: "'Two' must be map[string]int and not empty"
+  conditions:
+    - attribute: two
+      operator: field-type-equal
+      value: map[string]int
+    - attribute: two
+      operator: field-value-is-true
+  action:
+    perform: ignore
+
+- name: "'three' must be nil"
+  conditions:
+    - attribute: three
+      operator: field-value-is-nil
+  action:
+    perform: ignore
+
+- name: "'four' must be string and member"
+  conditions:
+    - attribute: four
+      operator: field-type-equal
+      value: string
+    - attribute: four
+      operator: field-value-in
+      value: [OK, CRITICAL, WARNING]
+  action:
+    perform: ignore
+
+- name: "'five' must match regex"
+  conditions:
+    - attribute: five
+      operator: field-type-equal
+      value: string
+    - attribute: five
+      operator: field-value-regex-match
+      value: ".*coffee.*"
+  action:
+    perform: ignore
+`
 )
 
 // * Variables:
@@ -89,8 +146,11 @@ var (
 // ** Test structure:
 
 type DummyStructure struct {
-	One any            `json:"one"`
-	Two map[string]int `json:"name_to_id"`
+	One   any            `json:"one"`
+	Two   map[string]int `json:"name_to_id"`
+	Three any
+	Four  string
+	Five  string
 }
 
 func (ds *DummyStructure) ReflectType() reflect.Type {
@@ -99,6 +159,14 @@ func (ds *DummyStructure) ReflectType() reflect.Type {
 	})
 
 	return dummyStructureType
+}
+
+var testData = &DummyStructure{
+	One:   int64(42),
+	Two:   map[string]int{"one": 1, "two": 2, "three": 3},
+	Three: nil,
+	Four:  "CRITICAL",
+	Five:  "Must contain coffee in here",
 }
 
 // ** Mock actions:
@@ -220,21 +288,22 @@ func TestShit(t *testing.T) {
 	)
 	issues := compiler.Compile(rules)
 
+	compiler.Export(os.Stdout)
+
 	if len(issues) > 0 {
 		t.Logf("Compiler issues:")
 		for idx := range issues {
 			t.Logf("%d: %s", idx+1, issues[idx])
 		}
+		t.Fatal("Fix the compiler issues in your test!")
 	}
 
 	bindings := NewBindings()
-	inst := &DummyStructure{One: int64(42), Two: map[string]int{}}
-
-	_, ok := bindings.Build(inst)
+	_, ok := bindings.Build(&DummyStructure{})
 	if !ok {
 		t.Fatalf("Could not create descriptor")
 	}
-	obj, _ := bindings.Bind(inst)
+	obj, _ := bindings.Bind(testData)
 
 	compiler.Evaluate(obj)
 
@@ -243,11 +312,10 @@ func TestShit(t *testing.T) {
 // ** Benchmarks:
 
 func BenchmarkCompiler(b *testing.B) {
-	inst := &DummyStructure{One: int64(42), Two: map[string]int{}}
 	data := BuildDescriptor(reflect.TypeOf(&DummyStructure{}))
 	bound := &BoundObject{
 		Descriptor: data,
-		Binding:    inst,
+		Binding:    testData,
 	}
 
 	mocker := gomock.NewController(b)

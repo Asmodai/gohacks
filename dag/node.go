@@ -51,9 +51,10 @@ import (
 
 // Graph node type.
 type node struct {
-	Predicate Predicate // Predicate.
-	Children  []*node   // Child nodes.
-	Action    ActionFn  // Action to execute upon successful predicate.
+	Predicate  Predicate // Predicate.
+	Children   []*node   // Child nodes.
+	ActionName string    // Action name.
+	Action     ActionFn  // Action to execute upon successful predicate.
 }
 
 // Traverse each child node in the given root node.
@@ -65,7 +66,7 @@ func traverse(ctx context.Context, root *node, input Filterable, debug bool, log
 		if debug {
 			logger.Debug(
 				"Eval failure",
-				"predicate", root.Predicate.String(),
+				"predicate", root.Predicate.Debug(),
 				"input", input.String(),
 			)
 		}
@@ -76,7 +77,7 @@ func traverse(ctx context.Context, root *node, input Filterable, debug bool, log
 	if debug {
 		logger.Debug(
 			"Eval success",
-			"predicate", root.Predicate.String(),
+			"predicate", root.Predicate.Debug(),
 			"input", input.String(),
 		)
 	}

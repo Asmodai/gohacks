@@ -72,17 +72,20 @@ type FVNILPredicate struct {
 	MetaPredicate
 }
 
-func (pred *FVNILPredicate) String() string {
-	if val, ok := pred.MetaPredicate.GetValueAsString(); ok {
-		return dag.FormatIsnf(
-			fvnilIsn,
-			"%q %s %v",
-			pred.MetaPredicate.key,
-			fvnilToken,
-			val)
-	}
+func (pred *FVNILPredicate) Instruction() string {
+	return fvnilIsn
+}
 
-	return dag.FormatIsnf(fvnilIsn, invalidTokenString)
+func (pred *FVNILPredicate) Token() string {
+	return fvnilToken
+}
+
+func (pred *FVNILPredicate) String() string {
+	return pred.MetaPredicate.String(fvnilToken)
+}
+
+func (pred *FVNILPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(fvnilIsn, fvnilToken)
 }
 
 func (pred *FVNILPredicate) Eval(_ context.Context, input dag.Filterable) bool {

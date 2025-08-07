@@ -64,16 +64,20 @@ type SIEQPredicate struct {
 	MetaPredicate
 }
 
-func (pred *SIEQPredicate) String() string {
-	if val, ok := pred.MetaPredicate.val.(string); ok {
-		return FormatIsnf(sieqIsn,
-			"%s %s %#v",
-			pred.MetaPredicate.key,
-			sieqToken,
-			val)
-	}
+func (pred *SIEQPredicate) Instruction() string {
+	return sieqIsn
+}
 
-	return FormatIsnf(sieqIsn, invalidTokenString)
+func (pred *SIEQPredicate) Token() string {
+	return sieqToken
+}
+
+func (pred *SIEQPredicate) String() string {
+	return pred.MetaPredicate.String(sieqToken)
+}
+
+func (pred *SIEQPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(sieqIsn, sieqToken)
 }
 
 func (pred *SIEQPredicate) Eval(_ context.Context, input Filterable) bool {

@@ -47,7 +47,7 @@ import (
 
 const (
 	iirIsn   = "IIR"
-	iirToken = "<"
+	iirToken = "in-range-inclusive" //nolint:gosec
 )
 
 // * Code:
@@ -62,16 +62,20 @@ type IIRPredicate struct {
 	MetaPredicate
 }
 
-func (pred *IIRPredicate) String() string {
-	if val, ok := pred.MetaPredicate.GetPredicateFloatArray(); ok {
-		return FormatIsnf(iirIsn,
-			"%s %s %g",
-			pred.MetaPredicate.key,
-			iirToken,
-			val)
-	}
+func (pred *IIRPredicate) Instruction() string {
+	return iirIsn
+}
 
-	return FormatIsnf(iirIsn, invalidTokenString)
+func (pred *IIRPredicate) Token() string {
+	return iirToken
+}
+
+func (pred *IIRPredicate) String() string {
+	return pred.MetaPredicate.String(iirToken)
+}
+
+func (pred *IIRPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(iirIsn, iirToken)
 }
 
 func (pred *IIRPredicate) Eval(_ context.Context, input Filterable) bool {

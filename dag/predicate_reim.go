@@ -50,7 +50,7 @@ import (
 
 const (
 	reimIsn   = "REIM"
-	reimToken = "regex-match" //nolint:gosec
+	reimToken = "regex-ci-match" //nolint:gosec
 )
 
 // * Code:
@@ -70,16 +70,20 @@ type REIMPredicate struct {
 	compiled *regexp.Regexp
 }
 
-func (pred *REIMPredicate) String() string {
-	if val, ok := pred.MetaPredicate.val.(string); ok {
-		return FormatIsnf(reimIsn,
-			"%s %s %#v",
-			pred.MetaPredicate.key,
-			reimToken,
-			val)
-	}
+func (pred *REIMPredicate) Instruction() string {
+	return reimIsn
+}
 
-	return FormatIsnf(reimIsn, invalidTokenString)
+func (pred *REIMPredicate) Token() string {
+	return reimToken
+}
+
+func (pred *REIMPredicate) String() string {
+	return pred.MetaPredicate.String(reimToken)
+}
+
+func (pred *REIMPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(reimIsn, reimToken)
 }
 
 func (pred *REIMPredicate) Eval(_ context.Context, input Filterable) bool {

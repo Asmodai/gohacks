@@ -72,18 +72,20 @@ type FVNEQPredicate struct {
 	FVEQPredicate
 }
 
-func (pred *FVNEQPredicate) String() string {
-	if val, ok := pred.FVEQPredicate.MetaPredicate.GetValueAsAny(); ok {
-		return dag.FormatIsnf(
-			fvneqIsn,
-			"%q %s %#v",
-			pred.FVEQPredicate.MetaPredicate.key,
-			fvneqToken,
-			val,
-		)
-	}
+func (pred *FVNEQPredicate) Instruction() string {
+	return fvneqIsn
+}
 
-	return dag.FormatIsnf(fveqIsn, invalidTokenString)
+func (pred *FVNEQPredicate) Token() string {
+	return fvneqToken
+}
+
+func (pred *FVNEQPredicate) String() string {
+	return pred.MetaPredicate.String(fvneqToken)
+}
+
+func (pred *FVNEQPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(fvneqIsn, fvneqToken)
 }
 
 func (pred *FVNEQPredicate) Eval(ctx context.Context, input dag.Filterable) bool {

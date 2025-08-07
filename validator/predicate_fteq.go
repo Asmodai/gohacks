@@ -73,18 +73,20 @@ type FTEQPredicate struct {
 	MetaPredicate
 }
 
-func (pred *FTEQPredicate) String() string {
-	if val, ok := pred.MetaPredicate.GetValueAsString(); ok {
-		return dag.FormatIsnf(
-			fteqIsn,
-			"%q %s %q",
-			pred.MetaPredicate.key,
-			fteqToken,
-			val,
-		)
-	}
+func (pred *FTEQPredicate) Instruction() string {
+	return fteqIsn
+}
 
-	return dag.FormatIsnf(fteqIsn, invalidTokenString)
+func (pred *FTEQPredicate) Token() string {
+	return fteqToken
+}
+
+func (pred *FTEQPredicate) String() string {
+	return pred.MetaPredicate.String(fteqToken)
+}
+
+func (pred *FTEQPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(fteqIsn, fteqToken)
 }
 
 func (pred *FTEQPredicate) Eval(_ context.Context, input dag.Filterable) bool {

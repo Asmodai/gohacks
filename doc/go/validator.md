@@ -18,6 +18,13 @@ var (
 
 ```go
 var (
+	ErrInvalidRegexp = errors.Base("invalid regexp")
+	ErrRegexpParse   = errors.Base("error parsing regexp")
+)
+```
+
+```go
+var (
 	ErrValueNotString = errors.Base("value is not a string")
 )
 ```
@@ -155,16 +162,34 @@ Field Type Equality.
 This predicate compares the type of the structure's field. If it is equal then
 the predicate returns true.
 
+#### func (*FTEQPredicate) Debug
+
+```go
+func (pred *FTEQPredicate) Debug() string
+```
+
 #### func (*FTEQPredicate) Eval
 
 ```go
 func (pred *FTEQPredicate) Eval(_ context.Context, input dag.Filterable) bool
 ```
 
+#### func (*FTEQPredicate) Instruction
+
+```go
+func (pred *FTEQPredicate) Instruction() string
+```
+
 #### func (*FTEQPredicate) String
 
 ```go
 func (pred *FTEQPredicate) String() string
+```
+
+#### func (*FTEQPredicate) Token
+
+```go
+func (pred *FTEQPredicate) Token() string
 ```
 
 #### type FTINBuilder
@@ -199,16 +224,34 @@ Field Type In.
 This predicate returns true of the type of a field in the input structure is one
 of the provided values in the predicate.
 
+#### func (*FTINPredicate) Debug
+
+```go
+func (pred *FTINPredicate) Debug() string
+```
+
 #### func (*FTINPredicate) Eval
 
 ```go
 func (pred *FTINPredicate) Eval(_ context.Context, input dag.Filterable) bool
 ```
 
+#### func (*FTINPredicate) Instruction
+
+```go
+func (pred *FTINPredicate) Instruction() string
+```
+
 #### func (*FTINPredicate) String
 
 ```go
 func (pred *FTINPredicate) String() string
+```
+
+#### func (*FTINPredicate) Token
+
+```go
+func (pred *FTINPredicate) Token() string
 ```
 
 #### type FVEQBuilder
@@ -252,16 +295,34 @@ rather than using the type of the field along with the value.
 If the field is integer, then the structure's field must have a bit width large
 enough to hold the value.
 
+#### func (*FVEQPredicate) Debug
+
+```go
+func (pred *FVEQPredicate) Debug() string
+```
+
 #### func (*FVEQPredicate) Eval
 
 ```go
 func (pred *FVEQPredicate) Eval(_ context.Context, input dag.Filterable) bool
 ```
 
+#### func (*FVEQPredicate) Instruction
+
+```go
+func (pred *FVEQPredicate) Instruction() string
+```
+
 #### func (*FVEQPredicate) String
 
 ```go
 func (pred *FVEQPredicate) String() string
+```
+
+#### func (*FVEQPredicate) Token
+
+```go
+func (pred *FVEQPredicate) Token() string
 ```
 
 #### type FVFALSEBuilder
@@ -313,16 +374,34 @@ Interfaces are also a special case. An interface can be considered logically
 false if it is `nil`, but it can also be considered logically false if the
 wrapped value is zero or empty.
 
+#### func (*FVFALSEPredicate) Debug
+
+```go
+func (pred *FVFALSEPredicate) Debug() string
+```
+
 #### func (*FVFALSEPredicate) Eval
 
 ```go
 func (pred *FVFALSEPredicate) Eval(_ context.Context, input dag.Filterable) bool
 ```
 
+#### func (*FVFALSEPredicate) Instruction
+
+```go
+func (pred *FVFALSEPredicate) Instruction() string
+```
+
 #### func (*FVFALSEPredicate) String
 
 ```go
 func (pred *FVFALSEPredicate) String() string
+```
+
+#### func (*FVFALSEPredicate) Token
+
+```go
+func (pred *FVFALSEPredicate) Token() string
 ```
 
 #### type FVINBuilder
@@ -357,16 +436,34 @@ Field Value In.
 This predicate returns true if the value in the structure is one of the provided
 values in the predicate.
 
+#### func (*FVINPredicate) Debug
+
+```go
+func (pred *FVINPredicate) Debug() string
+```
+
 #### func (*FVINPredicate) Eval
 
 ```go
 func (pred *FVINPredicate) Eval(_ context.Context, input dag.Filterable) bool
 ```
 
+#### func (*FVINPredicate) Instruction
+
+```go
+func (pred *FVINPredicate) Instruction() string
+```
+
 #### func (*FVINPredicate) String
 
 ```go
 func (pred *FVINPredicate) String() string
+```
+
+#### func (*FVINPredicate) Token
+
+```go
+func (pred *FVINPredicate) Token() string
 ```
 
 #### type FVNEQBuilder
@@ -410,16 +507,34 @@ rather than using the type of the field along with the value.
 If the field is integer then the structure's field must have a bit width large
 enough to hold the value.
 
+#### func (*FVNEQPredicate) Debug
+
+```go
+func (pred *FVNEQPredicate) Debug() string
+```
+
 #### func (*FVNEQPredicate) Eval
 
 ```go
 func (pred *FVNEQPredicate) Eval(ctx context.Context, input dag.Filterable) bool
 ```
 
+#### func (*FVNEQPredicate) Instruction
+
+```go
+func (pred *FVNEQPredicate) Instruction() string
+```
+
 #### func (*FVNEQPredicate) String
 
 ```go
 func (pred *FVNEQPredicate) String() string
+```
+
+#### func (*FVNEQPredicate) Token
+
+```go
+func (pred *FVNEQPredicate) Token() string
 ```
 
 #### type FVNILBuilder
@@ -461,16 +576,92 @@ It only applies to types that can be `nil` in Go--e.g. pointers, slices, maps,
 interfaces, et al. If you're looking to test whether a field is "logically nil"
 (e.g. zero, false, empty) then consider using `FVFALSE` instead.
 
+#### func (*FVNILPredicate) Debug
+
+```go
+func (pred *FVNILPredicate) Debug() string
+```
+
 #### func (*FVNILPredicate) Eval
 
 ```go
 func (pred *FVNILPredicate) Eval(_ context.Context, input dag.Filterable) bool
 ```
 
+#### func (*FVNILPredicate) Instruction
+
+```go
+func (pred *FVNILPredicate) Instruction() string
+```
+
 #### func (*FVNILPredicate) String
 
 ```go
 func (pred *FVNILPredicate) String() string
+```
+
+#### func (*FVNILPredicate) Token
+
+```go
+func (pred *FVNILPredicate) Token() string
+```
+
+#### type FVREMBuilder
+
+```go
+type FVREMBuilder struct{}
+```
+
+
+#### func (*FVREMBuilder) Build
+
+```go
+func (bld *FVREMBuilder) Build(key string, val any, lgr logger.Logger, dbg bool) (dag.Predicate, error)
+```
+
+#### func (*FVREMBuilder) Token
+
+```go
+func (bld *FVREMBuilder) Token() string
+```
+
+#### type FVREMPredicate
+
+```go
+type FVREMPredicate struct {
+	MetaPredicate
+}
+```
+
+
+#### func (*FVREMPredicate) Debug
+
+```go
+func (pred *FVREMPredicate) Debug() string
+```
+
+#### func (*FVREMPredicate) Eval
+
+```go
+func (pred *FVREMPredicate) Eval(_ context.Context, input dag.Filterable) bool
+```
+
+#### func (*FVREMPredicate) Instruction
+
+```go
+func (pred *FVREMPredicate) Instruction() string
+```
+
+#### func (*FVREMPredicate) String
+
+```go
+func (pred *FVREMPredicate) String() string
+```
+
+#### func (*FVREMPredicate) Token
+
+```go
+func (pred *FVREMPredicate) Token() string
 ```
 
 #### type FVTRUEBuilder
@@ -509,16 +700,34 @@ A logical true value is any value that is not empty or zero.
 
 For more details on how this works, see `FVFALSE`.
 
+#### func (*FVTRUEPredicate) Debug
+
+```go
+func (pred *FVTRUEPredicate) Debug() string
+```
+
 #### func (*FVTRUEPredicate) Eval
 
 ```go
 func (pred *FVTRUEPredicate) Eval(ctx context.Context, input dag.Filterable) bool
 ```
 
+#### func (*FVTRUEPredicate) Instruction
+
+```go
+func (pred *FVTRUEPredicate) Instruction() string
+```
+
 #### func (*FVTRUEPredicate) String
 
 ```go
 func (pred *FVTRUEPredicate) String() string
+```
+
+#### func (*FVTRUEPredicate) Token
+
+```go
+func (pred *FVTRUEPredicate) Token() string
 ```
 
 #### type FieldAccessorFn
@@ -582,6 +791,12 @@ type MetaPredicate struct {
 }
 ```
 
+
+#### func (*MetaPredicate) Debug
+
+```go
+func (meta *MetaPredicate) Debug(isn, token string) string
+```
 
 #### func (*MetaPredicate) GetKeyAsFieldInfo
 
@@ -651,6 +866,12 @@ Return the condition value as a string.
 
 ```go
 func (meta *MetaPredicate) GetValueAsUint64() (uint64, bool)
+```
+
+#### func (*MetaPredicate) String
+
+```go
+func (meta *MetaPredicate) String(token string) string
 ```
 
 #### type Reflectable

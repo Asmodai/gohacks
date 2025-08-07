@@ -48,7 +48,7 @@ import (
 
 const (
 	ssmIsn   = "SSM"
-	ssmToken = "<"
+	ssmToken = "string-member"
 )
 
 // * Code:
@@ -63,16 +63,20 @@ type SSMPredicate struct {
 	MetaPredicate
 }
 
-func (pred *SSMPredicate) String() string {
-	if val, ok := pred.MetaPredicate.GetPredicateStringArray(); ok {
-		return FormatIsnf(ssmIsn,
-			"%s %s %#v",
-			pred.MetaPredicate.key,
-			ssmToken,
-			val)
-	}
+func (pred *SSMPredicate) Instruction() string {
+	return ssmIsn
+}
 
-	return FormatIsnf(ssmIsn, invalidTokenString)
+func (pred *SSMPredicate) Token() string {
+	return ssmToken
+}
+
+func (pred *SSMPredicate) String() string {
+	return pred.MetaPredicate.String(ssmToken)
+}
+
+func (pred *SSMPredicate) Debug() string {
+	return pred.MetaPredicate.Debug(ssmIsn, ssmToken)
 }
 
 func (pred *SSMPredicate) Eval(_ context.Context, input Filterable) bool {
