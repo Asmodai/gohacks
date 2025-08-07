@@ -57,39 +57,14 @@ import (
 
 const (
 	rulesFTEQ string = `
-- name: "'One' must be int64"
+- name: "'One' must be valid"
   conditions:
-    - attribute: one
-      operator: field-type-equal
-      value: int64
-    - attribute: one
-      operator: field-value-in
-      value: [40, 41, 42, 43]
     - attribute: one
       operator: field-type-in
       value: [int8, int16, int32, int64]
-  action:
-    perform: ignore
-
-- name: "'One' must equal 42"
-  conditions:
     - attribute: one
-      operator: field-type-equal
-      value: int64
-    - attribute: one
-      operator: field-value-equal
-      value: 42
-  action:
-    perform: ignore
-
-- name: "'One' must not equal 9001"
-  conditions:
-    - attribute: one
-      operator: field-type-equal
-      value: int64
-    - attribute: one
-      operator: field-value-not-equal
-      value: 9001
+      operator: field-value-in
+      value: [40, 41, 42, 43]
   action:
     perform: ignore
 

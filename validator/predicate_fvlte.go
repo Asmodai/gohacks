@@ -49,13 +49,15 @@ import (
 
 const (
 	fvlteIsn   = "FVLTE"
-	fvlteToken = "field-value-<"
+	fvlteToken = "field-value-<=" //nolint:gosec
 )
 
 // * Code:
 
 // ** Predicate:
 
+// This predicate returns true if the value in the structure is lesser than
+// or equal to the value in the predicate.
 type FVLTEPredicate struct {
 	MetaPredicate
 }

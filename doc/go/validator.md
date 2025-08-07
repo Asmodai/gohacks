@@ -450,6 +450,8 @@ type FVGTEPredicate struct {
 }
 ```
 
+This predicate returns true if the value in the structure is greater than or
+equal to the value in the predicate.
 
 #### func (*FVGTEPredicate) Debug
 
@@ -489,6 +491,8 @@ type FVGTPredicate struct {
 }
 ```
 
+This predicate returns true if the value in the structure is greater than the
+value in the predicate.
 
 #### func (*FVGTPredicate) Debug
 
@@ -628,6 +632,8 @@ type FVLTEPredicate struct {
 }
 ```
 
+This predicate returns true if the value in the structure is lesser than or
+equal to the value in the predicate.
 
 #### func (*FVLTEPredicate) Debug
 
@@ -667,6 +673,8 @@ type FVLTPredicate struct {
 }
 ```
 
+This predicate returns true if the value in the structure is lesser than the
+value in the predicate.
 
 #### func (*FVLTPredicate) Debug
 

@@ -56,6 +56,8 @@ const (
 
 // ** Predicate:
 
+// This predicate returns true if the value in the structure is greater than
+// the value in the predicate.
 type FVGTPredicate struct {
 	MetaPredicate
 }
