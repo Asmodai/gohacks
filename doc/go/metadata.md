@@ -53,7 +53,7 @@ var (
 	//                 restricting UI tools.
 	// - "example": A usage example (inline or structured Markdown).
 	// - "tags": Comma-separated labels for filtering or grouping.
-	//          E.g. "filesystem,experimental,fastpath"
+	//           E.g. "filesystem,experimental,fastpath"
 	// - "author": Who wrote or maintains the selector logic.
 	//             Useful for blame or kudos.
 	//

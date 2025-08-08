@@ -86,7 +86,6 @@ func TestRegistry_ValidateAndVerify(t *testing.T) {
 
 	// Build a respondable that implements both required selectors.
 	sr := selector.NewRespondable("file0", "fs.File")
-	tbl := sr.MetadataForSelector
 
 	// Register the required selectors on the respondable.
 	srSel := []string{"fs.open", "fs.read"}
