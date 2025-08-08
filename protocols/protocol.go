@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// error.go --- Error event.
+// protocol.go --- Protocol type.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -29,26 +29,19 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package events
+// * Comments:
 
-import "time"
+// * Package:
 
-type Error struct {
-	Time
+package protocols
 
-	Err error
+// * Code:
+
+// ** Types:
+
+type Protocol struct {
+	Name      string
+	Selectors []string
 }
 
-func NewError(err error) *Error {
-	return &Error{
-		Time: Time{
-			TStamp: time.Now(),
-		},
-		Err: err,
-	}
-}
-
-func (e *Error) String() string { return e.Err.Error() }
-func (e *Error) Error() error   { return e.Err }
-
-// error.go ends here.
+// * protocol.go ends here.

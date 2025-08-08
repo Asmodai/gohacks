@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// error.go --- Error event.
+// event_interface.go --- Selector event interface.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -28,27 +28,32 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+//mock:yes
 
-package events
+// * Comments:
 
-import "time"
+// * Package:
 
-type Error struct {
-	Time
+package selector
 
-	Err error
+// * Imports:
+
+import "github.com/Asmodai/gohacks/events"
+
+// * Code:
+
+// This interface represents a Selector-specific event.
+//
+// NOTE: `golangci-lint` will want this to be called `Event`.  this is a
+// bad idea because this type is explicitly for selector-specific events, and
+// should not be confused with `events.Event`.
+//
+//nolint:revive
+type SelectorEvent interface {
+	events.Event
+
+	Selector() string
 }
 
-func NewError(err error) *Error {
-	return &Error{
-		Time: Time{
-			TStamp: time.Now(),
-		},
-		Err: err,
-	}
-}
-
-func (e *Error) String() string { return e.Err.Error() }
-func (e *Error) Error() error   { return e.Err }
-
-// error.go ends here.
+// * event_interface.go ends here.

@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// error.go --- Error event.
+// interface.go --- Metadata interface.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -28,27 +28,58 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+//mock:yes
 
-package events
+// * Comments:
 
-import "time"
+// * Package:
 
-type Error struct {
-	Time
+package metadata
 
-	Err error
+// * Imports:
+
+// * Constants:
+
+// * Variables:
+
+// * Code:
+
+// ** Interface:
+
+type Metadata interface {
+	List() map[string]string
+
+	Set(string, string) error
+
+	Get(string) (string, bool)
+
+	SetDoc(string) Metadata
+	SetSince(string) Metadata
+	SetVersion(string) Metadata
+	SetDeprecated(string) Metadata
+	SetProtocol(string) Metadata
+	SetVisibility(string) Metadata
+	SetExample(string) Metadata
+	SetTags(string) Metadata
+	SetTagsFromSlice([]string) Metadata
+	SetAuthor(string) Metadata
+
+	GetDoc() string
+	GetSince() string
+	GetVersion() string
+	GetDeprecated() string
+	GetProtocol() string
+	GetVisibility() string
+	GetExample() string
+	GetTags() string
+	GetAuthor() string
+
+	Clone() Metadata
+	Merge(Metadata, bool) Metadata
+
+	Tags() []string
+	TagsNormalised() []string
 }
 
-func NewError(err error) *Error {
-	return &Error{
-		Time: Time{
-			TStamp: time.Now(),
-		},
-		Err: err,
-	}
-}
-
-func (e *Error) String() string { return e.Err.Error() }
-func (e *Error) Error() error   { return e.Err }
-
-// error.go ends here.
+// * interface.go ends here.

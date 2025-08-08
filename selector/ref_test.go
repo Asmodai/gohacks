@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// respondable.go --- Interface for `Respondable` things.
+// ref_test.go --- Reference tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -28,53 +28,73 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-//
-//mock:yes
 
 // * Comments:
 
 // * Package:
 
-package responder
+package selector
+
+import (
+	"fmt"
+	"testing"
+)
 
 // * Imports:
 
-import "github.com/Asmodai/gohacks/events"
+// * Constants:
+
+// * Variables:
 
 // * Code:
 
-// ** Interfaces:
+func TestRef(t *testing.T) {
+	data := []struct {
+		input    string
+		pkg      string
+		name     string
+		version  string
+		internal bool
+	}{
+		{"foo", "", "foo", "", false},
+		{"bar:foo", "bar", "foo", "", false},
+		{"bar::foo", "bar", "foo", "", true},
+		{"bar:foo@v1", "bar", "foo", "v1", false},
+		{"bar::foo@v1", "bar", "foo", "v1", true},
+	}
 
-// Objects the implement these methods are considered `respondable` and are
-// deemed capable of being sent messages directly or via responder chain.
-type Respondable interface {
-	// A unique name for the respondable object.
-	//
-	// As this allows us to send events to a specific thing the value
-	// returned here must be unique.
-	Name() string
+	for idx, elt := range data {
+		t.Run(fmt.Sprintf("%02d %s", idx, elt.input), func(t *testing.T) {
+			result, ok := ParseRef(elt.input)
+			if !ok {
+				t.Fatalf("Could not parse!")
+			}
 
-	// The type of the respondable object.
-	//
-	// This can be the internal Go type, or some arbitrary user-specified
-	// value that makes sense to you.
-	//
-	// This is used to implement a "send to all of type" system.
-	Type() string
+			if result.Package != elt.pkg {
+				t.Errorf("Package: expected %q got %q",
+					elt.pkg,
+					result.Package)
+			}
 
-	// Does the receiver respond to a specific event or event type?
-	//
-	// There is no definition for what `RespondsTo` should do other than
-	// return a boolean that states whether an object responds to an
-	// event or not.
-	RespondsTo(events.Event) bool
+			if result.Name != elt.name {
+				t.Errorf("NBame: expected %q got %q",
+					elt.name,
+					result.Name)
+			}
 
-	// Send an event to the object.
-	//
-	// There is no second return value to indicate success or whether
-	// the event was handled or not.  The idea being that the receiver
-	// will send an `events.Response` event back.
-	Invoke(events.Event) events.Event
+			if result.Version != elt.version {
+				t.Errorf("Version: expected %q got %q",
+					elt.version,
+					result.Version)
+			}
+
+			if result.Internal != elt.internal {
+				t.Errorf("Internal: expected %v got %v",
+					elt.internal,
+					result.Internal)
+			}
+		})
+	}
 }
 
-// * respondable.go ends here.
+// * ref_test.go ends here.

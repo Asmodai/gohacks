@@ -19,6 +19,8 @@ func EventType(e Event) reflect.Type
 ```go
 type Error struct {
 	Time
+
+	Err error
 }
 ```
 
@@ -32,7 +34,13 @@ func NewError(err error) *Error
 #### func (*Error) Error
 
 ```go
-func (e *Error) Error() string
+func (e *Error) Error() error
+```
+
+#### func (*Error) String
+
+```go
+func (e *Error) String() string
 ```
 
 #### type Event
@@ -51,6 +59,39 @@ type Event interface {
 type EventList []Event
 ```
 
+
+#### type Forward
+
+```go
+type Forward struct {
+	Time
+}
+```
+
+
+#### func  NewForward
+
+```go
+func NewForward(to string, event Event) *Forward
+```
+
+#### func (*Forward) Event
+
+```go
+func (f *Forward) Event() Event
+```
+
+#### func (*Forward) String
+
+```go
+func (f *Forward) String() string
+```
+
+#### func (*Forward) To
+
+```go
+func (f *Forward) To() string
+```
 
 #### type Interrupt
 

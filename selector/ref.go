@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// error.go --- Error event.
+// ref.go --- Selector references.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -29,26 +29,64 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package events
+// * Comments:
 
-import "time"
+// * Package:
 
-type Error struct {
-	Time
+package selector
 
-	Err error
+// * Imports:
+
+import "strings"
+
+// * Code:
+
+// ** Types:
+
+type Ref struct {
+	Package  string // Package name.
+	Name     string // Name.
+	Version  string // Version, e.g. "v1", "v1.2" et al
+	Internal bool   // If true, then thing is package internal.
 }
 
-func NewError(err error) *Error {
-	return &Error{
-		Time: Time{
-			TStamp: time.Now(),
-		},
-		Err: err,
+// ** Functions:
+
+// Parse a reference.
+//
+// Supports:
+//
+//	name
+//	name@version
+//	package:name
+//	package::name
+//	package:name@version
+//	package::name@version
+func ParseRef(ref string) (Ref, bool) {
+	out := Ref{}
+
+	if at := strings.LastIndexByte(ref, '@'); at > 0 {
+		out.Version = ref[at+1:]
+		ref = ref[:at]
 	}
+
+	// Do we have a package qualifier?
+	if idx := strings.Index(ref, "::"); idx > 0 {
+		out.Package = ref[:idx]
+		out.Name = ref[idx+2:]
+		out.Internal = true
+	} else if idx := strings.IndexByte(ref, ':'); idx > 0 {
+		out.Package = ref[:idx]
+		out.Name = ref[idx+1:]
+	} else {
+		out.Name = ref
+	}
+
+	if len(out.Name) == 0 {
+		return Ref{}, false
+	}
+
+	return out, true
 }
 
-func (e *Error) String() string { return e.Err.Error() }
-func (e *Error) Error() error   { return e.Err }
-
-// error.go ends here.
+// * ref.go ends here.

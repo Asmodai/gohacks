@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// error.go --- Error event.
+// foward.go --- Forwarded event.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -29,26 +29,44 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Comments:
+
+// * Package:
+
 package events
+
+// * Imports:
 
 import "time"
 
-type Error struct {
+// * Code:
+
+// ** Type:
+
+type Forward struct {
 	Time
 
-	Err error
+	to    string
+	event Event
 }
 
-func NewError(err error) *Error {
-	return &Error{
-		Time: Time{
-			TStamp: time.Now(),
-		},
-		Err: err,
+// ** Methods:
+
+func (f *Forward) To() string   { return f.to }
+func (f *Forward) Event() Event { return f.event }
+
+func (f *Forward) String() string {
+	return f.to + ": " + f.event.String()
+}
+
+// ** Functions:
+
+func NewForward(to string, event Event) *Forward {
+	return &Forward{
+		Time:  Time{TStamp: time.Now()},
+		to:    to,
+		event: event,
 	}
 }
 
-func (e *Error) String() string { return e.Err.Error() }
-func (e *Error) Error() error   { return e.Err }
-
-// error.go ends here.
+// * foward.go ends here.

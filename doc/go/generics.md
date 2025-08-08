@@ -38,6 +38,12 @@ func HasFraction(num float64) bool
 ```
 Does the given float have a faction?
 
+#### func  Map
+
+```go
+func Map[T, V any](input []T, fun func(T) V) []V
+```
+
 #### func  MapList
 
 ```go

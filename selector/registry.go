@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// error.go --- Error event.
+// registry.go --- Package registry.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -29,26 +29,48 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package events
+// * Comments:
 
-import "time"
+// * Package:
 
-type Error struct {
-	Time
+package selector
 
-	Err error
+// * Imports:
+
+import "sync"
+
+// * Code:
+
+// ** Types:
+
+type Registry struct {
+	mu            sync.RWMutex
+	packages      map[string]*Package
+	GlobalDefault *Package
 }
 
-func NewError(err error) *Error {
-	return &Error{
-		Time: Time{
-			TStamp: time.Now(),
-		},
-		Err: err,
-	}
+// ** Methods:
+
+func (r *Registry) AddPackage(pkg *Package) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.packages[pkg.Name] = pkg
 }
 
-func (e *Error) String() string { return e.Err.Error() }
-func (e *Error) Error() error   { return e.Err }
+func (r *Registry) GetPackage(name string) (*Package, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
-// error.go ends here.
+	pkg, found := r.packages[name]
+
+	return pkg, found
+}
+
+// ** Functions:
+
+func NewRegistry() *Registry {
+	return &Registry{packages: make(map[string]*Package)}
+}
+
+// * registry.go ends here.

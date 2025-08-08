@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// error.go --- Error event.
+// errors.go --- Error definitions.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -29,26 +29,32 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package events
+// * Comments:
 
-import "time"
+// * Package:
 
-type Error struct {
-	Time
+package selector
 
-	Err error
-}
+// * Imports:
 
-func NewError(err error) *Error {
-	return &Error{
-		Time: Time{
-			TStamp: time.Now(),
-		},
-		Err: err,
-	}
-}
+import "gitlab.com/tozd/go/errors"
 
-func (e *Error) String() string { return e.Err.Error() }
-func (e *Error) Error() error   { return e.Err }
+// * Constants:
 
-// error.go ends here.
+// * Variables:
+
+var (
+	ErrForwardLoop       = errors.Base("selector forward loop detected")
+	ErrHasNoSelector     = errors.Base("has no selector")
+	ErrNoMethodExists    = errors.Base("no method by this name exists")
+	ErrNoMethodSpecified = errors.Base("no method specified")
+	ErrNoMethodToWrap    = errors.Base("no method to wrap")
+	ErrReferenceParse    = errors.Base("reference parse failure")
+	ErrSelectorNotFound  = errors.Base("no method for selector")
+	ErrSelectorPanic     = errors.Base("panic during selector method")
+	ErrUnresolved        = errors.Base("unresolved selector")
+)
+
+// * Code:
+
+// * errors.go ends here.

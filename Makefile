@@ -63,11 +63,14 @@ MODULES = amqp            \
 	  logger          \
 	  math            \
 	  memoise         \
+	  metadata        \
 	  process         \
+	  protocols       \
 	  responder       \
 	  rfc3339         \
 	  rlhttp          \
 	  secrets         \
+	  selector        \
 	  semver          \
 	  service         \
 	  sysinfo         \

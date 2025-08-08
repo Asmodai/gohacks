@@ -1,0 +1,15 @@
+#+TITLE: Selector todo
+#+AUTHOR: Paul Ward
+#+DATE: 07 Aug 2025
+
+* What's left
+ * Immediate plans: [9/9][100%]
+     1. [X] Selector discovery and introspection.
+     2. [X] Selector metadata.
+     3. [X] Selector priorities and ordering.
+     4. [X] Selector chaining and forwarding.
+     5. [X] Protocol verification.
+     6. [X] Fallback/default selectors.
+     7. [X] Selector groups or namespaces.
+     8. [X] Panic recovery.
+     9. [X] Async dispatch.

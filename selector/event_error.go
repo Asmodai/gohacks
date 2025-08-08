@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// error.go --- Error event.
+// event_error.go --- Selector error event.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -29,26 +29,45 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package events
+// * Comments:
 
-import "time"
+// * Package:
 
-type Error struct {
-	Time
+package selector
 
-	Err error
+// * Imports:
+
+import (
+	"time"
+
+	"github.com/Asmodai/gohacks/events"
+)
+
+// * Code:
+
+// Selector error event.
+//
+// NOTE: `golangci-lint` will want this to be called `Error', and that is
+// not what we want.  This is an explicit event, not to be confused with
+// `events.Error`.
+//
+//nolint:revive
+type SelectorError struct {
+	err events.Error
 }
 
-func NewError(err error) *Error {
-	return &Error{
-		Time: Time{
-			TStamp: time.Now(),
+func (e *SelectorError) When() time.Time  { return e.err.Time.When() }
+func (e *SelectorError) String() string   { return e.err.Err.Error() }
+func (e *SelectorError) Error() error     { return e.err.Err }
+func (e *SelectorError) Selector() string { return "error" }
+
+func NewSelectorError(err error) *SelectorError {
+	return &SelectorError{
+		err: events.Error{
+			Time: events.Time{TStamp: time.Now()},
+			Err:  err,
 		},
-		Err: err,
 	}
 }
 
-func (e *Error) String() string { return e.Err.Error() }
-func (e *Error) Error() error   { return e.Err }
-
-// error.go ends here.
+// * event_error.go ends here.
