@@ -47,9 +47,8 @@ import (
 // ** Types:
 
 type Bindings struct {
-	mu sync.RWMutex
-
 	Bindings map[reflect.Type]*StructDescriptor
+	mu       sync.RWMutex
 }
 
 func (b *Bindings) getType(object any) reflect.Type {

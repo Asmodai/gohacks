@@ -2,8 +2,13 @@
 
 set -e
 
+if [ -f FORCE ]
+then
+    echo "Force file present.  Not linting.  Good luck!"
+    exit 0
+fi
+
 echo "Linting source tree:"
 golangci-lint run --tests=0 "./..." || status=$?
 
 exit $status
-

@@ -89,12 +89,11 @@ var (
 // It might also attempt to bring a bit of MIT Flavors, too... but don't
 // expect to see crazy like `defwrapper` and `defwhopper`.
 type Chain struct {
-	mu sync.RWMutex
-
-	name       string
-	responders []chainEntry
 	nameIndex  map[string]int
 	typeIndex  map[string][]int
+	name       string
+	responders []chainEntry
+	mu         sync.RWMutex
 }
 
 // ** Methods:
@@ -133,7 +132,7 @@ func (chain *Chain) sortResponders() {
 func (chain *Chain) appendResponder(name string, responder Respondable, priority int) {
 	chain.responders = append(
 		chain.responders,
-		chainEntry{name, responder, priority},
+		chainEntry{name: name, responder: responder, priority: priority},
 	)
 }
 
@@ -219,7 +218,10 @@ func (chain *Chain) AddOrReplaceNamedWithPriority(
 
 	for idx := range chain.responders {
 		if chain.responders[idx].name == name {
-			chain.responders[idx] = chainEntry{name, responder, priority}
+			chain.responders[idx] = chainEntry{
+				name:      name,
+				responder: responder,
+				priority:  priority}
 			found = true
 
 			break

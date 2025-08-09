@@ -58,9 +58,9 @@ var (
 // ** Types:
 
 type MetaPredicate struct {
-	key    string
 	val    any
 	logger logger.Logger
+	key    string
 	debug  bool
 }
 

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// node.go --- Direct Acyclic Graph node type.
+// options.go --- Options.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,58 +33,49 @@
 
 // * Package:
 
-package dag
+package fileio
 
 // * Imports:
 
-import (
-	"context"
-
-	"github.com/Asmodai/gohacks/logger"
-)
+import "math"
 
 // * Code:
 
-// Graph node type.
-type node struct {
-	Predicate  Predicate // Predicate.
-	Action     ActionFn  // Action to execute upon successful predicate.
-	ActionName string    // Action name.
-	Children   []*node   // Child nodes.
+// File I/O options.
+type Options struct {
+	// Maximum number of bytes to read.
+	//
+	// If this value is set to a negative number then it is interpreted
+	// as "read an unlimited number of bytes".
+	//
+	// However "unlimited", in this case, equates to `math.MaxInt` bytes.
+	//
+	// The reason for this is that we return a slice of bytes, and the
+	// maximum number of elements in a Go slice is `math.MaxInt`.
+	//
+	// The default value is 0.
+	MaxReadBytes int64
+
+	// Should symbolic links be followed?
+	//
+	// If false, then symbolic links are not followed.
+	//
+	// The default value is false.
+	FollowSymlinks bool
 }
 
-// Traverse each child node in the given root node.
-//
-// If the node has an associated predicate then that is evaluated against
-// the given input.
-func traverse(ctx context.Context, root *node, input Filterable, debug bool, logger logger.Logger) {
-	if !root.Predicate.Eval(ctx, input) {
-		if debug {
-			logger.Debug(
-				"Eval failure",
-				"predicate", root.Predicate.Debug(),
-				"input", input.String(),
-			)
-		}
+// ** methods:
 
-		return
+func (opt *Options) sanity() error {
+	if opt.MaxReadBytes < 0 {
+		opt.MaxReadBytes = 0
 	}
 
-	if debug {
-		logger.Debug(
-			"Eval success",
-			"predicate", root.Predicate.Debug(),
-			"input", input.String(),
-		)
+	if opt.MaxReadBytes > int64(math.MaxInt) {
+		return ErrInvalidSize
 	}
 
-	if root.Action != nil {
-		root.Action(ctx, input)
-	}
-
-	for _, child := range root.Children {
-		traverse(ctx, child, input, debug, logger)
-	}
+	return nil
 }
 
-// * node.go ends here.
+// * options.go ends here.

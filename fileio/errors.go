@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// node.go --- Direct Acyclic Graph node type.
+// errors.go --- Error definitions.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,58 +33,35 @@
 
 // * Package:
 
-package dag
+package fileio
 
 // * Imports:
 
-import (
-	"context"
+import "gitlab.com/tozd/go/errors"
 
-	"github.com/Asmodai/gohacks/logger"
+// * Variables:
+
+var (
+
+	// Signalled when a file is not a regular file.
+	//
+	// That is not a symlink, pipe, socket, device, etc.
+	ErrNotRegular = errors.Base("not a regular file")
+
+	// Signalled when an attempt is made to process a file that is
+	// too large.
+	//
+	// The size limit is configurable via `Options`.
+	ErrTooLarge = errors.Base("file exceeds size limit")
+
+	// Signalled if a size option is invalid.
+	ErrInvalidSize = errors.Base("invalid size")
+
+	// Signalled if we're trying to operate on a symbolic link without
+	// `FollowSymlinks` enabled.
+	ErrSymlinkDenied = errors.Base("symlink not allowed")
 )
 
 // * Code:
 
-// Graph node type.
-type node struct {
-	Predicate  Predicate // Predicate.
-	Action     ActionFn  // Action to execute upon successful predicate.
-	ActionName string    // Action name.
-	Children   []*node   // Child nodes.
-}
-
-// Traverse each child node in the given root node.
-//
-// If the node has an associated predicate then that is evaluated against
-// the given input.
-func traverse(ctx context.Context, root *node, input Filterable, debug bool, logger logger.Logger) {
-	if !root.Predicate.Eval(ctx, input) {
-		if debug {
-			logger.Debug(
-				"Eval failure",
-				"predicate", root.Predicate.Debug(),
-				"input", input.String(),
-			)
-		}
-
-		return
-	}
-
-	if debug {
-		logger.Debug(
-			"Eval success",
-			"predicate", root.Predicate.Debug(),
-			"input", input.String(),
-		)
-	}
-
-	if root.Action != nil {
-		root.Action(ctx, input)
-	}
-
-	for _, child := range root.Children {
-		traverse(ctx, child, input, debug, logger)
-	}
-}
-
-// * node.go ends here.
+// * errors.go ends here.

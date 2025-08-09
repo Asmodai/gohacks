@@ -51,14 +51,14 @@ import (
 type FieldAccessorFn func(any) any
 
 type FieldInfo struct {
-	Name        string
 	Type        reflect.Type
-	TypeKind    reflect.Kind
-	TypeName    string
-	Accessor    FieldAccessorFn
-	Tags        reflect.StructTag
-	Kind        FieldKind
 	ElementType reflect.Type
+	Accessor    FieldAccessorFn
+	Name        string
+	TypeName    string
+	Tags        reflect.StructTag
+	TypeKind    reflect.Kind
+	Kind        FieldKind
 	ElementKind FieldKind
 }
 

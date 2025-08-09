@@ -994,14 +994,14 @@ type FieldAccessorFn func(any) any
 
 ```go
 type FieldInfo struct {
-	Name        string
 	Type        reflect.Type
-	TypeKind    reflect.Kind
-	TypeName    string
-	Accessor    FieldAccessorFn
-	Tags        reflect.StructTag
-	Kind        FieldKind
 	ElementType reflect.Type
+	Accessor    FieldAccessorFn
+	Name        string
+	TypeName    string
+	Tags        reflect.StructTag
+	TypeKind    reflect.Kind
+	Kind        FieldKind
 	ElementKind FieldKind
 }
 ```
@@ -1171,8 +1171,8 @@ type Reflectable interface {
 ```go
 type StructDescriptor struct {
 	Type     reflect.Type
-	TypeName string
 	Fields   map[string]*FieldInfo
+	TypeName string
 }
 ```
 

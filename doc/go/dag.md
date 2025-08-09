@@ -87,14 +87,14 @@ A map of key/value pairs that is passed to the action handler.
 
 ```go
 type ActionSpec struct {
+	// Parameters.
+	Params ActionParams `json:"params,omitempty" yaml:"params,omitempty"`
+
 	// Action name.
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 
 	// Function to perform.
 	Perform string `json:"perform,omitempty" yaml:"perform,omitempty"`
-
-	// Parameters.
-	Params ActionParams `json:"params,omitempty" yaml:"params,omitempty"`
 }
 ```
 
@@ -164,14 +164,14 @@ func NewCompilerWithPredicates(
 
 ```go
 type ConditionSpec struct {
+	// Value to check.
+	Value any `json:"value" yaml:"value"`
+
 	// Attribute to check.
 	Attribute string `json:"attribute" yaml:"attribute"`
 
 	// Predicate operator.
 	Operator string `json:"operator" yaml:"operator"`
-
-	// Value to check.
-	Value any `json:"value" yaml:"value"`
 }
 ```
 
@@ -1101,14 +1101,14 @@ func (pred *RESMPredicate) Token() string
 
 ```go
 type RuleSpec struct {
+	// Action to evaluate.
+	Action ActionSpec `json:"action" yaml:"action"`
+
 	// Rule name.
 	Name string `json:"name" yaml:"name"`
 
 	// List of conditions.
 	Conditions []ConditionSpec `json:"conditions" yaml:"conditions"`
-
-	// Action to evaluate.
-	Action ActionSpec `json:"action" yaml:"action"`
 }
 ```
 

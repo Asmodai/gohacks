@@ -104,11 +104,11 @@ type attributes [8]bool
 // latest ECMA-48 standard.
 type ColorString struct {
 	data   string     // User-supplied data.
-	attrs  attributes // The 10 main ECMA-48 attributes.
+	cached string     // Cached string for speed.
 	fg     Colour     // Foreground colour.
 	bg     Colour     // Background colour.
+	attrs  attributes // The 10 main ECMA-48 attributes.
 	dirty  bool       // Has the object been changed?
-	cached string     // Cached string for speed.
 }
 
 // ** Methods:

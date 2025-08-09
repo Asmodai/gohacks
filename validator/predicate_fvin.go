@@ -70,9 +70,9 @@ var (
 // This predicate returns true if the value in the structure is one of the
 // provided values in the predicate.
 type FVINPredicate struct {
-	MetaPredicate
-
 	valueSet map[any]struct{}
+
+	MetaPredicate
 }
 
 func (pred *FVINPredicate) Instruction() string {

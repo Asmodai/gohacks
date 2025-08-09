@@ -121,9 +121,9 @@ type PredicateDict map[string]PredicateBuilder
 // The meta preducate presents common fields and methods so as to avoid
 // duplicate code.
 type MetaPredicate struct {
-	key    string
 	val    any
 	logger logger.Logger
+	key    string
 	debug  bool
 }
 

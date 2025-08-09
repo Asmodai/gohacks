@@ -65,9 +65,9 @@ var (
 // ** Predicate:
 
 type FVREMPredicate struct {
-	MetaPredicate
-
 	compiled *regexp.Regexp
+
+	MetaPredicate
 }
 
 func (pred *FVREMPredicate) Instruction() string {

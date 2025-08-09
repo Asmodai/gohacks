@@ -71,9 +71,9 @@ var (
 //
 // The regular expression will not be forced into being case-insensitive.
 type RESMPredicate struct {
-	MetaPredicate
-
 	compiled *regexp.Regexp
+
+	MetaPredicate
 }
 
 func (pred *RESMPredicate) Instruction() string {

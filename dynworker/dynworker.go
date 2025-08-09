@@ -342,6 +342,12 @@ func (obj *workerPool) startWorkerLoop(killChan chan struct{}) {
 
 		default:
 			if obj.handleWorkerLifecycle(idleTimer) {
+				obj.lgr.Info(
+					"Worker timed out.",
+					"type", "dynworker",
+					"pool", obj.name,
+				)
+
 				return
 			}
 		}

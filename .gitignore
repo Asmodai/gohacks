@@ -5,3 +5,5 @@ vendor/
 *.xml
 *.out
 *.html
+coverage.txt
+bench*.txt

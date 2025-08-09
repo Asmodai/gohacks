@@ -52,8 +52,8 @@ import (
 
 type StructDescriptor struct {
 	Type     reflect.Type
-	TypeName string
 	Fields   map[string]*FieldInfo
+	TypeName string
 }
 
 // ** Methods:

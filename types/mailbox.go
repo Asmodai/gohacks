@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package types
@@ -74,7 +70,7 @@ a single datum.
 This is *not* a queue!
 */
 type Mailbox struct {
-	mu      sync.Mutex
+	// The storage element.
 	element Datum
 
 	// The `writeAvailable` semaphore, when acquired, will prevent writes.
@@ -82,6 +78,9 @@ type Mailbox struct {
 
 	// The `readAvailable` semaphore, when acquired, will prevent reads.
 	readAvailable *semaphore.Weighted
+
+	// Mutex.
+	mu sync.Mutex
 }
 
 // ** Methods:

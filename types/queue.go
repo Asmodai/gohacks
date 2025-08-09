@@ -54,13 +54,11 @@ Queue structure.
 This is a cheap implementation of a FIFO queue.
 */
 type Queue struct {
-	sync.Mutex
-
 	notEmpty *sync.Cond // Queue is not empty.
 	notFull  *sync.Cond // Queue is not full.
-
-	queue   []Datum
-	bounds  int
+	queue    []Datum
+	bounds   int
+	sync.Mutex
 	bounded bool
 }
 

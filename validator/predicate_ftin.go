@@ -62,9 +62,9 @@ const (
 // This predicate returns true of the type of a field in the input structure
 // is one of the provided values in the predicate.
 type FTINPredicate struct {
-	MetaPredicate
-
 	valueSet map[string]struct{}
+
+	MetaPredicate
 }
 
 func (pred *FTINPredicate) Instruction() string {

@@ -47,8 +47,8 @@ package responder
 
 // Chain entry structure.
 type chainEntry struct {
-	name      string
 	responder Respondable
+	name      string
 	priority  int
 }
 

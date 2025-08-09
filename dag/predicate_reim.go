@@ -65,9 +65,9 @@ const (
 // The regular expression will be compiled with a prefix denoting that it
 // does not care about case.
 type REIMPredicate struct {
-	MetaPredicate
-
 	compiled *regexp.Regexp
+
+	MetaPredicate
 }
 
 func (pred *REIMPredicate) Instruction() string {

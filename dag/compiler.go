@@ -75,14 +75,14 @@ type Compiler interface {
 // ** Types:
 
 type compiler struct {
+	ctx        context.Context     // Owning context.
+	lgr        logger.Logger       // Logger instance from DI.
+	builder    Actions             // Action builder.
 	nodeCache  map[string]*node    // Node cache.
 	actions    map[string]ActionFn // Action cache.
 	predicates PredicateDict       // Predicates.
 	root       *node               // Root node.
-	ctx        context.Context     // Owning context.
-	lgr        logger.Logger       // Logger instance from DI.
 	debugMode  bool                // Are we debugging?
-	builder    Actions             // Action builder.
 }
 
 // ** Methods:
