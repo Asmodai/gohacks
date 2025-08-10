@@ -36,12 +36,9 @@ const (
 )
 
 type Config struct {
-	ExpirationTime  int       `json:"expiration_time"`
-	OnEvicted       OnEvictFn `config_hide:"true"     json:"-"`
-	CacheHitMetric  MetricFn  `config_hide:"true"     json:"-"`
-	CacheMissMetric MetricFn  `config_hide:"true"     json:"-"`
-	CacheGetMetric  MetricFn  `config_hide:"true"     json:"-"`
-	CacheSetMetric  MetricFn  `config_hide:"true"     json:"-"`
+	OnEvicted      OnEvictFn `config_hide:"true"     json:"-"`
+	Name           string    `json:"-"`
+	ExpirationTime int       `json:"expiration_time"`
 }
 
 // Create a timed cache with a default configuration.

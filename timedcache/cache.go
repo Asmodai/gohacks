@@ -46,11 +46,11 @@ package timedcache
 // * Imports:
 
 import (
-	"gitlab.com/tozd/go/errors"
-
-	"fmt"
 	"sync"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"gitlab.com/tozd/go/errors"
 )
 
 // * Variables:
@@ -63,6 +63,72 @@ var (
 	// Triggered when an operation that expects a key to exist finds that
 	// the key actually does not exist.
 	ErrKeyNotExist = errors.Base("the specified key does not exist")
+
+	//nolint:gochecknoglobals
+	itemsGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "timedcache_items",
+			Help: "Number of items in the cache"},
+		[]string{"timedcache"})
+
+	//nolint:gochecknoglobals
+	updatedGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "timedcache_updates",
+			Help: "Last time cache was updated"},
+		[]string{"timedcache"})
+
+	//nolint:gochecknoglobals
+	getTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "timedcache_get_total",
+			Help: "Number of cache gets"},
+		[]string{"timedcache"})
+
+	//nolint:gochecknoglobals
+	setTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "timedcache_set_total",
+			Help: "Number of cache sets"},
+		[]string{"timedcache"})
+
+	//nolint:gochecknoglobals
+	hitTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "timedcache_hit_total",
+			Help: "Number of cache hits"},
+		[]string{"timedcache"})
+
+	//nolint:gochecknoglobals
+	missTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "timedcache_miss_total",
+			Help: "Number of cache misses"},
+		[]string{"timedcache"})
+
+	//nolint:gochecknoglobals
+	evictTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "timedcache_evict_total",
+			Help: "Number of cache evictions"},
+		[]string{"timedcache"})
+
+	//nolint:gochecknoglobals
+	deleteTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "timedcache_delete_total",
+			Help: "Number of cache deletions"},
+		[]string{"timedcache"})
+	//nolint:gochecknoglobals
+
+	flushTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "timedcache_flush_total",
+			Help: "Number of cache flushes"},
+		[]string{"timedcache"})
+
+	//nolint:gochecknoglobals
+	prometheusInitOnce sync.Once
 )
 
 // * Code:
@@ -140,16 +206,23 @@ type Item struct {
 // Type definition for the map of items in the cache.
 type CacheItems map[any]Item
 
+// Timed cache implementation.
 type timedCache struct {
-	updated         time.Time     // Last update time.
-	expiration      time.Duration // Cache expiration time.
-	items           CacheItems    // Cached items.
-	mutex           sync.RWMutex  // R/W mutex.
-	onEvicted       OnEvictFn     // Callback for eviction.
-	cacheHitMetric  MetricFn      // Callback for hit metrics.
-	cacheMissMetric MetricFn      // Callback for miss metrics.
-	cacheGetMetric  MetricFn      // Callback for get metrics.
-	cacheSetMetric  MetricFn      // Callbcak for set metrics.
+	updated            time.Time          // Last update time.
+	cacheItemsMetric   prometheus.Gauge   // Item count metric.
+	cacheUpdatedMetric prometheus.Gauge   // Update time metric.
+	cacheHitMetric     prometheus.Counter // Cache hit metric.
+	cacheMissMetric    prometheus.Counter // Cache miss metric.
+	cacheGetMetric     prometheus.Counter // Cache get metric.
+	cacheSetMetric     prometheus.Counter // Cache set metric.
+	cacheEvictMetric   prometheus.Counter // Cache evict metric.
+	cacheDeleteMetric  prometheus.Counter // Cache delete metric.
+	cacheFlushMetric   prometheus.Counter // Cache flush metric.
+	items              CacheItems         // Cached items.
+	onEvicted          OnEvictFn          // Callback for eviction.
+	name               string             // Name for the cache.
+	expiration         time.Duration      // Cache expiration time.
+	mutex              sync.RWMutex       // R/W mutex.
 }
 
 // ** Methods:
@@ -169,59 +242,78 @@ func (obj *timedCache) Keys() []any {
 
 // Set the value for the given key.
 func (obj *timedCache) Set(key any, value any) {
+	var size int
+
+	now := time.Now()
+
 	obj.mutex.Lock()
-	obj.set(key, value)
+	// CRITICAL SECTION START.
+	{
+		obj.updated = now
+		obj.items[key] = Item{Object: value}
+		size = len(obj.items)
+	}
+	// CRITICAL SECTION END.
 	obj.mutex.Unlock()
-}
 
-// Internal implementation for setting values.
-func (obj *timedCache) set(key any, value any) {
-	obj.tryCacheSetMetric()
-
-	obj.updated = time.Now()
-	obj.items[key] = Item{Object: value}
+	obj.cacheSetMetric.Inc()
+	obj.cacheItemsMetric.Set(float64(size))
+	obj.cacheUpdatedMetric.Set(float64(now.Unix()))
 }
 
 // Ge the value for the given key.
 func (obj *timedCache) Get(key any) (any, bool) {
 	obj.mutex.RLock()
-	itm, found := obj.get(key)
+	itm, found := obj.items[key]
 	obj.mutex.RUnlock()
 
-	return itm, found
-}
+	get := obj.cacheGetMetric
 
-// Internal implementation for getting values.
-func (obj *timedCache) get(key any) (any, bool) {
-	obj.tryCacheGetMetric()
+	if found {
+		get.Inc()
+		obj.cacheHitMetric.Inc()
 
-	itm, found := obj.items[key]
-	if !found {
-		obj.tryCacheMissMetric()
-
-		return nil, false
+		return itm.Object, true
 	}
 
-	obj.tryCacheHitMetric()
+	get.Inc()
+	obj.cacheMissMetric.Inc()
 
-	return itm.Object, true
+	return itm, found
 }
 
 // Add a new key/value pair to the cache.
 //
 // Triggers `ErrKeyExists` if the given key already exists.
 func (obj *timedCache) Add(key any, value any) error {
+	var (
+		size int
+		now  time.Time
+	)
+
 	obj.mutex.Lock()
-	defer obj.mutex.Unlock()
+	// CRITICAL SECTION START.
+	{
+		if _, exists := obj.items[key]; exists {
+			obj.mutex.Unlock() // Exit critical section here.
 
-	if _, found := obj.get(key); found {
-		return errors.Wrap(
-			ErrKeyExists,
-			fmt.Sprintf("key %#v already exists", key),
-		)
+			return errors.WithMessagef(
+				ErrKeyExists,
+				"key %q already exists",
+				key)
+		}
+
+		now = time.Now()
+		obj.items[key] = Item{Object: value}
+		obj.updated = now
+		size = len(obj.items)
 	}
+	// CRITICAL SECTION END.
+	obj.mutex.Unlock()
 
-	obj.set(key, value)
+	obj.cacheSetMetric.Inc()
+	obj.cacheItemsMetric.Set(float64(size))
+	obj.cacheUpdatedMetric.Set(float64(now.Unix()))
 
 	return nil
 }
@@ -230,40 +322,63 @@ func (obj *timedCache) Add(key any, value any) error {
 //
 // Triggers `ErrKeyNotExist` if the key does not exist.
 func (obj *timedCache) Replace(key any, value any) error {
+	var now time.Time
+
 	obj.mutex.Lock()
-	defer obj.mutex.Unlock()
+	// CRITICAL SECTION START.
+	{
+		if _, exists := obj.items[key]; !exists {
+			obj.mutex.Unlock() // Exit critical section here.
 
-	if _, found := obj.get(key); !found {
-		return errors.Wrap(
-			ErrKeyNotExist,
-			fmt.Sprintf("key %#v does not exist", key),
-		)
+			return errors.WithMessagef(
+				ErrKeyNotExist,
+				"key %q does not exist",
+				key)
+		}
+
+		now = time.Now()
+		obj.items[key] = Item{Object: value}
+		obj.updated = now
 	}
+	// CRITICAL SECTION END.
+	obj.mutex.Unlock()
 
-	obj.set(key, value)
+	obj.cacheSetMetric.Inc()
+	obj.cacheUpdatedMetric.Set(float64(now.Unix()))
 
 	return nil
 }
 
 // Delete the given key from the cache.
 func (obj *timedCache) Delete(key any) (any, bool) {
+	var (
+		val      any
+		canEvict bool
+		evict    OnEvictFn
+	)
+
 	obj.mutex.Lock()
-	val, found := obj.zap(key)
+	// CRITICAL SECTION START.
+	{
+		if itm, found := obj.items[key]; found {
+			delete(obj.items, key)
+			val = itm.Object
+			canEvict = true
+			evict = obj.onEvicted
+		}
+	}
+	// CRITICAL SECTION END.
 	obj.mutex.Unlock()
 
-	return val, found
-}
+	if canEvict && evict != nil {
+		obj.cacheEvictMetric.Inc()
+		obj.cacheDeleteMetric.Inc()
+		obj.cacheUpdatedMetric.Set(float64(time.Now().Unix()))
 
-// Internal implementation of key/value pair deletion.
-func (obj *timedCache) zap(key any) (any, bool) {
-	val, found := obj.items[key]
-
-	if found {
-		delete(obj.items, key)
-		obj.tryOnEvicted(key, val)
+		evict(key, val)
 	}
 
-	return val, found
+	return val, canEvict
 }
 
 // Set the "on eviction" callback function.
@@ -284,16 +399,35 @@ func (obj *timedCache) Count() int {
 
 // Flush all elements from the cache.
 func (obj *timedCache) Flush() {
+	var (
+		items CacheItems
+		evict OnEvictFn
+		now   time.Time
+	)
+
 	obj.mutex.Lock()
-	defer obj.mutex.Unlock()
+	// CRITICAL SECTION START.
+	{
+		items = obj.items
+		evict = obj.onEvicted
+		now = time.Now()
 
-	obj.updated = time.Now()
+		obj.updated = now
+		obj.items = CacheItems{}
+	}
+	// CRITICAL SECTION END.
+	obj.mutex.Unlock()
 
-	for k, v := range obj.items {
-		obj.tryOnEvicted(k, v.Object)
+	if evict != nil {
+		for k, v := range items {
+			obj.cacheEvictMetric.Inc()
+
+			evict(k, v.Object)
+		}
 	}
 
-	obj.items = CacheItems{}
+	obj.cacheFlushMetric.Inc()
+	obj.cacheUpdatedMetric.Set(float64(now.Unix()))
 }
 
 // Return the time of the last cache update.
@@ -314,67 +448,49 @@ func (obj *timedCache) Expired() bool {
 	return time.Now().After(end)
 }
 
-// Attempt to invoke the eviction callback.
-func (obj *timedCache) tryOnEvicted(key any, value any) {
-	if obj.onEvicted == nil {
-		return
-	}
-
-	obj.onEvicted(key, value)
-}
-
-// Attempt to invoke the cache set metric callback.
-func (obj *timedCache) tryCacheSetMetric() {
-	if obj.cacheSetMetric == nil {
-		return
-	}
-
-	obj.cacheSetMetric()
-}
-
-// Attempt to invoke the cache get metric callback.
-func (obj *timedCache) tryCacheGetMetric() {
-	if obj.cacheGetMetric == nil {
-		return
-	}
-
-	obj.cacheGetMetric()
-}
-
-// Attempt to invoke the cache hit metric callback.
-func (obj *timedCache) tryCacheHitMetric() {
-	if obj.cacheHitMetric == nil {
-		return
-	}
-
-	obj.cacheHitMetric()
-}
-
-// Attempt to invoke the cache miss metric callback.
-func (obj *timedCache) tryCacheMissMetric() {
-	if obj.cacheMissMetric == nil {
-		return
-	}
-
-	obj.cacheMissMetric()
-}
-
 // * Functions:
 
 // Create a new timed cache with the given configuration.
 func New(config *Config) TimedCache {
+	if len(config.Name) == 0 {
+		config.Name = "Default"
+	}
+
+	label := prometheus.Labels{"timedcache": config.Name}
 	expire := time.Duration(config.ExpirationTime) * time.Second
 
 	return &timedCache{
-		updated:         time.Now(),
-		expiration:      expire,
-		onEvicted:       config.OnEvicted,
-		items:           CacheItems{},
-		cacheHitMetric:  config.CacheHitMetric,
-		cacheMissMetric: config.CacheMissMetric,
-		cacheGetMetric:  config.CacheGetMetric,
-		cacheSetMetric:  config.CacheSetMetric,
+		name:               config.Name,
+		updated:            time.Now(),
+		expiration:         expire,
+		onEvicted:          config.OnEvicted,
+		items:              CacheItems{},
+		cacheItemsMetric:   itemsGauge.With(label),
+		cacheUpdatedMetric: updatedGauge.With(label),
+		cacheGetMetric:     getTotal.With(label),
+		cacheSetMetric:     setTotal.With(label),
+		cacheHitMetric:     hitTotal.With(label),
+		cacheMissMetric:    missTotal.With(label),
+		cacheEvictMetric:   evictTotal.With(label),
+		cacheDeleteMetric:  deleteTotal.With(label),
+		cacheFlushMetric:   flushTotal.With(label),
 	}
+}
+
+// Initialise Prometheus metrics.
+func InitPrometheus() {
+	prometheusInitOnce.Do(func() {
+		prometheus.MustRegister(
+			itemsGauge,
+			updatedGauge,
+			getTotal,
+			setTotal,
+			hitTotal,
+			missTotal,
+			evictTotal,
+			deleteTotal,
+			flushTotal)
+	})
 }
 
 // * cache.go ends here.

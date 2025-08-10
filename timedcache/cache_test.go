@@ -29,7 +29,11 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Package:
+
 package timedcache
+
+// * Imports:
 
 import (
 	"gitlab.com/tozd/go/errors"
@@ -38,14 +42,7 @@ import (
 	"testing"
 )
 
-var (
-	testCache  TimedCache
-	hasEvicted bool = false
-	getMetric  int  = 0
-	setMetric  int  = 0
-	hitMetric  int  = 0
-	missMetric int  = 0
-)
+// * Constants:
 
 const (
 	TestKey1 string = "testKey1"
@@ -59,14 +56,26 @@ const (
 	TestValue4 int = 4
 )
 
+// * Variables:
+
+var (
+	testCache  TimedCache
+	hasEvicted bool = false
+	getMetric  int  = 0
+	setMetric  int  = 0
+	hitMetric  int  = 0
+	missMetric int  = 0
+)
+
+// * Code:
+
+// ** Helpers:
+
 func OnEvictedEvent(key any, _ any) { hasEvicted = true }
-func MetricGet()                    { getMetric++ }
-func MetricSet()                    { setMetric++ }
-func MetricMiss()                   { missMetric++ }
-func MetricHit()                    { hitMetric++ }
 
 func NewTestConfig() *Config {
 	return &Config{
+		Name:           "test",
 		ExpirationTime: 2,
 		OnEvicted:      nil,
 	}
@@ -74,12 +83,9 @@ func NewTestConfig() *Config {
 
 func NewTestMetricConfig() *Config {
 	return &Config{
-		ExpirationTime:  2,
-		OnEvicted:       nil,
-		CacheHitMetric:  MetricHit,
-		CacheMissMetric: MetricMiss,
-		CacheGetMetric:  MetricGet,
-		CacheSetMetric:  MetricSet,
+		Name:           "test",
+		ExpirationTime: 2,
+		OnEvicted:      nil,
 	}
 }
 
@@ -102,6 +108,8 @@ func CheckKey(cache TimedCache, key any, value any) error {
 
 	return fmt.Errorf("Key '%v' not found.", key)
 }
+
+// ** Tests:
 
 // Test the basic accessor methods.
 func TestAccessors(t *testing.T) {
@@ -289,25 +297,59 @@ func TestCallbacks(t *testing.T) {
 	testCache.Get(TestKey1)             // hit, get
 	testCache.Delete(TestKey1)          // evict
 
-	if getMetric != 2 {
-		t.Errorf("get = %v", getMetric)
-	}
-
-	if setMetric != 1 {
-		t.Errorf("set = %v", setMetric)
-	}
-
-	if missMetric != 1 {
-		t.Errorf("miss = %v", missMetric)
-	}
-
-	if hitMetric != 1 {
-		t.Errorf("hit = %v", hitMetric)
-	}
-
 	if hasEvicted == false {
 		t.Error("Have not evicted!")
 	}
 }
 
-// cache_test.go ends here.
+// ** Benchmarks:
+
+func BenchmarkTimedCache(b *testing.B) {
+	const (
+		TestKey = "TestKey"
+		Val     = "This is a long value maybe."
+		Replace = "This is a different key, yo."
+	)
+
+	var cache TimedCache
+
+	b.Run("Constructor", func(b *testing.B) {
+		b.ReportAllocs()
+
+		cache = New(NewTestConfig())
+	})
+
+	b.Run("Add", func(b *testing.B) {
+		b.ReportAllocs()
+
+		for range b.N {
+			cache.Add(TestKey, Val)
+		}
+	})
+
+	b.Run("Replace", func(b *testing.B) {
+		b.ReportAllocs()
+
+		for range b.N {
+			cache.Replace(TestKey, Replace)
+		}
+	})
+
+	b.Run("Set", func(b *testing.B) {
+		b.ReportAllocs()
+
+		for range b.N {
+			cache.Set(TestKey, Val)
+		}
+	})
+
+	b.Run("Get", func(b *testing.B) {
+		b.ReportAllocs()
+
+		for range b.N {
+			_, _ = cache.Get(TestKey)
+		}
+	})
+}
+
+// * cache_test.go ends here.

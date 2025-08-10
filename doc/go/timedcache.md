@@ -38,6 +38,13 @@ var (
 )
 ```
 
+#### func  InitPrometheus
+
+```go
+func InitPrometheus()
+```
+Initialise Prometheus metrics.
+
 #### func  SetTimedCache
 
 ```go
@@ -57,12 +64,9 @@ Type definition for the map of items in the cache.
 
 ```go
 type Config struct {
-	ExpirationTime  int       `json:"expiration_time"`
-	OnEvicted       OnEvictFn `config_hide:"true"     json:"-"`
-	CacheHitMetric  MetricFn  `config_hide:"true"     json:"-"`
-	CacheMissMetric MetricFn  `config_hide:"true"     json:"-"`
-	CacheGetMetric  MetricFn  `config_hide:"true"     json:"-"`
-	CacheSetMetric  MetricFn  `config_hide:"true"     json:"-"`
+	OnEvicted      OnEvictFn `config_hide:"true"     json:"-"`
+	Name           string    `json:"-"`
+	ExpirationTime int       `json:"expiration_time"`
 }
 ```
 
