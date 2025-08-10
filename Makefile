@@ -77,7 +77,8 @@ MODULES = amqp            \
 	  timedcache      \
 	  types           \
 	  utils           \
-	  validator
+	  validator       \
+	  wal
 
 # Options
 .SHELLFLAGS   := -eu -o pipefail -c

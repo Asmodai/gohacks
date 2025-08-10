@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// errors.go --- Error definitions.
+// constants.go --- Constants
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,34 +37,19 @@ package fileio
 
 // * Imports:
 
-import "gitlab.com/tozd/go/errors"
-
-// * Variables:
-
-var (
-
-	// Signalled when a file is not a regular file.
-	//
-	// That is not a symlink, pipe, socket, device, etc.
-	ErrNotRegular = errors.Base("not a regular file")
-
-	// Signalled when an attempt is made to process a file that is
-	// too large.
-	//
-	// The size limit is configurable via `Options`.
-	ErrTooLarge = errors.Base("file exceeds size limit")
-
-	// Signalled if a size option is invalid.
-	ErrInvalidSize = errors.Base("invalid size")
-
-	// Signalled if we're trying to operate on a symbolic link without
-	// `FollowSymlinks` enabled.
-	ErrSymlinkDenied = errors.Base("symlink not allowed")
-
-	// Signalled if Writer options has both `Apppend` and `Atomic`.
-	ErrInvalidWriteMode = errors.Base("invalid write mode")
-)
-
 // * Code:
 
-// * errors.go ends here.
+const (
+	// Default stream chunk size.
+	defaultChunkSize = 64 * 1024
+
+	// Default streaming buffer size.
+	defaultBufSize = 8
+
+	defaultWriteBufferSize = 64 * 1024
+
+	DefaultDirectoryMode = 0o755
+	DefaultFileMode      = 0o644
+)
+
+// * constants.go ends here.

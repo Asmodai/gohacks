@@ -9,6 +9,13 @@
 ## Usage
 
 ```go
+const (
+	DefaultDirectoryMode = 0o755
+	DefaultFileMode      = 0o644
+)
+```
+
+```go
 var (
 
 	// Signalled when a file is not a regular file.
@@ -28,6 +35,9 @@ var (
 	// Signalled if we're trying to operate on a symbolic link without
 	// `FollowSymlinks` enabled.
 	ErrSymlinkDenied = errors.Base("symlink not allowed")
+
+	// Signalled if Writer options has both `Apppend` and `Atomic`.
+	ErrInvalidWriteMode = errors.Base("invalid write mode")
 )
 ```
 
@@ -35,16 +45,86 @@ var (
 
 ```go
 type Chunk struct {
-	Offset int64
-	Data   []byte
+	Offset int64  // Offset into the file.
+	Data   []byte // Data slab.
+}
+```
+
+Data chunk used when dealing with streamed file data.
+
+#### type CreateMode
+
+```go
+type CreateMode int
+```
+
+
+```go
+const (
+	CreateModeTruncate CreateMode = iota // Truncate files before writing.
+	CreateModeAppend                     // Append to file during writing.
+)
+```
+
+#### type Files
+
+```go
+type Files interface {
+	// Open a file for writing.
+	OpenWriter(context.Context, string, WriteOptions) (Writer, error)
+
+	// Write to a file.
+	WriteFile(context.Context, string, []byte, WriteOptions) error
+
+	// Append data to a file.
+	AppendFile(context.Context, string, io.Reader, WriteOptions) (int64, error)
+
+	// Remove a file.
+	Remove(string) error
+
+	// Rename a file.
+	Rename(string, string) error
+
+	// Create directory.
+	//
+	// If any directory in the path does not exist, then it will be
+	// created.
+	MkdirAll(string, os.FileMode) error
 }
 ```
 
 
-#### type Options
+#### func  NewFiles
 
 ```go
-type Options struct {
+func NewFiles() Files
+```
+
+#### type FsyncPolicy
+
+```go
+type FsyncPolicy int
+```
+
+
+```go
+const (
+	FsyncNever      FsyncPolicy = iota // Never
+	FsyncOnClose                       // Synchronise on close.
+	FsyncEveryWrite                    // Synchronise every write.
+
+	// Default temporary file prefix.
+	DefaultTempFilePrefix = "."
+
+	// Default temporary file suffix.
+	DefaultTempFileSuffix = ".tmp"
+)
+```
+
+#### type ReadOptions
+
+```go
+type ReadOptions struct {
 	// Maximum number of bytes to read.
 	//
 	// If this value is set to a negative number then it is interpreted
@@ -134,16 +214,16 @@ type Reader interface {
 
 File reader.
 
-A utility that provides file opening functionality wrapped in a mockable
+A utility that provides file reading functionality wrapped in a mockable
 interface.
 
 To use:
 
-    1. Create an instance with the file path you wish to load:
+    1. Create an instance with the file path you wish to read:
 
 ```go
 
-    load := fileloader.NewWithFile("/path/to/file")
+    load := fileio.NewWReaderithFile("/path/to/file")
 
 ```
 
@@ -171,19 +251,26 @@ To use:
 
 The `Load` method returns the file content as a byte array.
 
+#### func  NewReader
+
+```go
+func NewReader() (Reader, error)
+```
+Create a new default file reader.
+
 #### func  NewReaderWithFile
 
 ```go
 func NewReaderWithFile(filename string) (Reader, error)
 ```
-Create a new FileReader with the given file name.
+Create a new reader with the given file name.
 
 #### func  NewReaderWithFileAndOptions
 
 ```go
-func NewReaderWithFileAndOptions(filename string, opts Options) (Reader, error)
+func NewReaderWithFileAndOptions(filename string, opts ReadOptions) (Reader, error)
 ```
-Create a new FileReader with the given file name and options.
+Create a new reader with the given file name and options.
 
 #### type StreamResult
 
@@ -194,4 +281,111 @@ type StreamResult struct {
 	Close   func()       // Cancel the stream.
 	Wait    func() error // Wait for completion.
 }
+```
+
+Result of opening a file for streaming read.
+
+#### type WriteOptions
+
+```go
+type WriteOptions struct {
+	// File mode.
+	//
+	// Default is 0o644.
+	Mode os.FileMode
+
+	// File creation mode.
+	//
+	// Can be one of "truncate" or "append".
+	CreateMode CreateMode
+
+	// Create directories should they not exist?
+	CreateDirs bool
+
+	// Buffer size.
+	//
+	// If the value is zero, the value in`DefaultWriteBufferSize` shall
+	// be used.
+	BufferSize int
+
+	// File sync policy.
+	Fsync FsyncPolicy
+
+	// Synchronise file every n writes.
+	//
+	// If zero, no syncs will be performed.
+	FsyncEveryN int64
+
+	// Context deadline.
+	Timeout time.Duration
+}
+```
+
+
+#### type Writer
+
+```go
+type Writer interface {
+	io.WriteCloser
+
+	// Perform a synchronisation.
+	Sync() error
+
+	// Number of bytes written.
+	BytesWritten() int64
+
+	// Name of the file to which we are writing.
+	Name() string
+
+	// Abort file writing.
+	Abort() error
+}
+```
+
+File writer.
+
+A utility that provides file writing functionality wrapped in a mockable
+interface.
+
+To use:
+
+    1. Create an instance with the file path you wish to write:
+
+```go
+
+    ctx := context.TODO()
+    writer := fileio.NewAppendWriter(
+    	ctx,
+    	"/path/to/file",
+    	fileio.WriteOptions{ ... },
+    )
+
+```
+
+    2. Write to your file:
+
+```go
+
+    err := writer.Write(someData)
+    if err != nil {
+    	panic("Could not write to file: " + err.Error())
+    }
+
+```
+
+    3. Sync and close your file:
+
+```go
+
+    _ = writer.Sync();
+    _ = writer.Close()
+
+```
+
+Add error handling to taste.
+
+#### func  NewWriter
+
+```go
+func NewWriter(ctx context.Context, path string, opts WriteOptions) (Writer, error)
 ```

@@ -182,7 +182,7 @@ func TestSymlinkReader(t *testing.T) {
 	}
 
 	inst2, err = NewReaderWithFileAndOptions(SymlinkFile,
-		Options{FollowSymlinks: false})
+		ReadOptions{FollowSymlinks: false})
 	switch {
 	case inst2 == nil:
 		t.Fatal("Instance is invalid")

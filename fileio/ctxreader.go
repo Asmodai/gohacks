@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// errors.go --- Error definitions.
+// ctxreader.go --- Reader with context support.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,34 +37,39 @@ package fileio
 
 // * Imports:
 
-import "gitlab.com/tozd/go/errors"
+import (
+	"context"
+	"io"
+
+	"gitlab.com/tozd/go/errors"
+)
+
+// * Constants:
 
 // * Variables:
 
-var (
-
-	// Signalled when a file is not a regular file.
-	//
-	// That is not a symlink, pipe, socket, device, etc.
-	ErrNotRegular = errors.Base("not a regular file")
-
-	// Signalled when an attempt is made to process a file that is
-	// too large.
-	//
-	// The size limit is configurable via `Options`.
-	ErrTooLarge = errors.Base("file exceeds size limit")
-
-	// Signalled if a size option is invalid.
-	ErrInvalidSize = errors.Base("invalid size")
-
-	// Signalled if we're trying to operate on a symbolic link without
-	// `FollowSymlinks` enabled.
-	ErrSymlinkDenied = errors.Base("symlink not allowed")
-
-	// Signalled if Writer options has both `Apppend` and `Atomic`.
-	ErrInvalidWriteMode = errors.Base("invalid write mode")
-)
-
 // * Code:
 
-// * errors.go ends here.
+// ** Types:
+
+type ctxReader struct {
+	ctx context.Context
+	rdr io.Reader
+}
+
+// ** Methods:
+
+func (c *ctxReader) Read(data []byte) (int, error) {
+	if err := c.ctx.Err(); err != nil {
+		return 0, errors.WithStack(err)
+	}
+
+	num, err := c.rdr.Read(data)
+	if num == 0 && err == nil && c.ctx.Err() != nil {
+		return 0, errors.WithStack(c.ctx.Err())
+	}
+
+	return num, errors.WithStack(err)
+}
+
+// * ctxreader.go ends here.

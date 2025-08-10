@@ -46,22 +46,13 @@ import (
 	"gitlab.com/tozd/go/errors"
 )
 
-// * Constants:
-
-const (
-	// Default stream chunk size.
-	defaultChunkSize = 64 * 1024
-
-	defaultBufSize = 8
-)
-
 // * Code:
 
 // ** Types:
 
 type fileReader struct {
-	filename string
-	opts     Options
+	filename string      // File name we're operating on.
+	opts     ReadOptions // Options.
 }
 
 // ** Methods:
@@ -201,6 +192,7 @@ func (frdr *fileReader) Open() (io.ReadCloser, error) {
 	return file, nil
 }
 
+// Open the file and stream its contents to the specified writer.
 func (frdr *fileReader) CopyTo(writer io.Writer, limit int64) (int64, error) {
 	rdr, err := frdr.Open()
 	if err != nil {
@@ -336,20 +328,25 @@ func (frdr *fileReader) Stream(parent context.Context, chunkSize, bufSize int, l
 
 // ** Functions:
 
-// Create a new FileReader with the given file name.
-func NewReaderWithFile(filename string) (Reader, error) {
-	return NewReaderWithFileAndOptions(filename, Options{FollowSymlinks: true})
+// Create a new default file reader.
+func NewReader() (Reader, error) {
+	return &fileReader{opts: ReadOptions{}}, nil
 }
 
-// Create a new FileReader with the given file name and options.
-func NewReaderWithFileAndOptions(filename string, opts Options) (Reader, error) {
+// Create a new reader with the given file name.
+func NewReaderWithFile(filename string) (Reader, error) {
+	return NewReaderWithFileAndOptions(filename, ReadOptions{FollowSymlinks: true})
+}
+
+// Create a new reader with the given file name and options.
+func NewReaderWithFileAndOptions(filename string, opts ReadOptions) (Reader, error) {
 	if err := opts.sanity(); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	inst := &fileReader{
 		filename: filename,
-		opts: Options{
+		opts: ReadOptions{
 			MaxReadBytes:   opts.MaxReadBytes,
 			FollowSymlinks: opts.FollowSymlinks,
 		},

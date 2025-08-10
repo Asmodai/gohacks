@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// errors.go --- Error definitions.
+// tunables.go --- WAL tunables.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,38 +33,50 @@
 
 // * Package:
 
-package fileio
+package wal
 
 // * Imports:
 
-import "gitlab.com/tozd/go/errors"
-
-// * Variables:
-
-var (
-
-	// Signalled when a file is not a regular file.
-	//
-	// That is not a symlink, pipe, socket, device, etc.
-	ErrNotRegular = errors.Base("not a regular file")
-
-	// Signalled when an attempt is made to process a file that is
-	// too large.
-	//
-	// The size limit is configurable via `Options`.
-	ErrTooLarge = errors.Base("file exceeds size limit")
-
-	// Signalled if a size option is invalid.
-	ErrInvalidSize = errors.Base("invalid size")
-
-	// Signalled if we're trying to operate on a symbolic link without
-	// `FollowSymlinks` enabled.
-	ErrSymlinkDenied = errors.Base("symlink not allowed")
-
-	// Signalled if Writer options has both `Apppend` and `Atomic`.
-	ErrInvalidWriteMode = errors.Base("invalid write mode")
-)
+import "time"
 
 // * Code:
 
-// * errors.go ends here.
+type Policy struct {
+	// SyncEveryBytes: fsync after this many bytes appended since the
+	// last sync.
+	//
+	// 0 disables byte-based syncing (only time-based or explicit
+	// sync/reset/close).
+	SyncEveryBytes int64
+
+	// SyncEvery: also fsync on this cadence if there is unsynced data.
+	//
+	// 0 disables time-based syncing.
+	SyncEvery time.Duration
+
+	// Maximum size of a value in bytes.
+	MaxValueBytes uint32
+
+	// Maximum size of a key in bytes.
+	MaxKeyBytes uint32
+}
+
+func (pol *Policy) sanity() {
+	if pol.MaxKeyBytes <= 0 {
+		pol.MaxKeyBytes = defaultMaxKeyBytes
+	}
+
+	if pol.MaxValueBytes <= 0 {
+		pol.MaxValueBytes = defaultMaxValueBytes
+	}
+
+	if pol.SyncEvery < 0 {
+		pol.SyncEvery = 0
+	}
+
+	if pol.SyncEveryBytes < 0 {
+		pol.SyncEveryBytes = 0
+	}
+}
+
+// * tunables.go ends here.

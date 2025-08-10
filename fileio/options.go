@@ -37,12 +37,36 @@ package fileio
 
 // * Imports:
 
-import "math"
+import (
+	"math"
+	"os"
+	"time"
+
+	"gitlab.com/tozd/go/errors"
+)
+
+// * Constants:
+
+const (
+	FsyncNever      FsyncPolicy = iota // Never
+	FsyncOnClose                       // Synchronise on close.
+	FsyncEveryWrite                    // Synchronise every write.
+
+	// Default temporary file prefix.
+	DefaultTempFilePrefix = "."
+
+	// Default temporary file suffix.
+	DefaultTempFileSuffix = ".tmp"
+)
 
 // * Code:
 
+// ** Read Options:
+
+// *** Type:
+
 // File I/O options.
-type Options struct {
+type ReadOptions struct {
 	// Maximum number of bytes to read.
 	//
 	// If this value is set to a negative number then it is interpreted
@@ -64,15 +88,87 @@ type Options struct {
 	FollowSymlinks bool
 }
 
-// ** methods:
+// *** methods:
 
-func (opt *Options) sanity() error {
+// Sanitise options.
+func (opt *ReadOptions) sanity() error {
 	if opt.MaxReadBytes < 0 {
 		opt.MaxReadBytes = 0
 	}
 
 	if opt.MaxReadBytes > int64(math.MaxInt) {
-		return ErrInvalidSize
+		return errors.WithMessagef(
+			ErrInvalidSize,
+			"MaxReadByts %d",
+			opt.MaxReadBytes)
+	}
+
+	return nil
+}
+
+// ** Write Options:
+
+// *** Constants:
+
+const (
+	CreateModeTruncate CreateMode = iota // Truncate files before writing.
+	CreateModeAppend                     // Append to file during writing.
+)
+
+// *** Types:
+
+type FsyncPolicy int
+
+type CreateMode int
+
+type WriteOptions struct {
+	// File mode.
+	//
+	// Default is 0o644.
+	Mode os.FileMode
+
+	// File creation mode.
+	//
+	// Can be one of "truncate" or "append".
+	CreateMode CreateMode
+
+	// Create directories should they not exist?
+	CreateDirs bool
+
+	// Buffer size.
+	//
+	// If the value is zero, the value in`DefaultWriteBufferSize` shall
+	// be used.
+	BufferSize int
+
+	// File sync policy.
+	Fsync FsyncPolicy
+
+	// Synchronise file every n writes.
+	//
+	// If zero, no syncs will be performed.
+	FsyncEveryN int64
+
+	// Context deadline.
+	Timeout time.Duration
+}
+
+// *** Methods:
+
+func (opt *WriteOptions) sanity() error {
+	if opt.Mode == 0 {
+		opt.Mode = DefaultFileMode
+	}
+
+	if opt.BufferSize <= 0 {
+		opt.BufferSize = defaultWriteBufferSize
+	}
+
+	if opt.CreateMode != CreateModeAppend && opt.CreateMode != CreateModeTruncate {
+		return errors.WithMessagef(
+			ErrInvalidWriteMode,
+			"invalid create mode %q",
+			opt.CreateMode)
 	}
 
 	return nil

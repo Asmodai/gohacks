@@ -42,6 +42,7 @@ package fileio
 import (
 	"context"
 	"io"
+	"os"
 )
 
 // * Constants:
@@ -52,11 +53,13 @@ import (
 
 // ** Types:
 
+// Data chunk used when dealing with streamed file data.
 type Chunk struct {
-	Offset int64
-	Data   []byte
+	Offset int64  // Offset into the file.
+	Data   []byte // Data slab.
 }
 
+// Result of opening a file for streaming read.
 type StreamResult struct {
 	ChunkCh <-chan Chunk // Channel for chunks.
 	ErrorCh <-chan error // Channel for errors.
@@ -66,19 +69,21 @@ type StreamResult struct {
 
 // ** Interface:
 
+// *** Reader:
+
 /*
 File reader.
 
-A utility that provides file opening functionality wrapped in a mockable
+A utility that provides file reading functionality wrapped in a mockable
 interface.
 
 To use:
 
- 1. Create an instance with the file path you wish to load:
+ 1. Create an instance with the file path you wish to read:
 
 ```go
 
-	load := fileloader.NewWithFile("/path/to/file")
+	load := fileio.NewWReaderithFile("/path/to/file")
 
 ```
 
@@ -163,6 +168,92 @@ type Reader interface {
 	// if `chunkSize` is zero or lower then a default chunk size of
 	// 64 * 1024 shall be used.
 	Stream(ctx context.Context, chunkSize, bufSize int, limit int64) StreamResult
+}
+
+// *** Writer:
+
+/*
+File writer.
+
+A utility that provides file writing functionality wrapped in a mockable
+interface.
+
+To use:
+
+ 1. Create an instance with the file path you wish to write:
+
+```go
+
+	ctx := context.TODO()
+	writer := fileio.NewAppendWriter(
+		ctx,
+		"/path/to/file",
+		fileio.WriteOptions{ ... },
+	)
+
+```
+
+ 2. Write to your file:
+
+```go
+
+	err := writer.Write(someData)
+	if err != nil {
+		panic("Could not write to file: " + err.Error())
+	}
+
+```
+
+ 3. Sync and close your file:
+
+```go
+
+	_ = writer.Sync();
+	_ = writer.Close()
+
+```
+
+Add error handling to taste.
+*/
+type Writer interface {
+	io.WriteCloser
+
+	// Perform a synchronisation.
+	Sync() error
+
+	// Number of bytes written.
+	BytesWritten() int64
+
+	// Name of the file to which we are writing.
+	Name() string
+
+	// Abort file writing.
+	Abort() error
+}
+
+// *** Files:
+
+type Files interface {
+	// Open a file for writing.
+	OpenWriter(context.Context, string, WriteOptions) (Writer, error)
+
+	// Write to a file.
+	WriteFile(context.Context, string, []byte, WriteOptions) error
+
+	// Append data to a file.
+	AppendFile(context.Context, string, io.Reader, WriteOptions) (int64, error)
+
+	// Remove a file.
+	Remove(string) error
+
+	// Rename a file.
+	Rename(string, string) error
+
+	// Create directory.
+	//
+	// If any directory in the path does not exist, then it will be
+	// created.
+	MkdirAll(string, os.FileMode) error
 }
 
 // * reader.go ends here.
