@@ -95,8 +95,8 @@ var (
 // ** Pooled buffer:
 
 type bufPool struct {
-	capacity int
 	pool     sync.Pool
+	capacity int
 }
 
 func (p *bufPool) get(num int) (*[]byte, []byte) {
@@ -231,12 +231,12 @@ type recSize struct {
 // ** Record fields structure:
 
 type recFields struct {
+	key    []byte
+	val    []byte
 	lsn    uint64
 	tstamp int64
 	klen   uint32
 	vlen   uint32
-	key    []byte
-	val    []byte
 }
 
 // ** Types:
@@ -245,17 +245,17 @@ type writeAheadLog struct {
 	lgr         logger.Logger
 	ctx         context.Context
 	cancel      context.CancelFunc
-	path        string
 	fptr        *os.File
+	flushTicker *time.Ticker
+	stopCh      chan struct{}
+	crcTab      *crc32.Table
+	pool        *bufPool
+	path        string
+	policy      Policy
 	bytes       int64
 	lastSyncAt  int64
 	mu          sync.Mutex
-	policy      Policy
-	flushTicker *time.Ticker
-	stopCh      chan struct{}
 	dirty       bool
-	crcTab      *crc32.Table
-	pool        *bufPool
 }
 
 // ** Methods:

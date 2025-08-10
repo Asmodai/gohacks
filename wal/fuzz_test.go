@@ -98,17 +98,21 @@ func replayCollect(w WriteAheadLog, base uint64) (out []rec, err error) {
 // ========== FUZZ: round trip append->replay ==========
 
 func FuzzAppendReplayRoundTrip(f *testing.F) {
+	// Seeds (kept tiny so we hit the interesting paths quickly).
 	seed := func(n int, key, val string) {
-		f.Add(uint64(n), int64(1730000000+n), []byte(key), []byte(val)) // base samples
+		f.Add(uint64(n), int64(1730000000+n), []byte(key), []byte(val))
 	}
 	seed(1, "k", "v")
 	seed(2, "k2", "v2")
 	seed(10, "alpha", "beta")
 
+	// Base policy, but force no ticker to avoid nondeterminism.
 	pol := tinyPolicy()
+	pol.SyncEvery = 0
+	pol.SyncEveryBytes = 0
 
 	f.Fuzz(func(t *testing.T, lsn uint64, ts int64, key, val []byte) {
-		// keep input within policy
+		// Clamp to policy so Append succeeds.
 		if len(key) == 0 {
 			key = []byte("k")
 		}
@@ -126,39 +130,79 @@ func FuzzAppendReplayRoundTrip(f *testing.F) {
 		}
 
 		w, _ := openWithPolicy(t, pol)
-		defer w.Close()
+		defer func() { _ = w.Close() }()
 
-		// write a prefix of random length 0..3 to have base > 0 cases
-		prefix := rand.Intn(4)
+		// Deterministic RNG per input.
+		r := rand.New(rand.NewSource(int64(lsn) ^ ts ^ int64(len(key))<<17 ^ int64(len(val))<<5))
+
+		// Write a small deterministic prefix (so base>0 paths are covered).
+		prefix := r.Intn(4) // 0..3
+		written := make([]rec, 0, prefix+1)
 		for i := 0; i < prefix; i++ {
-			appendRec(t, w, rec{
+			rr := rec{
 				lsn: uint64(i + 1),
 				ts:  int64(1730000000 + i),
 				k:   []byte{byte('a' + i)},
 				v:   []byte{byte('A' + i)},
-			})
+			}
+			appendRec(t, w, rr)
+			written = append(written, rr)
 		}
-		// one fuzzed record
-		appendRec(t, w, rec{lsn: maxU64(1, lsn), ts: ts, k: key, v: val})
 
-		// base randomly 0..prefix
-		base := uint64(rand.Intn(prefix + 1))
+		// One fuzzed record. Allow arbitrary LSN, but make 0 → prefix+1
+		if lsn == 0 {
+			lsn = uint64(prefix + 1)
+		}
+		fr := rec{lsn: lsn, ts: ts, k: key, v: val}
+		appendRec(t, w, fr)
+		written = append(written, fr)
+
+		// Pick a random base within the prefix, so we often skip the first few.
+		base := uint64(r.Intn(prefix + 1))
+
 		got, err := replayCollect(w, base)
 		if err != nil {
 			t.Fatalf("replay: %v", err)
 		}
-		// all applied LSN must be > base and non-decreasing
-		var last uint64 = base
-		for i, r := range got {
-			if r.lsn <= base {
-				t.Fatalf("applied lsn <= base: %d <= %d", r.lsn, base)
+
+		// Build the expected *applied* sequence (filter by base).
+		expected := filterByBase(written, base)
+
+		// WAL tail-truncation semantics: got must be a prefix of expected.
+		if !isPrefixRecords(expected, got) {
+			t.Fatalf("replay not a prefix (base=%d): want prefix of %v, got %v", base, expected, got)
+		}
+
+		// Optional: internal order sanity.
+		for i := 1; i < len(got); i++ {
+			if got[i].lsn < got[i-1].lsn {
+				t.Fatalf("replayed out of order at %d: %d < %d", i, got[i].lsn, got[i-1].lsn)
 			}
-			if r.lsn < last {
-				t.Fatalf("lsn order violated at %d: %d < %d", i, r.lsn, last)
-			}
-			last = r.lsn
 		}
 	})
+}
+
+func filterByBase(in []rec, base uint64) []rec {
+	out := make([]rec, 0, len(in))
+	for _, r := range in {
+		if r.lsn > base {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+func isPrefixRecords(full, cand []rec) bool {
+	if len(cand) > len(full) {
+		return false
+	}
+	for i := range cand {
+		a, b := full[i], cand[i]
+		if a.lsn != b.lsn || a.ts != b.ts || !bytes.Equal(a.k, b.k) || !bytes.Equal(a.v, b.v) {
+			return false
+		}
+	}
+	return true
 }
 
 func maxU64(a, b uint64) uint64 {
