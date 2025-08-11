@@ -168,42 +168,34 @@ type WorkerPool interface {
 // ** Types:
 
 type workerPool struct {
-	name       string
-	input      TaskQueue
-	minWorkers int64
-	maxWorkers int64
-
-	scaleUpCh   chan struct{}
-	scaleDownCh chan struct{}
-
-	shutdownChans []chan struct{}
-	shutdownLock  sync.Mutex
-
-	lastScaleTime       time.Time
-	scaleCooldown       time.Duration
-	smoothedRequired    atomic.Int64
-	hysteresisThreshold int64
-	maxScaleDown        int64
-
-	processFn TaskFn
-	scalerFn  ScalerFn
-
-	wg       sync.WaitGroup
-	taskPool *sync.Pool
-
-	ctx    context.Context
-	cancel context.CancelFunc
-	lgr    logger.Logger
-	config *Config
-
-	workerCount atomic.Int64
-	avgProcTime atomic.Int64
-
+	lastScaleTime         time.Time
+	input                 TaskQueue
+	ctx                   context.Context
+	lgr                   logger.Logger
 	activeWorkersMetric   prometheus.Gauge
 	tasksTotalMetric      prometheus.Counter
 	taskDurationMetric    prometheus.Observer
 	totalScaledUpMetric   prometheus.Counter
 	totalScaledDownMetric prometheus.Counter
+	scaleUpCh             chan struct{}
+	scaleDownCh           chan struct{}
+	processFn             TaskFn
+	scalerFn              ScalerFn
+	taskPool              *sync.Pool
+	cancel                context.CancelFunc
+	config                *Config
+	name                  string
+	shutdownChans         []chan struct{}
+	wg                    sync.WaitGroup
+	minWorkers            int64
+	maxWorkers            int64
+	scaleCooldown         time.Duration
+	smoothedRequired      atomic.Int64
+	hysteresisThreshold   int64
+	maxScaleDown          int64
+	workerCount           atomic.Int64
+	avgProcTime           atomic.Int64
+	shutdownLock          sync.Mutex
 }
 
 // ** Methods:
@@ -554,9 +546,14 @@ func NewWorkerPool(ctx context.Context, config *Config) WorkerPool {
 		panic("invalid worker configuration")
 	}
 
-	lgr := logger.MustGetLogger(ctx)
+	if config.Prometheus == nil {
+		config.Prometheus = prometheus.DefaultRegisterer
+	}
 
+	lgr := logger.MustGetLogger(ctx)
 	nctx, cancel := context.WithCancel(ctx)
+
+	InitPrometheus(config.Prometheus)
 
 	label := prometheus.Labels{"pool": config.Name}
 
@@ -593,9 +590,9 @@ func NewWorkerPool(ctx context.Context, config *Config) WorkerPool {
 }
 
 // Initialise Prometheus metrics for this module.
-func InitPrometheus() {
+func InitPrometheus(reg prometheus.Registerer) {
 	prometheusInitOnce.Do(func() {
-		prometheus.MustRegister(
+		reg.MustRegister(
 			activeWorkers,
 			tasksTotal,
 			taskDuration,

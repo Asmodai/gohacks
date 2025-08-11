@@ -119,8 +119,8 @@ var (
 			Name: "timedcache_delete_total",
 			Help: "Number of cache deletions"},
 		[]string{"timedcache"})
-	//nolint:gochecknoglobals
 
+	//nolint:gochecknoglobals
 	flushTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "timedcache_flush_total",
@@ -362,6 +362,7 @@ func (obj *timedCache) Delete(key any) (any, bool) {
 	{
 		if itm, found := obj.items[key]; found {
 			delete(obj.items, key)
+
 			val = itm.Object
 			canEvict = true
 			evict = obj.onEvicted
@@ -452,6 +453,12 @@ func (obj *timedCache) Expired() bool {
 
 // Create a new timed cache with the given configuration.
 func New(config *Config) TimedCache {
+	if config.Prometheus == nil {
+		config.Prometheus = prometheus.DefaultRegisterer
+	}
+
+	InitPrometheus(config.Prometheus)
+
 	if len(config.Name) == 0 {
 		config.Name = "Default"
 	}
@@ -478,9 +485,9 @@ func New(config *Config) TimedCache {
 }
 
 // Initialise Prometheus metrics.
-func InitPrometheus() {
+func InitPrometheus(reg prometheus.Registerer) {
 	prometheusInitOnce.Do(func() {
-		prometheus.MustRegister(
+		reg.MustRegister(
 			itemsGauge,
 			updatedGauge,
 			getTotal,

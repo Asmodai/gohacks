@@ -49,7 +49,8 @@ import (
 func TestDI(t *testing.T) {
 	var (
 		ctx  context.Context = context.TODO()
-		inst Memoise         = NewMemoise()
+		cfg  *Config         = NewDefaultConfig()
+		inst Memoise         = NewMemoise(cfg)
 		err  error
 	)
 

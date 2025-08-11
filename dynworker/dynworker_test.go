@@ -55,8 +55,6 @@ import (
 // ** Tests:
 
 func TestDynworker(t *testing.T) {
-	InitPrometheus()
-
 	mocker := gomock.NewController(t)
 	defer mocker.Finish()
 

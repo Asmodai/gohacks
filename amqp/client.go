@@ -147,25 +147,11 @@ type Client interface {
 // ** Types:
 
 type client struct {
-	cfg     *Config
-	conn    amqpshim.Connection // was *goamqp.Connection
-	channel amqpshim.Channel    // was *goamqp.Channel
-
-	dialFn DialFn
-	lgr    logger.Logger
-
-	ctx    context.Context
-	cancel context.CancelFunc
-
-	connMux    sync.Mutex
-	chanMux    sync.Mutex
-	metricsMux sync.Mutex
-
-	connected    bool
-	lastMsgCount int64
-
-	pool dynworker.WorkerPool
-
+	conn                   amqpshim.Connection // was *goamqp.Connection
+	channel                amqpshim.Channel    // was *goamqp.Channel
+	lgr                    logger.Logger
+	ctx                    context.Context
+	pool                   dynworker.WorkerPool
 	disconnectMetric       prometheus.Counter
 	reconnectAttemptMetric prometheus.Counter
 	consumeMetric          prometheus.Counter
@@ -173,6 +159,14 @@ type client struct {
 	rejectMetric           prometheus.Counter
 	publishMetric          prometheus.Counter
 	publishErrorMetric     prometheus.Counter
+	cfg                    *Config
+	dialFn                 DialFn
+	cancel                 context.CancelFunc
+	lastMsgCount           int64
+	connMux                sync.Mutex
+	chanMux                sync.Mutex
+	metricsMux             sync.Mutex
+	connected              bool
 }
 
 // ** Methods:
@@ -496,8 +490,9 @@ func NewClient(ctx context.Context, cfg *Config, pool dynworker.WorkerPool) Clie
 	}
 
 	lgr := logger.MustGetLogger(ctx)
-
 	nctx, cancel := context.WithCancel(ctx)
+
+	InitPrometheus(cfg.Prometheus)
 
 	label := prometheus.Labels{"consumer": cfg.ConsumerName}
 
@@ -526,9 +521,9 @@ func NewClient(ctx context.Context, cfg *Config, pool dynworker.WorkerPool) Clie
 }
 
 // Initialise Prometheus metrics for this module.
-func InitPrometheus() {
+func InitPrometheus(reg prometheus.Registerer) {
 	prometheusInitOnce.Do(func() {
-		prometheus.MustRegister(
+		reg.MustRegister(
 			disconnectTotal,
 			reconnectAttemptTotal,
 			consumeTotal,

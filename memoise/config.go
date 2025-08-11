@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// dialer.go --- AMQP mock dialer.
+// config.go --- Configuration.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -30,45 +30,35 @@
 // SOFTWARE.
 
 // * Comments:
-//
-//
 
 // * Package:
 
-package amqpmock
+package memoise
 
 // * Imports:
 
-import (
-	"crypto/tls"
-
-	"github.com/Asmodai/gohacks/amqp/amqpshim"
-)
-
-// * Constants:
-
-// * Variables:
+import "github.com/prometheus/client_golang/prometheus"
 
 // * Code:
 
-// ** Type:
+// ** Types:
 
-type MockDialer struct {
-	Connection amqpshim.Connection
-	Error      error
-	URL        string
+type Config struct {
+	// Prometheus registerer.
+	Prometheus prometheus.Registerer `json:"-"`
+
+	// Instance name.
+	//
+	// This gets used for Prometheus metrics should you have more than
+	// one memoiser in your application.
+	Name string `json:"-"`
 }
 
-// ** Methods:
+// ** Functions:
 
-func (obj *MockDialer) Dial(url string) (amqpshim.Connection, error) {
-	obj.URL = url
-
-	return obj.Connection, obj.Error
+func NewDefaultConfig() *Config {
+	return &Config{
+		Prometheus: prometheus.DefaultRegisterer}
 }
 
-func (obj *MockDialer) DialTLS(url string, _ *tls.Config) (amqpshim.Connection, error) {
-	return obj.Dial(url)
-}
-
-// * dialer.go ends here.
+// * config.go ends here.

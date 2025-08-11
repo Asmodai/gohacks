@@ -27,7 +27,7 @@ var (
 #### func  InitPrometheus
 
 ```go
-func InitPrometheus()
+func InitPrometheus(reg prometheus.Registerer)
 ```
 Initialise Prometheus metrics for this module.
 
@@ -57,24 +57,27 @@ func NewClient(ctx context.Context, cfg *Config, pool dynworker.WorkerPool) Clie
 
 ```go
 type Config struct {
-	Username              string         `json:"username"`
-	Password              string         `config_obscure:"true" json:"password"`
-	Hostname              string         `json:"hostname"`
+	Prometheus prometheus.Registerer `json:"-"`
+
+	Username     string `json:"username"`
+	Password     string `config_obscure:"true" json:"password"`
+	Hostname     string `json:"hostname"`
+	VirtualHost  string `json:"vhost"`
+	QueueName    string `json:"queue_name"`
+	ConsumerName string `json:"consumer_name"`
+
 	Port                  int            `json:"port"`
-	VirtualHost           string         `json:"vhost"`
-	QueueName             string         `json:"queue_name"`
-	QueueIsDurable        bool           `json:"queue_is_durable"`
-	QueueDeleteWhenUnused bool           `json:"queue_delete_when_unused"`
-	QueueIsExclusive      bool           `json:"queue_is_exclusive"`
-	QueueNoWait           bool           `json:"queue_no_wait"`
 	PrefetchCount         int64          `json:"prefetch_count"`
 	PollInterval          types.Duration `json:"poll_interval"`
 	ReconnectDelay        types.Duration `json:"reconnect_delay"`
-	ConsumerName          string         `json:"consumer_name"`
 	MaxRetryConnect       int            `json:"max_retry_connect"`
 	MaxWorkers            int64          `json:"max_workers"`
 	MinWorkers            int64          `json:"min_workers"`
 	WorkerIdleTimeout     types.Duration `json:"worker_idle_timeout"`
+	QueueIsDurable        bool           `json:"queue_is_durable"`
+	QueueDeleteWhenUnused bool           `json:"queue_delete_when_unused"`
+	QueueIsExclusive      bool           `json:"queue_is_exclusive"`
+	QueueNoWait           bool           `json:"queue_no_wait"`
 }
 ```
 

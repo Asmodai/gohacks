@@ -23,7 +23,7 @@ var (
 #### func  InitPrometheus
 
 ```go
-func InitPrometheus()
+func InitPrometheus(reg prometheus.Registerer)
 ```
 Initialise Prometheus metrics for this module.
 
@@ -31,13 +31,30 @@ Initialise Prometheus metrics for this module.
 
 ```go
 type Config struct {
-	Name        string        // Worker pool name for logger and metrics.
-	MinWorkers  int64         // Minimum number of workers.
-	MaxWorkers  int64         // Maximum number of workers.
-	IdleTimeout time.Duration // Idle timeout duration.
-	WorkerFunc  TaskFn        // Function to use as the worker.
-	ScalerFunc  ScalerFn      // Function to use to determine scaling.
-	InputQueue  TaskQueue     // Custom queue to use.
+
+	// Custom queue to use.
+	InputQueue TaskQueue
+
+	// Prometheus registerer.
+	Prometheus prometheus.Registerer
+
+	// Function to use as the worker.
+	WorkerFunc TaskFn
+
+	// Function to use to determine scaling.
+	ScalerFunc ScalerFn
+
+	// Worker pool name for logger and metrics.
+	Name string
+
+	// Minimum number of workers.
+	MinWorkers int64
+
+	// Maximum number of workers.
+	MaxWorkers int64
+
+	// Idle timeout duration.
+	IdleTimeout time.Duration
 }
 ```
 

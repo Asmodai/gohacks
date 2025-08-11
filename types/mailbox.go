@@ -40,14 +40,6 @@ package types
 import (
 	"context"
 	"sync"
-	"time"
-)
-
-// * Constants:
-
-const (
-	// Default deadline for context timeouts.
-	defaultCtxDeadline time.Duration = 5 * time.Second
 )
 
 // * Code:
@@ -82,7 +74,6 @@ func (m *Mailbox) Put(elem Datum) bool {
 
 			return false
 		}
-
 	}
 	// CRITICAL SECTION END.
 	m.mu.Unlock()

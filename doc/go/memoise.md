@@ -20,6 +20,13 @@ var (
 )
 ```
 
+#### func  InitPrometheus
+
+```go
+func InitPrometheus(reg prometheus.Registerer)
+```
+Initialise Prometheus metrics.
+
 #### func  SetMemoiser
 
 ```go
@@ -34,6 +41,28 @@ type CallbackFn func() (any, error)
 ```
 
 Memoisation function type.
+
+#### type Config
+
+```go
+type Config struct {
+	// Prometheus registerer.
+	Prometheus prometheus.Registerer `json:"-"`
+
+	// Instance name.
+	//
+	// This gets used for Prometheus metrics should you have more than
+	// one memoiser in your application.
+	Name string `json:"-"`
+}
+```
+
+
+#### func  NewDefaultConfig
+
+```go
+func NewDefaultConfig() *Config
+```
 
 #### type Memoise
 
@@ -73,6 +102,6 @@ fails.
 #### func  NewMemoise
 
 ```go
-func NewMemoise() Memoise
+func NewMemoise(cfg *Config) Memoise
 ```
 Create a new memoisation object.

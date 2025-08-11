@@ -33,10 +33,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package memoise
@@ -46,7 +42,37 @@ package memoise
 import (
 	"sync"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"gitlab.com/tozd/go/errors"
+)
+
+// * Variables:
+
+var (
+	//nolint:gochecknoglobals
+	checkTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "memoise_check_total",
+			Help: "Number of calls to the memoiser value checker"},
+		[]string{"memoise", "result"})
+
+	//nolint:gochecknoglobals
+	loadDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "memoise_load_duration_seconds",
+			Help:    "Callback runtime duration",
+			Buckets: prometheus.DefBuckets},
+		[]string{"memoise"})
+
+	//nolint:gochecknoglobals
+	inFlightGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "memoise_inflight",
+			Help: "Callbacks in flight"},
+		[]string{"memoise"})
+
+	//nolint:gochecknoglobals
+	prometheusInitOnce sync.Once
 )
 
 // * Code:
@@ -68,11 +94,22 @@ type Memoise interface {
 	Reset()
 }
 
+type entry struct {
+	ready chan struct{}
+	val   any
+	err   error
+}
+
 // Implementation of the memoisation type.
 type memoise struct {
-	sync.RWMutex
-
-	store map[string]any
+	checkHit      prometheus.Counter
+	checkMiss     prometheus.Counter
+	checkErr      prometheus.Counter
+	loadHist      prometheus.Observer
+	inflightGauge prometheus.Gauge
+	store         map[string]*entry
+	name          string
+	mu            sync.RWMutex
 }
 
 // ** Methods:
@@ -82,50 +119,105 @@ type memoise struct {
 // stores the result, and returns it.
 // Thread-safe.
 func (obj *memoise) Check(name string, callback CallbackFn) (any, error) {
-	obj.RLock()
-	result, ok := obj.store[name]
-	obj.RUnlock()
+	obj.mu.RLock()
+	result := obj.store[name]
+	obj.mu.RUnlock()
 
-	// If we get a hit, return it.
-	if ok {
-		return result, nil
+	if result != nil {
+		<-result.ready
+
+		return result.val, errors.WithStack(result.err)
 	}
 
-	// Miss, so obtain a lock.
-	obj.Lock()
-	defer obj.Unlock()
+	// Miss, create a placeholder.
+	result = &entry{ready: make(chan struct{})}
 
-	// Sanity check in case we lost a race.
-	if result, ok := obj.store[name]; ok {
-		return result, nil
+	obj.mu.Lock()
+	// CRITICAL SECTION START.
+	{
+		// Re-check after acquiring write lock.
+		if exist := obj.store[name]; exist != nil {
+			obj.mu.Unlock() // Exit critical section/
+			<-exist.ready
+
+			return exist.val, errors.WithStack(exist.err)
+		}
+
+		obj.store[name] = result
 	}
+	// CRITICAL SECTION END.
+	obj.mu.Unlock()
 
-	// Still a miss.
-	res, err := callback()
+	val, err := callback()
 	if err != nil {
-		return nil, errors.WithStack(err)
+		result.err = errors.WithStack(err)
+		close(result.ready)
+
+		obj.mu.Lock()
+		// CRITICAL SECTION START.
+		{
+			delete(obj.store, name)
+		}
+		// CRITICAL SECTION END.
+		obj.mu.Unlock()
+
+		return nil, errors.WithStack(result.err)
 	}
 
-	// Store the result.
-	obj.store[name] = res
+	result.val = val
+	close(result.ready)
 
-	return res, nil
+	return val, nil
 }
 
 func (obj *memoise) Reset() {
-	obj.Lock()
-	defer obj.Unlock()
-
-	obj.store = make(map[string]any)
+	obj.mu.Lock()
+	// CRITICAL SECTION START.
+	{
+		obj.store = make(map[string]*entry)
+	}
+	// CRITICAL SECTION END.
+	obj.mu.Unlock()
 }
 
 // ** Functions:
 
 // Create a new memoisation object.
-func NewMemoise() Memoise {
-	return &memoise{
-		store: make(map[string]any),
+func NewMemoise(cfg *Config) Memoise {
+	if cfg.Prometheus == nil {
+		cfg.Prometheus = prometheus.DefaultRegisterer
 	}
+
+	InitPrometheus(cfg.Prometheus)
+
+	if len(cfg.Name) == 0 {
+		cfg.Name = "Default"
+	}
+
+	label := prometheus.Labels{"memoise": cfg.Name}
+	curried, _ := checkTotal.CurryWith(label)
+	hit := curried.WithLabelValues("hit")
+	miss := curried.WithLabelValues("miss")
+	errc := curried.WithLabelValues("error")
+
+	return &memoise{
+		name:          cfg.Name,
+		store:         make(map[string]*entry),
+		checkHit:      hit,
+		checkMiss:     miss,
+		checkErr:      errc,
+		inflightGauge: inFlightGauge.With(label),
+		loadHist:      loadDuration.With(label)}
+}
+
+// Initialise Prometheus metrics.
+func InitPrometheus(reg prometheus.Registerer) {
+	prometheusInitOnce.Do(func() {
+		reg.MustRegister(
+			checkTotal,
+			loadDuration,
+			inFlightGauge)
+	})
 }
 
 // * memoise.go ends here.

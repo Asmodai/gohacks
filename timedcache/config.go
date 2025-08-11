@@ -29,23 +29,40 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Package:
+
 package timedcache
+
+// * Imports:
+
+import (
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+// * Constants:
 
 const (
 	DefaultCacheExpiration int = 1000
 )
 
+// * Code:
+
+// ** Types:
+
 type Config struct {
-	OnEvicted      OnEvictFn `config_hide:"true"     json:"-"`
-	Name           string    `json:"-"`
-	ExpirationTime int       `json:"expiration_time"`
+	OnEvicted      OnEvictFn             `config_hide:"true"     json:"-"`
+	ExpirationTime int                   `json:"expiration_time"`
+	Name           string                `json:"-"`
+	Prometheus     prometheus.Registerer `json:"-"`
 }
+
+// ** Functions:
 
 // Create a timed cache with a default configuration.
 func NewDefaultConfig() *Config {
 	return &Config{
-		ExpirationTime: DefaultCacheExpiration,
-	}
+		Prometheus:     prometheus.DefaultRegisterer,
+		ExpirationTime: DefaultCacheExpiration}
 }
 
-// config.go ends here.
+// * config.go ends here.

@@ -128,9 +128,9 @@ type ConsumeResults struct {
 }
 
 type GetResults struct {
+	Error   error
 	Message goamqp.Delivery
 	Ok      bool
-	Error   error
 }
 
 type NotifyBlockedResults struct {
@@ -168,13 +168,13 @@ type PublishDeferredResults struct {
 }
 
 type QueueDeclareResults struct {
-	Queue goamqp.Queue
 	Error error
+	Queue goamqp.Queue
 }
 
 type QueueDeleteResults struct {
-	Purged int
 	Error  error
+	Purged int
 }
 
 // ** Function Types:

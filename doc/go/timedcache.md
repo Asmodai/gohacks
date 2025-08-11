@@ -41,7 +41,7 @@ var (
 #### func  InitPrometheus
 
 ```go
-func InitPrometheus()
+func InitPrometheus(reg prometheus.Registerer)
 ```
 Initialise Prometheus metrics.
 
@@ -64,9 +64,10 @@ Type definition for the map of items in the cache.
 
 ```go
 type Config struct {
-	OnEvicted      OnEvictFn `config_hide:"true"     json:"-"`
-	Name           string    `json:"-"`
-	ExpirationTime int       `json:"expiration_time"`
+	OnEvicted      OnEvictFn             `config_hide:"true"     json:"-"`
+	ExpirationTime int                   `json:"expiration_time"`
+	Name           string                `json:"-"`
+	Prometheus     prometheus.Registerer `json:"-"`
 }
 ```
 
