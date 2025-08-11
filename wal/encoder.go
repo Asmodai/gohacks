@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// decoder.go --- Decoder helper.
+// encoder.go --- Encoder helpers.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -43,57 +43,36 @@ import "encoding/binary"
 
 // ** Type:
 
-type decoder struct {
+type encoder struct {
 	data   []byte
-	length int64
-	offset int64
+	offset int
 }
 
 // ** Methods:
 
-func (e *decoder) u32() (uint32, bool) {
-	if e.offset+i32Size > e.length {
-		return 0, false
-	}
-
-	val := binary.LittleEndian.Uint32(e.data[e.offset : e.offset+i32Size])
+func (e *encoder) u32(val uint32) {
+	binary.LittleEndian.PutUint32(e.data[e.offset:e.offset+i32Size], val)
 	e.offset += i32Size
-
-	return val, true
 }
 
-func (e *decoder) u64() (uint64, bool) {
-	if e.offset+i64Size > e.length {
-		return 0, false
-	}
-
-	val := binary.LittleEndian.Uint64(e.data[e.offset : e.offset+i64Size])
+func (e *encoder) u64(val uint64) {
+	binary.LittleEndian.PutUint64(e.data[e.offset:e.offset+i64Size], val)
 	e.offset += i64Size
-
-	return val, true
 }
 
-func (e *decoder) bytes(length uint32) ([]byte, bool) {
-	len64 := int64(length)
+func (e *encoder) copy(data []byte) {
+	length := len(data)
 
-	if e.offset+len64 > e.length {
-		return []byte{}, false
-	}
-
-	val := e.data[e.offset : e.offset+len64]
-	e.offset += len64
-
-	return val, true
+	copy(e.data[e.offset:e.offset+length], data)
+	e.offset += length
 }
 
-// ** Functions:
+// ** Function:
 
-func newDecoder(data []byte) decoder {
-	return decoder{
+func newEncoder(data []byte) encoder {
+	return encoder{
 		data:   data,
-		length: int64(len(data)),
-		offset: 0,
-	}
+		offset: 0}
 }
 
-// * decoder.go ends here.
+// * encoder.go ends here.
