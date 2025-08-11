@@ -73,42 +73,6 @@ func (q *Queue) validate() {
 	}
 }
 
-// Unlock the main queue mutex while waiting on cond.Wait().
-//
-// Locks the mutex when done.
-// A goroutine is used to avoid deadlocks.
-// If the context is cancelled, it will exit and lock the mutex on the way
-// out.
-func (q *Queue) waitWithContextUnlocked(ctx context.Context, cond *sync.Cond) error {
-	q.validate()
-
-	done := make(chan struct{})
-
-	go func() {
-		q.Unlock()
-		{
-			// Notice me, senpai!
-			// Notice how we're not locked in here!
-			// Notice how I have a key... to your heart.
-			cond.L.Lock()
-			cond.Wait()
-			cond.L.Unlock()
-		}
-		q.Lock()
-		close(done)
-	}()
-
-	select {
-	case <-ctx.Done():
-		// Relock if the context is done.
-		q.Lock()
-
-		return errors.WithStack(ctx.Err())
-	case <-done:
-		return nil
-	}
-}
-
 // Put an element on to the queue.
 //
 // This blocks.
@@ -141,10 +105,31 @@ func (q *Queue) PutWithContext(ctx context.Context, elem Datum) error {
 	q.Lock()
 	defer q.Unlock()
 
+	cancelled := make(chan struct{})
+
+	go func() {
+		select {
+		case <-ctx.Done():
+			q.Lock()
+			// CRITICAL SECTION START.
+			{
+				q.notFull.Broadcast()
+			}
+			// CRITICAL SECTION END.
+			q.Unlock()
+
+		case <-cancelled:
+		}
+	}()
+
+	defer close(cancelled)
+
 	for q.bounded && len(q.queue) == q.bounds {
-		if err := q.waitWithContextUnlocked(ctx, q.notFull); err != nil {
+		if err := ctx.Err(); err != nil {
 			return errors.WithStack(err)
 		}
+
+		q.notFull.Wait()
 	}
 
 	q.queue = append(q.queue, elem)
@@ -209,10 +194,29 @@ func (q *Queue) GetWithContext(ctx context.Context) (Datum, error) {
 	q.Lock()
 	defer q.Unlock()
 
+	cancelled := make(chan struct{})
+
+	go func() {
+		select {
+		case <-ctx.Done():
+			q.Lock()
+			// CRITICAL SECTION START.
+			{
+				q.notEmpty.Broadcast()
+			}
+			// CRITICAL SECTION END.
+			q.Unlock()
+
+		case <-cancelled:
+		}
+	}()
+
 	for len(q.queue) == 0 {
-		if err := q.waitWithContextUnlocked(ctx, q.notEmpty); err != nil {
+		if err := ctx.Err(); err != nil {
 			return nil, errors.WithStack(err)
 		}
+
+		q.notEmpty.Wait()
 	}
 
 	elem := q.queue[0]

@@ -42,6 +42,10 @@ package types
 // * Imports:
 
 import (
+	"context"
+	"runtime"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -123,6 +127,207 @@ func TestMailboxNoContext(t *testing.T) {
 			return
 		}
 	})
+}
+
+// ** Benchmarks:
+
+var benchMsg Datum = struct{}{} // adjust if Datum isn't `any`
+
+// Single goroutine round-trip (no contention).
+func BenchmarkMailbox_Serial_PutGet(b *testing.B) {
+	m := NewMailbox()
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_ = m.Put(benchMsg)
+		_, _ = m.Get()
+	}
+}
+
+// 1 producer / 1 consumer, steady flow.
+func BenchmarkMailbox_1P1C(b *testing.B) {
+	m := NewMailbox()
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	go func(n int) {
+		defer wg.Done()
+		for i := 0; i < n; i++ {
+			_, _ = m.Get()
+		}
+	}(b.N)
+
+	for i := 0; i < b.N; i++ {
+		_ = m.Put(benchMsg)
+	}
+
+	wg.Wait()
+}
+
+// Many producers & consumers, exercises wakeups and contention.
+func BenchmarkMailbox_ManyP_ManyC(b *testing.B) {
+	type cfg struct{ P, C int }
+	cases := []cfg{
+		{P: 1, C: 1},
+		{P: runtime.GOMAXPROCS(0), C: runtime.GOMAXPROCS(0)},
+		{P: 8, C: 8},
+	}
+
+	for _, tc := range cases {
+		name := benchName("P", tc.P, "C", tc.C)
+		b.Run(name, func(b *testing.B) {
+			m := NewMailbox()
+			var got int64
+			want := int64(b.N)
+
+			// Consumers
+			var cg sync.WaitGroup
+			cg.Add(tc.C)
+			ctx, cancel := context.WithCancel(context.Background())
+			for i := 0; i < tc.C; i++ {
+				go func() {
+					defer cg.Done()
+					for {
+						v, ok := m.GetWithContext(ctx)
+						if !ok {
+							return
+						}
+						_ = v
+						if atomic.AddInt64(&got, 1) >= want {
+							// keep draining until cancelled
+						}
+					}
+				}()
+			}
+
+			// Producers share the load
+			var pg sync.WaitGroup
+			pg.Add(tc.P)
+			per := b.N / tc.P
+			rem := b.N % tc.P
+
+			b.ReportAllocs()
+			b.ResetTimer()
+
+			for p := 0; p < tc.P; p++ {
+				n := per
+				if p == 0 {
+					n += rem
+				}
+				go func(n int) {
+					defer pg.Done()
+					for i := 0; i < n; i++ {
+						_ = m.Put(benchMsg)
+					}
+				}(n)
+			}
+
+			pg.Wait()
+
+			// Wait until all observed
+			for atomic.LoadInt64(&got) < want {
+				runtime.Gosched()
+			}
+			cancel()
+			cg.Wait()
+		})
+	}
+}
+
+// Hot path: each goroutine does Put then Get (balanced).
+func BenchmarkMailbox_RunParallel_Pairs(b *testing.B) {
+	m := NewMailbox()
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_ = m.Put(benchMsg)
+			_, _ = m.Get()
+		}
+	})
+}
+
+// Non-blocking try paths under churn.
+func BenchmarkMailbox_TryPutTryGet(b *testing.B) {
+	m := NewMailbox()
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if !m.TryPut(benchMsg) {
+			_, _ = m.TryGet()
+		}
+	}
+}
+
+// Context-cancel microbenches (fast-fail).
+func BenchmarkMailbox_GetWithContext_Canceled(b *testing.B) {
+	m := NewMailbox()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = m.GetWithContext(ctx)
+	}
+}
+
+func BenchmarkMailbox_PutWithContext_Canceled(b *testing.B) {
+	m := NewMailbox()
+	// Fill the mailbox so Put will need to wait.
+	_ = m.Put(benchMsg)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_ = m.PutWithContext(ctx, benchMsg)
+	}
+}
+
+// tiny, alloc-free name helper
+func benchName(k1 string, v1 int, k2 string, v2 int) string {
+	var buf [64]byte
+	n := 0
+	n += copy(buf[n:], k1)
+	n += itoaInto(&buf, n, v1)
+	n += copy(buf[n:], "_")
+	n += copy(buf[n:], k2)
+	n += itoaInto(&buf, n, v2)
+	return string(buf[:n])
+}
+
+func itoaInto(b *[64]byte, off int, n int) int {
+	if n == 0 {
+		b[off] = '0'
+		return 1
+	}
+	start := off
+	if n < 0 {
+		b[off] = '-'
+		off++
+		n = -n
+	}
+	// write digits into temp
+	var tmp [20]byte
+	i := len(tmp)
+	for n > 0 {
+		i--
+		tmp[i] = byte('0' + (n % 10))
+		n /= 10
+	}
+	c := copy(b[off:], tmp[i:])
+	return (off - start) + c
 }
 
 // * mailbox_test.go ends here.

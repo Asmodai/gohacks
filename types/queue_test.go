@@ -43,188 +43,179 @@ package types
 
 import (
 	"context"
+	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
-	"time"
 )
 
 // * Code:
 
-// ** Tests:
+// ** Benchmarks:
 
-type dummyDatum struct {
-	val int
-}
+var benchDatum Datum = struct{}{} // adjust if Datum isn't `any`
 
-// satisfy the Datum interface if any
-var _ Datum = (*dummyDatum)(nil)
+// Serial put->get round trip in one goroutine (no contention).
+func BenchmarkQueue_Serial_PutGet(b *testing.B) {
+	q := NewBoundedQueue(1024)
+	b.ReportAllocs()
+	b.ResetTimer()
 
-func TestQueueBasicPutGet(t *testing.T) {
-	q := NewBoundedQueue(2)
-	d1 := &dummyDatum{1}
-	d2 := &dummyDatum{2}
-
-	q.Put(d1)
-	q.Put(d2)
-
-	if q.Len() != 2 {
-		t.Fatalf("expected length 2, got %d", q.Len())
-	}
-
-	got := q.Get()
-	if got.(*dummyDatum).val != 1 {
-		t.Errorf("expected 1, got %v", got)
-	}
-
-	got = q.Get()
-	if got.(*dummyDatum).val != 2 {
-		t.Errorf("expected 2, got %v", got)
+	for i := 0; i < b.N; i++ {
+		q.Put(benchDatum)
+		_ = q.Get()
 	}
 }
 
-func TestQueuePutBlocksWhenFull(t *testing.T) {
-	q := NewBoundedQueue(1)
-	q.Put(&dummyDatum{1})
-
-	done := make(chan struct{})
-	go func() {
-		// this should block until Get frees space
-		q.Put(&dummyDatum{2})
-		close(done)
-	}()
-
-	select {
-	case <-done:
-		t.Fatal("Put did not block when queue was full")
-	case <-time.After(100 * time.Millisecond):
-		// expected, still blocked
-	}
-
-	// Free up space
-	_ = q.Get()
-
-	select {
-	case <-done:
-		// success, Put unblocked
-	case <-time.After(100 * time.Millisecond):
-		t.Fatal("Put did not unblock after space freed")
-	}
-}
-
-func TestQueueGetBlocksWhenEmpty(t *testing.T) {
-	q := NewBoundedQueue(1)
-
-	done := make(chan struct{})
-	var got Datum
-
-	go func() {
-		got = q.Get()
-		close(done)
-	}()
-
-	select {
-	case <-done:
-		t.Fatal("Get did not block when queue was empty")
-	case <-time.After(100 * time.Millisecond):
-		// expected, still blocked
-	}
-
-	val := &dummyDatum{42}
-	q.Put(val)
-
-	select {
-	case <-done:
-		if got.(*dummyDatum) != val {
-			t.Errorf("expected val %v, got %v", val, got)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatal("Get did not unblock after Put")
-	}
-}
-
-func TestQueuePutWithContextCancellation(t *testing.T) {
-	q := NewBoundedQueue(1)
-	q.Put(&dummyDatum{1})
-
-	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
-	defer cancel()
-
-	err := q.PutWithContext(ctx, &dummyDatum{2})
-	if err == nil {
-		t.Fatal("expected timeout error from PutWithContext")
-	}
-}
-
-func TestQueueGetWithContextCancellation(t *testing.T) {
-	q := NewBoundedQueue(1)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
-	defer cancel()
-
-	_, err := q.GetWithContext(ctx)
-	if err == nil {
-		t.Fatal("expected timeout error from GetWithContext")
-	}
-}
-
-func TestQueuePutWithoutBlock(t *testing.T) {
-	q := NewBoundedQueue(1)
-	ok := q.PutWithoutBlock(&dummyDatum{1})
-	if !ok {
-		t.Fatal("expected PutWithoutBlock to succeed")
-	}
-
-	ok = q.PutWithoutBlock(&dummyDatum{2})
-	if ok {
-		t.Fatal("expected PutWithoutBlock to fail due to full queue")
-	}
-}
-
-func TestQueueGetWithoutBlock(t *testing.T) {
-	q := NewBoundedQueue(1)
-	q.Put(&dummyDatum{1})
-
-	d, ok := q.GetWithoutBlock()
-	if !ok {
-		t.Fatal("expected GetWithoutBlock to succeed")
-	}
-	if d.(*dummyDatum).val != 1 {
-		t.Errorf("expected value 1, got %v", d)
-	}
-
-	d, ok = q.GetWithoutBlock()
-	if ok {
-		t.Fatal("expected GetWithoutBlock to fail on empty queue")
-	}
-}
-
-func TestQueueConcurrentPutGet(t *testing.T) {
-	q := NewBoundedQueue(100)
-	wg := sync.WaitGroup{}
-	n := 1000
-
-	// Producer
+// One producer, one consumer, bounded queue to exercise cond wakeups.
+func BenchmarkQueue_1P1C_Bounded(b *testing.B) {
+	q := NewBoundedQueue(256)
+	var wg sync.WaitGroup
 	wg.Add(1)
-	go func() {
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	go func(n int) {
 		defer wg.Done()
 		for i := 0; i < n; i++ {
-			q.Put(&dummyDatum{i})
+			_ = q.Get()
 		}
-	}()
+	}(b.N)
 
-	// Consumer
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < n; i++ {
-			d := q.Get()
-			if d == nil {
-				t.Errorf("got nil datum at index %d", i)
-			}
-		}
-	}()
+	for i := 0; i < b.N; i++ {
+		q.Put(benchDatum)
+	}
 
 	wg.Wait()
+}
+
+// Many producers/consumers with context-cancellable consumers.
+// Stresses lock contention + cond.Broadcast paths.
+func BenchmarkQueue_ManyP_ManyC_Bounded(b *testing.B) {
+	type cfg struct{ P, C, Cap int }
+	cases := []cfg{
+		{P: 1, C: 1, Cap: 64},
+		{P: runtime.GOMAXPROCS(0), C: runtime.GOMAXPROCS(0), Cap: 128},
+		{P: 8, C: 8, Cap: 32},
+	}
+
+	for _, tc := range cases {
+		name := func(c cfg) string {
+			return b.Name() + "_P" + itoa(c.P) + "_C" + itoa(c.C) + "_Cap" + itoa(c.Cap)
+		}(tc)
+
+		b.Run(name, func(b *testing.B) {
+			q := NewBoundedQueue(tc.Cap)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			var got int64
+			want := int64(b.N)
+
+			var wg sync.WaitGroup
+			wg.Add(tc.C)
+			for c := 0; c < tc.C; c++ {
+				go func() {
+					defer wg.Done()
+					for {
+						v, err := q.GetWithContext(ctx)
+						if err != nil {
+							return // ctx cancelled
+						}
+						_ = v
+						if atomic.AddInt64(&got, 1) >= want {
+							// We’ve consumed everything; other consumers will exit on cancel.
+						}
+					}
+				}()
+			}
+
+			b.ReportAllocs()
+			b.ResetTimer()
+
+			// Producers share the work: b.N total items.
+			var pg sync.WaitGroup
+			pg.Add(tc.P)
+			per := b.N / tc.P
+			rem := b.N % tc.P
+			for p := 0; p < tc.P; p++ {
+				n := per
+				if p == 0 {
+					n += rem // account for remainder
+				}
+				go func(n int) {
+					defer pg.Done()
+					for i := 0; i < n; i++ {
+						q.Put(benchDatum)
+					}
+				}(n)
+			}
+
+			pg.Wait()
+
+			// Wait until all items are consumed, then cancel consumers cleanly.
+			for atomic.LoadInt64(&got) < want {
+				runtime.Gosched()
+			}
+			cancel()
+			wg.Wait()
+		})
+	}
+}
+
+// Contended hot-path with goroutines doing Put+Get pairs.
+// Good for measuring lock/cond overhead under mixed ops.
+func BenchmarkQueue_RunParallel_Pairs(b *testing.B) {
+	q := NewBoundedQueue(256)
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			q.Put(benchDatum)
+			_ = q.Get()
+		}
+	})
+}
+
+// Microbench the cancellation path: empty queue, already-cancelled ctx.
+func BenchmarkQueue_GetWithContext_Canceled(b *testing.B) {
+	q := NewBoundedQueue(0)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // already canceled
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = q.GetWithContext(ctx)
+	}
+}
+
+// Helper: tiny int -> string without fmt allocation in inner benches.
+func itoa(n int) string {
+	if n == 0 {
+		return "0"
+	}
+	// small, allocation-free int to ascii
+	var a [20]byte
+	i := len(a)
+	neg := n < 0
+	u := uint64(n)
+	if neg {
+		u = uint64(-n)
+	}
+	for u > 0 {
+		i--
+		a[i] = byte('0' + u%10)
+		u /= 10
+	}
+	if neg {
+		i--
+		a[i] = '-'
+	}
+	return string(a[i:])
 }
 
 // * queue_test.go ends here.

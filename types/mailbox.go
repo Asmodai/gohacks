@@ -38,11 +38,8 @@ package types
 // * Imports:
 
 import (
-	"sync"
-
-	"golang.org/x/sync/semaphore"
-
 	"context"
+	"sync"
 	"time"
 )
 
@@ -66,162 +63,128 @@ This is a cheap implementation of a mailbox.
 
 It uses two semaphores to control read and write access, and contains
 a single datum.
-
-This is *not* a queue!
 */
 type Mailbox struct {
-	// The storage element.
-	element Datum
-
-	// The `writeAvailable` semaphore, when acquired, will prevent writes.
-	writeAvailable *semaphore.Weighted
-
-	// The `readAvailable` semaphore, when acquired, will prevent reads.
-	readAvailable *semaphore.Weighted
-
-	// Mutex.
-	mu sync.Mutex
+	ch     chan Datum
+	mu     sync.Mutex
+	closed bool
 }
 
 // ** Methods:
 
 // Put an element into the mailbox.
 func (m *Mailbox) Put(elem Datum) bool {
-	ctx, cancel := context.WithTimeout(
-		context.Background(),
-		defaultCtxDeadline,
-	)
-	defer cancel()
+	m.mu.Lock()
+	// CRITICAL SECTION START.
+	{
+		if m.closed {
+			m.mu.Unlock() // Exit critical section.
 
-	return m.PutWithContext(ctx, elem)
+			return false
+		}
+
+	}
+	// CRITICAL SECTION END.
+	m.mu.Unlock()
+
+	m.ch <- elem
+
+	return true
 }
 
 // Put an element into the mailbox using a context.
 func (m *Mailbox) PutWithContext(ctx context.Context, elem Datum) bool {
-	// Attempt to acquire `writeAvailable` semaphore.
-	if err := m.writeAvailable.Acquire(ctx, 1); err != nil {
-		return false
-	}
-
-	// Semaphore acquired, put elem on queue.
 	m.mu.Lock()
-	m.element = elem
+	// CRITICAL SECTION START.
+	{
+		if m.closed {
+			m.mu.Unlock() // Exit critical section.
+
+			return false
+		}
+	}
+	// CRITICAL SECTION END.
 	m.mu.Unlock()
 
-	// We're no longer full, so release the `readAvailable` semaphore.
-	m.readAvailable.Release(1)
+	select {
+	case m.ch <- elem:
+		return true
 
-	return true
+	case <-ctx.Done():
+		return false
+	}
 }
 
 // Try to put an element into the mailbox.
-func (m *Mailbox) TryPut(item Datum) bool {
-	if !m.writeAvailable.TryAcquire(1) {
-		return false
-	}
-
+func (m *Mailbox) TryPut(elem Datum) bool {
 	m.mu.Lock()
-	m.element = item
+	// CRITICAL SECTION START.
+	{
+		if m.closed {
+			m.mu.Unlock() // Exit critical section.
+
+			return false
+		}
+	}
+	// CRITICAL SECTION END.
 	m.mu.Unlock()
 
-	m.readAvailable.Release(1)
+	select {
+	case m.ch <- elem:
+		return true
 
-	return true
+	default:
+		return false
+	}
 }
 
 // Get an element from the mailbox.  Defaults to using a context with
 // a deadline of 5 seconds.
 func (m *Mailbox) Get() (Datum, bool) {
-	ctx, cancel := context.WithTimeout(
-		context.Background(),
-		defaultCtxDeadline,
-	)
-	defer cancel()
+	value, ok := <-m.ch
 
-	return m.GetWithContext(ctx)
+	return value, ok
 }
 
 // Get an element from the mailbox using the provided context.
 //
 // It is recommended to use a context that has a timeout deadline.
 func (m *Mailbox) GetWithContext(ctx context.Context) (Datum, bool) {
-	// Attempt to acquire the `readAvailable` semaphore
-	if err := m.readAvailable.Acquire(ctx, 1); err != nil {
+	select {
+	case val, ok := <-m.ch:
+		return val, ok
+
+	case <-ctx.Done():
 		return nil, false
 	}
-
-	m.mu.Lock()
-	result := m.element
-	m.element = nil
-	m.mu.Unlock()
-
-	// Release the `writeAvailable` semaphore.
-	m.writeAvailable.Release(1)
-
-	return result, true
 }
 
 // Try to get an element from the mailbox.
 func (m *Mailbox) TryGet() (Datum, bool) {
-	if !m.readAvailable.TryAcquire(1) {
+	select {
+	case val, ok := <-m.ch:
+		return val, ok
+
+	default:
 		return nil, false
 	}
-
-	m.mu.Lock()
-	result := m.element
-	m.element = nil
-	m.mu.Unlock()
-
-	m.writeAvailable.Release(1)
-
-	return result, true
 }
 
 // Does the mailbox contain a value?
 func (m *Mailbox) Full() bool {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	return m.element != nil
+	return len(m.ch) == 1
 }
 
 // Is the mailbox empty like my heart?
 func (m *Mailbox) Empty() bool {
-	return !m.Full()
-}
-
-// Reset the mailbox.
-func (m *Mailbox) Reset() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	m.element = nil
-	m.writeAvailable = semaphore.NewWeighted(1)
-	m.readAvailable = semaphore.NewWeighted(1)
-
-	//nolint:errcheck
-	m.readAvailable.Acquire(context.Background(), 1)
+	return len(m.ch) == 0
 }
 
 // ** Functions:
 
 // Create and return a new empty mailbox.
-//
-// Note: this acquires the `readAvailable` semaphore.
-//
-//nolint:errcheck
 func NewMailbox() *Mailbox {
-	// Please note that the context given here should never be one
-	// passed in by the user, we want a TODO context because *we* are
-	// setting up this initial context.
-	readAvailable := semaphore.NewWeighted(int64(1))
-	readAvailable.Acquire(context.TODO(), 1)
-
-	return &Mailbox{
-		element:        nil,
-		writeAvailable: semaphore.NewWeighted(int64(1)),
-		readAvailable:  readAvailable,
-	}
+	return &Mailbox{ch: make(chan Datum, 1)}
 }
 
 // * mailbox.go ends here.

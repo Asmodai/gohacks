@@ -366,16 +366,12 @@ This is a cheap implementation of a mailbox.
 It uses two semaphores to control read and write access, and contains a single
 datum.
 
-This is *not* a queue!
-
 #### func  NewMailbox
 
 ```go
 func NewMailbox() *Mailbox
 ```
 Create and return a new empty mailbox.
-
-Note: this acquires the `readAvailable` semaphore.
 
 #### func (*Mailbox) Empty
 
@@ -422,13 +418,6 @@ func (m *Mailbox) PutWithContext(ctx context.Context, elem Datum) bool
 ```
 Put an element into the mailbox using a context.
 
-#### func (*Mailbox) Reset
-
-```go
-func (m *Mailbox) Reset()
-```
-Reset the mailbox.
-
 #### func (*Mailbox) TryGet
 
 ```go
@@ -439,7 +428,7 @@ Try to get an element from the mailbox.
 #### func (*Mailbox) TryPut
 
 ```go
-func (m *Mailbox) TryPut(item Datum) bool
+func (m *Mailbox) TryPut(elem Datum) bool
 ```
 Try to put an element into the mailbox.
 
