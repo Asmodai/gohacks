@@ -10,7 +10,7 @@
 
 ```go
 const (
-	ContextKeyLogger = "_DI_LOGGER"
+	ContextKeyLogger = "gohacks/logger@v1"
 )
 ```
 

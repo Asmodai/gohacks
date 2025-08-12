@@ -10,7 +10,7 @@
 
 ```go
 const (
-	ContextKeyResponderChain = "_DI_RESPONDER"
+	ContextKeyResponderChain = "gohacks/responder@v1"
 )
 ```
 

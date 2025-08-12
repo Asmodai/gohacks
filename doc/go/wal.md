@@ -9,6 +9,24 @@
 ## Usage
 
 ```go
+const (
+	// Size of the write-ahead log header.
+	HeaderSize = 4 + 4 + 8 + 8
+
+	// Write-ahead log magic number.
+	//
+	// This is the string `WALX` expressed as a little-endian integer.
+	MagicNumber = 0x584C4157
+
+	// Write-ahead log version number.
+	VersionNumber = 1
+
+	// WAL makes use of 32-bit CRC Castagnoli.
+	FeatureCRC32C uint64 = 1 << 0
+)
+```
+
+```go
 var (
 	ErrKeyTooLarge       = errors.Base("key too large")
 	ErrValueTooLarge     = errors.Base("value too large")
@@ -27,6 +45,45 @@ var (
 type ApplyCallbackFn func(lsn uint64, tstamp int64, key, value []byte) error
 ```
 
+
+#### type Header
+
+```go
+type Header struct {
+	// Write-Ahead Log magic number.
+	//
+	// This equates to the string `WALX`.
+	Magic uint32
+
+	// File format version number.
+	Version uint32
+
+	// Features.
+	Features uint64
+
+	// When the write-ahead log was created.
+	CreatedAt time.Time
+}
+```
+
+
+#### func  ReadHeader
+
+```go
+func ReadHeader(fptr *os.File) (Header, error)
+```
+
+#### func (*Header) HasCRC32C
+
+```go
+func (h *Header) HasCRC32C() bool
+```
+
+#### func (*Header) IsLatestVersion
+
+```go
+func (h *Header) IsLatestVersion() bool
+```
 
 #### type Policy
 

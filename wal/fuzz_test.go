@@ -251,7 +251,7 @@ func FuzzReplayCorruptionPrefixOrError(f *testing.F) {
 		if truncBytes < 0 {
 			truncBytes = -truncBytes
 		}
-		if truncBytes > 0 && truncBytes < sz-int64(headerSize) {
+		if truncBytes > 0 && truncBytes < sz-int64(HeaderSize) {
 			_ = fh.Truncate(sz - truncBytes)
 			sz -= truncBytes
 		}
@@ -262,7 +262,7 @@ func FuzzReplayCorruptionPrefixOrError(f *testing.F) {
 		}
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 		for i := int64(0); i < flips; i++ {
-			pos := int64(headerSize) + r.Int63n(maxI64(0, sz-int64(headerSize)))
+			pos := int64(HeaderSize) + r.Int63n(maxI64(0, sz-int64(HeaderSize)))
 			var b [1]byte
 			_, _ = fh.ReadAt(b[:], pos)
 			b[0] ^= 0xFF

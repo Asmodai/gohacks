@@ -56,14 +56,10 @@ import (
 // * Constants:
 
 const (
-	magicNumber   = 0x584C4157 // WAL magic.  'W' 'A' 'L' 'X'
-	versionNumber = 1
-
 	defaultFileMode = 0o644
 
-	i32Size    = 4 // Size of a 32-bit integer.
-	i64Size    = 8 // Size of a 64-bit integer.
-	headerSize = 8 // Size of the WAL header.
+	i32Size = 4 // Size of a 32-bit integer.
+	i64Size = 8 // Size of a 64-bit integer.
 
 	// Size of the WAL payload prefix (not including the CRC).
 	payloadSizePrefix = i64Size + i64Size + i32Size + i32Size
@@ -392,11 +388,11 @@ func (wal *writeAheadLog) Reset() error {
 	defer wal.mu.Unlock()
 
 	// Truncate back to just the header.
-	if err := wal.fptr.Truncate(headerSize); err != nil {
+	if err := wal.fptr.Truncate(HeaderSize); err != nil {
 		return errors.WithStack(err)
 	}
 
-	wal.bytes = headerSize
+	wal.bytes = HeaderSize
 
 	if err := wal.syncLocked(); err != nil {
 		return errors.WithStack(err)
@@ -412,7 +408,7 @@ func (wal *writeAheadLog) Replay(baseLSN uint64, applyCb ApplyCallbackFn) (uint6
 	wal.mu.Unlock()
 
 	var (
-		pos     = int64(headerSize)
+		pos     = int64(HeaderSize)
 		maxLSN  = baseLSN
 		scratch []byte
 	)
@@ -699,45 +695,6 @@ func writeFullAt(fptr *os.File, data []byte, offset int64) error {
 	return nil
 }
 
-func readHeader(fptr *os.File) (bool, error) {
-	var hdr [headerSize]byte
-
-	if _, err := fptr.ReadAt(hdr[:], 0); err != nil {
-		return false, errors.WithStack(err)
-	}
-
-	if binary.LittleEndian.Uint32(hdr[0:i32Size]) != magicNumber {
-		return false, nil
-	}
-
-	if binary.LittleEndian.Uint32(hdr[i32Size:i64Size]) != versionNumber {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-func writeHeader(fptr *os.File) (int64, error) {
-	var hdr [headerSize]byte
-
-	binary.LittleEndian.PutUint32(hdr[0:4], magicNumber)
-	binary.LittleEndian.PutUint32(hdr[4:8], versionNumber)
-
-	if _, err := fptr.WriteAt(hdr[:], 0); err != nil {
-		fptr.Close()
-
-		return 0, errors.WithStack(err)
-	}
-
-	if err := fptr.Sync(); err != nil {
-		fptr.Close()
-
-		return 0, errors.WithStack(err)
-	}
-
-	return headerSize, nil
-}
-
 func OpenWAL(ctx context.Context, path string, syncEveryBytes int64) (WriteAheadLog, error) {
 	return OpenWALWithPolicy(
 		ctx,
@@ -798,8 +755,8 @@ func OpenWALWithPolicy(parent context.Context, path string, pol Policy) (WriteAh
 		wal.bytes = written
 		wal.lastSyncAt = written
 
-	case finfo.Size() >= headerSize:
-		hdrOk, err := readHeader(fptr)
+	case finfo.Size() >= HeaderSize:
+		hdrOk, _, err := readHeader(fptr)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

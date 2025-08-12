@@ -47,7 +47,7 @@ import (
 // * Constants:
 
 const (
-	ContextKeyTimedCache = "_DI_TIMEDCACHE"
+	ContextKeyTimedCache = "gohacks/timedcache@v1"
 )
 
 // * Variables:

@@ -10,7 +10,7 @@
 
 ```go
 const (
-	ContextKeyMemoise = "_DI_MEMO"
+	ContextKeyMemoise = "gohacks/memoise@v1"
 )
 ```
 

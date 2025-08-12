@@ -352,7 +352,7 @@ func TestReplay_StopsOnCRCMismatch(t *testing.T) {
 
 	// Walk file: header + record1 + record2; we’ll flip the last byte of file.
 	info, _ := f.Stat()
-	if info.Size() <= int64(headerSize)+10 {
+	if info.Size() <= int64(HeaderSize)+10 {
 		t.Fatalf("file too small to corrupt meaningfully")
 	}
 	// read last byte, flip, write back
@@ -390,7 +390,7 @@ func TestOpen_InvalidHeader(t *testing.T) {
 		t.Fatalf("open: %v", err)
 	}
 	// write bad magic/version
-	var hdr [headerSize]byte
+	var hdr [HeaderSize]byte
 	binary.LittleEndian.PutUint32(hdr[0:4], 0xDEADBEEF)
 	binary.LittleEndian.PutUint32(hdr[4:8], 99)
 	_, _ = f.WriteAt(hdr[:], 0)
@@ -440,7 +440,7 @@ func TestReplay_TimestampTooBig(t *testing.T) {
 	finaliseCRC(buf, int(bufLen), w.(*writeAheadLog).crcTab)
 
 	// write directly after header
-	if err := writeFullAt(w.(*writeAheadLog).fptr, buf, int64(headerSize)); err != nil {
+	if err := writeFullAt(w.(*writeAheadLog).fptr, buf, int64(HeaderSize)); err != nil {
 		t.Fatalf("inject: %v", err)
 	}
 	_ = w.Close()

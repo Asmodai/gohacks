@@ -10,7 +10,7 @@
 
 ```go
 const (
-	ContextKeyProcManager = "_DI_PROC_MGR"
+	ContextKeyProcManager = "gohacks/process@v1"
 )
 ```
 

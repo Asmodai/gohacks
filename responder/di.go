@@ -47,7 +47,7 @@ import (
 // * Constants:
 
 const (
-	ContextKeyResponderChain = "_DI_RESPONDER"
+	ContextKeyResponderChain = "gohacks/responder@v1"
 )
 
 // * Variables:

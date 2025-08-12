@@ -47,7 +47,7 @@ import (
 // * Constants:
 
 const (
-	ContextKeyDBManager = "_DI_DB_MGR"
+	ContextKeyDBManager = "gohacks/database@v1"
 )
 
 // * Variables:

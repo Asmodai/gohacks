@@ -10,7 +10,7 @@
 
 ```go
 const (
-	ContextKeyTimedCache = "_DI_TIMEDCACHE"
+	ContextKeyTimedCache = "gohacks/timedcache@v1"
 )
 ```
 
