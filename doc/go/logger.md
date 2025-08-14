@@ -9,23 +9,35 @@
 ## Usage
 
 ```go
-const (
-	ContextKeyLogger = "gohacks/logger@v1"
-)
+const ContextKeyLogger = "gohacks/logger@v1"
 ```
+Key used to store the instance in the context's user value.
 
 ```go
-var (
-	ErrValueNotLogger = errors.Base("value is not logger.Logger")
-)
+var ErrValueNotLogger = errors.Base("value is not Logger")
 ```
+Signalled if the instance associated with the context key is not of type Logger.
 
 #### func  SetLogger
 
 ```go
 func SetLogger(ctx context.Context, inst Logger) (context.Context, error)
 ```
-Set the logger value to the context map.
+Set Logger stores the instance in the context map.
+
+#### func  SetLoggerIfAbsent
+
+```go
+func SetLoggerIfAbsent(ctx context.Context, inst Logger) (context.Context, error)
+```
+SetLoggerIfAbsent sets only if not already present.
+
+#### func  WithLogger
+
+```go
+func WithLogger(ctx context.Context, fn func(Logger))
+```
+WithLogger calls fn with the instance or fallback.
 
 #### type Fields
 
@@ -120,6 +132,13 @@ To use,
 If an empty string is passed to `NewLogger`, then the log facility will display
 messages on standard output.
 
+#### func  FromLogger
+
+```go
+func FromLogger(ctx context.Context) Logger
+```
+FromLogger returns the instance or the fallback.
+
 #### func  GetLogger
 
 ```go
@@ -127,15 +146,15 @@ func GetLogger(ctx context.Context) (Logger, error)
 ```
 Get the logger from the given context.
 
-Will return `ErrValueNotLogger` if the value in the context is not of type
-`logger.Logger`.
+Will return ErrValueNotLogger if the value in the context is not of type Logger.
 
 #### func  MustGetLogger
 
 ```go
 func MustGetLogger(ctx context.Context) Logger
 ```
-Attempt to get the logger from the given context. Panics if the operation fails.
+Attempt to get the instance from the given context. Panics if the operation
+fails.
 
 #### func  NewDefaultLogger
 
@@ -157,3 +176,10 @@ Create a new logger.
 func NewZapLoggerWithFile(logfile string) Logger
 ```
 Create a new logger with the given log file.
+
+#### func  TryGetLogger
+
+```go
+func TryGetLogger(ctx context.Context) (Logger, bool)
+```
+TryGetLogger returns the instance and true if present and typed.

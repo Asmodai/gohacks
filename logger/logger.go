@@ -30,6 +30,9 @@
 // SOFTWARE.
 //
 // mock:yes
+//
+//go:generate go run github.com/Asmodai/gohacks/cmd/digen -pattern .
+//di:gen basename=Logger key=gohacks/logger@v1 type=Logger fallback=NewDefaultLogger()
 
 package logger
 

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// di_test.go --- DI tests.
+// txn.go --- Transaction hackery.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,45 +31,68 @@
 
 // * Comments:
 
+//
+//
+//
+
 // * Package:
 
-package responder
+package database
 
 // * Imports:
 
 import (
 	"context"
-	"testing"
+
+	"gitlab.com/tozd/go/errors"
 )
+
+// * Constants:
+
+// * Variables:
 
 // * Code:
 
-// ** Tests:
+// ** Types:
 
-func TestDI(t *testing.T) {
-	var (
-		ctx  context.Context = context.TODO()
-		inst *Chain          = NewChain("test")
-		err  error
-	)
+type TxnFn func(ctx context.Context) error
 
-	t.Run("SetResponderChain", func(t *testing.T) {
-		ctx, err = SetResponderChain(ctx, inst)
-		if err != nil {
-			t.Fatalf("Unexpected error: %#v", err)
+func WithTransaction(ctx context.Context, dbase Database, callback TxnFn) error {
+	var retErr error
+
+	txCtx, err := dbase.Begin(ctx)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	defer func() {
+		if prec := recover(); prec != nil {
+			// If a panic occurred, attempt a rollback and then
+			// re-panic like a boss.
+			if rbErr := dbase.Rollback(txCtx); rbErr != nil {
+				prec = errors.WithStack(
+					errors.WithMessagef(rbErr, "%v", prec),
+				)
+			}
+
+			panic(prec)
 		}
-	})
 
-	t.Run("GetResponderChain", func(t *testing.T) {
-		res, err := GetResponderChain(ctx)
-		if err != nil {
-			t.Fatalf("Unexpected error: %#v", err)
+		if retErr != nil {
+			if rbErr := dbase.Rollback(txCtx); rbErr != nil {
+				retErr = errors.WithStack(errors.WrapWith(retErr, rbErr))
+			}
+		} else {
+			if cErr := dbase.Commit(txCtx); cErr != nil {
+				retErr = errors.WithStack(cErr)
+			}
 		}
+	}()
 
-		if res != inst {
-			t.Errorf("Unexpected result: %#v ", res)
-		}
-	})
+	// Invoke the callback making sure to capture its error.
+	retErr = errors.WithStack(callback(txCtx))
+
+	return retErr
 }
 
-// * di.go ends here.
+// * txn.go ends here.

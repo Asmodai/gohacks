@@ -29,7 +29,9 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-// mock:yes
+//mock:yes
+//go:generate go run github.com/Asmodai/gohacks/cmd/digen -pattern .
+//di:gen basename=TimedCache key=gohacks/timedcache@v1 type=TimedCache fallback=NewDefault()
 
 // * Comments:
 
@@ -450,6 +452,10 @@ func (obj *timedCache) Expired() bool {
 }
 
 // * Functions:
+
+func NewDefault() TimedCache {
+	return New(&Config{})
+}
 
 // Create a new timed cache with the given configuration.
 func New(config *Config) TimedCache {

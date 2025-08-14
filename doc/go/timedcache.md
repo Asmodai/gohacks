@@ -9,10 +9,9 @@
 ## Usage
 
 ```go
-const (
-	ContextKeyTimedCache = "gohacks/timedcache@v1"
-)
+const ContextKeyTimedCache = "gohacks/timedcache@v1"
 ```
+Key used to store the instance in the context's user value.
 
 ```go
 const (
@@ -33,10 +32,10 @@ var (
 ```
 
 ```go
-var (
-	ErrValueNotTimedCache = errors.Base("value is not timedcache.TimedCache")
-)
+var ErrValueNotTimedCache = errors.Base("value is not TimedCache")
 ```
+Signalled if the instance associated with the context key is not of type
+TimedCache.
 
 #### func  InitPrometheus
 
@@ -50,7 +49,21 @@ Initialise Prometheus metrics.
 ```go
 func SetTimedCache(ctx context.Context, inst TimedCache) (context.Context, error)
 ```
-Set the timed cache value in the context map.
+Set TimedCache stores the instance in the context map.
+
+#### func  SetTimedCacheIfAbsent
+
+```go
+func SetTimedCacheIfAbsent(ctx context.Context, inst TimedCache) (context.Context, error)
+```
+SetTimedCacheIfAbsent sets only if not already present.
+
+#### func  WithTimedCache
+
+```go
+func WithTimedCache(ctx context.Context, fn func(TimedCache))
+```
+WithTimedCache calls fn with the instance or fallback.
 
 #### type CacheItems
 
@@ -165,23 +178,30 @@ type TimedCache interface {
 ```
 
 
+#### func  FromTimedCache
+
+```go
+func FromTimedCache(ctx context.Context) TimedCache
+```
+FromTimedCache returns the instance or the fallback.
+
 #### func  GetTimedCache
 
 ```go
 func GetTimedCache(ctx context.Context) (TimedCache, error)
 ```
-Get the timed cache value from the given context.
+Get the logger from the given context.
 
-WIll return `ErrValueNotTimedCache` if the value in the context is not of type
-`timedcache.TimedCache`.
+Will return ErrValueNotTimedCache if the value in the context is not of type
+TimedCache.
 
 #### func  MustGetTimedCache
 
 ```go
 func MustGetTimedCache(ctx context.Context) TimedCache
 ```
-Attempt to get the timed cache value from the given context. Panics if the
-operation fails.
+Attempt to get the instance from the given context. Panics if the operation
+fails.
 
 #### func  New
 
@@ -189,3 +209,16 @@ operation fails.
 func New(config *Config) TimedCache
 ```
 Create a new timed cache with the given configuration.
+
+#### func  NewDefault
+
+```go
+func NewDefault() TimedCache
+```
+
+#### func  TryGetTimedCache
+
+```go
+func TryGetTimedCache(ctx context.Context) (TimedCache, bool)
+```
+TryGetTimedCache returns the instance and true if present and typed.

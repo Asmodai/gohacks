@@ -30,6 +30,8 @@
 // SOFTWARE.
 //
 // mock:yes
+//go:generate go run github.com/Asmodai/gohacks/cmd/digen -pattern .
+//di:gen basename=Memoise key=gohacks/memoise@v1 type=Memoise fallback=NewDefaultMemoise()
 
 // * Comments:
 
@@ -181,6 +183,10 @@ func (obj *memoise) Reset() {
 }
 
 // ** Functions:
+
+func NewDefaultMemoise() Memoise {
+	return NewMemoise(&Config{})
+}
 
 // Create a new memoisation object.
 func NewMemoise(cfg *Config) Memoise {

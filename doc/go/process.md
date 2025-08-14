@@ -9,23 +9,36 @@
 ## Usage
 
 ```go
-const (
-	ContextKeyProcManager = "gohacks/process@v1"
-)
+const ContextKeyManager = "gohacks/process@v1"
 ```
+Key used to store the instance in the context's user value.
 
 ```go
-var (
-	ErrValueNotProcessManager = errors.Base("value is not process.Manager")
-)
+var ErrValueNotManager = errors.Base("value is not Manager")
 ```
+Signalled if the instance associated with the context key is not of type
+Manager.
 
 #### func  SetManager
 
 ```go
 func SetManager(ctx context.Context, inst Manager) (context.Context, error)
 ```
-Set the process manager value to the context map.
+Set Manager stores the instance in the context map.
+
+#### func  SetManagerIfAbsent
+
+```go
+func SetManagerIfAbsent(ctx context.Context, inst Manager) (context.Context, error)
+```
+SetManagerIfAbsent sets only if not already present.
+
+#### func  WithManager
+
+```go
+func WithManager(ctx context.Context, fn func(Manager))
+```
+WithManager calls fn with the instance or fallback.
 
 #### type CallbackFn
 
@@ -129,23 +142,30 @@ To use,
 
 Manager is optional, as you can create processes directly.
 
+#### func  FromManager
+
+```go
+func FromManager(ctx context.Context) Manager
+```
+FromManager returns the instance or the fallback.
+
 #### func  GetManager
 
 ```go
 func GetManager(ctx context.Context) (Manager, error)
 ```
-Get the process manager from the given context.
+Get the logger from the given context.
 
-Will return `ErrValueNotProcessManager` if the value in the context is not of
-type `process.Manager`.
+Will return ErrValueNotManager if the value in the context is not of type
+Manager.
 
 #### func  MustGetManager
 
 ```go
 func MustGetManager(ctx context.Context) Manager
 ```
-Attempt to get the process manager from the given context. Panics if the
-operation fails.
+Attempt to get the instance from the given context. Panics if the operation
+fails.
 
 #### func  NewManager
 
@@ -160,6 +180,13 @@ Create a new process manager.
 func NewManagerWithContext(parent context.Context) Manager
 ```
 Create a new process manager with a given parent context.
+
+#### func  TryGetManager
+
+```go
+func TryGetManager(ctx context.Context) (Manager, bool)
+```
+TryGetManager returns the instance and true if present and typed.
 
 #### type Process
 

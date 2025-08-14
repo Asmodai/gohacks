@@ -9,10 +9,9 @@
 ## Usage
 
 ```go
-const (
-	ContextKeyResponderChain = "gohacks/responder@v1"
-)
+const ContextKeyResponderChain = "gohacks/responder@v1"
 ```
+Key used to store the instance in the context's user value.
 
 ```go
 var (
@@ -27,17 +26,30 @@ var (
 ```
 
 ```go
-var (
-	ErrValueNotResponderChain = errors.Base("value is not responder.Chain")
-)
+var ErrValueNotResponderChain = errors.Base("value is not *Chain")
 ```
+Signalled if the instance associated with the context key is not of type *Chain.
 
 #### func  SetResponderChain
 
 ```go
 func SetResponderChain(ctx context.Context, inst *Chain) (context.Context, error)
 ```
-Set the responder chain value in the context map.
+Set ResponderChain stores the instance in the context map.
+
+#### func  SetResponderChainIfAbsent
+
+```go
+func SetResponderChainIfAbsent(ctx context.Context, inst *Chain) (context.Context, error)
+```
+SetResponderChainIfAbsent sets only if not already present.
+
+#### func  WithResponderChain
+
+```go
+func WithResponderChain(ctx context.Context, fn func(*Chain))
+```
+WithResponderChain calls fn with the instance or fallback.
 
 #### type Chain
 
@@ -54,26 +66,30 @@ wonderful world of Go.
 It might also attempt to bring a bit of MIT Flavors, too... but don't expect to
 see crazy like `defwrapper` and `defwhopper`.
 
+#### func  FromResponderChain
+
+```go
+func FromResponderChain(ctx context.Context) *Chain
+```
+FromResponderChain returns the instance or the fallback.
+
 #### func  GetResponderChain
 
 ```go
 func GetResponderChain(ctx context.Context) (*Chain, error)
 ```
-Get the responder chain from the given context.
+Get the logger from the given context.
 
-Will return `ErrValueNotResponderChain` if the value in the context is not of
-type `responder.Chain`.
-
-Please be aware that this responder chain should be treated as immutable, as we
-can't really propagate changes down the context hierarchy.
+Will return ErrValueNotResponderChain if the value in the context is not of type
+*Chain.
 
 #### func  MustGetResponderChain
 
 ```go
 func MustGetResponderChain(ctx context.Context) *Chain
 ```
-Attempt to get the responder chain from the given context. Panics if the
-operation fails.
+Attempt to get the instance from the given context. Panics if the operation
+fails.
 
 #### func  NewChain
 
@@ -81,6 +97,13 @@ operation fails.
 func NewChain(name string) *Chain
 ```
 Create a new responder chain object.
+
+#### func  TryGetResponderChain
+
+```go
+func TryGetResponderChain(ctx context.Context) (*Chain, bool)
+```
+TryGetResponderChain returns the instance and true if present and typed.
 
 #### func (*Chain) Add
 

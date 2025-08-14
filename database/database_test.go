@@ -330,4 +330,65 @@ func TestSQLErrors(t *testing.T) {
 	})
 }
 
+func TestWithTransaction(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Could not mock DB: %v", err)
+	}
+	defer db.Close()
+
+	obj := FromDB(db, "sqlmock")
+
+	t.Run("Success", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectCommit()
+
+		err := WithTransaction(context.TODO(), obj, func(ctx context.Context) error {
+			return nil
+		})
+
+		if err != nil {
+			t.Errorf("Expected no error, got: %v", err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("Callback returns error", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectRollback()
+
+		expectedErr := errors.Base("callback failed")
+
+		err := WithTransaction(context.TODO(), obj, func(ctx context.Context) error {
+			return expectedErr
+		})
+
+		if !errors.Is(err, expectedErr) {
+			t.Errorf("Expected %v, got: %v", expectedErr, err)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("Unmet expectations: %v", err)
+		}
+	})
+
+	t.Run("Callback panics", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectRollback()
+
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected a panic, but none occurred")
+			}
+		}()
+
+		_ = WithTransaction(context.TODO(), obj, func(ctx context.Context) error {
+			panic("OMG PANIC!")
+		})
+	})
+}
+
 // database_test.go ends here.

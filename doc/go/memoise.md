@@ -9,16 +9,15 @@
 ## Usage
 
 ```go
-const (
-	ContextKeyMemoise = "gohacks/memoise@v1"
-)
+const ContextKeyMemoise = "gohacks/memoise@v1"
 ```
+Key used to store the instance in the context's user value.
 
 ```go
-var (
-	ErrValueNotMemoise = errors.Base("value is not memoise.Memoise")
-)
+var ErrValueNotMemoise = errors.Base("value is not Memoise")
 ```
+Signalled if the instance associated with the context key is not of type
+Memoise.
 
 #### func  InitPrometheus
 
@@ -27,12 +26,26 @@ func InitPrometheus(reg prometheus.Registerer)
 ```
 Initialise Prometheus metrics.
 
-#### func  SetMemoiser
+#### func  SetMemoise
 
 ```go
-func SetMemoiser(ctx context.Context, inst Memoise) (context.Context, error)
+func SetMemoise(ctx context.Context, inst Memoise) (context.Context, error)
 ```
-Set the memoiser value to the context map.
+Set Memoise stores the instance in the context map.
+
+#### func  SetMemoiseIfAbsent
+
+```go
+func SetMemoiseIfAbsent(ctx context.Context, inst Memoise) (context.Context, error)
+```
+SetMemoiseIfAbsent sets only if not already present.
+
+#### func  WithMemoise
+
+```go
+func WithMemoise(ctx context.Context, fn func(Memoise))
+```
+WithMemoise calls fn with the instance or fallback.
 
 #### type CallbackFn
 
@@ -81,23 +94,36 @@ type Memoise interface {
 
 Memoisation type.
 
-#### func  GetMemoiser
+#### func  FromMemoise
 
 ```go
-func GetMemoiser(ctx context.Context) (Memoise, error)
+func FromMemoise(ctx context.Context) Memoise
 ```
-Get the memoiser from the given context.
+FromMemoise returns the instance or the fallback.
 
-Will return `ErrValueNoMemoise` if the value in the context is not of type
-`memoise.Memoise`.
-
-#### func  MustGetMemoiser
+#### func  GetMemoise
 
 ```go
-func MustGetMemoiser(ctx context.Context) Memoise
+func GetMemoise(ctx context.Context) (Memoise, error)
 ```
-Attempt to get the memoiser from the given context. Panics if the operation
+Get the logger from the given context.
+
+Will return ErrValueNotMemoise if the value in the context is not of type
+Memoise.
+
+#### func  MustGetMemoise
+
+```go
+func MustGetMemoise(ctx context.Context) Memoise
+```
+Attempt to get the instance from the given context. Panics if the operation
 fails.
+
+#### func  NewDefaultMemoise
+
+```go
+func NewDefaultMemoise() Memoise
+```
 
 #### func  NewMemoise
 
@@ -105,3 +131,10 @@ fails.
 func NewMemoise(cfg *Config) Memoise
 ```
 Create a new memoisation object.
+
+#### func  TryGetMemoise
+
+```go
+func TryGetMemoise(ctx context.Context) (Memoise, bool)
+```
+TryGetMemoise returns the instance and true if present and typed.

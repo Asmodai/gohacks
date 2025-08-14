@@ -30,6 +30,8 @@
 // SOFTWARE.
 //
 // mock:yes
+//go:generate go run github.com/Asmodai/gohacks/cmd/digen -pattern .
+//di:gen basename=Manager key=gohacks/process@v1 type=Manager fallback=NewManager()
 
 // * Comments:
 

@@ -18,10 +18,9 @@ const (
 ```
 
 ```go
-const (
-	ContextKeyDBManager = "_DI_DB_MGR"
-)
+const ContextKeyManager = "gohacks/database@v1"
 ```
+Key used to store the instance in the context's user value.
 
 ```go
 var (
@@ -54,10 +53,10 @@ var (
 ```
 
 ```go
-var (
-	ErrValueNotDBManager = errors.Base("value is not database.Manager")
-)
+var ErrValueNotManager = errors.Base("value is not Manager")
 ```
+Signalled if the instance associated with the context key is not of type
+Manager.
 
 #### func  Exec
 
@@ -136,7 +135,27 @@ The transaction should be passed via a context value.
 ```go
 func SetManager(ctx context.Context, inst Manager) (context.Context, error)
 ```
-Set the database manager value to the context map.
+Set Manager stores the instance in the context map.
+
+#### func  SetManagerIfAbsent
+
+```go
+func SetManagerIfAbsent(ctx context.Context, inst Manager) (context.Context, error)
+```
+SetManagerIfAbsent sets only if not already present.
+
+#### func  WithManager
+
+```go
+func WithManager(ctx context.Context, fn func(Manager))
+```
+WithManager calls fn with the instance or fallback.
+
+#### func  WithTransaction
+
+```go
+func WithTransaction(ctx context.Context, dbase Database, callback TxnFn) error
+```
 
 #### type Config
 
@@ -274,23 +293,30 @@ Database management.
 This is a series of wrappers around Go's internal DB stuff to ensure that we set
 up max idle/open connections et al.
 
+#### func  FromManager
+
+```go
+func FromManager(ctx context.Context) Manager
+```
+FromManager returns the instance or the fallback.
+
 #### func  GetManager
 
 ```go
 func GetManager(ctx context.Context) (Manager, error)
 ```
-Get the database manager from the given context.
+Get the logger from the given context.
 
-Will return `ErrValueNoDBManager` if the value in the context is not of type
-`database.Manager`.
+Will return ErrValueNotManager if the value in the context is not of type
+Manager.
 
 #### func  MustGetManager
 
 ```go
 func MustGetManager(ctx context.Context) Manager
 ```
-Attempt to get the database manager from the given context. Panics if the
-operation fails.
+Attempt to get the instance from the given context. Panics if the operation
+fails.
 
 #### func  NewManager
 
@@ -298,6 +324,13 @@ operation fails.
 func NewManager() Manager
 ```
 Create a new manager.
+
+#### func  TryGetManager
+
+```go
+func TryGetManager(ctx context.Context) (Manager, bool)
+```
+TryGetManager returns the instance and true if present and typed.
 
 #### type NullBool
 
@@ -417,4 +450,10 @@ type NullTime struct {
 
 ```go
 func (x NullTime) MarshalJSON() ([]byte, error)
+```
+
+#### type TxnFn
+
+```go
+type TxnFn func(ctx context.Context) error
 ```

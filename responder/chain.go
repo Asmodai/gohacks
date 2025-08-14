@@ -28,6 +28,9 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+//go:generate go run github.com/Asmodai/gohacks/cmd/digen -pattern .
+//di:gen basename=ResponderChain key=gohacks/responder@v1 type=*Chain fallback=NewChain("unnamed")
 
 // * Comments:
 
