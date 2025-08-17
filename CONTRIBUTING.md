@@ -1,4 +1,4 @@
-<!-- -*- mode: gfm;auto-fill: t; fill-column: 78; -*- -->
+<!-- -*- mode: gfm; auto-fill: t; fill-column: 78; -*- -->
 
 # Contributing to gohacks
 

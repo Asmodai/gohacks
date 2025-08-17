@@ -237,6 +237,9 @@ protobuf:
 	@PROTOC="$(PROTOC)" ./makeproto.sh
 	@echo "Done."
 
+generate:
+	@go generate ./...
+
 mocks:
 	@./makemocks.sh
 	@echo "Done."
@@ -271,6 +274,7 @@ help:
 	@echo "doc              - Generate gomarkdown documentation."
 	@echo "fmt              - Run gofmt."
 	@echo "fuzz             - Run fuzzers."
+	@echo "generate         - Run Go generate."
 	@echo "help             - you are reading it."
 	@echo "imports          - Fix up imports."
 	@echo "lint             - Run golangci-lint."

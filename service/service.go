@@ -36,7 +36,7 @@ import (
 )
 
 // Constructor function for creating new service records.
-type ConstructorFn func() interface{}
+type ConstructorFn func() any
 
 /*
 Service structure.
@@ -63,7 +63,7 @@ To use:
 
 ```go
 
-	svc.Create("SomeName", func() interface{} { return NewThing() })
+	svc.Create("SomeName", func() any { return NewThing() })
 
 ```
 
@@ -72,7 +72,7 @@ Profit.
 type Service struct {
 	sync.RWMutex
 
-	services map[string]interface{}
+	services map[string]any
 	classes  map[string]ConstructorFn
 }
 
@@ -91,7 +91,7 @@ func DumpInstance() *Service {
 func GetInstance() *Service {
 	once.Do(func() {
 		instance = &Service{
-			services: make(map[string]interface{}),
+			services: make(map[string]any),
 			classes:  make(map[string]ConstructorFn),
 		}
 	})
@@ -100,7 +100,7 @@ func GetInstance() *Service {
 }
 
 // Add a new service instance with the given name.
-func (s *Service) Add(name string, thing interface{}) {
+func (s *Service) Add(name string, thing any) {
 	s.Lock()
 	s.services[name] = thing
 	s.Unlock()
@@ -114,7 +114,7 @@ func (s *Service) AddClass(name string, ctor ConstructorFn) {
 }
 
 // Get a service with the given name.
-func (s *Service) Get(name string) (interface{}, bool) {
+func (s *Service) Get(name string) (any, bool) {
 	s.Lock()
 	thing := s.services[name]
 	s.Unlock()
@@ -128,7 +128,7 @@ func (s *Service) Get(name string) (interface{}, bool) {
 
 // Create a new instance of the given class by invoking its registered
 // constructor.
-func (s *Service) CreateNew(name string) (interface{}, bool) {
+func (s *Service) CreateNew(name string) (any, bool) {
 	s.Lock()
 	ctor := s.classes[name]
 	s.Unlock()

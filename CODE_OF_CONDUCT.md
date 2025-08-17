@@ -1,4 +1,4 @@
-<!-- -*- mode: gfm;auto-fill: t; fill-column: 78; -*- -->
+<!-- -*- mode: gfm; auto-fill: t; fill-column: 78; -*- -->
 
 # Contributor Covenant Code of Conduct
 
@@ -12,7 +12,7 @@ education, socio-economic status, nationality, personal appearance,
 race, caste, color, religion, or sexual identity and orientation.
 
 We pledge to act and interact in ways that contribute to an open,
-welcoming, diverse, inclusive, and healthy community. 
+welcoming, diverse, inclusive, and healthy community.
 
 ## Our Standards
 
@@ -67,7 +67,7 @@ reported to the [hacker responsible for enforcement][contact]. All
 complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and
-security of the eporter of any incident.
+security of the reporter of any incident.
 
 ## Enforcement Guidelines
 

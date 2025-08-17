@@ -61,7 +61,7 @@ const (
 // Callback function.
 type CallbackFn func(*State)
 
-type QueryFn func(interface{}) interface{}
+type QueryFn func(any) any
 
 /*
 Process structure.
@@ -271,7 +271,7 @@ func (p *Process) Stop() bool {
 //
 // This allows interaction with the process's base object without using
 // `Action`.
-func (p *Process) Query(arg interface{}) interface{} {
+func (p *Process) Query(arg any) any {
 	if p.onQuery == nil {
 		return nil
 	}

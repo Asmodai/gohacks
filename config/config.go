@@ -50,7 +50,7 @@ var (
 	ErrInvalidObject = errors.Base("invalid configuration object")
 )
 
-type ValidatorsMap map[string]interface{}
+type ValidatorsMap map[string]any
 
 /*
 Config structure.

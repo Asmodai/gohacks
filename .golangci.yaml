@@ -9,7 +9,7 @@ run:
   allow-parallel-runners: true
   allow-serial-runners: true
   go: '1.23.5'
-  
+
 output:
   formats:
     - format: json
@@ -34,7 +34,7 @@ issues:
       - godot
       text: '^// \*+ \w+:$'
 
-linger-settings:
+linters-settings:
   godox:
     keywords:
       - OPTIMIZE
