@@ -291,7 +291,7 @@ func (p *Process) Name() string
 #### func (*Process) Query
 
 ```go
-func (p *Process) Query(arg interface{}) interface{}
+func (p *Process) Query(arg any) any
 ```
 Query the running process.
 
@@ -339,7 +339,7 @@ func (p *Process) Type() string
 #### type QueryFn
 
 ```go
-type QueryFn func(interface{}) interface{}
+type QueryFn func(any) any
 ```
 
 

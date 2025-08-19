@@ -11,7 +11,7 @@
 #### type ConstructorFn
 
 ```go
-type ConstructorFn func() interface{}
+type ConstructorFn func() any
 ```
 
 Constructor function for creating new service records.
@@ -48,7 +48,7 @@ To use:
 
 ```go
 
-    svc.Create("SomeName", func() interface{} { return NewThing() })
+    svc.Create("SomeName", func() any { return NewThing() })
 
 ```
 
@@ -71,7 +71,7 @@ Return the service manager's singleton instance.
 #### func (*Service) Add
 
 ```go
-func (s *Service) Add(name string, thing interface{})
+func (s *Service) Add(name string, thing any)
 ```
 Add a new service instance with the given name.
 
@@ -106,14 +106,14 @@ Return a count of registered services.
 #### func (*Service) CreateNew
 
 ```go
-func (s *Service) CreateNew(name string) (interface{}, bool)
+func (s *Service) CreateNew(name string) (any, bool)
 ```
 Create a new instance of the given class by invoking its registered constructor.
 
 #### func (*Service) Get
 
 ```go
-func (s *Service) Get(name string) (interface{}, bool)
+func (s *Service) Get(name string) (any, bool)
 ```
 Get a service with the given name.
 

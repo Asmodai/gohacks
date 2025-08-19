@@ -199,5 +199,5 @@ Create a new empty `Config` instance.
 #### type ValidatorsMap
 
 ```go
-type ValidatorsMap map[string]interface{}
+type ValidatorsMap map[string]any
 ```

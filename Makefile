@@ -61,6 +61,7 @@ MODULES = amqp            \
 	  fileio          \
 	  generics        \
 	  logger          \
+	  lucette         \
 	  math            \
 	  memoise         \
 	  metadata        \
