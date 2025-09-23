@@ -57,7 +57,7 @@ type node struct {
 //
 // If the node has an associated predicate then that is evaluated against
 // the given input.
-func traverse(ctx context.Context, root *node, input Filterable, debug bool, logger logger.Logger) {
+func traverse(ctx context.Context, root *node, input Filterable, debug bool, logger logger.Logger) bool {
 	if !root.Predicate.Eval(ctx, input) {
 		if debug {
 			logger.Debug(
@@ -67,7 +67,7 @@ func traverse(ctx context.Context, root *node, input Filterable, debug bool, log
 			)
 		}
 
-		return
+		return false
 	}
 
 	if debug {
@@ -83,8 +83,10 @@ func traverse(ctx context.Context, root *node, input Filterable, debug bool, log
 	}
 
 	for _, child := range root.Children {
-		traverse(ctx, child, input, debug, logger)
+		_ = traverse(ctx, child, input, debug, logger)
 	}
+	
+	return true
 }
 
 // * node.go ends here.

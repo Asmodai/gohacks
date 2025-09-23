@@ -68,7 +68,7 @@ var (
 type Compiler interface {
 	CompileAction(ActionSpec) (ActionFn, error)
 	Compile([]RuleSpec) []error
-	Evaluate(Filterable)
+	Evaluate(Filterable) bool
 	Export(io.Writer)
 }
 
@@ -238,8 +238,12 @@ func (cmplr *compiler) attachAction(current *node, action ActionSpec) error {
 	return nil
 }
 
-func (cmplr *compiler) Evaluate(input Filterable) {
-	traverse(cmplr.ctx, cmplr.root, input, cmplr.debugMode, cmplr.lgr)
+func (cmplr *compiler) Evaluate(input Filterable) bool{
+	return traverse(cmplr.ctx,
+		cmplr.root,
+		input,
+		cmplr.debugMode,
+		cmplr.lgr)
 }
 
 func (cmplr *compiler) Export(writer io.Writer) {
