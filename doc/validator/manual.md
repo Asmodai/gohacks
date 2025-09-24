@@ -163,6 +163,27 @@ perform: "none"
 params: {}
 ```
 
+## ⚠️ `error`
+
+This action records an error which may be accessed via the validator's
+`Failures` method.
+
+To clear failures for reuse, use the `ClearFailures` method.
+
+### Parameters
+
+| Name      | Type     | Required | Description                       |
+|-----------|----------|----------|-----------------------------------|
+| `message` | `string` | ✅       | The message to record as an error |
+
+### Example
+
+```yaml
+perform: "error"
+params:
+  message: "The object is invalid"
+```
+
 ## 📢 `log`
 
 This action writes a structured log message to the current DAG context logger.
@@ -250,8 +271,10 @@ We can define the YAML rules thusly:
     - attribute: one
       operator: field-value-in
       value: [40, 41, 42, 43]
-  action:
-    perform: none
+  failure:
+    perform: log-fail
+    params:
+      message: "'One' is not valid"
 
 - name: "'Two' must be map[string]int and not empty"
   conditions:
@@ -260,15 +283,19 @@ We can define the YAML rules thusly:
       value: map[string]int
     - attribute: two
       operator: field-value-is-true
-  action:
-    perform: none
+  failure:
+    perform: log-fail
+    params:
+      message: "'Two' is not valid"
 
 - name: "'three' must be nil"
   conditions:
     - attribute: three
       operator: field-value-is-nil
-  action:
-    perform: none
+  failure:
+    perform: log-fail
+    params:
+      message: "'Three' is not valid"
 
 - name: "'four' must be string and member"
   conditions:
@@ -278,8 +305,10 @@ We can define the YAML rules thusly:
     - attribute: four
       operator: field-value-in
       value: [OK, CRITICAL, WARNING]
-  action:
-    perform: none
+  failure:
+    perform: log-fail
+    params:
+      message: "'Four' is not valid"
 
 - name: "'five' must match regex"
   conditions:
@@ -289,8 +318,10 @@ We can define the YAML rules thusly:
     - attribute: five
       operator: field-value-regex-match
       value: ".*coffee.*"
-  action:
-    perform: none
+  failure:
+    perform: log-fail
+    params:
+      message: "'Five' is not valid"
 ```
 
 In this case, I am using the special action `none` which simply results in

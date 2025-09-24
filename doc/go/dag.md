@@ -137,6 +137,7 @@ Create a new empty `Actions` object.
 ```go
 type Compiler interface {
 	CompileAction(ActionSpec) (ActionFn, error)
+	CompileFailure(FailureSpec) (ActionFn, error)
 	Compile([]RuleSpec) []error
 	Evaluate(Filterable)
 	Export(io.Writer)
@@ -149,6 +150,7 @@ type Compiler interface {
 ```go
 func NewCompiler(ctx context.Context, build Actions) Compiler
 ```
+Return a new DAG compiler.
 
 #### func  NewCompilerWithPredicates
 
@@ -159,6 +161,7 @@ func NewCompilerWithPredicates(
 	predicates PredicateDict,
 ) Compiler
 ```
+Return a new DAG compiler with custom predicates.
 
 #### type ConditionSpec
 
@@ -353,6 +356,23 @@ func (pred *EQPredicate) String() string
 ```go
 func (pred *EQPredicate) Token() string
 ```
+
+#### type FailureSpec
+
+```go
+type FailureSpec struct {
+	// Parameters.
+	Params ActionParams `json:"params,omitempty" yaml:"params,omitempty"`
+
+	// Action name.
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// Function to perform.
+	Perform string `json:"perform,omitempty" yaml:"perform,omitempty"`
+}
+```
+
+Failure action specification.
 
 #### type Filterable
 
@@ -1103,6 +1123,9 @@ func (pred *RESMPredicate) Token() string
 type RuleSpec struct {
 	// Action to evaluate.
 	Action ActionSpec `json:"action" yaml:"action"`
+
+	// Action to evaluate on failure.
+	Failure FailureSpec `json:"failure" yaml:"failure"`
 
 	// Rule name.
 	Name string `json:"name" yaml:"name"`

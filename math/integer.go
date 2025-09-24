@@ -63,4 +63,36 @@ func ClampI64(val, minVal, maxVal int64) int64 {
 	return val
 }
 
+func MaxI64(lhs, rhs int64) int64 {
+	if lhs < rhs {
+		return rhs
+	}
+
+	return lhs
+}
+
+func MaxI32(lhs, rhs int32) int32 {
+	return int32(MaxI64(int64(lhs), int64(rhs)))
+}
+
+func MaxI(lhs, rhs int) int {
+	return int(MaxI64(int64(lhs), int64(rhs)))
+}
+
+func MinI64(lhs, rhs int64) int64 {
+	if lhs < rhs {
+		return lhs
+	}
+
+	return rhs
+}
+
+func MinI32(lhs, rhs int32) int32 {
+	return int32(MinI64(int64(lhs), int64(rhs)))
+}
+
+func MinI(lhs, rhs int) int {
+	return int(MinI64(int64(lhs), int64(rhs)))
+}
+
 // * integer.go ends here.

@@ -104,6 +104,16 @@ func exportNodeDOT(writer io.Writer, node *node, visited map[*node]string, count
 		fontColor = "#003300"
 	}
 
+	if len(node.FailureName) > 0 {
+		parts = append(
+			parts,
+			"<f3> Failure: "+node.FailureName,
+		)
+		color = "#66cc66"
+		fillColor = "#e8f6e0"
+		fontColor = "#003300"
+	}
+
 	// Generate the node.
 	fmt.Fprintf(
 		writer,

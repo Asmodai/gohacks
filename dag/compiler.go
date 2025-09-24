@@ -67,8 +67,9 @@ var (
 
 type Compiler interface {
 	CompileAction(ActionSpec) (ActionFn, error)
+	CompileFailure(FailureSpec) (ActionFn, error)
 	Compile([]RuleSpec) []error
-	Evaluate(Filterable) bool
+	Evaluate(Filterable)
 	Export(io.Writer)
 }
 
@@ -115,13 +116,24 @@ func (cmplr *compiler) CompileAction(spec ActionSpec) (ActionFn, error) {
 	return built, nil
 }
 
+// Compile a failure action from a failure specification.
+func (cmplr *compiler) CompileFailure(spec FailureSpec) (ActionFn, error) {
+	built, err := cmplr.builder.Builder(spec.Perform, spec.Params)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return built, nil
+}
+
+// Initialise predicate dictionary.
 func (cmplr *compiler) initPredicates() {
 	if cmplr.predicates == nil {
 		cmplr.predicates = BuildPredicateDict()
 	}
 }
 
-// Compile a rule spec into a DAG graph.
+// Compile a slice of rule specs into a DAG graph.
 func (cmplr *compiler) Compile(rules []RuleSpec) []error {
 	if cmplr.predicates == nil {
 		cmplr.initPredicates()
@@ -146,6 +158,7 @@ func (cmplr *compiler) initRoot() {
 	cmplr.nodeCache = make(map[string]*node)
 }
 
+// Compile a rule specification.
 func (cmplr *compiler) compileRule(rule RuleSpec) error {
 	current := cmplr.root
 
@@ -171,9 +184,17 @@ func (cmplr *compiler) compileRule(rule RuleSpec) error {
 			rule.Name)
 	}
 
+	if err := cmplr.attachFailure(current, rule.Failure); err != nil {
+		return errors.WithMessagef(
+			err,
+			"Rule %q",
+			rule.Name)
+	}
+
 	return nil
 }
 
+// Build a predicate from a condition specification.
 func (cmplr *compiler) buildPredicate(cond ConditionSpec) (Predicate, string, error) {
 	builder, ok := cmplr.predicates[cond.Operator]
 	if !ok {
@@ -202,6 +223,7 @@ func (cmplr *compiler) buildPredicate(cond ConditionSpec) (Predicate, string, er
 	return pred, key, nil
 }
 
+// Link the given nodes.
 func (cmplr *compiler) linkNodes(current, next *node) {
 	linked := false
 
@@ -218,7 +240,12 @@ func (cmplr *compiler) linkNodes(current, next *node) {
 	}
 }
 
+// Attach a success action to the given node.
 func (cmplr *compiler) attachAction(current *node, action ActionSpec) error {
+	if len(action.Perform) == 0 {
+		return nil
+	}
+
 	compiled, err := cmplr.CompileAction(action)
 	if err != nil {
 		return errors.WithMessagef(
@@ -238,24 +265,53 @@ func (cmplr *compiler) attachAction(current *node, action ActionSpec) error {
 	return nil
 }
 
-func (cmplr *compiler) Evaluate(input Filterable) bool{
-	return traverse(cmplr.ctx,
+// Attach a failure action to the given node.
+func (cmplr *compiler) attachFailure(current *node, failure FailureSpec) error {
+	if len(failure.Perform) == 0 {
+		return nil
+	}
+
+	compiled, err := cmplr.CompileFailure(failure)
+	if err != nil {
+		return errors.WithMessagef(
+			err,
+			"Failure %q",
+			failure.Name)
+	}
+
+	if len(failure.Name) > 0 {
+		current.FailureName = failure.Name
+	} else {
+		current.FailureName = failure.Perform
+	}
+
+	current.Failure = compiled
+
+	return nil
+}
+
+// Evaluate an input against the DAG.
+func (cmplr *compiler) Evaluate(input Filterable) {
+	traverse(cmplr.ctx,
 		cmplr.root,
 		input,
 		cmplr.debugMode,
 		cmplr.lgr)
 }
 
+// Export the compiler's rulesets to GraphViz DOT format.
 func (cmplr *compiler) Export(writer io.Writer) {
 	ExportToDOT(writer, cmplr.root)
 }
 
 // ** Functions:
 
+// Return a new DAG compiler.
 func NewCompiler(ctx context.Context, build Actions) Compiler {
 	return NewCompilerWithPredicates(ctx, build, BuildPredicateDict())
 }
 
+// Return a new DAG compiler with custom predicates.
 func NewCompilerWithPredicates(
 	ctx context.Context,
 	builder Actions,

@@ -47,13 +47,6 @@ func BuildPredicateDict() dag.PredicateDict
 func KindToString(kind FieldKind) string
 ```
 
-#### func  NewValidator
-
-```go
-func NewValidator(ctx context.Context) dag.Compiler
-```
-Create a new validator with the default action set and predicate list.
-
 #### type Bindings
 
 ```go
@@ -1218,3 +1211,68 @@ func (sd *StructDescriptor) Keys() []string
 ```go
 func (sd *StructDescriptor) String() string
 ```
+
+#### type Validator
+
+```go
+type Validator struct {
+}
+```
+
+Validator structure.
+
+#### func  NewValidator
+
+```go
+func NewValidator(ctx context.Context) *Validator
+```
+Create a new validator with the default action set and predicate list.
+
+#### func (*Validator) ClearFailures
+
+```go
+func (v *Validator) ClearFailures()
+```
+Clear the list of failure messages.
+
+#### func (*Validator) Compile
+
+```go
+func (v *Validator) Compile(specs []dag.RuleSpec) []error
+```
+Compile a slice of rule specs into a DAG graph.
+
+#### func (*Validator) CompileAction
+
+```go
+func (v *Validator) CompileAction(spec dag.ActionSpec) (dag.ActionFn, error)
+```
+Compile an action from an action specification.
+
+#### func (*Validator) CompileFailure
+
+```go
+func (v *Validator) CompileFailure(spec dag.FailureSpec) (dag.ActionFn, error)
+```
+Compile a failure action from a failure specification.
+
+#### func (*Validator) Evaluate
+
+```go
+func (v *Validator) Evaluate(input dag.Filterable)
+```
+Evaluate an input against the validator.
+
+#### func (*Validator) Export
+
+```go
+func (v *Validator) Export(writer io.Writer)
+```
+Export the compiler's rulesets to GraphViz DOT format.
+
+#### func (*Validator) Failures
+
+```go
+func (v *Validator) Failures() []error
+```
+Return a list of failure messages (if any) generated during validation.

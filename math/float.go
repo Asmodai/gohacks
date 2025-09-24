@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// node.go --- Direct Acyclic Graph node type.
+// float.go --- Floating-point utils.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,64 +33,58 @@
 
 // * Package:
 
-package dag
+package math
 
 // * Imports:
 
 import (
-	"context"
-
-	"github.com/Asmodai/gohacks/logger"
+	"fmt"
+	gomath "math"
 )
 
 // * Code:
 
-// Graph node type.
-type node struct {
-	Predicate   Predicate // Predicate.
-	Action      ActionFn  // Action to execute upon successful predicate.
-	ActionName  string    // Action name.
-	Failure     ActionFn  // Action to execute upon predicate failure.
-	FailureName string    // Failure action name.
-	Children    []*node   // Child nodes.
+// Rounds a 64-bit floating point number to the nearest integer,
+// returning it as an int. Values halfway between integers are rounded
+// away from zero.
+func RoundI(num float64) int {
+	return int(num + gomath.Copysign(0.5, num))
 }
 
-// Traverse each child node in the given root node.
+// Rounds num to the given number of decimal places and returns the result
+// as a float64. Unlike RoundF, it uses integer rounding logic (via RoundI),
+// which may behave slightly differently around half-values.
+func ToFixed(num float64, precision uint) float64 {
+	ratio := gomath.Pow(10, float64(precision))
+
+	return float64(RoundI(num*ratio)) / ratio
+}
+
+// Rounds num to the given number of decimal places and returns the result
+// as a float64, using math.Round for IEEE-754 compliant rounding.
+func RoundF(num float64, precision uint) float64 {
+	ratio := gomath.Pow(10, float64(precision))
+
+	return gomath.Round(num*ratio) / ratio
+}
+
+// Format a float.
 //
-// If the node has an associated predicate then that is evaluated against
-// the given input.
-func traverse(ctx context.Context, root *node, input Filterable, debug bool, logger logger.Logger) {
-	if !root.Predicate.Eval(ctx, input) {
-		if debug {
-			logger.Debug(
-				"Eval failure",
-				"predicate", root.Predicate.Debug(),
-				"input", input.String(),
-			)
-		}
+// If the float is NaN or infinite, then those are explicitly returned.
+func FormatFloat64(num float64) string {
+	switch {
+	case gomath.IsNaN(num):
+		return "NaN"
 
-		if root.Failure != nil {
-			root.Failure(ctx, input)
-		}
+	case gomath.IsInf(num, +1):
+		return "+Inf"
 
-		return
-	}
+	case gomath.IsInf(num, -1):
+		return "-Inf"
 
-	if debug {
-		logger.Debug(
-			"Eval success",
-			"predicate", root.Predicate.Debug(),
-			"input", input.String(),
-		)
-	}
-
-	if root.Action != nil {
-		root.Action(ctx, input)
-	}
-
-	for _, child := range root.Children {
-		traverse(ctx, child, input, debug, logger)
+	default:
+		return fmt.Sprintf("%g", num)
 	}
 }
 
-// * node.go ends here.
+// * float.go ends here.

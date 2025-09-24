@@ -39,6 +39,7 @@ package validator
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/Asmodai/gohacks/dag"
@@ -59,7 +60,9 @@ var (
 // Implementation of validator actions.
 //
 // Conforms to `dag.Actions`.
-type actions struct{}
+type actions struct {
+	errors []error
+}
 
 // ** Methods:
 
@@ -74,6 +77,9 @@ func (act *actions) Builder(funame string, params dag.ActionParams) (dag.ActionF
 	case "log":
 		return act.logAction(params)
 
+	case "error":
+		return act.errorAction(params)
+
 	default:
 		return nil, errors.WithMessagef(
 			dag.ErrUnknownBuiltin,
@@ -87,6 +93,47 @@ func (act *actions) Builder(funame string, params dag.ActionParams) (dag.ActionF
 // There are no required parameters.
 func (act *actions) noneAction(_ dag.ActionParams) (dag.ActionFn, error) {
 	afn := func(_ context.Context, _ dag.Filterable) {}
+
+	return afn, nil
+}
+
+// Compile an `error` action.
+//
+// Required parameters are:
+//
+//	`message`: The message to print in the log.
+//
+// If no valid parameters are passed then `ErrExpectedParams` is returned.
+//
+// If no `message` parameter is provided then `ErrMissingParam` is returned.
+//
+// If the given `message` parameter is not a string then `ErrExpectedString`
+// is returned.
+//
+// Upon success a function object containing the error generator is returned.
+func (act *actions) errorAction(params dag.ActionParams) (dag.ActionFn, error) {
+	if params == nil {
+		return nil, errors.WithStack(dag.ErrExpectedParams)
+	}
+
+	msg, okay := params["message"]
+	if !okay {
+		return nil, errors.WithMessage(dag.ErrMissingParam,
+			`Parameter "message"`)
+	}
+
+	smsg, okay := msg.(string)
+	if !okay {
+		return nil, errors.WithStack(dag.ErrExpectedString)
+	}
+
+	afn := func(ctx context.Context, input dag.Filterable) {
+		if act.errors == nil {
+			act.errors = []error{}
+		}
+
+		act.errors = append(act.errors, fmt.Errorf("%s", smsg))
+	}
 
 	return afn, nil
 }

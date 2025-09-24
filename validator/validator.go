@@ -39,19 +39,77 @@ package validator
 
 import (
 	"context"
+	"io"
 
 	"github.com/Asmodai/gohacks/dag"
 )
 
 // * Code:
 
+// ** Type:
+
+// Validator structure.
+type Validator struct {
+	cmplr dag.Compiler // The DAG compiler.
+	act   *actions     // Actions.
+}
+
+// ** Methods:
+
+// Compile an action from an action specification.
+func (v *Validator) CompileAction(spec dag.ActionSpec) (dag.ActionFn, error) {
+	return v.cmplr.CompileAction(spec)
+}
+
+// Compile a failure action from a failure specification.
+func (v *Validator) CompileFailure(spec dag.FailureSpec) (dag.ActionFn, error) {
+	return v.cmplr.CompileFailure(spec)
+}
+
+// Compile a slice of rule specs into a DAG graph.
+func (v *Validator) Compile(specs []dag.RuleSpec) []error {
+	return v.cmplr.Compile(specs)
+}
+
+// Evaluate an input against the validator.
+func (v *Validator) Evaluate(input dag.Filterable) {
+	v.cmplr.Evaluate(input)
+}
+
+// Export the compiler's rulesets to GraphViz DOT format.
+func (v *Validator) Export(writer io.Writer) {
+	v.cmplr.Export(writer)
+}
+
+// Return a list of failure messages (if any) generated during validation.
+func (v *Validator) Failures() []error {
+	return v.act.errors
+}
+
+// Clear the list of failure messages.
+func (v *Validator) ClearFailures() {
+	v.act.errors = v.act.errors[:0]
+}
+
+// ** Functions:
+
 // Create a new validator with the default action set and predicate list.
-func NewValidator(ctx context.Context) dag.Compiler {
-	return dag.NewCompilerWithPredicates(
+func NewValidator(ctx context.Context) *Validator {
+	inst := &Validator{
+		act: &actions{
+			errors: []error{},
+		},
+	}
+
+	dag := dag.NewCompilerWithPredicates(
 		ctx,
-		&actions{},
+		inst.act,
 		BuildPredicateDict(),
 	)
+
+	inst.cmplr = dag
+
+	return inst
 }
 
 // * validator.go ends here.

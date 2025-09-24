@@ -41,7 +41,6 @@ import (
 	"context"
 	"os"
 	"reflect"
-	"strings"
 	"sync"
 	"testing"
 
@@ -49,7 +48,6 @@ import (
 	"github.com/Asmodai/gohacks/dag"
 	"github.com/Asmodai/gohacks/logger"
 	mlogger "github.com/Asmodai/gohacks/mocks/logger"
-	"gitlab.com/tozd/go/errors"
 	"go.uber.org/mock/gomock"
 )
 
@@ -65,8 +63,10 @@ const (
     - attribute: one
       operator: field-value-in
       value: [40, 41, 42, 43]
-  action:
-    perform: ignore
+  failure:
+    perform: error
+    params:
+      message: "'One' is not valid"
 
 - name: "'Two' must be map[string]int and not empty"
   conditions:
@@ -75,15 +75,19 @@ const (
       value: map[string]int
     - attribute: two
       operator: field-value-is-true
-  action:
-    perform: ignore
+  failure:
+    perform: error
+    params:
+      message: "'Two' is not valid"
 
 - name: "'three' must be nil"
   conditions:
     - attribute: three
       operator: field-value-is-nil
-  action:
-    perform: ignore
+  failure:
+    perform: error
+    params:
+      message: "'Three' is not valid"
 
 - name: "'four' must be string and member"
   conditions:
@@ -93,8 +97,10 @@ const (
     - attribute: four
       operator: field-value-in
       value: [OK, CRITICAL, WARNING]
-  action:
-    perform: ignore
+  failure:
+    perform: error
+    params:
+      message: "'Four' is not valid"
 
 - name: "'five' must match regex"
   conditions:
@@ -104,8 +110,10 @@ const (
     - attribute: five
       operator: field-value-regex-match
       value: ".*coffee.*"
-  action:
-    perform: ignore
+  failure:
+    perform: error
+    params:
+      message: "'Five' is not valid"
 `
 )
 
@@ -120,10 +128,13 @@ var (
 
 // ** Test structure:
 
+type UnusedStruct struct {
+}
+
 type DummyStructure struct {
 	One   any            `json:"one"`
 	Two   map[string]int `json:"name_to_id"`
-	Three any
+	Three *UnusedStruct
 	Four  string
 	Five  string
 }
@@ -136,70 +147,23 @@ func (ds *DummyStructure) ReflectType() reflect.Type {
 	return dummyStructureType
 }
 
-var testData = &DummyStructure{
-	One:   int64(42),
-	Two:   map[string]int{"one": 1, "two": 2, "three": 3},
-	Three: nil,
-	Four:  "CRITICAL",
-	Five:  "Must contain coffee in here",
-}
-
-// ** Mock actions:
-
-// *** Type:
-
-type MockActions struct {
-	hasRunLog bool
-}
-
-// *** Methods:
-
-func (obj *MockActions) Builder(fn string, params dag.ActionParams) (dag.ActionFn, error) {
-	normalised := strings.ToLower(fn)
-
-	switch normalised {
-	case "ignore":
-		return func(_ context.Context, _ dag.Filterable) {}, nil
-
-	case "log":
-		return obj.logAction(params)
-
-	default:
-		return nil, errors.WithMessagef(dag.ErrUnknownBuiltin, "%q", fn)
-	}
-}
-
-func (obj *MockActions) logAction(params dag.ActionParams) (afn dag.ActionFn, err error) {
-	msgparam, ok := params["message"]
-	if !ok {
-		afn = nil
-		err = errors.WithMessage(dag.ErrMissingParam,
-			`Parameter "message"`)
-
-		return
+var (
+	testData = &DummyStructure{
+		One:   int64(42),
+		Two:   map[string]int{"one": 1, "two": 2, "three": 3},
+		Three: nil,
+		Four:  "CRITICAL",
+		Five:  "Must contain coffee in here",
 	}
 
-	msg, ok := msgparam.(string)
-	if !ok {
-		afn = nil
-		err = errors.WithStack(dag.ErrExpectedString)
-
-		return
+	testInvalid = &DummyStructure{
+		One:   int64(76),
+		Two:   map[string]int{},
+		Three: &UnusedStruct{},
+		Four:  "FINE",
+		Five:  "Must contain tea in here",
 	}
-
-	err = nil
-	afn = func(ctx context.Context, input dag.Filterable) {
-		lgr := logger.MustGetLogger(ctx)
-		lgr.Info(
-			msg,
-			"src", "log_action",
-		)
-
-		obj.hasRunLog = true
-	}
-
-	return
-}
+)
 
 // ** Tests:
 
@@ -252,15 +216,7 @@ func TestShit(t *testing.T) {
 		t.Fatalf("YAML parse error: %#v", err)
 	}
 
-	mact := &MockActions{
-		hasRunLog: false,
-	}
-
-	compiler := dag.NewCompilerWithPredicates(
-		ctx,
-		mact,
-		BuildPredicateDict(),
-	)
+	compiler := NewValidator(ctx)
 	issues := compiler.Compile(rules)
 
 	compiler.Export(os.Stdout)
@@ -278,9 +234,24 @@ func TestShit(t *testing.T) {
 	if !ok {
 		t.Fatalf("Could not create descriptor")
 	}
-	obj, _ := bindings.Bind(testData)
 
-	compiler.Evaluate(obj)
+	t.Run("valid data", func(t *testing.T) {
+		obj, _ := bindings.Bind(testData)
+		compiler.Evaluate(obj)
+	})
+
+	t.Run("invalid data", func(t *testing.T) {
+		obj, _ := bindings.Bind(testInvalid)
+		compiler.Evaluate(obj)
+
+		if len(compiler.Failures()) == 0 {
+			t.Fatal("No errors generated")
+		}
+
+		for idx, val := range compiler.Failures() {
+			t.Logf("%02d - %q", idx, val)
+		}
+	})
 
 }
 
@@ -311,15 +282,7 @@ func BenchmarkCompiler(b *testing.B) {
 		b.Fatalf("YAML: %#v", err)
 	}
 
-	mact := &MockActions{
-		hasRunLog: false,
-	}
-
-	compiler := dag.NewCompilerWithPredicates(
-		ctx,
-		mact,
-		BuildPredicateDict(),
-	)
+	compiler := NewValidator(ctx)
 
 	b.Run("Compile()", func(b *testing.B) {
 		b.ReportAllocs()

@@ -100,6 +100,9 @@ type RuleSpec struct {
 	// Action to evaluate.
 	Action ActionSpec `json:"action" yaml:"action"`
 
+	// Action to evaluate on failure.
+	Failure FailureSpec `json:"failure" yaml:"failure"`
+
 	// Rule name.
 	Name string `json:"name" yaml:"name"`
 
@@ -121,6 +124,18 @@ type ConditionSpec struct {
 
 // Action specification.
 type ActionSpec struct {
+	// Parameters.
+	Params ActionParams `json:"params,omitempty" yaml:"params,omitempty"`
+
+	// Action name.
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// Function to perform.
+	Perform string `json:"perform,omitempty" yaml:"perform,omitempty"`
+}
+
+// Failure action specification.
+type FailureSpec struct {
 	// Parameters.
 	Params ActionParams `json:"params,omitempty" yaml:"params,omitempty"`
 
