@@ -9,15 +9,6 @@
 ## Usage
 
 ```go
-const (
-	KeyTransaction   string = "_DB_TXN"
-	StringDeadlock   string = "Error 1213" // Deadlock detected.
-	StringConnClosed string = "Error 2006" // MySQL server connection closed.
-	StringLostConn   string = "Error 2013" // Lost connection during query.
-)
-```
-
-```go
 const ContextKeyManager = "gohacks/database@v1"
 ```
 Key used to store the instance in the context's user value.
@@ -34,14 +25,10 @@ var (
 
 ```go
 var (
-	ErrTxnKeyNotFound error = errors.Base("transaction key not found")
-	ErrTxnKeyNotTxn   error = errors.Base("key value is not a transaction")
-	ErrTxnContext     error = errors.Base("could not create transaction context")
-	ErrTxnStart       error = errors.Base("could not start transaction")
-
-	ErrTxnDeadlock      error = errors.Base("deadlock found when trying to get lock")
-	ErrServerConnClosed error = errors.Base("server connection closed")
-	ErrLostConn         error = errors.Base("lost connection during query")
+	ErrServerConnClosed = errors.Base("server connection closed")
+	ErrLostConn         = errors.Base("lost connection during query")
+	ErrTxnDeadlock      = errors.Base("deadlock found when trying to get lock")
+	ErrTxnSerialization = errors.Base("serialization failure")
 )
 ```
 
@@ -57,78 +44,6 @@ var ErrValueNotManager = errors.Base("value is not Manager")
 ```
 Signalled if the instance associated with the context key is not of type
 Manager.
-
-#### func  Exec
-
-```go
-func Exec(ctx context.Context, query string, args ...any) (sql.Result, error)
-```
-Wrapper around `Tx.Exec`.
-
-The transaction should be passed via a context value.
-
-#### func  ExecStmt
-
-```go
-func ExecStmt(ctx context.Context, stmt *stmt, args ...any) (sql.Result, error)
-```
-Wrapper around `Tx.ExecStmt`.
-
-The transaction should be passed via a context value.
-
-#### func  Get
-
-```go
-func Get(ctx context.Context, dest any, query string, args ...any) error
-```
-Wrapper around `Tx.Get`.
-
-The transaction should be passed via a context value.
-
-#### func  NamedExec
-
-```go
-func NamedExec(ctx context.Context, query string, arg any) (sql.Result, error)
-```
-Wrapper around `Tx.NamedExec`.
-
-The transaction should be passed via a context value.
-
-#### func  Prepare
-
-```go
-func Prepare(ctx context.Context, query string, args ...any) (*stmt, error)
-```
-Wrapper around `Tx.Prepare`.
-
-The transaction should be passed via a context value.
-
-#### func  Queryx
-
-```go
-func Queryx(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
-```
-Wrapper around `Tx.Queryx`.
-
-The transaction should be passed via a context value.
-
-#### func  QueryxContext
-
-```go
-func QueryxContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
-```
-Wrapper around `Tx.QueryxContext`.
-
-The transaction should be passed via a context value.
-
-#### func  Select
-
-```go
-func Select(ctx context.Context, dest any, query string, args ...any) error
-```
-Wrapper around `Tx.Select`.
-
-The transaction should be passed via a context value.
 
 #### func  SetManager
 
@@ -150,12 +65,6 @@ SetManagerIfAbsent sets only if not already present.
 func WithManager(ctx context.Context, fn func(Manager))
 ```
 WithManager calls fn with the instance or fallback.
-
-#### func  WithTransaction
-
-```go
-func WithTransaction(ctx context.Context, dbase Database, callback TxnFn) error
-```
 
 #### type Config
 
@@ -239,18 +148,8 @@ type Database interface {
 	// Set the maximum open connections.
 	SetMaxOpenConns(int)
 
-	// Return the transaction (if any) from the given context.
-	Tx(context.Context) (*sqlx.Tx, error)
-
-	// Initiate a transaction.  Returns a new context that contains the
-	// database transaction session as a value.
-	Begin(context.Context) (context.Context, error)
-
-	// Initiate a transaction commit.
-	Commit(context.Context) error
-
-	// Initiate a transaction rollback.
-	Rollback(context.Context) error
+	// Rebind query placeholders to the chosen SQL backend.
+	Rebind(string) string
 
 	// Parses the given error looking for common MySQL error conditions.
 	//
@@ -260,6 +159,16 @@ type Database interface {
 	// If nothing interesting is found, then the original error is
 	// returned.
 	GetError(error) error
+
+	// Run a query function within the context of a database transaction.
+	//
+	// If there is no error, then the transaction is committed.
+	//
+	// If there is an error, then the transaction is rolled back.
+	WithTransaction(context.Context, TxnFn) error
+
+	// Exposes the database's pool as a `Runner`.
+	Runner() Runner
 }
 ```
 
@@ -452,8 +361,22 @@ type NullTime struct {
 func (x NullTime) MarshalJSON() ([]byte, error)
 ```
 
+#### type Runner
+
+```go
+type Runner interface {
+	sqlx.ExtContext
+
+	GetContext(context.Context, any, string, ...any) error
+	SelectContext(context.Context, any, string, ...any) error
+}
+```
+
+Runner is "anything that can run sqlx queries with context". Both *sqlx.DB and
+*sqlx.Tx satisfy this.
+
 #### type TxnFn
 
 ```go
-type TxnFn func(ctx context.Context) error
+type TxnFn func(context.Context, Runner) error
 ```

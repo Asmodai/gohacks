@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// txn.go --- Transaction hackery.
+// runner.go --- Database query runner.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package database
@@ -43,71 +39,23 @@ package database
 
 import (
 	"context"
-	"time"
 
-	"gitlab.com/tozd/go/errors"
+	"github.com/jmoiron/sqlx"
 )
+
+// * Constants:
+
+// * Variables:
 
 // * Code:
 
-// ** Types:
+// Runner is "anything that can run sqlx queries with context".
+// Both *sqlx.DB and *sqlx.Tx satisfy this.
+type Runner interface {
+	sqlx.ExtContext
 
-type TxnFn func(context.Context, Runner) error
-
-// ** Methods:
-
-// Runs `fn` in a DB transaction and commits/rolls back.
-func (obj *database) WithTransaction(ctx context.Context, fn TxnFn) error {
-	const (
-		maxRetries = 3
-		backoff    = 100 * time.Millisecond
-	)
-
-	for attempt := 0; ; attempt++ {
-		// one attempt = one scoped function, so defer is not stacked
-		attemptErr := func() error {
-			tx, err := obj.real.BeginTxx(ctx, nil)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			defer func() {
-				if p := recover(); p != nil {
-					_ = tx.Rollback()
-					panic(p)
-				}
-			}()
-
-			if err := fn(ctx, tx); err != nil {
-				_ = tx.Rollback()
-				return obj.GetError(err)
-			}
-
-			if err := tx.Commit(); err != nil {
-				_ = tx.Rollback()
-				return obj.GetError(err)
-			}
-
-			return nil
-		}()
-
-		if attemptErr == nil {
-			return nil
-		}
-
-		inerror := (errors.Is(attemptErr, ErrTxnDeadlock) ||
-			errors.Is(attemptErr, ErrTxnSerialization)) &&
-			attempt < maxRetries
-
-		if inerror {
-			// Back off and retry.
-			time.Sleep(backoff * time.Duration(attempt+1))
-
-			continue
-		}
-
-		return attemptErr
-	}
+	GetContext(context.Context, any, string, ...any) error
+	SelectContext(context.Context, any, string, ...any) error
 }
 
-// * txn.go ends here.
+// * runner.go ends here.

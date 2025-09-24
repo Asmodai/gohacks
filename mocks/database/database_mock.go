@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	sqlx "github.com/jmoiron/sqlx"
+	database "github.com/Asmodai/gohacks/database"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -41,21 +41,6 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 	return m.recorder
 }
 
-// Begin mocks base method.
-func (m *MockDatabase) Begin(arg0 context.Context) (context.Context, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Begin", arg0)
-	ret0, _ := ret[0].(context.Context)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Begin indicates an expected call of Begin.
-func (mr *MockDatabaseMockRecorder) Begin(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockDatabase)(nil).Begin), arg0)
-}
-
 // Close mocks base method.
 func (m *MockDatabase) Close() error {
 	m.ctrl.T.Helper()
@@ -68,20 +53,6 @@ func (m *MockDatabase) Close() error {
 func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close))
-}
-
-// Commit mocks base method.
-func (m *MockDatabase) Commit(arg0 context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Commit", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Commit indicates an expected call of Commit.
-func (mr *MockDatabaseMockRecorder) Commit(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockDatabase)(nil).Commit), arg0)
 }
 
 // GetError mocks base method.
@@ -112,18 +83,32 @@ func (mr *MockDatabaseMockRecorder) Ping() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockDatabase)(nil).Ping))
 }
 
-// Rollback mocks base method.
-func (m *MockDatabase) Rollback(arg0 context.Context) error {
+// Rebind mocks base method.
+func (m *MockDatabase) Rebind(arg0 string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Rollback", arg0)
-	ret0, _ := ret[0].(error)
+	ret := m.ctrl.Call(m, "Rebind", arg0)
+	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// Rollback indicates an expected call of Rollback.
-func (mr *MockDatabaseMockRecorder) Rollback(arg0 any) *gomock.Call {
+// Rebind indicates an expected call of Rebind.
+func (mr *MockDatabaseMockRecorder) Rebind(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockDatabase)(nil).Rollback), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rebind", reflect.TypeOf((*MockDatabase)(nil).Rebind), arg0)
+}
+
+// Runner mocks base method.
+func (m *MockDatabase) Runner() database.Runner {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Runner")
+	ret0, _ := ret[0].(database.Runner)
+	return ret0
+}
+
+// Runner indicates an expected call of Runner.
+func (mr *MockDatabaseMockRecorder) Runner() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Runner", reflect.TypeOf((*MockDatabase)(nil).Runner))
 }
 
 // SetMaxIdleConns mocks base method.
@@ -150,17 +135,16 @@ func (mr *MockDatabaseMockRecorder) SetMaxOpenConns(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxOpenConns", reflect.TypeOf((*MockDatabase)(nil).SetMaxOpenConns), arg0)
 }
 
-// Tx mocks base method.
-func (m *MockDatabase) Tx(arg0 context.Context) (*sqlx.Tx, error) {
+// WithTransaction mocks base method.
+func (m *MockDatabase) WithTransaction(arg0 context.Context, arg1 database.TxnFn) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Tx", arg0)
-	ret0, _ := ret[0].(*sqlx.Tx)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "WithTransaction", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// Tx indicates an expected call of Tx.
-func (mr *MockDatabaseMockRecorder) Tx(arg0 any) *gomock.Call {
+// WithTransaction indicates an expected call of WithTransaction.
+func (mr *MockDatabaseMockRecorder) WithTransaction(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Tx", reflect.TypeOf((*MockDatabase)(nil).Tx), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithTransaction", reflect.TypeOf((*MockDatabase)(nil).WithTransaction), arg0, arg1)
 }

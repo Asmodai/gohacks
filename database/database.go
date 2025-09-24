@@ -31,42 +31,31 @@
 //
 // mock:yes
 
+// * Package:
+
 package database
 
-import (
-	"github.com/Asmodai/gohacks/contextext"
+// * Imports:
 
-	// This is the MySQL driver, it must be blank.
-	_ "github.com/go-sql-driver/mysql"
+import (
+	"context"
+	"database/sql"
 
 	"github.com/jmoiron/sqlx"
 	"gitlab.com/tozd/go/errors"
-
-	"context"
-	"database/sql"
-	"fmt"
-	"strings"
 )
+
+// * Variables:
 
 var (
-	errKeyNotFound error = errors.Base("key not found")
-
-	ErrTxnKeyNotFound error = errors.Base("transaction key not found")
-	ErrTxnKeyNotTxn   error = errors.Base("key value is not a transaction")
-	ErrTxnContext     error = errors.Base("could not create transaction context")
-	ErrTxnStart       error = errors.Base("could not start transaction")
-
-	ErrTxnDeadlock      error = errors.Base("deadlock found when trying to get lock")
-	ErrServerConnClosed error = errors.Base("server connection closed")
-	ErrLostConn         error = errors.Base("lost connection during query")
+	ErrServerConnClosed = errors.Base("server connection closed")
+	ErrLostConn         = errors.Base("lost connection during query")
+	ErrTxnDeadlock      = errors.Base("deadlock found when trying to get lock")
+	ErrTxnSerialization = errors.Base("serialization failure")
 )
 
-const (
-	KeyTransaction   string = "_DB_TXN"
-	StringDeadlock   string = "Error 1213" // Deadlock detected.
-	StringConnClosed string = "Error 2006" // MySQL server connection closed.
-	StringLostConn   string = "Error 2013" // Lost connection during query.
-)
+// * Code:
+// ** Interface:
 
 type Database interface {
 	// Pings the database connection to ensure it is alive and connected.
@@ -82,18 +71,8 @@ type Database interface {
 	// Set the maximum open connections.
 	SetMaxOpenConns(int)
 
-	// Return the transaction (if any) from the given context.
-	Tx(context.Context) (*sqlx.Tx, error)
-
-	// Initiate a transaction.  Returns a new context that contains the
-	// database transaction session as a value.
-	Begin(context.Context) (context.Context, error)
-
-	// Initiate a transaction commit.
-	Commit(context.Context) error
-
-	// Initiate a transaction rollback.
-	Rollback(context.Context) error
+	// Rebind query placeholders to the chosen SQL backend.
+	Rebind(string) string
 
 	// Parses the given error looking for common MySQL error conditions.
 	//
@@ -103,12 +82,27 @@ type Database interface {
 	// If nothing interesting is found, then the original error is
 	// returned.
 	GetError(error) error
+
+	// Run a query function within the context of a database transaction.
+	//
+	// If there is no error, then the transaction is committed.
+	//
+	// If there is an error, then the transaction is rolled back.
+	WithTransaction(context.Context, TxnFn) error
+
+	// Exposes the database's pool as a `Runner`.
+	Runner() Runner
 }
 
+// ** Type:
+
+// Concrete database type.
 type database struct {
 	real   *sqlx.DB
 	driver string
 }
+
+// ** Methods:
 
 // Ping a database connection.
 func (obj *database) Ping() error {
@@ -132,166 +126,24 @@ func (obj *database) SetMaxOpenConns(limit int) {
 	obj.real.SetMaxOpenConns(limit)
 }
 
-// Obtain a transaction from a context (if any).
-func (obj *database) Tx(ctx context.Context) (*sqlx.Tx, error) {
-	return getTx(ctx)
+// Rebind query placeholders to the chosen SQL backend.
+func (obj *database) Rebind(query string) string {
+	bind := sqlx.QUESTION
+
+	switch obj.driver {
+	case "postgres", "pgx", "pgx/v5":
+		bind = sqlx.DOLLAR
+	}
+
+	return sqlx.Rebind(bind, query)
 }
 
-// Begin a transaction.
-func (obj *database) Begin(ctx context.Context) (context.Context, error) {
-	txn, err := getTx(ctx)
-
-	// Did we fail at getting a transaction from the context?
-	if err != nil {
-		if !errors.Is(err, contextext.ErrValueMapNotFound) {
-			//
-			// This should never happen, but it is better to be
-			// safe than sorry in case the implementation of
-			// context value maps should change in the future.
-			//
-			return nil, errors.WithStack(err)
-		}
-	}
-
-	// Is the transaction non-NIL?
-	if txn != nil {
-		return nil, errors.Wrap(
-			ErrTxnStart,
-			"already in a transaction",
-		)
-	}
-
-	// Begin the transaction.
-	ntx, err := obj.real.BeginTxx(ctx, nil)
-	if err != nil {
-		return nil, errors.Wrap(ErrTxnStart, err.Error())
-	}
-
-	// Set up a new context.
-	nctx, err := setTx(ctx, ntx)
-	if err != nil {
-		return nil, errors.Wrap(ErrTxnContext, err.Error())
-	}
-
-	return nctx, nil
+// Expose the database's pool as a runner.
+func (d *database) Runner() Runner {
+	return d.real
 }
 
-// Initiate a transaction commit.
-func (obj *database) Commit(ctx context.Context) error {
-	txn, err := getTx(ctx)
-
-	if err != nil {
-		return errors.Wrap(
-			err,
-			"could not get transaction from context",
-		)
-	}
-
-	if err := txn.Commit(); err != nil {
-		return obj.GetError(err)
-	}
-
-	return nil
-}
-
-// Initiate a transaction rollback.
-func (obj *database) Rollback(ctx context.Context) error {
-	txn, err := getTx(ctx)
-
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	if err := txn.Rollback(); err != nil {
-		return errors.WithStack(err)
-	}
-
-	return nil
-}
-
-// Translate specific MySQL errors into distinct error conditions.
-func (obj *database) GetError(err error) error {
-	var nerr = err
-
-	switch {
-	case strings.Contains(err.Error(), StringDeadlock):
-		nerr = ErrTxnDeadlock
-
-	case strings.Contains(err.Error(), StringConnClosed):
-		nerr = ErrServerConnClosed
-
-	case strings.Contains(err.Error(), StringLostConn):
-		nerr = ErrLostConn
-	}
-
-	return errors.WithStack(nerr)
-}
-
-// Helper function for obtaining a value from a context's value map.
-func fromContext(ctx context.Context, key string) (any, error) {
-	vmap, err := contextext.GetValueMap(ctx)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	rval, found := vmap.Get(key)
-	if !found {
-		return nil, errors.WithStack(errKeyNotFound)
-	}
-
-	return rval, nil
-}
-
-// Get the context's transaction value in the value map.
-//
-// If there is no value map in the context then contextext's
-// `ErrValueMapNotFound` is returned.
-//
-// If the value for the transaction key is not of type `*sql.Tx` (or cannot be
-// coerced to that type) then `ErrTxnKeyNotTxn` is returned.
-func getTx(ctx context.Context) (*sqlx.Tx, error) {
-	val, err := fromContext(ctx, KeyTransaction)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	txn, ok := val.(*sqlx.Tx)
-	if !ok {
-		return nil, errors.WithStack(ErrTxnKeyNotTxn)
-	}
-
-	return txn, nil
-}
-
-// Set the context's transaction value in the value map.
-//
-// This will never return an error condition in it's current state, but should
-// retain the error handling in case the implementation of contextext changes.
-//
-//nolint:unparam
-func setTx(ctx context.Context, txn *sqlx.Tx) (context.Context, error) {
-	var (
-		vmap contextext.ValueMap
-		err  error
-	)
-
-	vmap, err = contextext.GetValueMap(ctx)
-	if err != nil {
-		vmap = contextext.NewValueMap()
-	}
-
-	vmap.Set(KeyTransaction, txn)
-
-	return contextext.WithValueMap(ctx, vmap), nil
-}
-
-func sqlError(err error, sql string, args ...any) error {
-	if err == nil {
-		return nil
-	}
-
-	return fmt.Errorf("error executing '%s' [%v]: %w", sql, args, err)
-}
+// ** Functions:
 
 // Create a new database object using an existing `sql` object.
 func FromDB(db *sql.DB, driver string) Database {
@@ -304,12 +156,11 @@ func FromDB(db *sql.DB, driver string) Database {
 // Open a connection using the relevant driver to the given data source name.
 func Open(driver string, dsn string) (Database, error) {
 	db, err := sqlx.Connect(driver, dsn)
-	obj := &database{
-		real:   db,
-		driver: driver,
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
-	return obj, errors.WithStack(err)
+	return &database{real: db, driver: driver}, nil
 }
 
 // database.go ends here.

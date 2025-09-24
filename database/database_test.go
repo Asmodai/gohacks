@@ -29,365 +29,300 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// * Package:
+
 package database
 
-import (
-	"github.com/Asmodai/gohacks/contextext"
-	"github.com/DATA-DOG/go-sqlmock"
-	"gitlab.com/tozd/go/errors"
+// * Imports:
 
+import (
 	"context"
+	"database/sql"
+	"errors"
+	"regexp"
 	"testing"
+	"time"
+
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/go-sql-driver/mysql"
+	"github.com/jackc/pgconn"
+	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
-func TestDatabaseOpen(t *testing.T) {
-	t.Run("Returns error if cannot connect", func(t *testing.T) {
-		_, e1 := Open("nil", "nil")
-		if e1 == nil {
-			t.Error("Expected an error condition")
-		}
-	})
-}
+// * Code:
 
-func TestBasic(t *testing.T) {
-	db, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
-	if err != nil {
-		t.Errorf("Could not mock DB: %v", err.Error())
-		return
-	}
-
-	obj := FromDB(db, "sqlmock")
-	defer obj.Close()
-
-	t.Run("Ping", func(t *testing.T) {
-		mock.ExpectPing()
-
-		obj.Ping()
-	})
-}
-
-func TestContext(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.TODO())
-	defer cancel()
-
-	t.Run("getTx() with bad transaction", func(t *testing.T) {
-		vmap := contextext.NewValueMap()
-		vmap.Set(KeyTransaction, 42)
-		nctx := contextext.WithValueMap(ctx, vmap)
-
-		_, err := getTx(nctx)
-		if !errors.Is(err, ErrTxnKeyNotTxn) {
-			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
-		}
-	})
-
-	t.Run("getTx() with missing key", func(t *testing.T) {
-		vmap := contextext.NewValueMap()
-		nctx := contextext.WithValueMap(ctx, vmap)
-
-		_, err := getTx(nctx)
-		if !errors.Is(err, errKeyNotFound) {
-			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
-		}
-	})
-}
-
-func TestTransactionFailures(t *testing.T) {
+// helper to build a *database from a sqlmock DB with a given driver string
+func newTestDB(t *testing.T, driver string) (*database, sqlmock.Sqlmock, *sql.DB) {
+	t.Helper()
 	db, mock, err := sqlmock.New()
 	if err != nil {
-		t.Errorf("Could not mock DB: %v", err.Error())
-		return
+		t.Fatalf("sqlmock new: %v", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.TODO())
-	defer cancel()
+	// wrap in sqlx and our database type
+	sqlxDB := sqlx.NewDb(db, driver)
 
-	obj := FromDB(db, "sqlmock")
-	defer obj.Close()
-
-	t.Run("Begin() ErrTxnStart", func(t *testing.T) {
-		mock.ExpectBegin()
-
-		txctx, err := obj.Begin(ctx)
-		_, err = obj.Begin(txctx)
-
-		if !errors.Is(err, ErrTxnStart) {
-			t.Errorf("Unexpected error: %#v", err)
-		}
-	})
-
-	t.Run("Begin() error from sqlx", func(t *testing.T) {
-		mock.ExpectBegin().WillReturnError(errors.Base("no cheese"))
-
-		_, err := obj.Begin(ctx)
-
-		if err.Error() != "no cheese" {
-			t.Errorf("Unexpected error: %#v", err)
-		}
-	})
-
-	t.Run("Commit() context error", func(t *testing.T) {
-		mock.ExpectBegin()
-
-		_, err := obj.Begin(ctx)
-		err = obj.Commit(ctx)
-
-		if !errors.Is(err, contextext.ErrValueMapNotFound) {
-			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
-		}
-	})
-
-	t.Run("Commit() sqlx error", func(t *testing.T) {
-		mock.ExpectBegin()
-		mock.ExpectCommit().WillReturnError(errors.Base("no cheese"))
-
-		txctx, err := obj.Begin(ctx)
-		err = obj.Commit(txctx)
-
-		if err.Error() != "no cheese" {
-			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
-		}
-	})
-
-	t.Run("Rollback() context error", func(t *testing.T) {
-		mock.ExpectBegin()
-
-		_, err := obj.Begin(ctx)
-		err = obj.Rollback(ctx)
-
-		if !errors.Is(err, contextext.ErrValueMapNotFound) {
-			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
-		}
-	})
-
-	t.Run("Rollback() sqlx error", func(t *testing.T) {
-		mock.ExpectBegin()
-		mock.ExpectRollback().WillReturnError(errors.Base("no cheese"))
-
-		txctx, err := obj.Begin(ctx)
-		err = obj.Rollback(txctx)
-
-		if err.Error() != "no cheese" {
-			t.Errorf("Unexpected error: %#v", errors.Unwrap(err))
-		}
-	})
+	return &database{real: sqlxDB, driver: driver}, mock, db
 }
 
-func TestTransactionCommit(t *testing.T) {
-	var (
-		ctx    context.Context
-		cancel context.CancelFunc
-		txctx  context.Context
-	)
-
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Errorf("Could not mock DB: %v", err.Error())
-		return
-	}
-
-	ctx, cancel = context.WithCancel(context.TODO())
-	defer cancel()
-
-	obj := FromDB(db, "sqlmock")
-	defer obj.Close()
-
-	// Query, mock rows and results.
-	query := "SELECT id,name FROM foo"
-	rows := sqlmock.NewRows([]string{"id", "name"}).
-		AddRow(1, "Dave").
-		AddRow(2, "Charles")
-
-	// Mock our SQL transaction.
-	mock.ExpectBegin()
-	mock.ExpectQuery("^SELECT (.+) FROM foo").WillReturnRows(rows)
-	mock.ExpectCommit()
-
-	// Create our transaction.
-	txctx, err = obj.Begin(ctx)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err.Error())
-		return
-	}
-
-	// Is the transaction ok?
-	if txctx == nil {
-		t.Error("Transaction context is nil")
-	}
-
-	// Extract the sqlx transaction from the context.
-	txn, err := obj.Tx(txctx)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err.Error())
-		return
-	}
-
-	// Transaction ok?
-	if txn == nil {
-		t.Error("Transaction is nil")
-		return
-	}
-
-	// Run our query.
-	txn.Query(query)
-
-	// Commit our query.
-	err = obj.Commit(txctx)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err.Error())
-	}
-}
-
-func TestTransactionRollback(t *testing.T) {
-	var (
-		ctx    context.Context
-		cancel context.CancelFunc
-		txctx  context.Context
-	)
-
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Errorf("Could not mock DB: %v", err.Error())
-		return
-	}
-
-	ctx, cancel = context.WithCancel(context.TODO())
-	defer cancel()
-
-	obj := FromDB(db, "sqlmock")
-	defer obj.Close()
-
-	// Query, mock rows and results.
-	query := "SELECT id,name FROM foo"
-	rows := sqlmock.NewRows([]string{"id", "name"}).
-		AddRow(1, "Dave").
-		AddRow(2, "Charles")
-
-	// Mock our SQL transaction.
-	mock.ExpectBegin()
-	mock.ExpectQuery("^SELECT (.+) FROM foo").WillReturnRows(rows)
-	mock.ExpectRollback()
-
-	// Create our transaction.
-	txctx, err = obj.Begin(ctx)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err.Error())
-		return
-	}
-
-	// Is the transaction ok?
-	if txctx == nil {
-		t.Error("Transaction context is nil")
-	}
-
-	// Extract the sqlx transaction from the context.
-	txn, err := obj.Tx(txctx)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err.Error())
-		return
-	}
-
-	// Transaction ok?
-	if txn == nil {
-		t.Error("Transaction is nil")
-		return
-	}
-
-	// Run our query.
-	txn.Query(query)
-
-	// Rollback our query.
-	err = obj.Rollback(txctx)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err.Error())
-	}
-}
-
-func TestSQLErrors(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Errorf("Could not mock DB: %v", err.Error())
-	}
-
-	ctx, cancel := context.WithCancel(context.TODO())
-	defer cancel()
-
-	obj := FromDB(db, "sqlmock")
-	defer obj.Close()
-
-	t.Run("1213: Deadlock found", func(t *testing.T) {
-		sqlerr := "Error 1213: Deadlock found when trying to get lock; try restarting transaction"
-
-		mock.ExpectBegin()
-		mock.ExpectCommit().WillReturnError(errors.Base(sqlerr))
-
-		txctx, err := obj.Begin(ctx)
-		err = obj.Commit(txctx)
-
-		if !errors.Is(err, ErrTxnDeadlock) {
-			t.Errorf("Unexpected error: %#v", err)
-		}
-	})
-}
-
-func TestWithTransaction(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Could not mock DB: %v", err)
-	}
+func TestRebind_MySQL(t *testing.T) {
+	d, _, db := newTestDB(t, "mysql")
 	defer db.Close()
 
-	obj := FromDB(db, "sqlmock")
+	q := "INSERT INTO x(a,b,c) VALUES (?, ?, ?)"
+	got := d.Rebind(q)
+	if got != q {
+		t.Fatalf("mysql rebind changed query: %q -> %q", q, got)
+	}
+}
 
-	t.Run("Success", func(t *testing.T) {
-		mock.ExpectBegin()
-		mock.ExpectCommit()
+func TestRebind_Postgres(t *testing.T) {
+	d, _, db := newTestDB(t, "postgres")
+	defer db.Close()
 
-		err := WithTransaction(context.TODO(), obj, func(ctx context.Context) error {
-			return nil
-		})
+	q := "INSERT INTO x(a,b,c) VALUES (?, ?, ?)"
+	got := d.Rebind(q)
+	want := "INSERT INTO x(a,b,c) VALUES ($1, $2, $3)"
+	if got != want {
+		t.Fatalf("postgres rebind = %q, want %q", got, want)
+	}
+}
 
-		if err != nil {
-			t.Errorf("Expected no error, got: %v", err)
+func TestRebind_PgxV5(t *testing.T) {
+	d, _, db := newTestDB(t, "pgx/v5")
+	defer db.Close()
+
+	q := "UPDATE t SET a=?, b=? WHERE id=?"
+	got := d.Rebind(q)
+	want := "UPDATE t SET a=$1, b=$2 WHERE id=$3"
+	if got != want {
+		t.Fatalf("pgx/v5 rebind = %q, want %q", got, want)
+	}
+}
+
+func TestGetError_MySQL_Mappings(t *testing.T) {
+	d, _, db := newTestDB(t, "mysql")
+	defer db.Close()
+
+	tests := []struct {
+		err  error
+		want error
+	}{
+		{&mysql.MySQLError{Number: 1213, Message: "deadlock"}, ErrTxnDeadlock},
+		{&mysql.MySQLError{Number: 2006, Message: "server gone"}, ErrServerConnClosed},
+		{&mysql.MySQLError{Number: 2013, Message: "lost conn"}, ErrLostConn},
+	}
+
+	for _, tt := range tests {
+		got := d.GetError(tt.err)
+
+		if !errors.Is(got, tt.want) {
+			t.Fatalf("GetError(%v) = %v, want %v", tt.err, got, tt.want)
 		}
+	}
+}
 
-		if err := mock.ExpectationsWereMet(); err != nil {
-			t.Errorf("Unmet expectations: %v", err)
+func TestGetError_Postgres_Mappings_pgx(t *testing.T) {
+	d, _, db := newTestDB(t, "pgx")
+	defer db.Close()
+
+	tests := []struct {
+		err  error
+		want error
+	}{
+		{&pgconn.PgError{Code: "40P01", Message: "deadlock"}, ErrTxnDeadlock},
+		{&pgconn.PgError{Code: "40001", Message: "serialization"}, ErrTxnSerialization},
+		{&pgconn.PgError{Code: "08006", Message: "conn failure"}, ErrLostConn},
+		{&pgconn.PgError{Code: "57P01", Message: "admin shutdown"}, ErrServerConnClosed},
+	}
+
+	for _, tt := range tests {
+		got := d.GetError(tt.err)
+
+		if !errors.Is(got, tt.want) {
+			t.Fatalf("GetError(%v) = %v, want %v", tt.err, got, tt.want)
 		}
+	}
+}
+
+func TestGetError_Postgres_Mappings_libpq(t *testing.T) {
+	d, _, db := newTestDB(t, "postgres")
+	defer db.Close()
+
+	tests := []struct {
+		err  error
+		want error
+	}{
+		{&pq.Error{Code: "40P01"}, ErrTxnDeadlock},
+		{&pq.Error{Code: "40001"}, ErrTxnSerialization},
+		{&pq.Error{Code: "08006"}, ErrLostConn},
+		{&pq.Error{Code: "57P01"}, ErrServerConnClosed},
+	}
+
+	for _, tt := range tests {
+		got := d.GetError(tt.err)
+
+		if !errors.Is(got, tt.want) {
+			t.Fatalf("GetError(%v) = %v, want %v", tt.err, got, tt.want)
+		}
+	}
+}
+
+func TestWithTransaction_CommitHappyPath(t *testing.T) {
+	d, mock, raw := newTestDB(t, "mysql")
+	defer raw.Close()
+
+	ctx := context.Background()
+
+	mock.ExpectBegin()
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO users(name) VALUES (?)")).
+		WithArgs("Ada").
+		WillReturnResult(sqlmock.NewResult(123, 1))
+	mock.ExpectCommit()
+
+	err := d.WithTransaction(ctx, func(ctx context.Context, r Runner) error {
+		q := d.Rebind("INSERT INTO users(name) VALUES (?)")
+		_, err := r.ExecContext(ctx, q, "Ada")
+		return err
 	})
 
-	t.Run("Callback returns error", func(t *testing.T) {
-		mock.ExpectBegin()
-		mock.ExpectRollback()
+	if err != nil {
+		t.Fatalf("WithTransaction commit path: %v", err)
+	}
 
-		expectedErr := errors.Base("callback failed")
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet expectations: %v", err)
+	}
+}
 
-		err := WithTransaction(context.TODO(), obj, func(ctx context.Context) error {
-			return expectedErr
-		})
+func TestWithTransaction_RollbackOnError(t *testing.T) {
+	d, mock, raw := newTestDB(t, "mysql")
+	defer raw.Close()
 
-		if !errors.Is(err, expectedErr) {
-			t.Errorf("Expected %v, got: %v", expectedErr, err)
+	ctx := context.Background()
+
+	mock.ExpectBegin()
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO users(name) VALUES (?)")).
+		WithArgs("Ada").
+		WillReturnError(errors.New("boom"))
+	mock.ExpectRollback()
+
+	err := d.WithTransaction(ctx, func(ctx context.Context, r Runner) error {
+		q := d.Rebind("INSERT INTO users(name) VALUES (?)")
+		_, execErr := r.ExecContext(ctx, q, "Ada")
+		if execErr != nil {
+			return execErr
 		}
-
-		if err := mock.ExpectationsWereMet(); err != nil {
-			t.Errorf("Unmet expectations: %v", err)
-		}
+		return nil
 	})
 
-	t.Run("Callback panics", func(t *testing.T) {
-		mock.ExpectBegin()
-		mock.ExpectRollback()
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
 
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("Expected a panic, but none occurred")
-			}
-		}()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet expectations: %v", err)
+	}
+}
 
-		_ = WithTransaction(context.TODO(), obj, func(ctx context.Context) error {
-			panic("OMG PANIC!")
-		})
+func TestWithTransaction_RetryOnMySQLDeadlock(t *testing.T) {
+	d, mock, raw := newTestDB(t, "mysql")
+	defer raw.Close()
+
+	ctx := context.Background()
+
+	// Attempt 1: deadlock -> rollback
+	mock.ExpectBegin()
+	mock.ExpectExec(regexp.QuoteMeta("UPDATE t SET v=? WHERE id=?")).
+		WithArgs(1, 42).
+		WillReturnError(&mysql.MySQLError{Number: 1213, Message: "deadlock"})
+	mock.ExpectRollback()
+
+	// Attempt 2: success -> commit
+	mock.ExpectBegin()
+	mock.ExpectExec(regexp.QuoteMeta("UPDATE t SET v=? WHERE id=?")).
+		WithArgs(1, 42).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	start := time.Now()
+	err := d.WithTransaction(ctx, func(ctx context.Context, r Runner) error {
+		q := d.Rebind("UPDATE t SET v=? WHERE id=?")
+		_, execErr := r.ExecContext(ctx, q, 1, 42)
+		return execErr
+	})
+	elapsed := time.Since(start)
+
+	if err != nil {
+		t.Fatalf("expected retry to succeed, got %v", err)
+	}
+
+	// sanity: ensure backoff didn’t explode (should be small)
+	if elapsed > 2*time.Second {
+		t.Fatalf("unexpected long retry backoff: %v", elapsed)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet expectations: %v", err)
+	}
+}
+
+func TestWithTransaction_RetryOnPgSerialization(t *testing.T) {
+	d, mock, raw := newTestDB(t, "pgx")
+	defer raw.Close()
+
+	ctx := context.Background()
+
+	// Attempt 1: serialization failure -> rollback
+	mock.ExpectBegin()
+	mock.ExpectExec(regexp.QuoteMeta("UPDATE t SET v=$1 WHERE id=$2")).
+		WithArgs(1, 42).
+		WillReturnError(&pgconn.PgError{Code: "40001", Message: "serialization failure"})
+	mock.ExpectRollback()
+
+	// Attempt 2: success -> commit
+	mock.ExpectBegin()
+	mock.ExpectExec(regexp.QuoteMeta("UPDATE t SET v=$1 WHERE id=$2")).
+		WithArgs(1, 42).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	err := d.WithTransaction(ctx, func(ctx context.Context, r Runner) error {
+		q := d.Rebind("UPDATE t SET v=? WHERE id=?")
+		_, execErr := r.ExecContext(ctx, q, 1, 42)
+		return execErr
+	})
+
+	if err != nil {
+		t.Fatalf("expected retry to succeed, got %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet expectations: %v", err)
+	}
+}
+
+func TestWithTransaction_PanicPathRollsBack(t *testing.T) {
+	d, mock, raw := newTestDB(t, "mysql")
+	defer raw.Close()
+
+	ctx := context.Background()
+
+	mock.ExpectBegin()
+	mock.ExpectRollback()
+
+	defer func() {
+		if p := recover(); p == nil {
+			t.Fatalf("expected panic to propagate")
+		}
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("unmet expectations: %v", err)
+		}
+	}()
+
+	_ = d.WithTransaction(ctx, func(ctx context.Context, r Runner) error {
+		panic("kaboom")
 	})
 }
 
