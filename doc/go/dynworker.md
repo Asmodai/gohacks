@@ -55,6 +55,9 @@ type Config struct {
 
 	// Idle timeout duration.
 	IdleTimeout time.Duration
+
+	// Drain target duration.
+	DrainTarget time.Duration
 }
 ```
 

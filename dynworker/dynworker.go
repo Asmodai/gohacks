@@ -44,6 +44,7 @@ package dynworker
 
 import (
 	"context"
+	gomath "math"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -98,8 +99,9 @@ var (
 	//nolint:gochecknoglobals
 	taskDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: "dynworker_task_duration_seconds",
-			Help: "Histogram of task processing durations",
+			Name:    "dynworker_task_duration_seconds",
+			Help:    "Histogram of task processing durations",
+			Buckets: prometheus.ExponentialBuckets(0.005, 2, 12),
 		},
 		[]string{"pool"},
 	)
@@ -177,8 +179,6 @@ type workerPool struct {
 	taskDurationMetric    prometheus.Observer
 	totalScaledUpMetric   prometheus.Counter
 	totalScaledDownMetric prometheus.Counter
-	scaleUpCh             chan struct{}
-	scaleDownCh           chan struct{}
 	processFn             TaskFn
 	scalerFn              ScalerFn
 	taskPool              *sync.Pool
@@ -187,8 +187,8 @@ type workerPool struct {
 	name                  string
 	shutdownChans         []chan struct{}
 	wg                    sync.WaitGroup
-	minWorkers            int64
-	maxWorkers            int64
+	minWorkers            atomic.Int64
+	maxWorkers            atomic.Int64
 	scaleCooldown         time.Duration
 	smoothedRequired      atomic.Int64
 	hysteresisThreshold   int64
@@ -207,22 +207,22 @@ func (obj *workerPool) WorkerCount() int64 {
 
 // Return the minimum number of workers in the pool.
 func (obj *workerPool) MinWorkers() int64 {
-	return obj.minWorkers
-}
-
-// Set the minimum number of workers to the given value.
-func (obj *workerPool) SetMinWorkers(val int64) {
-	obj.minWorkers = val
-}
-
-// Set the maximum number of workers to the given value.
-func (obj *workerPool) SetMaxWorkers(val int64) {
-	obj.maxWorkers = val
+	return obj.minWorkers.Load()
 }
 
 // Return the maximum number of workers in the pool.
 func (obj *workerPool) MaxWorkers() int64 {
-	return obj.maxWorkers
+	return obj.maxWorkers.Load()
+}
+
+// Set the minimum number of workers to the given value.
+func (obj *workerPool) SetMinWorkers(val int64) {
+	obj.minWorkers.Store(val)
+}
+
+// Set the maximum number of workers to the given value.
+func (obj *workerPool) SetMaxWorkers(val int64) {
+	obj.maxWorkers.Store(val)
 }
 
 // Set the task callback function.
@@ -236,7 +236,7 @@ func (obj *workerPool) SetScalerFunction(scalerfn ScalerFn) {
 
 // Start the worker pool.
 func (obj *workerPool) Start() {
-	for range obj.minWorkers {
+	for range obj.minWorkers.Load() {
 		obj.spawnWorker()
 	}
 
@@ -287,7 +287,10 @@ func (obj *workerPool) spawnWorker() {
 	killChan := make(chan struct{})
 	obj.registerShutdownChannel(killChan)
 
-	go obj.startWorkerLoop(killChan)
+	// Per-worker context.
+	wctx, cancel := context.WithCancel(obj.ctx)
+
+	go obj.startWorkerLoop(wctx, cancel, killChan)
 }
 
 func (obj *workerPool) registerShutdownChannel(killChan chan struct{}) {
@@ -313,16 +316,14 @@ func (obj *workerPool) unregisterShutdownChannel(killChan chan struct{}) {
 	}
 }
 
-func (obj *workerPool) startWorkerLoop(killChan chan struct{}) {
+func (obj *workerPool) startWorkerLoop(wctx context.Context, cancel context.CancelFunc, killChan chan struct{}) {
 	defer func() {
+		cancel()
 		obj.wg.Done()
 		obj.workerCount.Add(-1)
 		obj.activeWorkersMetric.Dec()
 		obj.unregisterShutdownChannel(killChan)
 	}()
-
-	idleTimer := time.NewTimer(obj.config.IdleTimeout)
-	defer idleTimer.Stop()
 
 	for {
 		select {
@@ -330,10 +331,12 @@ func (obj *workerPool) startWorkerLoop(killChan chan struct{}) {
 			return
 
 		case <-killChan:
+			cancel()
+
 			return
 
 		default:
-			if obj.handleWorkerLifecycle(idleTimer) {
+			if obj.handleWorkerLifecycle(wctx) {
 				obj.lgr.Info(
 					"Worker timed out.",
 					"type", "dynworker",
@@ -346,10 +349,24 @@ func (obj *workerPool) startWorkerLoop(killChan chan struct{}) {
 	}
 }
 
-func (obj *workerPool) handleWorkerLifecycle(idleTimer *time.Timer) bool {
-	task, err := obj.input.Get(obj.ctx)
+func (obj *workerPool) handleWorkerLifecycle(wctx context.Context) bool {
+	tctx, tcancel := context.WithTimeout(wctx, obj.config.IdleTimeout)
+	defer tcancel()
+
+	task, err := obj.input.Get(tctx)
 	if err != nil {
-		return errors.Is(err, context.Canceled)
+		// Channel closed, exit.
+		if errors.Is(err, ErrChannelClosed) {
+			return true
+		}
+
+		// If we timed out and we have more than min workers, exit.
+		if errors.Is(errors.Unwrap(err), context.DeadlineExceeded) {
+			return obj.workerCount.Load() > obj.minWorkers.Load()
+		}
+
+		// Treat cancellation or context shutdown as an exit.
+		return true
 	}
 
 	if task == nil {
@@ -357,7 +374,6 @@ func (obj *workerPool) handleWorkerLifecycle(idleTimer *time.Timer) bool {
 	}
 
 	obj.processTask(task)
-	idleTimer.Reset(obj.config.IdleTimeout)
 
 	return false
 }
@@ -368,12 +384,12 @@ func (obj *workerPool) processTask(task *Task) {
 	_ = obj.processFn(task)
 	obj.tasksTotalMetric.Inc()
 
-	elapsed := time.Since(start).Nanoseconds()
+	elapsed := time.Since(start)
 
 	runtime.Gosched() // Give some time to Go.
 
-	obj.updateAvgProcTime(elapsed)
-	obj.taskDurationMetric.Observe(float64(elapsed))
+	obj.updateAvgProcTime(elapsed.Nanoseconds())
+	obj.taskDurationMetric.Observe(float64(elapsed) / float64(time.Second))
 
 	task.reset()
 	obj.taskPool.Put(task)
@@ -414,8 +430,8 @@ func (obj *workerPool) computeRequiredWorkers() int64 {
 	if obj.scalerFn != nil {
 		return math.ClampI64(
 			int64(obj.scalerFn()),
-			obj.minWorkers,
-			obj.maxWorkers,
+			obj.minWorkers.Load(),
+			obj.maxWorkers.Load(),
 		)
 	}
 
@@ -426,9 +442,20 @@ func (obj *workerPool) computeRequiredWorkers() int64 {
 		avg = defaultAverageProcessTime
 	}
 
-	raw := int64(float64(queued)*avg.Seconds()) + 1
+	target := obj.config.DrainTarget
+	if target <= 0 {
+		target = time.Second
+	}
 
-	return math.ClampI64(raw, obj.minWorkers, obj.maxWorkers)
+	// workesr ~ ceil(queued * avg / target)
+	num := int64(gomath.Ceil(float64(queued) *
+		(float64(avg) / float64(target))))
+
+	if num < 1 {
+		num = 1
+	}
+
+	return math.ClampI64(num, obj.minWorkers.Load(), obj.maxWorkers.Load())
 }
 
 // Smooth the number of required numbers.
@@ -461,7 +488,7 @@ func (obj *workerPool) scaleUp(num, current, required int64) {
 		"pool", obj.name,
 		"current", current,
 		"required", required,
-		"new", num,
+		"delta", num,
 	)
 
 	obj.totalScaledUpMetric.Inc()
@@ -483,7 +510,7 @@ func (obj *workerPool) scaleDown(num, current, required int64) {
 		"pool", obj.name,
 		"current", current,
 		"required", required,
-		"new", num,
+		"delta", num,
 	)
 
 	obj.totalScaledDownMetric.Inc()
@@ -546,6 +573,10 @@ func NewWorkerPool(ctx context.Context, config *Config) WorkerPool {
 		panic("invalid worker configuration")
 	}
 
+	if config.WorkerFunc == nil {
+		panic("dynworker: WorkerFunc must not be nil.")
+	}
+
 	if config.Prometheus == nil {
 		config.Prometheus = prometheus.DefaultRegisterer
 	}
@@ -563,13 +594,9 @@ func NewWorkerPool(ctx context.Context, config *Config) WorkerPool {
 		},
 	}
 
-	return &workerPool{
+	obj := &workerPool{
 		name:                  config.Name,
 		input:                 config.InputQueue,
-		minWorkers:            config.MinWorkers,
-		maxWorkers:            config.MaxWorkers,
-		scaleUpCh:             make(chan struct{}, 1),
-		scaleDownCh:           make(chan struct{}, 1),
 		processFn:             config.WorkerFunc,
 		scalerFn:              config.ScalerFunc,
 		ctx:                   nctx,
@@ -587,6 +614,11 @@ func NewWorkerPool(ctx context.Context, config *Config) WorkerPool {
 		totalScaledUpMetric:   totalScaledUp.With(label),
 		totalScaledDownMetric: totalScaledDown.With(label),
 	}
+
+	obj.SetMinWorkers(config.MinWorkers)
+	obj.SetMaxWorkers(config.MaxWorkers)
+
+	return obj
 }
 
 // Initialise Prometheus metrics for this module.

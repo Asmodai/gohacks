@@ -63,6 +63,9 @@ const (
 
 	// Default worker timeout.
 	defaultTimeout time.Duration = 30 * time.Second
+
+	// Default drain target.
+	defaultDrainTarget time.Duration = 500 * time.Millisecond
 )
 
 // * Code:
@@ -94,6 +97,9 @@ type Config struct {
 
 	// Idle timeout duration.
 	IdleTimeout time.Duration
+
+	// Drain target duration.
+	DrainTarget time.Duration
 }
 
 // ** Methods:
@@ -157,6 +163,7 @@ func NewConfigWithQueue(name string, minw, maxw int64, queue TaskQueue) *Config 
 		IdleTimeout: defaultTimeout,
 		InputQueue:  inputQueue,
 		Prometheus:  prometheus.DefaultRegisterer,
+		DrainTarget: defaultDrainTarget,
 	}
 }
 
