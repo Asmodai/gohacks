@@ -169,6 +169,7 @@ func (wt *workerTask) Work(task *dynworker.Task) error {
 
 type Worker interface {
 	Name() string
+	Database() Database
 	Start()
 	Stop()
 	SubmitBatch(dynworker.UserData) error
@@ -198,6 +199,10 @@ type worker struct {
 
 func (w *worker) Name() string {
 	return w.pool.Name()
+}
+
+func (w *worker) Database() Database {
+	return w.db
 }
 
 func (w *worker) Start() {

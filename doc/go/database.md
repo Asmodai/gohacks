@@ -432,6 +432,7 @@ Any object that contains a `Txn` function can be used for callbacks.
 ```go
 type Worker interface {
 	Name() string
+	Database() Database
 	Start()
 	Stop()
 	SubmitBatch(dynworker.UserData) error

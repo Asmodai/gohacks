@@ -156,6 +156,20 @@ func (m *MockWorker) EXPECT() *MockWorkerMockRecorder {
 	return m.recorder
 }
 
+// Database mocks base method.
+func (m *MockWorker) Database() database.Database {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Database")
+	ret0, _ := ret[0].(database.Database)
+	return ret0
+}
+
+// Database indicates an expected call of Database.
+func (mr *MockWorkerMockRecorder) Database() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Database", reflect.TypeOf((*MockWorker)(nil).Database))
+}
+
 // Name mocks base method.
 func (m *MockWorker) Name() string {
 	m.ctrl.T.Helper()
