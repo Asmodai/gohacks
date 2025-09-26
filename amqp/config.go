@@ -44,7 +44,6 @@ package amqp
 import (
 	"context"
 	"fmt"
-	"math"
 	"os"
 	"strings"
 	"time"
