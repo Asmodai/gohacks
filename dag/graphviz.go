@@ -64,6 +64,7 @@ func ExportToDOT(writer io.Writer, root *node) {
 	fmt.Fprintln(writer, "}")
 }
 
+//nolint:funlen
 func exportNodeDOT(writer io.Writer, node *node, visited map[*node]string, counter *int) string {
 	if id, ok := visited[node]; ok {
 		return id

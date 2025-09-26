@@ -104,7 +104,7 @@ SQL configuration structure.
 type Config struct {
 	Driver           string         `json:"driver"`
 	Username         string         `json:"username"`
-	Password         string         `config_obscure:"true"      json:"password"`
+	Password         string         `config_obscure:"true"     json:"password"`
 	Hostname         string         `json:"hostname"`
 	Port             int            `json:"port"`
 	Database         string         `json:"database"`
@@ -125,6 +125,8 @@ type Config struct {
 // ** Methods:
 
 // Validate the configuration.
+//
+//nolint:cyclop,funlen
 func (c *Config) Validate() []error {
 	errs := []error{}
 

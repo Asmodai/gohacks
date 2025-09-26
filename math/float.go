@@ -48,14 +48,14 @@ import (
 // returning it as an int. Values halfway between integers are rounded
 // away from zero.
 func RoundI(num float64) int {
-	return int(num + gomath.Copysign(0.5, num))
+	return int(num + gomath.Copysign(0.5, num)) //nolint:mnd
 }
 
 // Rounds num to the given number of decimal places and returns the result
 // as a float64. Unlike RoundF, it uses integer rounding logic (via RoundI),
 // which may behave slightly differently around half-values.
 func ToFixed(num float64, precision uint) float64 {
-	ratio := gomath.Pow(10, float64(precision))
+	ratio := gomath.Pow(10, float64(precision)) //nolint:mnd
 
 	return float64(RoundI(num*ratio)) / ratio
 }
@@ -63,7 +63,7 @@ func ToFixed(num float64, precision uint) float64 {
 // Rounds num to the given number of decimal places and returns the result
 // as a float64, using math.Round for IEEE-754 compliant rounding.
 func RoundF(num float64, precision uint) float64 {
-	ratio := gomath.Pow(10, float64(precision))
+	ratio := gomath.Pow(10, float64(precision)) //nolint:mnd
 
 	return gomath.Round(num*ratio) / ratio
 }

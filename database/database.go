@@ -139,8 +139,8 @@ func (obj *database) Rebind(query string) string {
 }
 
 // Expose the database's pool as a runner.
-func (d *database) Runner() Runner {
-	return d.real
+func (obj *database) Runner() Runner {
+	return obj.real
 }
 
 // ** Functions:

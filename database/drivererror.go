@@ -52,6 +52,8 @@ import (
 // ** Methods:
 
 // Translate specific MySQL errors into distinct error conditions.
+//
+//nolint:cyclop
 func (obj *database) GetError(err error) error {
 	if err == nil {
 		return nil
@@ -96,6 +98,8 @@ func (obj *database) GetError(err error) error {
 // ** Functions:
 
 // Map MySQL errors.
+//
+//nolint:mnd
 func mapMySQLError(err error) error {
 	var merr *mysql.MySQLError
 

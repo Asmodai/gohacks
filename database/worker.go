@@ -50,6 +50,7 @@ import (
 	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/math"
 	"github.com/Asmodai/gohacks/types"
+	"gitlab.com/tozd/go/errors"
 )
 
 // * Code:
@@ -83,7 +84,7 @@ type jobRunner struct {
 
 // Execute the job's transaction code.
 func (jr jobRunner) Txn(ctx context.Context, runner Runner) error {
-	return jr.Job.Run(ctx, runner)
+	return errors.WithStack(jr.Job.Run(ctx, runner))
 }
 
 // ** BatchJob:
@@ -108,7 +109,7 @@ type batchRunner struct {
 
 // Execute the batch's transaction code.
 func (br batchRunner) Txn(ctx context.Context, runner Runner) error {
-	return br.UserFn.Run(ctx, runner, br.Batch)
+	return errors.WithStack(br.UserFn.Run(ctx, runner, br.Batch))
 }
 
 // ** workerTask:
@@ -140,7 +141,7 @@ func (wt *workerTask) Work(task *dynworker.Task) error {
 
 	// Wrappers that provide a `Txn` method.
 	if tprov, ok := raw.(TxnProvider); ok {
-		return wt.db.WithTransaction(ctx, tprov.Txn)
+		return errors.WithStack(wt.db.WithTransaction(ctx, tprov.Txn))
 	}
 
 	// Bare batch.
@@ -151,14 +152,14 @@ func (wt *workerTask) Work(task *dynworker.Task) error {
 			Logger: lgr,
 		}
 
-		return wt.db.WithTransaction(ctx, brn.Txn)
+		return errors.WithStack(wt.db.WithTransaction(ctx, brn.Txn))
 	}
 
 	// Bare worker job.
 	if job, ok := raw.(WorkerJob); ok && job != nil {
 		jrn := jobRunner{Job: job}
 
-		return wt.db.WithTransaction(ctx, jrn.Txn)
+		return errors.WithStack(wt.db.WithTransaction(ctx, jrn.Txn))
 	}
 
 	return nil
@@ -241,13 +242,13 @@ func (w *worker) SubmitBatch(job dynworker.UserData) error {
 		return nil
 
 	case <-w.ctx.Done():
-		return w.ctx.Err()
+		return errors.WithStack(w.ctx.Err())
 	}
 }
 
 // Enqueue a prebuilt job.
 func (w *worker) SubmitJob(job WorkerJob) error {
-	return w.pool.Submit(jobRunner{Job: job})
+	return errors.WithStack(w.pool.Submit(jobRunner{Job: job}))
 }
 
 func (w *worker) batcher() {
@@ -283,7 +284,7 @@ func (w *worker) batcher() {
 		case item := <-w.inputCh:
 			buf = append(buf, item)
 
-			if len(buf) >= int(w.batchSize) {
+			if len(buf) >= w.batchSize {
 				flush()
 
 				if !timer.Stop() {
@@ -303,25 +304,24 @@ func (w *worker) batcher() {
 			timer.Reset(w.batchTimeout)
 		}
 	}
-
 }
 
 func (w *worker) scaler() int {
 	if err := w.db.Ping(); err != nil {
-		return int(w.minWorkers)
+		return w.minWorkers
 	}
 
 	qlen := w.queue.Len()
-	avg := 100 * time.Millisecond
+	avg := 100 * time.Millisecond //nolint:mnd
 	want := int(gomath.Ceil(float64(qlen) *
 		(float64(avg) / float64(w.drainTarget))))
 
-	if want < int(w.minWorkers) {
-		want = int(w.minWorkers)
+	if want < w.minWorkers {
+		want = w.minWorkers
 	}
 
-	if want > int(w.maxWorkers) {
-		want = int(w.maxWorkers)
+	if want > w.maxWorkers {
+		want = w.maxWorkers
 	}
 
 	return want
@@ -343,8 +343,8 @@ func computeQueueCaps(cfg *Config) int {
 func computeInputCaps(cfg *Config) int {
 	maxW := cfg.PoolMaxWorkers
 
-	want := int64(maxW) * int64(cfg.BatchSize) * 2
-	least := int64(cfg.BatchSize) * 2
+	want := int64(maxW) * int64(cfg.BatchSize) * 2 //nolint:mnd
+	least := int64(cfg.BatchSize) * 2              //nolint:mnd
 	got := math.WithinPlatform(want, least)
 
 	if got < 1 {
@@ -354,7 +354,7 @@ func computeInputCaps(cfg *Config) int {
 	return got
 }
 
-func NewWorker(parent context.Context, cfg *Config, db Database, handler BatchJob) Worker {
+func NewWorker(parent context.Context, cfg *Config, dbase Database, handler BatchJob) Worker {
 	if !cfg.UsePool {
 		return nil
 	}
@@ -376,12 +376,12 @@ func NewWorker(parent context.Context, cfg *Config, db Database, handler BatchJo
 
 	dwcfg.IdleTimeout = cfg.PoolIdleTimeout.Duration()
 	dwcfg.DrainTarget = cfg.PoolDrainTimeout.Duration()
-	dwcfg.WorkerFunc = (&workerTask{db: db, handler: handler}).Work
+	dwcfg.WorkerFunc = (&workerTask{db: dbase, handler: handler}).Work
 
 	pool := dynworker.NewWorkerPool(ctx, dwcfg)
 
 	inst := &worker{
-		db:           db,
+		db:           dbase,
 		ctx:          ctx,
 		cancel:       cancel,
 		inputCh:      inputCh,

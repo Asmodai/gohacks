@@ -99,7 +99,7 @@ jobs.
 type Config struct {
 	Driver           string         `json:"driver"`
 	Username         string         `json:"username"`
-	Password         string         `config_obscure:"true"      json:"password"`
+	Password         string         `config_obscure:"true"     json:"password"`
 	Hostname         string         `json:"hostname"`
 	Port             int            `json:"port"`
 	Database         string         `json:"database"`
@@ -444,7 +444,7 @@ type Worker interface {
 #### func  NewWorker
 
 ```go
-func NewWorker(parent context.Context, cfg *Config, db Database, handler BatchJob) Worker
+func NewWorker(parent context.Context, cfg *Config, dbase Database, handler BatchJob) Worker
 ```
 
 #### type WorkerJob

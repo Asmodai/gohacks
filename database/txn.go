@@ -57,7 +57,7 @@ type TxnFn func(context.Context, Runner) error
 // ** Methods:
 
 // Runs `fn` in a DB transaction and commits/rolls back.
-func (obj *database) WithTransaction(ctx context.Context, fn TxnFn) error {
+func (obj *database) WithTransaction(ctx context.Context, txfn TxnFn) error {
 	const (
 		maxRetries = 3
 		backoff    = 100 * time.Millisecond
@@ -66,25 +66,29 @@ func (obj *database) WithTransaction(ctx context.Context, fn TxnFn) error {
 	for attempt := 0; ; attempt++ {
 		// one attempt = one scoped function, so defer is not stacked
 		attemptErr := func() error {
-			tx, err := obj.real.BeginTxx(ctx, nil)
+			txn, err := obj.real.BeginTxx(ctx, nil)
 			if err != nil {
 				return errors.WithStack(err)
 			}
 
 			defer func() {
 				if p := recover(); p != nil {
-					_ = tx.Rollback()
+					_ = txn.Rollback()
+
 					panic(p)
 				}
 			}()
 
-			if err := fn(ctx, tx); err != nil {
-				_ = tx.Rollback()
+			// Execute the transaction function.
+			if err := txfn(ctx, txn); err != nil {
+				_ = txn.Rollback()
+
 				return obj.GetError(err)
 			}
 
-			if err := tx.Commit(); err != nil {
-				_ = tx.Rollback()
+			if err := txn.Commit(); err != nil {
+				_ = txn.Rollback()
+
 				return obj.GetError(err)
 			}
 

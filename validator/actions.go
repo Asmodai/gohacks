@@ -127,11 +127,12 @@ func (act *actions) errorAction(params dag.ActionParams) (dag.ActionFn, error) {
 		return nil, errors.WithStack(dag.ErrExpectedString)
 	}
 
-	afn := func(ctx context.Context, input dag.Filterable) {
+	afn := func(_ context.Context, _ dag.Filterable) {
 		if act.errors == nil {
 			act.errors = []error{}
 		}
 
+		//nolint:err113
 		act.errors = append(act.errors, fmt.Errorf("%s", smsg))
 	}
 

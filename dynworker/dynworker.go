@@ -96,7 +96,7 @@ var (
 		[]string{"pool"},
 	)
 
-	//nolint:gochecknoglobals
+	//nolint:gochecknoglobals,mnd
 	taskDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "dynworker_task_duration_seconds",

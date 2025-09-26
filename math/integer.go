@@ -63,6 +63,7 @@ func ClampI64(val, minVal, maxVal int64) int64 {
 	return val
 }
 
+// Return the maximum value of the 64-bit integer values.
 func MaxI64(lhs, rhs int64) int64 {
 	if lhs < rhs {
 		return rhs
@@ -71,14 +72,20 @@ func MaxI64(lhs, rhs int64) int64 {
 	return lhs
 }
 
+// Return the maximum value of the 32-bit integer values.
 func MaxI32(lhs, rhs int32) int32 {
+	// There is no overflow going on here, so...
+	//
+	//nolint:gosec
 	return int32(MaxI64(int64(lhs), int64(rhs)))
 }
 
+// Return the maximum value of the integer values.
 func MaxI(lhs, rhs int) int {
 	return int(MaxI64(int64(lhs), int64(rhs)))
 }
 
+// Return the minimum value of the 64-bit integer values.
 func MinI64(lhs, rhs int64) int64 {
 	if lhs < rhs {
 		return lhs
@@ -87,14 +94,29 @@ func MinI64(lhs, rhs int64) int64 {
 	return rhs
 }
 
+// Return the minimum value of the 32-bit integer values.
 func MinI32(lhs, rhs int32) int32 {
+	// There is no overflow going on here, so...
+	//
+	//nolint:gosec
 	return int32(MinI64(int64(lhs), int64(rhs)))
 }
 
+// Return the minimum value of the integer values.
 func MinI(lhs, rhs int) int {
 	return int(MinI64(int64(lhs), int64(rhs)))
 }
 
+// Ensure that the given value is within the limit of the platform-specific
+// integer type and, if it is, multiply it by two.
+//
+// If the value would be larger than the platform integer, then the default
+// value in `defValue` is returned.
+//
+// If `defValue` is too large, then the maximum integer size for the platform
+// is returned.
+//
+//nolint:mnd
 func WithinPlatform(value, defValue int64) int {
 	const maxInt = int(^uint(0) >> 1) // platform MaxInt
 

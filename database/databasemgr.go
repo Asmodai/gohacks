@@ -40,9 +40,9 @@ package database
 // * Imports:
 
 import (
-	// This is the MySQL driver, it must be blank.
 	"context"
 
+	// This is the MySQL driver, it must be blank.
 	_ "github.com/go-sql-driver/mysql"
 
 	"gitlab.com/tozd/go/errors"

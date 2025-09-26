@@ -42,6 +42,7 @@ import (
 	"io"
 
 	"github.com/Asmodai/gohacks/dag"
+	"gitlab.com/tozd/go/errors"
 )
 
 // * Code:
@@ -58,12 +59,16 @@ type Validator struct {
 
 // Compile an action from an action specification.
 func (v *Validator) CompileAction(spec dag.ActionSpec) (dag.ActionFn, error) {
-	return v.cmplr.CompileAction(spec)
+	act, err := v.cmplr.CompileAction(spec)
+
+	return act, errors.WithStack(err)
 }
 
 // Compile a failure action from a failure specification.
 func (v *Validator) CompileFailure(spec dag.FailureSpec) (dag.ActionFn, error) {
-	return v.cmplr.CompileFailure(spec)
+	act, err := v.cmplr.CompileFailure(spec)
+
+	return act, errors.WithStack(err)
 }
 
 // Compile a slice of rule specs into a DAG graph.
