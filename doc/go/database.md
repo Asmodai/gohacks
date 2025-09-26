@@ -43,6 +43,13 @@ var (
 
 ```go
 var (
+	ErrNotAWorkerPool = errors.Base("not configured for worker pools")
+	ErrNoPoolWorker   = errors.Base("no pool worker function provided")
+)
+```
+
+```go
+var (
 	// The empty cursor.
 	EmptyCursor = &Cursor{Offset: 0, Limit: 0}
 )
@@ -220,6 +227,7 @@ Open a connection using the relevant driver to the given data source name.
 type Manager interface {
 	Open(string, string) (Database, error)
 	OpenConfig(*Config) (Database, error)
+	OpenWorker(context.Context, *Config, BatchJob) (Worker, error)
 	CheckDB(Database) error
 }
 ```

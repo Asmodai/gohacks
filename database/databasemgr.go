@@ -33,14 +33,30 @@
 //go:generate go run github.com/Asmodai/gohacks/cmd/digen -pattern .
 //di:gen basename=Manager key=gohacks/database@v1 type=Manager fallback=NewManager()
 
+// * Package:
+
 package database
+
+// * Imports:
 
 import (
 	// This is the MySQL driver, it must be blank.
+	"context"
+
 	_ "github.com/go-sql-driver/mysql"
 
 	"gitlab.com/tozd/go/errors"
 )
+
+// * Variables
+
+var (
+	ErrNotAWorkerPool = errors.Base("not configured for worker pools")
+	ErrNoPoolWorker   = errors.Base("no pool worker function provided")
+)
+
+// * Code:
+// ** Interface:
 
 /*
 Database management.
@@ -51,17 +67,17 @@ that we set up max idle/open connections et al.
 type Manager interface {
 	Open(string, string) (Database, error)
 	OpenConfig(*Config) (Database, error)
+	OpenWorker(context.Context, *Config, BatchJob) (Worker, error)
 	CheckDB(Database) error
 }
+
+// ** Type:
 
 // Internal implementation.
 type manager struct {
 }
 
-// Create a new manager.
-func NewManager() Manager {
-	return &manager{}
-}
+// ** Methods:
 
 // Open a connection to the database specified in the DSN string.
 func (dbm *manager) Open(driver string, dsn string) (Database, error) {
@@ -83,9 +99,36 @@ func (dbm *manager) OpenConfig(conf *Config) (Database, error) {
 	return dbase, nil
 }
 
+// Configure and open a database connect as a worker pool.
+func (dbm *manager) OpenWorker(ctx context.Context, conf *Config, handler BatchJob) (Worker, error) {
+	if !conf.UsePool {
+		return nil, errors.WithStack(ErrNotAWorkerPool)
+	}
+
+	if handler == nil {
+		return nil, errors.WithStack(ErrNoPoolWorker)
+	}
+
+	db, err := dbm.OpenConfig(conf)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	inst := NewWorker(ctx, conf, db, handler)
+
+	return inst, nil
+}
+
 // Check the db connection.
 func (dbm *manager) CheckDB(db Database) error {
 	return errors.WithStack(db.Ping())
+}
+
+// ** Functions:
+
+// Create a new manager.
+func NewManager() Manager {
+	return &manager{}
 }
 
 // databasemgr.go ends here.

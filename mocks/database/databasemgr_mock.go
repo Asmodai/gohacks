@@ -10,6 +10,7 @@
 package database
 
 import (
+	context "context"
 	reflect "reflect"
 
 	database "github.com/Asmodai/gohacks/database"
@@ -82,4 +83,19 @@ func (m *MockManager) OpenConfig(arg0 *database.Config) (database.Database, erro
 func (mr *MockManagerMockRecorder) OpenConfig(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenConfig", reflect.TypeOf((*MockManager)(nil).OpenConfig), arg0)
+}
+
+// OpenWorker mocks base method.
+func (m *MockManager) OpenWorker(arg0 context.Context, arg1 *database.Config, arg2 database.BatchJob) (database.Worker, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OpenWorker", arg0, arg1, arg2)
+	ret0, _ := ret[0].(database.Worker)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// OpenWorker indicates an expected call of OpenWorker.
+func (mr *MockManagerMockRecorder) OpenWorker(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenWorker", reflect.TypeOf((*MockManager)(nil).OpenWorker), arg0, arg1, arg2)
 }
