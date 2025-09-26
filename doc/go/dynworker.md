@@ -219,6 +219,9 @@ type WorkerPool interface {
 
 	// Set the task scaler function.
 	SetScalerFunction(ScalerFn)
+
+	// Return the name of the pool.
+	Name() string
 }
 ```
 

@@ -165,6 +165,9 @@ type WorkerPool interface {
 
 	// Set the task scaler function.
 	SetScalerFunction(ScalerFn)
+
+	// Return the name of the pool.
+	Name() string
 }
 
 // ** Types:
@@ -199,6 +202,11 @@ type workerPool struct {
 }
 
 // ** Methods:
+
+// Return the name of the pool.
+func (obj *workerPool) Name() string {
+	return obj.name
+}
 
 // Return the number of current workers in the pool.
 func (obj *workerPool) WorkerCount() int64 {

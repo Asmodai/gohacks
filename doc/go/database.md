@@ -15,10 +15,19 @@ Key used to store the instance in the context's user value.
 
 ```go
 var (
-	ErrNoDriver   error = errors.Base("no driver provided")
+	// Signalled when there is no SQL driver.
+	ErrNoDriver error = errors.Base("no driver provided")
+
+	// Signalled when there is no SQL username given.
 	ErrNoUsername error = errors.Base("no username provided")
+
+	// Signalled when there is no SQL password given.
 	ErrNoPassword error = errors.Base("no password provided")
+
+	// Signalled when there is no SQL server hostname given.
 	ErrNoHostname error = errors.Base("no hostname provided")
+
+	// Signalled when there is no SQL database name provided.
 	ErrNoDatabase error = errors.Base("no database name provided")
 )
 ```
@@ -66,20 +75,37 @@ func WithManager(ctx context.Context, fn func(Manager))
 ```
 WithManager calls fn with the instance or fallback.
 
+#### type BatchJob
+
+```go
+type BatchJob interface {
+	Run(ctx context.Context, runner Runner, data []dynworker.UserData) error
+}
+```
+
+BatchJob provides a means to invoke a user-supplied function with a batch of
+jobs.
+
 #### type Config
 
 ```go
 type Config struct {
-	Driver        string `json:"driver"`
-	Username      string `json:"username"`
-	Password      string `config_obscure:"true"  json:"password"`
-	Hostname      string `json:"hostname"`
-	Port          int    `json:"port"`
-	Database      string `json:"database"`
-	BatchSize     int    `json:"batch_size"`
-	SetPoolLimits bool   `json:"set_pool_limits"`
-	MaxIdleConns  int    `json:"max_idle_conns"`
-	MaxOpenConns  int    `json:"max_open_conns"`
+	Driver           string         `json:"driver"`
+	Username         string         `json:"username"`
+	Password         string         `config_obscure:"true"      json:"password"`
+	Hostname         string         `json:"hostname"`
+	Port             int            `json:"port"`
+	Database         string         `json:"database"`
+	BatchSize        int            `json:"batch_size"`
+	BatchTimeout     types.Duration `json:"batch_timeout"`
+	SetPoolLimits    bool           `json:"set_pool_limits"`
+	MaxIdleConns     int            `json:"max_idle_conns"`
+	MaxOpenConns     int            `json:"max_open_conns"`
+	UsePool          bool           `json:"use_worker_pool"`
+	PoolMinWorkers   int            `json:"pool_min_workers"`
+	PoolMaxWorkers   int            `json:"pool_max_workers"`
+	PoolIdleTimeout  types.Duration `json:"pool_idle_timeout"`
+	PoolDrainTimeout types.Duration `json:"pool_drain_timeout"`
 }
 ```
 
@@ -104,6 +130,7 @@ Return the DSN for this database configuration.
 ```go
 func (c *Config) Validate() []error
 ```
+Validate the configuration.
 
 #### type Cursor
 
@@ -380,3 +407,47 @@ Runner is "anything that can run sqlx queries with context". Both *sqlx.DB and
 ```go
 type TxnFn func(context.Context, Runner) error
 ```
+
+
+#### type TxnProvider
+
+```go
+type TxnProvider interface {
+	Txn(context.Context, Runner) error
+}
+```
+
+Any object that contains a `Txn` function can be used for callbacks.
+
+#### type Worker
+
+```go
+type Worker interface {
+	Name() string
+	Start()
+	Stop()
+	SubmitBatch(dynworker.UserData) error
+	SubmitJob(WorkerJob) error
+}
+```
+
+
+#### func  NewWorker
+
+```go
+func NewWorker(parent context.Context, cfg *Config, db Database, handler BatchJob) Worker
+```
+
+#### type WorkerJob
+
+```go
+type WorkerJob interface {
+	Run(ctx context.Context, runner Runner) error
+}
+```
+
+WorkerJob is a user-supplied unit of work which will be executed inside a
+database transaction.
+
+Implement `Run' with your SQL using the provided `Runner' (`*sqlx.DB` or
+`*sqlx.Tx`).

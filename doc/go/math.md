@@ -91,3 +91,9 @@ func ToFixed(num float64, precision uint) float64
 Rounds num to the given number of decimal places and returns the result as a
 float64. Unlike RoundF, it uses integer rounding logic (via RoundI), which may
 behave slightly differently around half-values.
+
+#### func  WithinPlatform
+
+```go
+func WithinPlatform(value, defValue int64) int
+```

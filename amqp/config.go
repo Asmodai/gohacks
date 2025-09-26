@@ -51,6 +51,7 @@ import (
 
 	"github.com/Asmodai/gohacks/amqp/amqpshim"
 	"github.com/Asmodai/gohacks/dynworker"
+	mymath "github.com/Asmodai/gohacks/math"
 	"github.com/Asmodai/gohacks/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"gitlab.com/tozd/go/errors"
@@ -207,15 +208,7 @@ func (obj *Config) makeConsumerTag() {
 
 // Generate a worker pool configuration.
 func (obj *Config) ConfigureWorkerPool() *dynworker.Config {
-	var bound int
-
-	//nolint:mnd
-	if obj.PrefetchCount < math.MaxInt32 {
-		bound = int(obj.PrefetchCount * 2)
-	} else {
-		bound = int(defaultMaxWorkerCount * 2)
-	}
-
+	bound := mymath.WithinPlatform(obj.PrefetchCount, defaultMaxWorkerCount)
 	queue := types.NewBoundedQueue(bound)
 
 	return &dynworker.Config{

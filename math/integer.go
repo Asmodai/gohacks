@@ -95,4 +95,18 @@ func MinI(lhs, rhs int) int {
 	return int(MinI64(int64(lhs), int64(rhs)))
 }
 
+func WithinPlatform(value, defValue int64) int {
+	const maxInt = int(^uint(0) >> 1) // platform MaxInt
+
+	if value < int64(maxInt/2) {
+		return int(value * 2)
+	}
+
+	if defValue > int64(maxInt/2) {
+		return maxInt
+	}
+
+	return int(defValue * 2)
+}
+
 // * integer.go ends here.

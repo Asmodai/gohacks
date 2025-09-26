@@ -68,6 +68,20 @@ func (mr *MockWorkerPoolMockRecorder) MinWorkers() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MinWorkers", reflect.TypeOf((*MockWorkerPool)(nil).MinWorkers))
 }
 
+// Name mocks base method.
+func (m *MockWorkerPool) Name() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Name")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Name indicates an expected call of Name.
+func (mr *MockWorkerPoolMockRecorder) Name() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockWorkerPool)(nil).Name))
+}
+
 // SetMaxWorkers mocks base method.
 func (m *MockWorkerPool) SetMaxWorkers(arg0 int64) {
 	m.ctrl.T.Helper()
