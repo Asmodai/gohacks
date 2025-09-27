@@ -388,6 +388,20 @@ func renderArgsBare(isn Instr) string {
 	return strings.Join(parts, " ")
 }
 
+func renderJump(isn Instr, loc string) string {
+	//nolint:exhaustive
+	switch isn.Op {
+	case OpJumpNZ:
+		return "jump " + loc + " if not zero"
+
+	case OpJumpZ:
+		return "jump " + loc + " if zero"
+
+	default:
+		return "jump " + loc
+	}
+}
+
 //nolint:cyclop,gocognit,gocyclo,funlen
 func renderComment(prog *Program, isn Instr, lbls map[int]string) string {
 	args := isn.Args
@@ -427,7 +441,7 @@ func renderComment(prog *Program, isn Instr, lbls map[int]string) string {
 		if length == 1 {
 			if tgt, ok := args[0].(int); ok {
 				if name, has := lbls[tgt]; has {
-					return "jump " + name
+					return renderJump(isn, name)
 				}
 
 				return fmt.Sprintf(

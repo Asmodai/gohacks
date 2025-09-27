@@ -80,8 +80,8 @@ func (n IRIPCmp) Debug(params ...any) *debug.Debug {
 
 // Generate opcode.
 func (n IRIPCmp) Emit(program *Program, trueLabel, falseLabel LabelID) {
-	operator := GetNumberComparator(n.Op, OpIPEQ)
-	fidx := program.AddStringConstant(n.Field)
+	operator := GetIPComparator(n.Op, OpIPEQ)
+	fidx := program.AddFieldConstant(n.Field)
 	nidx := program.AddIPConstant(n.Value)
 
 	program.AppendIsn(OpLoadField, fidx)    // LDFLD fIdx
