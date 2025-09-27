@@ -278,7 +278,7 @@ func makeLiteralToken(token Token, lexeme string, literal any) LexedToken {
 
 // ** Tests:
 
-func TestLuceTokene(t *testing.T) {
+func TestLucette(t *testing.T) {
 	for testno, test := range tests {
 		var (
 			lx     Lexer
@@ -428,7 +428,7 @@ func TestLuceTokene(t *testing.T) {
 
 // ** Benchmarks:
 
-func BenchmarkLuceTokene(b *testing.B) {
+func BenchmarkLucette(b *testing.B) {
 	var (
 		lexed  []LexedToken
 		parsed ASTNode
