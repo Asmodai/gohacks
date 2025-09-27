@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// ast.go --- Abstract syntax tree.
+// irphrase.go --- IR `Phrase' node.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -38,23 +38,75 @@ package lucette
 // * Imports:
 
 import (
+	"strings"
+
 	"github.com/Asmodai/gohacks/debug"
 )
 
 // * Code:
 
-// ** Interface:
+// ** Structure:
 
-// Abstract Syntax Tree.
-type ASTNode interface {
-	// Return the span for this node.
-	//
-	// Spans can be used in diagnostics to show where in the source file
-	// an issue exists.
-	Span() *Span
-
-	// Print debugging information for the given node.
-	Debug(...any) *debug.Debug
+type IRPhrase struct {
+	Field     string
+	Phrase    string
+	Proximity int
+	Fuzz      *float64
+	Boost     *float64
 }
 
-// * ast.go ends here.
+// ** Methods:
+
+func (n IRPhrase) HasWildcard() bool {
+	return strings.ContainsAny(n.Phrase, "?*")
+}
+
+// Generate the key.
+func (n IRPhrase) Key() string {
+	return "phrase|" + n.Field + "|" + n.Phrase
+}
+
+// Display debugging information.
+func (n IRPhrase) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug("Phrase")
+
+	dbg.Init(params...)
+	dbg.Printf("Field:     %s", n.Field)
+	dbg.Printf("Phrase:    %q", n.Phrase)
+	dbg.Printf("Proximity: %d", n.Proximity)
+
+	if n.Fuzz != nil {
+		dbg.Printf("Fuzziness: %g", *n.Fuzz)
+	}
+
+	if n.Boost != nil {
+		dbg.Printf("Boost:     %g", *n.Boost)
+	}
+
+	dbg.End()
+	dbg.Print()
+
+	return dbg
+}
+
+// Generate opcode.
+func (n IRPhrase) Emit(program *Program, trueLabel, falseLabel LabelID) {
+	fidx := program.AddFieldConstant(n.Field)
+	sidx := program.AddStringConstant(n.Phrase)
+
+	program.AppendIsn(OpLoadField, fidx) // LDFLD fIdx
+
+	if n.Fuzz != nil {
+		program.AppendIsn(OpLoadFuzzy, *n.Fuzz) // LDFZY fuzz
+	}
+
+	if n.Boost != nil {
+		program.AppendIsn(OpLoadBoost, *n.Boost) // LDBST boost
+	}
+
+	program.AppendIsn(OpPhrase, sidx, n.Proximity) // PHR.S sIdx prox
+	program.AppendIsn(OpJumpNZ, trueLabel)         // JNZ true cont.
+	program.AppendIsn(OpJump, falseLabel)          // JMP false cont.
+}
+
+// * irphrase.go ends here.

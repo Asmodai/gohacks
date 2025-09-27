@@ -48,28 +48,33 @@ import (
 
 // Position within source code.
 type Position struct {
-	line   int
-	column int
+	Line   int // Line number.
+	Column int // Column number.
 }
 
-// ** Methods:
+// ** methods:
 
-// Pretty-print the position as a string.
-func (p *Position) String() string {
+// Return the string representation of a position.
+func (p Position) String() string {
 	var sbld strings.Builder
 
-	sbld.WriteString(strconv.Itoa(p.line))
+	sbld.WriteString(strconv.Itoa(p.Line))
 	sbld.WriteRune(':')
-	sbld.WriteString(strconv.Itoa(p.column))
+	sbld.WriteString(strconv.Itoa(p.Column))
 
 	return sbld.String()
 }
 
 // ** Functions:
 
-// Return a new position.
-func newPosition(line, col int) Position {
-	return Position{line: line, column: col}
+// Create a new empty position.
+func NewEmptyPosition() Position {
+	return Position{}
+}
+
+// Create a new position with the given line and column numbers.
+func NewPosition(line, col int) Position {
+	return Position{Line: line, Column: col}
 }
 
 // * position.go ends here.

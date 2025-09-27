@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// lexer_interface.go --- Lexer interface definition.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -28,6 +28,8 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+//mock:yes
 
 // * Comments:
 
@@ -37,34 +39,14 @@ package lucette
 
 // * Imports:
 
-import "testing"
+import "io"
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
-
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
-
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+type Lexer interface {
+	Reset()
+	Tokens() []LexedToken
+	Lex(io.Reader) ([]LexedToken, error)
 }
 
-// * tokentype_test.go ends here.
+// * lexer_interface.go ends here.

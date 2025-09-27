@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// position_test.go --- Position tests
+// position_test.go --- Position tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -48,18 +48,18 @@ func TestPosition(t *testing.T) {
 	column := 42
 	wantstr := "12:42"
 
-	t.Run("newPosition", func(t *testing.T) {
-		testPos = newPosition(line, column)
+	t.Run("NewPosition", func(t *testing.T) {
+		testPos = NewPosition(line, column)
 
-		if testPos.line != line {
+		if testPos.Line != line {
 			t.Errorf("Line mismatch: %d != %d",
-				testPos.line,
+				testPos.Line,
 				line)
 		}
 
-		if testPos.column != column {
+		if testPos.Column != column {
 			t.Errorf("Column mismatch: %d != %d",
-				testPos.column,
+				testPos.Column,
 				column)
 		}
 	})

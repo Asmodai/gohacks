@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// parser_stack.go --- Stack methods.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,34 +37,58 @@ package lucette
 
 // * Imports:
 
-import "testing"
+// * Constants:
+
+// * Variables:
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
-
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
-
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+// Push an operator to the stack.
+func (p *parser) pushOp(kind exprKind, aux any, span *Span) {
+	p.stack = append(
+		p.stack,
+		opEntry{kind: kind, aux: aux, span: span})
 }
 
-// * tokentype_test.go ends here.
+// Pop an operator from the stack.
+func (p *parser) popOp() (opEntry, bool) {
+	if len(p.stack) == 0 {
+		return opEntry{}, false
+	}
+
+	elt := p.stack[len(p.stack)-1]
+	p.stack = p.stack[:len(p.stack)-1]
+
+	return elt, true
+}
+
+// Return the operator on the top of the stack.
+func (p *parser) topOp() (opEntry, bool) {
+	if len(p.stack) == 0 {
+		return opEntry{}, false
+	}
+
+	return p.stack[len(p.stack)-1], true
+}
+
+// Push a node to the AST.
+func (p *parser) pushNode(node ASTNode) {
+	p.ast = append(p.ast, node)
+}
+
+// Pop a node from the AST.
+func (p *parser) popNode() ASTNode {
+	if len(p.ast) == 0 {
+		p.errorf(NewEmptySpan(), "stack underflow")
+
+		return &ASTPredicate{Kind: PredicateANY}
+	}
+
+	end := len(p.ast) - 1
+	node := p.ast[end]
+	p.ast = p.ast[:end]
+
+	return node
+}
+
+// * parser_stack.go ends here.

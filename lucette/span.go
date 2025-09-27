@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// span.go --- Source code spans.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,34 +37,70 @@ package lucette
 
 // * Imports:
 
-import "testing"
+import (
+	"strings"
+)
+
+// * Variables:
+
+//nolint:gochecknoglobals
+var (
+	// A span with zero values.
+	ZeroSpan = &Span{}
+)
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+// ** Type:
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
-
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+// Span within source code.
+type Span struct {
+	start  Position // Starting position of span.
+	end    Position // Ending position of span.
+	cache  string   // Cache for stringer.
+	cached bool     // Are we cached?
 }
 
-// * tokentype_test.go ends here.
+// ** Methods:
+
+// Return the span's starting position.
+func (s *Span) Start() Position {
+	return s.start
+}
+
+// Return the span's ending position.
+func (s *Span) End() Position {
+	return s.end
+}
+
+// Return the string representation of a span.
+func (s *Span) String() string {
+	if !s.cached {
+		var sbld strings.Builder
+
+		sbld.WriteString(s.start.String())
+		sbld.WriteRune('-')
+		sbld.WriteString(s.end.String())
+
+		s.cache = sbld.String()
+		s.cached = true
+	}
+
+	return s.cache
+}
+
+// ** Functions:
+
+// Create a new span with the given start and end positions.
+func NewSpan(start, end Position) *Span {
+	return &Span{start: start, end: end}
+}
+
+// Create a new empty span.
+func NewEmptySpan() *Span {
+	pos := NewEmptyPosition()
+
+	return NewSpan(pos, pos)
+}
+
+// * span.go ends here.

@@ -33,157 +33,164 @@
 
 // * Package:
 
-//nolint:unused
 package lucette
+
+// * Imports:
 
 // * Constants:
 
 const (
-	ttEOF TokenType = iota // End of file.
+	TokenEOF Token = iota // End of file.
 
-	ttNumber // Numeric value.
-	ttPhrase // String value.
-	ttField  // Field name.
-	ttRegexp // Regular expression.
+	TokenNumber // Numeric value.
+	TokenPhrase // String phrase value.
+	TokenField  // Field name.
+	TokenRegex  // Regular expression.
 
-	ttPlus     // '+'
-	ttMinus    // '-'
-	ttStar     // '*'
-	ttQuestion // '?'
-	ttLParen   // '('
-	ttLBracket // '['
-	ttLCurly   // '{'
-	ttRParen   // ')'
-	ttRBracket // ']'
-	ttRCurly   // '}'
-	ttColon    // ':'
-	ttTilde    // '~'
-	ttCaret    // '^'
+	TokenPlus     // '+'
+	TokenMinus    // '-'
+	TokenStar     // '*'
+	TokenQuestion // '?'
+	TokenLParen   // '('
+	TokenLBracket // '['
+	TokenLCurly   // '{'
+	TokenRParen   // ')'
+	TokenRBracket // ']'
+	TokenRCurly   // '}'
+	TokenColon    // ':'
+	TokenTilde    // '~'
+	TokenCaret    // '^'
 
-	ttTo  // 'TO' lexeme.
-	ttAnd // 'AND'/'&&' lexeme.
-	ttOr  // 'OR'/'||' lexeme.
-	ttNot // 'NOT'/'!' lexeme.
-	ttLT  // '<' lexeme.
-	ttLTE // '<=' lexeme.
-	ttGT  // '>' lexeme.
-	ttGTE // '>=' lexeme.
+	TokenTo  // 'TO'.
+	TokenAnd // 'AND'/'&&'.
+	TokenOr  // 'OR'/'||'.
+	TokenNot // 'NOT'/'!'.
+	TokenLT  // '<'.
+	TokenLTE // '<='.
+	TokenGT  // '>'
+	TokenGTE // '>='
 
-	ttIllegal // Illegal token.
-	ttUnknown // Unknown token.
+	TokenIllegal // Illegal token.
+	TokenUnknown // Unknown token.
 )
 
-// ** Variables:
+// * Variables:
 
 var (
+	// Map of `tokens -> strings` for use with pretty-printing.
+	//
 	//nolint:gochecknoglobals
-	tokenTypeNames = map[TokenType]string{
-		ttEOF:      "ttEOF",
-		ttNumber:   "ttNumber",
-		ttPhrase:   "ttPhrase",
-		ttField:    "ttField",
-		ttRegexp:   "ttRegexp",
-		ttPlus:     "ttPlus",
-		ttMinus:    "ttMinus",
-		ttStar:     "ttStar",
-		ttQuestion: "ttQuestion",
-		ttLParen:   "ttLParen",
-		ttLBracket: "ttLBracket",
-		ttLCurly:   "ttLCurly",
-		ttRParen:   "ttRParen",
-		ttRBracket: "ttRBracket",
-		ttRCurly:   "ttRCurly",
-		ttColon:    "ttColon",
-		ttTilde:    "ttTilde",
-		ttCaret:    "ttCaret",
-		ttTo:       "ttTo",
-		ttAnd:      "ttAnd",
-		ttOr:       "ttOr",
-		ttNot:      "ttNot",
-		ttLT:       "ttLT",
-		ttLTE:      "ttLTE",
-		ttGT:       "ttGT",
-		ttGTE:      "ttGTE",
-		ttIllegal:  "ttIllegal",
-		ttUnknown:  "ttUnknown",
+	tokenStrings = map[Token]string{
+		TokenEOF:      "TokenEOF",
+		TokenNumber:   "TokenNumber",
+		TokenPhrase:   "TokenPhrase",
+		TokenField:    "TokenField",
+		TokenRegex:    "TokenRegex",
+		TokenPlus:     "TokenPlus",
+		TokenMinus:    "TokenMinus",
+		TokenStar:     "TokenStar",
+		TokenQuestion: "TokenQuestion",
+		TokenLParen:   "TokenLParen",
+		TokenLBracket: "TokenLBracket",
+		TokenLCurly:   "TokenLCurly",
+		TokenRParen:   "TokenRParen",
+		TokenRBracket: "TokenRBracket",
+		TokenRCurly:   "TokenRCurly",
+		TokenColon:    "TokenColon",
+		TokenTilde:    "TokenTilde",
+		TokenCaret:    "TokenCaret",
+		TokenTo:       "TokenTo",
+		TokenAnd:      "TokenAnd",
+		TokenOr:       "TokenOr",
+		TokenNot:      "TokenNot",
+		TokenLT:       "TokenLT",
+		TokenLTE:      "TokenLTE",
+		TokenGT:       "TokenGT",
+		TokenGTE:      "TokenGTE",
+		TokenIllegal:  "TokenIllegal",
+		TokenUnknown:  "TokenUnknown",
 	}
 
+	// Map of `keyword strings -> tokens` for use with identifier parsing.
+	//
 	//nolint:gochecknoglobals
-	tokenTypeKeyword = map[string]TokenType{
-		"NOT": ttNot,
-		"OR":  ttOr,
-		"AND": ttAnd,
-		"TO":  ttTo,
+	tokenKeywords = map[string]Token{
+		"NOT": TokenNot,
+		"OR":  TokenOr,
+		"AND": TokenAnd,
+		"TO":  TokenTo,
 	}
 
+	// Map of `tokens -> literal strings` for use with building lexed
+	// tokens.
+	//
 	//nolint:gochecknoglobals
-	tokenTypeLiterals = map[TokenType]string{
-		ttEOF:      "<EOF>",
-		ttPlus:     "+",
-		ttMinus:    "-",
-		ttStar:     "*",
-		ttQuestion: "?",
-		ttLParen:   "(",
-		ttLBracket: "[",
-		ttLCurly:   "{",
-		ttRParen:   ")",
-		ttRBracket: "]",
-		ttRCurly:   "}",
-		ttColon:    ":",
-		ttTilde:    "~",
-		ttCaret:    "^",
-		ttIllegal:  "<illegal>",
-		ttUnknown:  "<unknown>",
+	tokenLiterals = map[Token]string{
+		TokenEOF:      "EOF",
+		TokenPlus:     "+",
+		TokenMinus:    "-",
+		TokenStar:     "*",
+		TokenQuestion: "?",
+		TokenLParen:   "(",
+		TokenLBracket: "[",
+		TokenLCurly:   "{",
+		TokenRParen:   ")",
+		TokenRBracket: "]",
+		TokenRCurly:   "}",
+		TokenColon:    ":",
+		TokenTilde:    "~",
+		TokenCaret:    "^",
+		TokenNot:      "!",
+		TokenIllegal:  "Illegal",
+		TokenUnknown:  "Unknown",
 	}
 
+	// Map of `runes -> tokens` for use with parsing of runes to tokens.
+	//
 	//nolint:gochecknoglobals
-	tokenPunct = map[rune]TokenType{
-		'+': ttPlus,
-		'-': ttMinus,
-		'*': ttStar,
-		'?': ttQuestion,
-		'(': ttLParen,
-		'{': ttLCurly,
-		'[': ttLBracket,
-		')': ttRParen,
-		'}': ttRCurly,
-		']': ttRBracket,
-		':': ttColon,
-		'~': ttTilde,
-		'^': ttCaret,
-		'!': ttNot,
+	tokenPunct = map[rune]Token{
+		'+': TokenPlus,
+		'-': TokenMinus,
+		'*': TokenStar,
+		'?': TokenQuestion,
+		'(': TokenLParen,
+		'[': TokenLBracket,
+		'{': TokenLCurly,
+		')': TokenRParen,
+		']': TokenRBracket,
+		'}': TokenRCurly,
+		':': TokenColon,
+		'~': TokenTilde,
+		'^': TokenCaret,
+		'!': TokenNot,
 	}
 )
 
 // * Code:
 
-// ** Type:
+// ** Types:
 
-// Lexer token.
-type TokenType uint
+// Lucette token type.
+type Token int
 
 // ** Methods:
 
-// Stringer method for lexer tokens.
-func (t TokenType) String() string {
-	if t >= ttUnknown {
-		return tokenTypeNames[ttUnknown]
+// Return the string representation of a token.
+func (t Token) String() string {
+	if t >= TokenUnknown {
+		return tokenStrings[TokenUnknown]
 	}
 
-	return tokenTypeNames[t]
+	return tokenStrings[t]
 }
 
-func (t TokenType) Literal() string {
-	if t < ttPlus || t >= ttCaret {
-		// Special case for the `!` operator.
-		if t == ttNot {
-			return "!"
-		}
-
-		return tokenTypeLiterals[ttIllegal]
+// Return the literal string representation of a token if it has one.
+func (t Token) Literal() string {
+	if (t < TokenPlus || t > TokenCaret) && t != TokenNot {
+		return tokenLiterals[TokenIllegal]
 	}
 
-	return tokenTypeLiterals[t]
+	return tokenLiterals[t]
 }
 
 // * tokentype.go ends here.

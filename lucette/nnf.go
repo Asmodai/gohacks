@@ -28,6 +28,8 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+//mock:yes
 
 // * Comments:
 
@@ -35,56 +37,61 @@
 
 package lucette
 
-// * Imports:
-
-// * Constants:
-
-// * Variables:
-
 // * Code:
+
+// ** Interface:
+
+type NNF interface {
+	NNF(IRNode) IRNode
+}
+
+// ** Structure:
+
+type nnf struct {
+}
 
 // ** Functions:
 
-func nnfAnd(node *TypedNodeAnd, neg bool) TypedNode {
-	kids := make([]TypedNode, 0, len(node.kids))
+func (n *nnf) nnfAnd(node *IRAnd, neg bool) IRNode {
+	kids := make([]IRNode, 0, len(node.Kids))
 
-	for _, kid := range node.kids {
-		kids = append(kids, nnf(kid, neg))
+	for _, kid := range node.Kids {
+		kids = append(kids, n.nnf(kid, neg))
 	}
 
 	if neg {
 		// De Morgan: NOT (A && B) => (NOT A) || (NOT B)
-		return &TypedNodeOr{kids: kids}
+		return &IROr{Kids: kids}
 	}
 
-	return &TypedNodeAnd{kids: kids}
+	return &IRAnd{Kids: kids}
 }
 
-func nnfOr(node *TypedNodeOr, neg bool) TypedNode {
-	kids := make([]TypedNode, 0, len(node.kids))
+func (n *nnf) nnfOr(node *IROr, neg bool) IRNode {
+	kids := make([]IRNode, 0, len(node.Kids))
 
-	for _, kid := range node.kids {
-		kids = append(kids, nnf(kid, neg))
+	for _, kid := range node.Kids {
+		kids = append(kids, n.nnf(kid, neg))
 	}
 
 	if neg {
 		// NOT (A || B) => (NOT A) && (NOT B)
-		return &TypedNodeAnd{kids: kids}
+		return &IRAnd{Kids: kids}
 	}
 
-	return &TypedNodeOr{kids: kids}
+	return &IROr{Kids: kids}
 }
 
-func nnf(node TypedNode, neg bool) TypedNode {
+func (n *nnf) nnf(node IRNode, neg bool) IRNode {
 	switch val := node.(type) {
-	case *TypedNodeAnd:
-		return nnfAnd(val, neg)
+	case *IRAnd:
+		return n.nnfAnd(val, neg)
 
-	case *TypedNodeOr:
-		return nnfOr(val, neg)
+	case *IROr:
+		return n.nnfOr(val, neg)
 
-	case *TypedNodeNot:
-		return nnf(val.kid, !neg)
+	case *IRNot:
+		return n.nnf(val.Kid, !neg)
 
 	default:
 		if !neg {
@@ -92,216 +99,197 @@ func nnf(node TypedNode, neg bool) TypedNode {
 		}
 
 		// Try to invert the leaf.
-		if inv := invertLeaf(val); inv != nil {
+		if inv := n.invertLeaf(val); inv != nil {
 			return inv
 		}
 
 		// Fallback: keep a single NOT as the leaf.
-		return &TypedNodeNot{kid: val}
+		return &IRNot{Kid: val}
 	}
 }
 
-func invertRangeN(node *TypedNodeRangeN) TypedNode {
-	var parts []TypedNode
+func (n *nnf) invertRangeN(node *IRNumberRange) IRNode {
+	var parts []IRNode
 
-	if node.low != nil {
+	if node.Lo != nil {
 		parts = append(
 			parts,
-			&TypedNodeCmpN{
-				field: node.field,
-				op:    CmpLT,
-				value: *node.low})
+			&IRNumberCmp{
+				Field: node.Field,
+				Op:    ComparatorLT,
+				Value: *node.Lo})
 
 		//nolint:forcetypeassert
-		if node.incl {
-			parts[len(parts)-1].(*TypedNodeCmpN).op = CmpLT
+		if node.IncL {
+			parts[len(parts)-1].(*IRNumberCmp).Op = ComparatorLT
 		} else {
-			parts[len(parts)-1].(*TypedNodeCmpN).op = CmpLTE
+			parts[len(parts)-1].(*IRNumberCmp).Op = ComparatorLTE
 		}
 	}
 
-	if node.high != nil {
-		opcode := CmpGTE
+	if node.Hi != nil {
+		opcode := ComparatorGTE
 
-		if node.inch {
-			opcode = CmpGT
+		if node.IncH {
+			opcode = ComparatorGT
 		}
 
 		parts = append(
 			parts,
-			&TypedNodeCmpN{
-				field: node.field,
-				op:    opcode,
-				value: *node.high})
+			&IRNumberCmp{
+				Field: node.Field,
+				Op:    opcode,
+				Value: *node.Hi})
 	}
 
 	switch len(parts) {
 	case 0:
-		return &TypedNodePhrase{
-			field:  node.field,
-			phrase: "",
-			prox:   0}
+		return &IRPhrase{
+			Field:     node.Field,
+			Phrase:    "",
+			Proximity: 0}
 
 	case 1:
 		return parts[0]
 	}
 
-	return &TypedNodeOr{kids: parts}
+	return &IROr{Kids: parts}
 }
 
-func invertRangeT(node *TypedNodeRangeT) TypedNode {
-	var parts []TypedNode
+func (n *nnf) invertRangeT(node *IRTimeRange) IRNode {
+	var parts []IRNode
 
-	if node.low != nil {
-		opcode := CmpLTE
+	if node.Lo != nil {
+		opcode := ComparatorLTE
 
-		if node.incl {
-			opcode = CmpLT
+		if node.IncL {
+			opcode = ComparatorLT
 		}
 
 		parts = append(
 			parts,
-			&TypedNodeCmpT{
-				field: node.field,
-				op:    opcode,
-				value: *node.low})
+			&IRTimeCmp{
+				Field: node.Field,
+				Op:    opcode,
+				Value: *node.Lo})
 	}
 
-	if node.high != nil {
-		opcode := CmpGTE
+	if node.Hi != nil {
+		opcode := ComparatorGTE
 
-		if node.inch {
-			opcode = CmpGT
+		if node.IncH {
+			opcode = ComparatorGT
 		}
 
 		parts = append(
 			parts,
-			&TypedNodeCmpT{
-				field: node.field,
-				op:    opcode,
-				value: *node.high})
+			&IRTimeCmp{
+				Field: node.Field,
+				Op:    opcode,
+				Value: *node.Hi})
 	}
 
 	switch len(parts) {
 	case 0:
-		return &TypedNodeFalse{}
+		return &IRFalse{}
 
 	case 1:
 		return parts[0]
 	}
 
-	return &TypedNodeOr{kids: parts}
+	return &IROr{Kids: parts}
 }
 
-func invertRangeIP(node *TypedNodeRangeIP) TypedNode {
-	var parts []TypedNode
+func (n *nnf) invertRangeIP(node *IRIPRange) IRNode {
+	var parts []IRNode
 
-	if node.low != zeroIP {
-		opcode := CmpLTE
+	if node.Lo != zeroIP {
+		opcode := ComparatorLTE
 
-		if node.incl {
-			opcode = CmpLT
+		if node.IncL {
+			opcode = ComparatorLT
 		}
 
 		parts = append(
 			parts,
-			&TypedNodeCmpIP{
-				field: node.field,
-				op:    opcode,
-				value: node.low})
+			&IRIPCmp{
+				Field: node.Field,
+				Op:    opcode,
+				Value: node.Lo})
 	}
 
-	if node.high != zeroIP {
-		opcode := CmpGTE
+	if node.Hi != zeroIP {
+		opcode := ComparatorGTE
 
-		if node.inch {
-			opcode = CmpGT
+		if node.IncH {
+			opcode = ComparatorGT
 		}
 
 		parts = append(
 			parts,
-			&TypedNodeCmpIP{
-				field: node.field,
-				op:    opcode,
-				value: node.high})
+			&IRIPCmp{
+				Field: node.Field,
+				Op:    opcode,
+				Value: node.Hi})
 	}
 
 	switch len(parts) {
 	case 0:
-		return &TypedNodeFalse{}
+		return &IRFalse{}
 	case 1:
 		return parts[0]
 	}
 
-	return &TypedNodeOr{kids: parts}
+	return &IROr{Kids: parts}
 }
 
-func invertLeaf(node TypedNode) TypedNode {
+func (n *nnf) invertLeaf(node IRNode) IRNode {
 	switch val := node.(type) {
-	case *TypedNodeEqS:
-		return &TypedNodeNeqS{field: val.field, value: val.value}
+	case *IRStringEQ:
+		return &IRStringNEQ{Field: val.Field, Value: val.Value}
 
-	case *TypedNodeNeqS:
-		return &TypedNodeEqS{field: val.field, value: val.value}
+	case *IRStringNEQ:
+		return &IRStringEQ{Field: val.Field, Value: val.Value}
 
-	case *TypedNodeCmpN:
-		return &TypedNodeCmpN{
-			field: val.field,
-			op:    invertCmp(val.op),
-			value: val.value}
+	case *IRNumberCmp:
+		return &IRNumberCmp{
+			Field: val.Field,
+			Op:    InvertComparator(val.Op),
+			Value: val.Value}
 
-	case *TypedNodeCmpT:
-		return &TypedNodeCmpT{
-			field: val.field,
-			op:    invertCmp(val.op),
-			value: val.value}
+	case *IRTimeCmp:
+		return &IRTimeCmp{
+			Field: val.Field,
+			Op:    InvertComparator(val.Op),
+			Value: val.Value}
 
-	case *TypedNodeCmpIP:
-		return &TypedNodeCmpIP{
-			field: val.field,
-			op:    invertCmp(val.op),
-			value: val.value}
+	case *IRIPCmp:
+		return &IRIPCmp{
+			Field: val.Field,
+			Op:    InvertComparator(val.Op),
+			Value: val.Value}
 
-	case *TypedNodeRangeN:
-		return invertRangeN(val)
+	case *IRNumberRange:
+		return n.invertRangeN(val)
 
-	case *TypedNodeRangeT:
-		return invertRangeT(val)
+	case *IRTimeRange:
+		return n.invertRangeT(val)
 
-	case *TypedNodeRangeIP:
-		return invertRangeIP(val)
+	case *IRIPRange:
+		return n.invertRangeIP(val)
 	}
 
 	return nil
 }
 
-func invertCmp(opcode CmpKind) CmpKind {
-	switch opcode {
-	case CmpLT:
-		return CmpGTE
-
-	case CmpLTE:
-		return CmpGT
-
-	case CmpGT:
-		return CmpLTE
-
-	case CmpGTE:
-		return CmpLT
-
-	case CmpEQ:
-		return CmpNEQ
-
-	case CmpNEQ:
-		return CmpEQ
-
-	default:
-		return opcode
-	}
+func (n *nnf) NNF(tokens IRNode) IRNode {
+	return n.nnf(tokens, false)
 }
 
-func ToNNF(node TypedNode) TypedNode {
-	return nnf(node, false)
+// ** Functions:
+
+func NewNNF() NNF {
+	return &nnf{}
 }
 
 // * nnf.go ends here.

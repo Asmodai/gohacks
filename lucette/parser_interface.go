@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// parser_interface.go --- Parser interface definition.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -28,6 +28,8 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+//mock:yes
 
 // * Comments:
 
@@ -37,34 +39,17 @@ package lucette
 
 // * Imports:
 
-import "testing"
-
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+type Parser interface {
+	// Reset the parser state.
+	Reset()
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
+	// Parse the list of lexed tokens and generate an AST.
+	Parse([]LexedToken) (ASTNode, []Diagnostic)
 
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+	// Return a list of diagnostic messages.
+	Diagnostics() []Diagnostic
 }
 
-// * tokentype_test.go ends here.
+// * parser_interface.go ends here.

@@ -48,88 +48,88 @@ import (
 // ** Tests:
 
 func TestToken(t *testing.T) {
-	tokType := ttAnd
+	tokType := TokenAnd
 	tokLexeme := "AND"
 	tokLiteral := "and"
 	tokErr := errors.Base("Chungus")
-	tokStart := newPosition(1, 2)
-	tokEnd := newPosition(3, 4)
+	tokStart := NewPosition(1, 2)
+	tokEnd := NewPosition(3, 4)
 
-	t.Run("newToken", func(t *testing.T) {
-		tok := newToken(tokType, tokLexeme, tokStart, tokEnd)
+	t.Run("NewLexedToken", func(t *testing.T) {
+		tok := NewLexedToken(tokType, tokLexeme, tokStart, tokEnd)
 
-		if tok.tokenType != tokType {
-			t.Errorf("Token type: %v != %v", tok.tokenType, tokType)
+		if tok.Token != tokType {
+			t.Errorf("Token type: %v != %v", tok.Token, tokType)
 		}
 
-		if tok.lexeme != tokLexeme {
-			t.Errorf("Lexeme: %v != %v", tok.lexeme, tokLexeme)
+		if tok.Lexeme != tokLexeme {
+			t.Errorf("Lexeme: %v != %v", tok.Lexeme, tokLexeme)
 		}
 
-		if tok.start != tokStart {
-			t.Errorf("Start: %#v != %#v", tok.start, tokStart)
+		if tok.Start != tokStart {
+			t.Errorf("Start: %#v != %#v", tok.Start, tokStart)
 		}
 
-		if tok.end != tokEnd {
-			t.Errorf("End: %#v != %#v", tok.end, tokEnd)
+		if tok.End != tokEnd {
+			t.Errorf("End: %#v != %#v", tok.End, tokEnd)
 		}
 	})
 
-	t.Run("newTokenWithLiteral", func(t *testing.T) {
-		tok := newTokenWithLiteral(
+	t.Run("NewLexedTokenWithLiteral", func(t *testing.T) {
+		tok := NewLexedTokenWithLiteral(
 			tokType,
 			tokLexeme,
 			tokLiteral,
 			tokStart,
 			tokEnd)
 
-		if tok.tokenType != tokType {
-			t.Errorf("Token type: %v != %v", tok.tokenType, tokType)
+		if tok.Token != tokType {
+			t.Errorf("Token type: %v != %v", tok.Token, tokType)
 		}
 
-		if tok.lexeme != tokLexeme {
-			t.Errorf("Lexeme: %v != %v", tok.lexeme, tokLexeme)
+		if tok.Lexeme != tokLexeme {
+			t.Errorf("Lexeme: %v != %v", tok.Lexeme, tokLexeme)
 		}
 
-		if tok.literal.value != tokLiteral {
-			t.Errorf("Literal: %q != %q", tok.literal, tokLiteral)
+		if tok.Literal.Value != tokLiteral {
+			t.Errorf("Literal: %q != %q", tok.Literal, tokLiteral)
 		}
 
-		if tok.start != tokStart {
-			t.Errorf("Start: %#v != %#v", tok.start, tokStart)
+		if tok.Start != tokStart {
+			t.Errorf("Start: %#v != %#v", tok.Start, tokStart)
 		}
 
-		if tok.end != tokEnd {
-			t.Errorf("End: %#v != %#v", tok.end, tokEnd)
+		if tok.End != tokEnd {
+			t.Errorf("End: %#v != %#v", tok.End, tokEnd)
 		}
 	})
 
-	t.Run("newTokenWithError", func(t *testing.T) {
-		tok := newTokenWithError(
+	t.Run("NewLexedTokenWithError", func(t *testing.T) {
+		tok := NewLexedTokenWithError(
 			tokType,
 			tokLexeme,
 			tokErr,
 			tokStart,
 			tokEnd)
 
-		if tok.tokenType != tokType {
-			t.Errorf("Token type: %v != %v", tok.tokenType, tokType)
+		if tok.Token != tokType {
+			t.Errorf("Token type: %v != %v", tok.Token, tokType)
 		}
 
-		if tok.lexeme != tokLexeme {
-			t.Errorf("Lexeme: %v != %v", tok.lexeme, tokLexeme)
+		if tok.Lexeme != tokLexeme {
+			t.Errorf("Lexeme: %v != %v", tok.Lexeme, tokLexeme)
 		}
 
-		if tok.literal.err != tokErr {
-			t.Errorf("Literal: %q != %q", tok.literal, tokLiteral)
+		if tok.Literal.Err != tokErr {
+			t.Errorf("Literal: %q != %q", tok.Literal, tokLiteral)
 		}
 
-		if tok.start != tokStart {
-			t.Errorf("Start: %#v != %#v", tok.start, tokStart)
+		if tok.Start != tokStart {
+			t.Errorf("Start: %#v != %#v", tok.Start, tokStart)
 		}
 
-		if tok.end != tokEnd {
-			t.Errorf("End: %#v != %#v", tok.end, tokEnd)
+		if tok.End != tokEnd {
+			t.Errorf("End: %#v != %#v", tok.End, tokEnd)
 		}
 	})
 }

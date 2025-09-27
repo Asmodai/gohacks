@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// span_test.go --- Span tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -41,30 +41,38 @@ import "testing"
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+func TestSpan(t *testing.T) {
+	var span *Span
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
+	start := NewPosition(1, 10)
+	end := NewPosition(1, 42)
+	str := "1:10-1:42"
 
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
+	t.Run("NewSpan", func(t *testing.T) {
+		span = NewSpan(start, end)
+
+		if span.start != start || span.end != end {
+			t.Fatal("Did not create span")
 		}
+	})
 
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
+	t.Run("Start", func(t *testing.T) {
+		if span.Start() != start {
+			t.Errorf("Mismatch: %#v != %#v", span.Start(), start)
 		}
-	}
+	})
+
+	t.Run("End", func(t *testing.T) {
+		if span.End() != end {
+			t.Errorf("Mismatch: %#v != %#v", span.End(), end)
+		}
+	})
+
+	t.Run("String", func(t *testing.T) {
+		if span.String() != str {
+			t.Errorf("Mismatch: %#v != %q", span.String(), str)
+		}
+	})
 }
 
-// * tokentype_test.go ends here.
+// * span_test.go ends here.

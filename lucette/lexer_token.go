@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// literal.go --- Literal type.
+// lexer_token.go --- Lexer token methods.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -35,65 +35,56 @@
 
 package lucette
 
-// * Imports:
-
-import "github.com/Asmodai/gohacks/conversion"
-
 // * Code:
 
-// ** Type:
+// Add a new lexed token with the given type and lexeme to the token list.
+func (l *lexer) addToken(token Token, lexeme string) {
+	l.addTokenWithLiteral(token, lexeme, "")
+}
 
-// Literal value structure.
+// Add a new lexed token with the given token type, lexeme, and literal
+// value to the token list.
+func (l *lexer) addTokenWithLiteral(token Token, lexeme string, literal any) {
+	l.tokens = append(
+		l.tokens,
+		NewLexedTokenWithLiteral(token, lexeme, literal, l.startPos, l.currPos))
+}
+
+// If the next rune in the lexer matches `match`, then a new lexed token
+// is created using `tokThen` as the token and `lexThen` as the lexeme.
 //
-//nolint:errname
-type Literal struct {
-	Value any   // The literal value.
-	Err   error // The error to pass as a literal.
-}
-
-// ** Methods:
-
-// Is the literal an error?
-func (l Literal) IsError() bool {
-	return l.Err != nil
-}
-
-// Return the string representation of the literal.
-func (l Literal) String() string {
-	if l.Err != nil {
-		return l.Err.Error()
+// If the match fails, then a new lexed token is created using `tokElse` as
+// the token and `lexElse` as the lexeme instead.
+func (l *lexer) addTokenIf(match rune, tokThen Token, lexThen string, tokElse Token, lexElse string) error {
+	found, err := l.matchRune(match)
+	if err != nil {
+		return err
 	}
 
-	if normal, ok := conversion.ToString(l.Value); ok {
-		return normal
+	if found {
+		l.addToken(tokThen, lexThen)
+
+		return nil
 	}
 
-	return "<invalid>"
+	l.addToken(tokElse, lexElse)
+
+	return nil
 }
 
-// Return the error message if one is present.
-func (l Literal) Error() string {
-	if l.Err == nil {
-		return ""
+// If the next rune in the lexer matches `match`, then a new lexed token
+// using `token` and `lexeme` is created.
+func (l *lexer) addTokenWhen(match rune, token Token, lexeme string) error {
+	found, err := l.matchRune(match)
+	if err != nil {
+		return err
 	}
 
-	return l.Err.Error()
-}
-
-// ** Functions:
-
-// Create a new value literal.
-func NewLiteral(value any) Literal {
-	return Literal{
-		Value: value,
+	if found {
+		l.addToken(token, lexeme)
 	}
+
+	return nil
 }
 
-// Create a new error literal.
-func NewErrorLiteral(err error) Literal {
-	return Literal{
-		Err: err,
-	}
-}
-
-// * literal.go ends here.
+// * lexer_token.go ends here.

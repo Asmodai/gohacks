@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// typer.go --- Semantic typer.
+// typer.go --- Generate Typed IR.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -28,12 +28,16 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+//mock:yes
 
 // * Comments:
 
 // * Package:
 
 package lucette
+
+// * Imports:
 
 import (
 	"fmt"
@@ -45,374 +49,354 @@ import (
 	"gitlab.com/tozd/go/errors"
 )
 
-// * Imports:
-
-// * Constants:
-
-const (
-	FTKeyword FieldType = iota
-	FTText
-	FTNumeric
-	FTDateTime
-	FTIP
-)
-
 // * Variables:
 
 var (
-	ErrBadDateTime    = errors.Base("bad datetime")
-	ErrUnknownLiteral = errors.Base("unknown literal")
-
 	//nolint:gochecknoglobals
 	zeroIP = netip.Addr{}
 )
 
 // * Code:
 
-// ** Types:
+// ** Interface:
 
-type FieldType int
+type Typer interface {
+	// Generate typed IR from the given AST root node.
+	Type(ASTNode) (IRNode, []Diagnostic)
 
-type Schema map[string]FieldSpec
-
-// ** Field specification:
-
-type FieldSpec struct {
-	Name     string
-	FType    FieldType
-	Analyser string
-	Layouts  []string
+	// Return the diagnostic messages generated during IR generation.
+	Diagnostics() []Diagnostic
 }
 
-func ftypeToString(ftype FieldType) string {
-	var ftypeString = map[FieldType]string{
-		FTKeyword:  "Keyword",
-		FTText:     "Text",
-		FTNumeric:  "Numeric",
-		FTDateTime: "Datetime",
-		FTIP:       "IP",
-	}
+// ** Structure:
 
-	if str, found := ftypeString[ftype]; found {
-		return str
-	}
-
-	return invalidStr
-}
-
-// ** Typer:
-
-type Typer struct {
+type typer struct {
 	Sch   Schema
 	Diags []Diagnostic
 }
 
-// ** Methods:
+// ** Utility methods:
 
-func (t *Typer) diag(span Span, msg string, args ...any) {
-	t.Diags = append(
-		t.Diags,
-		Diagnostic{
-			Msg: fmt.Sprintf(msg, args...),
-			At:  span})
+func (t *typer) addDiag(span *Span, msg string, args ...any) {
+	t.Diags = append(t.Diags,
+		NewDiagnostic(fmt.Sprintf(msg, args...), span))
 }
 
-func (t *Typer) Type(node Node) (TypedNode, []Diagnostic) {
-	out := t.typeNode(node)
-
-	return out, t.Diags
+func (t *typer) Diagnostics() []Diagnostic {
+	return t.Diags
 }
 
-//nolint:cyclop
-func (t *Typer) typeNode(node Node) TypedNode {
-	switch val := node.(type) {
-	case *NodeAnd:
-		kids := make([]TypedNode, 0, len(val.kids))
+// ** IR methods:
 
-		for _, kid := range val.kids {
-			kids = append(kids, t.typeNode(kid))
-		}
+// Generate an IR `And' node.
+func (t *typer) makeIRAnd(node *ASTAnd) IRNode {
+	kids := make([]IRNode, 0, len(node.Kids))
 
-		return &TypedNodeAnd{kids: kids}
-
-	case *NodeOr:
-		kids := make([]TypedNode, 0, len(val.kids))
-
-		for _, kid := range val.kids {
-			kids = append(kids, t.typeNode(kid))
-		}
-
-		return &TypedNodeOr{kids: kids}
-
-	case *NodeNot:
-		return &TypedNodeNot{kid: t.typeNode(val.kid)}
-
-	case *NodeMod:
-		// -X => NOT X
-		if val.kind == ModProhibit {
-			return &TypedNodeNot{kid: t.typeNode(val.kid)}
-		}
-
-		// +X => X.
-		return t.typeNode(val.kid)
-
-	case *NodePred:
-		spec, ok := t.Sch[val.field]
-		if !ok && len(val.field) > 0 {
-			t.diag(val.span, "unknown field %q", val.field)
-
-			// Treat unknown as a keyword so we can proceed.
-			spec = FieldSpec{Name: val.field, FType: FTKeyword}
-		}
-
-		return t.typeLeaf(val, spec)
-
-	default:
-		t.diag(Span{}, "internal: unknown node")
-
-		return &TypedNodeAnd{kids: nil}
+	for _, kid := range node.Kids {
+		kids = append(kids, t.typeIR(kid))
 	}
+
+	return &IRAnd{Kids: kids}
 }
 
-//nolint:funlen
-func (t *Typer) typeEqS(pred *NodePred, spec FieldSpec) TypedNode {
-	switch spec.FType {
-	case FTKeyword, FTText:
-		return &TypedNodeEqS{
-			field: spec.Name,
-			value: pred.strval}
+// Generate an IR `Or' node.
+func (t *typer) makeIROr(node *ASTOr) IRNode {
+	kids := make([]IRNode, 0, len(node.Kids))
 
-	case FTNumeric:
-		val, err := strconv.ParseFloat(pred.strval, 64)
-		if err == nil {
-			return &TypedNodeCmpN{
-				field: spec.Name,
-				op:    CmpEQ,
-				value: val}
-		}
-
-		t.diag(pred.span,
-			"field %q is numeric; %q is not a number",
-			spec.Name,
-			pred.strval)
-
-		return &TypedNodeEqS{
-			field: spec.Name,
-			value: pred.strval}
-
-	case FTDateTime:
-		val, err := toEpoch(pred.strval, spec.Layouts)
-		if err == nil {
-			return &TypedNodeCmpT{
-				field: spec.Name,
-				op:    CmpEQ,
-				value: val}
-		}
-
-		t.diag(pred.span,
-			"datetime parse failed for %q",
-			pred.strval)
-
-		return &TypedNodeEqS{
-			field: spec.Name,
-			value: pred.strval}
-
-	case FTIP:
-		ipaddr, err := toIP(pred.strval)
-		if err != nil {
-			t.diag(pred.span,
-				"ip parse failed: %v",
-				err)
-
-			return &TypedNodeEqS{
-				field: spec.Name,
-				value: pred.strval}
-		}
-
-		return &TypedNodeCmpIP{
-			field: spec.Name,
-			op:    CmpEQ,
-			value: ipaddr}
-
-	default:
-		t.diag(pred.span,
-			"unknown string equality comparison")
-
-		return &TypedNodeEqS{
-			field: spec.Name,
-			value: pred.strval}
+	for _, kid := range node.Kids {
+		kids = append(kids, t.typeIR(kid))
 	}
+
+	return &IROr{Kids: kids}
 }
 
-//nolint:exhaustive
-func (t *Typer) typeCmp(pred *NodePred, spec FieldSpec) TypedNode {
+func (t *typer) makeIRModifier(node *ASTModifier) IRNode {
+	// -x => NOT X.
+	if node.Kind == ModProhibit {
+		return &IRNot{Kid: t.typeIR(node.Kid)}
+	}
+
+	// +X => X.
+	return t.typeIR(node.Kid)
+}
+
+func (t *typer) makeIRPredicate(node *ASTPredicate) IRNode {
+	spec, ok := t.Sch[node.Field]
+	if !ok {
+		t.addDiag(node.span, "unknown field %q", node.Field)
+
+		// Treat as a keyword so we can at least proceed.
+		spec = FieldSpec{Name: node.Field, FType: FTKeyword}
+	}
+
+	return t.typeLeaf(node, spec)
+}
+
+func (t *typer) typeCompare(pred *ASTPredicate, spec FieldSpec) IRNode {
+	//nolint:exhaustive
 	switch spec.FType {
 	case FTNumeric:
-		val := pickNumber(pred.cmp.Atom, t, pred.span)
+		val := pickNumber(pred.Comparator.Atom, t, pred.span)
 
-		return &TypedNodeCmpN{
-			field: spec.Name,
-			op:    pred.cmp.Op,
-			value: val}
+		return &IRNumberCmp{
+			Field: spec.Name,
+			Op:    pred.Comparator.Op,
+			Value: val}
 
 	case FTDateTime:
-		str, _, _ := stringOrNumber(pred.cmp.Atom)
+		str, _, _ := stringOrNumber(pred.Comparator.Atom)
 
 		val, err := toEpoch(str, spec.Layouts)
 		if err != nil {
-			t.diag(pred.span, "%v", err)
+			t.addDiag(pred.span, "%v", err)
 
 			val = 0
 		}
 
-		return &TypedNodeCmpT{
-			field: spec.Name,
-			op:    pred.cmp.Op,
-			value: val}
+		return &IRTimeCmp{
+			Field: spec.Name,
+			Op:    pred.Comparator.Op,
+			Value: val}
 
 	case FTIP:
-		str, _, _ := stringOrNumber(pred.cmp.Atom)
+		str, _, _ := stringOrNumber(pred.Comparator.Atom)
 
 		val, err := toIP(str)
 		if err != nil {
-			t.diag(pred.span, "%v", err)
+			t.addDiag(pred.span, "%v", err)
 		}
 
-		return &TypedNodeCmpIP{
-			field: spec.Name,
-			op:    pred.cmp.Op,
-			value: val}
+		return &IRIPCmp{
+			Field: spec.Name,
+			Op:    pred.Comparator.Op,
+			Value: val}
 
 	default:
-		t.diag(pred.span,
+		t.addDiag(pred.span,
 			"%q comparators not supported on field %q",
-			ftypeToString(spec.FType),
+			FieldTypeToString(spec.FType),
 			spec.Name)
 
-		return &TypedNodeEqS{
-			field: spec.Name,
-			value: fmt.Sprintf("%v", pred.cmp.Atom)}
+		return &IRStringEQ{
+			Field: spec.Name,
+			Value: fmt.Sprintf("%v", pred.Comparator.Atom)}
 	}
 }
 
-//nolint:exhaustive
-func (t *Typer) typeRange(pred *NodePred, spec FieldSpec) TypedNode {
-	switch spec.FType {
-	case FTNumeric:
-		low := pickNumberPtr(pred.rnge.Low, t, pred.span)
-		high := pickNumberPtr(pred.rnge.High, t, pred.span)
-
-		return &TypedNodeRangeN{
-			field: spec.Name,
-			low:   low,
-			high:  high,
-			incl:  pred.rnge.IncL,
-			inch:  pred.rnge.IncH}
-
-	case FTDateTime:
-		low := pickTimePtr(pred.rnge.Low, t, pred.span, spec.Layouts)
-		high := pickTimePtr(pred.rnge.High, t, pred.span, spec.Layouts)
-
-		return &TypedNodeRangeT{
-			field: spec.Name,
-			low:   low,
-			high:  high,
-			incl:  pred.rnge.IncL,
-			inch:  pred.rnge.IncH}
-
-	case FTIP:
-		low := pickIPPtr(pred.rnge.Low, t, pred.span)
-		high := pickIPPtr(pred.rnge.High, t, pred.span)
-
-		return &TypedNodeRangeIP{
-			field: spec.Name,
-			low:   low,
-			high:  high,
-			incl:  pred.rnge.IncL,
-			inch:  pred.rnge.IncH}
-
-	default:
-		t.diag(pred.span,
-			"ranges not supported on field %q",
-			spec.Name)
-
-		return &TypedNodeEqS{
-			field: spec.Name,
-			value: ""}
-	}
-}
-
-func (t *Typer) typeRegex(pred *NodePred, spec FieldSpec) TypedNode {
-	if spec.FType != FTKeyword && spec.FType != FTText {
-		t.diag(pred.span,
-			"regex not supported on field %q",
-			spec.Name)
+func (t *typer) typeStringEQ(pred *ASTPredicate, spec FieldSpec) IRNode {
+	if spec.FType != FTText && spec.FType != FTKeyword {
+		return t.typeCompare(pred, spec)
 	}
 
-	return &TypedNodeRegex{
-		field:    spec.Name,
-		pattern:  pred.reval,
-		compiled: pred.repat}
+	return &IRStringEQ{
+		Field: spec.Name,
+		Value: pred.String}
 }
 
-func (t *Typer) typePhrase(pred *NodePred, spec FieldSpec) TypedNode {
-	if spec.FType != FTText && pred.prox != 0 {
-		t.diag(pred.span,
+func (t *typer) typeStringNEQ(pred *ASTPredicate, spec FieldSpec) IRNode {
+	if spec.FType != FTText && spec.FType != FTKeyword {
+		return t.typeCompare(pred, spec)
+	}
+
+	return &IRStringNEQ{
+		Field: spec.Name,
+		Value: pred.String}
+}
+
+func (t *typer) typeAny(_ *ASTPredicate, spec FieldSpec) IRNode {
+	return &IRAny{Field: spec.Name}
+}
+
+func (t *typer) typeGlob(pred *ASTPredicate, spec FieldSpec) IRNode {
+	if spec.FType != FTText {
+		t.addDiag(pred.span,
+			"glob only supported for text fields")
+
+		return &IRAny{Field: spec.Name}
+	}
+
+	return &IRGlob{
+		Field: spec.Name,
+		Glob:  pred.String}
+}
+
+func (t *typer) typePhrase(pred *ASTPredicate, spec FieldSpec) IRNode {
+	if spec.FType != FTText && pred.Proximity != 0 {
+		t.addDiag(pred.span,
 			"proximity only supported for text fields")
 	}
 
-	return &TypedNodePhrase{
-		field:  spec.Name,
-		phrase: pred.strval,
-		prox:   pred.prox,
-		fuzz:   pred.fuzz,
-		boost:  pred.boost}
-}
+	if spec.FType == FTIP {
+		ipaddr, err := toIP(pred.String)
+		if err != nil {
+			t.addDiag(pred.span,
+				"ip parse failed: %v",
+				err)
 
-func (t *Typer) typePrefix(pred *NodePred, spec FieldSpec) TypedNode {
-	if spec.FType != FTKeyword && spec.FType != FTText {
-		t.diag(pred.span, "prefix unsupported on field %q", spec.Name)
+			goto proceedAsString
+		}
+
+		return &IRIPCmp{
+			Field: spec.Name,
+			Op:    ComparatorEQ,
+			Value: ipaddr}
 	}
 
-	return &TypedNodePrefix{
-		field:  spec.Name,
-		prefix: pred.strval}
+proceedAsString:
+	return &IRPhrase{
+		Field:     spec.Name,
+		Phrase:    pred.String,
+		Proximity: pred.Proximity,
+		Fuzz:      pred.Fuzz,
+		Boost:     pred.Boost}
 }
 
-//nolint:exhaustive
-func (t *Typer) typeLeaf(pred *NodePred, spec FieldSpec) TypedNode {
-	switch pred.kind {
-	case PK_EXISTS:
-		return &TypedNodeExists{field: spec.Name}
+func (t *typer) typePrefix(pred *ASTPredicate, spec FieldSpec) IRNode {
+	if spec.FType != FTKeyword && spec.FType != FTText {
+		t.addDiag(pred.span,
+			"prefix not supported on field %q",
+			spec.Name)
 
-	case PK_EQ_S:
-		return t.typeEqS(pred, spec)
+		return &IRAny{Field: spec.Name}
+	}
 
-	case PK_CMP:
-		return t.typeCmp(pred, spec)
+	return &IRPrefix{
+		Field:  spec.Name,
+		Prefix: pred.String}
+}
 
-	case PK_RANGE:
-		return t.typeRange(pred, spec)
+func (t *typer) typeRange(pred *ASTPredicate, spec FieldSpec) IRNode {
+	//nolint:exhaustive
+	switch spec.FType {
+	case FTNumeric:
+		low := pickNumberPtr(pred.Range.Lo, t, pred.span)
+		high := pickNumberPtr(pred.Range.Hi, t, pred.span)
 
-	case PK_REGEX:
-		return t.typeRegex(pred, spec)
+		return &IRNumberRange{
+			Field: spec.Name,
+			Lo:    low,
+			Hi:    high,
+			IncL:  pred.Range.IncL,
+			IncH:  pred.Range.IncH}
 
-	case PK_PHRASE:
+	case FTDateTime:
+		low := pickTimePtr(pred.Range.Lo, t, pred.span, spec.Layouts)
+		high := pickTimePtr(pred.Range.Hi, t, pred.span, spec.Layouts)
+
+		return &IRTimeRange{
+			Field: spec.Name,
+			Lo:    low,
+			Hi:    high,
+			IncL:  pred.Range.IncL,
+			IncH:  pred.Range.IncH}
+
+	case FTIP:
+		low := pickIPPtr(pred.Range.Lo, t, pred.span)
+		high := pickIPPtr(pred.Range.Hi, t, pred.span)
+
+		return &IRIPRange{
+			Field: spec.Name,
+			Lo:    low,
+			Hi:    high,
+			IncL:  pred.Range.IncL,
+			IncH:  pred.Range.IncH}
+
+	default:
+		t.addDiag(pred.span,
+			"ranges not supported on field %q",
+			spec.Name)
+
+		return &IRStringEQ{Field: spec.Name, Value: ""}
+	}
+}
+
+func (t *typer) typeRegex(pred *ASTPredicate, spec FieldSpec) IRNode {
+	if spec.FType != FTKeyword && spec.FType != FTText {
+		t.addDiag(pred.span,
+			"regex not supported on field %q",
+			spec.Name)
+
+		return &IRAny{Field: spec.Name}
+	}
+
+	return &IRRegex{
+		Field:    spec.Name,
+		Pattern:  pred.Regex,
+		Compiled: pred.compiled}
+}
+
+func (t *typer) typeLeaf(pred *ASTPredicate, spec FieldSpec) IRNode {
+	switch pred.Kind {
+	case PredicateCMP:
+		return t.typeCompare(pred, spec)
+
+	case PredicateEQS:
+		return t.typeStringEQ(pred, spec)
+
+	case PredicateNEQS:
+		return t.typeStringNEQ(pred, spec)
+
+	case PredicateANY:
+		return t.typeAny(pred, spec)
+
+	case PredicateGLOB:
+		return t.typeGlob(pred, spec)
+
+	case PredicatePHRASE:
 		return t.typePhrase(pred, spec)
 
-	case PK_PREFIX:
+	case PredicatePREFIX:
 		return t.typePrefix(pred, spec)
+
+	case PredicateRANGE:
+		return t.typeRange(pred, spec)
+
+	case PredicateREGEX:
+		return t.typeRegex(pred, spec)
 	}
 
-	t.diag(pred.span,
+	t.addDiag(pred.span,
 		"unhandled predicate kind %q",
-		predKindToString(pred.kind))
+		PredicateKindToString(pred.Kind))
 
-	return &TypedNodeExists{field: spec.Name}
+	return &IRAny{Field: spec.Name}
+}
+
+func (t *typer) typeIR(node ASTNode) IRNode {
+	switch val := node.(type) {
+	case *ASTAnd:
+		return t.makeIRAnd(val)
+
+	case *ASTOr:
+		return t.makeIROr(val)
+
+	case *ASTNot:
+		return &IRNot{Kid: t.typeIR(val.Kid)}
+
+	case *ASTModifier:
+		return t.makeIRModifier(val)
+
+	case *ASTPredicate:
+		return t.makeIRPredicate(val)
+
+	default:
+		t.addDiag(ZeroSpan, "internal: unknown node type")
+
+		return &IRAnd{Kids: nil}
+	}
+}
+
+// ** Methods:
+
+func (t *typer) Type(node ASTNode) (IRNode, []Diagnostic) {
+	out := t.typeIR(node)
+
+	return out, t.Diags
 }
 
 // ** Functions:
 
+// Convert a string to a Unix epoch.
 func toEpoch(val string, layouts []string) (int64, error) {
 	for _, layout := range layouts {
 		if tval, err := time.Parse(layout, val); err == nil {
@@ -436,7 +420,7 @@ func toEpoch(val string, layouts []string) (int64, error) {
 		val)
 }
 
-// NOTE: Replace this... should have net.Addr in the typed node.
+// Convert a string to an IP address.
 func toIP(val string) (netip.Addr, error) {
 	addr, err := netip.ParseAddr(val)
 	if err != nil {
@@ -446,14 +430,16 @@ func toIP(val string) (netip.Addr, error) {
 	return addr, nil
 }
 
+// Extract either a string or a number from a literal.
+//
 //nolint:unparam
-func stringOrNumber(lit NodeLit) (string, *float64, error) {
-	switch lit.kind {
+func stringOrNumber(lit ASTLiteral) (string, *float64, error) {
+	switch lit.Kind {
 	case LString:
-		return lit.strval, nil, nil
+		return lit.String, nil, nil
 
 	case LNumber:
-		val := lit.numval
+		val := lit.Number
 		sval, _ := conversion.ToString(val)
 
 		return sval, &val, nil
@@ -466,16 +452,18 @@ func stringOrNumber(lit NodeLit) (string, *float64, error) {
 	}
 }
 
+// Extract a number from a literal.
+//
 //nolint:exhaustive
-func pickNumber(lit NodeLit, inst *Typer, span Span) float64 {
-	switch lit.kind {
+func pickNumber(lit ASTLiteral, inst *typer, span *Span) float64 {
+	switch lit.Kind {
 	case LNumber:
-		return lit.numval
+		return lit.Number
 
 	case LString:
-		val, err := strconv.ParseFloat(lit.strval, 64)
+		val, err := strconv.ParseFloat(lit.String, 64)
 		if err != nil {
-			inst.diag(span, "not a number: %q", lit.strval)
+			inst.addDiag(span, "not a number: %q", lit.String)
 
 			return 0
 		}
@@ -483,14 +471,14 @@ func pickNumber(lit NodeLit, inst *Typer, span Span) float64 {
 		return val
 
 	default:
-		inst.diag(span, "unbounded not allowed here")
+		inst.addDiag(span, "unbounded not allowed here")
 
 		return 0
 	}
 }
 
-func pickNumberPtr(lit *NodeLit, inst *Typer, span Span) *float64 {
-	if lit == nil || lit.kind == LUnbounded {
+func pickNumberPtr(lit *ASTLiteral, inst *typer, span *Span) *float64 {
+	if lit == nil || lit.Kind == LUnbounded {
 		return nil
 	}
 
@@ -499,8 +487,8 @@ func pickNumberPtr(lit *NodeLit, inst *Typer, span Span) *float64 {
 	return &val
 }
 
-func pickTimePtr(lit *NodeLit, inst *Typer, span Span, layouts []string) *int64 {
-	if lit == nil || lit.kind == LUnbounded {
+func pickTimePtr(lit *ASTLiteral, inst *typer, span *Span, layouts []string) *int64 {
+	if lit == nil || lit.Kind == LUnbounded {
 		return nil
 	}
 
@@ -508,7 +496,7 @@ func pickTimePtr(lit *NodeLit, inst *Typer, span Span, layouts []string) *int64 
 
 	val, err := toEpoch(str, layouts)
 	if err != nil {
-		inst.diag(span, "%v", err)
+		inst.addDiag(span, "%v", err)
 
 		return nil
 	}
@@ -516,8 +504,8 @@ func pickTimePtr(lit *NodeLit, inst *Typer, span Span, layouts []string) *int64 
 	return &val
 }
 
-func pickIPPtr(lit *NodeLit, inst *Typer, span Span) netip.Addr {
-	if lit == nil || lit.kind == LUnbounded {
+func pickIPPtr(lit *ASTLiteral, inst *typer, span *Span) netip.Addr {
+	if lit == nil || lit.Kind == LUnbounded {
 		return zeroIP
 	}
 
@@ -525,7 +513,7 @@ func pickIPPtr(lit *NodeLit, inst *Typer, span Span) netip.Addr {
 
 	val, err := toIP(str)
 	if err != nil {
-		inst.diag(span, "%v", err)
+		inst.addDiag(span, "%v", err)
 
 		return zeroIP
 	}
@@ -533,8 +521,8 @@ func pickIPPtr(lit *NodeLit, inst *Typer, span Span) netip.Addr {
 	return val
 }
 
-func NewTyper(sch Schema) *Typer {
-	return &Typer{Sch: sch}
+func NewTyper(sch Schema) Typer {
+	return &typer{Sch: sch}
 }
 
 // * typer.go ends here.

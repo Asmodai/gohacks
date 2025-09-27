@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// irnot.go --- IR `Not' node.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,34 +37,54 @@ package lucette
 
 // * Imports:
 
-import "testing"
+import "github.com/Asmodai/gohacks/debug"
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+// ** Structure:
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
-
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+type IRNot struct {
+	Kid IRNode
 }
 
-// * tokentype_test.go ends here.
+// ** Methods:
+
+// Generate key.
+func (n IRNot) Key() string {
+	return "not|" + n.Kid.Key()
+}
+
+// Display debugging information.
+func (n IRNot) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug("NOT Node")
+
+	dbg.Init(params...)
+	dbg.Printf("Child:")
+
+	if n.Kid != nil {
+		n.Kid.Debug(&dbg)
+	}
+
+	dbg.End()
+	dbg.Print()
+
+	return dbg
+}
+
+// Emit opcode.
+func (n IRNot) Emit(program *Program, trueLabel, falseLabel LabelID) {
+	if n.Kid == nil {
+		program.AppendJump(OpJump, falseLabel)
+
+		return
+	}
+
+	cont := program.NewLabel()
+
+	n.Kid.Emit(program, trueLabel, cont)
+
+	program.AppendIsn(OpNot)
+	program.BindLabel(cont)
+}
+
+// * irnot.go ends here.

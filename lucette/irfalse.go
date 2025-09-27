@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// irfalse.go --- IR `False' node.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,34 +37,36 @@ package lucette
 
 // * Imports:
 
-import "testing"
+import "github.com/Asmodai/gohacks/debug"
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+// ** Structure:
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
-
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+type IRFalse struct {
 }
 
-// * tokentype_test.go ends here.
+// ** Methods:
+
+// Generate key.
+func (n IRFalse) Key() string {
+	return "false"
+}
+
+// Display debugging information.
+func (n IRFalse) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug("Typed FALSE node")
+
+	dbg.Init(params...)
+	dbg.End()
+	dbg.Print()
+
+	return dbg
+}
+
+// Emit opcode.
+func (n IRFalse) Emit(_ *Program, _, _ LabelID) {
+	// Nothing to emit.
+}
+
+// * irfalse.go ends here.

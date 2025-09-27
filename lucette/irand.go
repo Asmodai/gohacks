@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// irand.go --- IR `And' node.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,38 +33,76 @@
 
 // * Package:
 
+//nolint:dupl
 package lucette
 
 // * Imports:
 
-import "testing"
+import (
+	"sort"
+	"strings"
+
+	"github.com/Asmodai/gohacks/debug"
+)
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+// ** Structure:
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
-
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+type IRAnd struct {
+	Kids []IRNode
 }
 
-// * tokentype_test.go ends here.
+// ** Methods:
+
+// Generate key.
+func (n IRAnd) Key() string {
+	keys := make([]string, 0, len(n.Kids))
+
+	for _, kid := range n.Kids {
+		keys = append(keys, kid.Key())
+	}
+
+	sort.Strings(keys)
+
+	return "and|" + strings.Join(keys, "|")
+}
+
+// Display debugging information.
+func (n IRAnd) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug("Typed AND Node")
+
+	dbg.Init(params...)
+	dbg.Printf("Children:")
+
+	for idx := range n.Kids {
+		n.Kids[idx].Debug(&dbg)
+	}
+
+	dbg.End()
+	dbg.Print()
+
+	return dbg
+}
+
+// Emit opcode.
+func (n IRAnd) Emit(program *Program, tLabel, fLabel LabelID) {
+	kidlen := len(n.Kids)
+
+	if kidlen == 0 {
+		program.AppendJump(OpJump, tLabel)
+
+		return
+	}
+
+	for idx := range kidlen - 1 {
+		continuation := program.NewLabel()
+
+		n.Kids[idx].Emit(program, continuation, fLabel)
+		program.BindLabel(continuation)
+	}
+
+	n.Kids[kidlen-1].Emit(program, tLabel, fLabel)
+}
+
+// * irand.go ends here.

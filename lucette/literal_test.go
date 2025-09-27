@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// literal_test.go --- Literal tests.
+// literal_test.go --- Literal type tests.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -43,19 +43,18 @@ import (
 	"gitlab.com/tozd/go/errors"
 )
 
-// * Constants:
-
-// * Variables:
-
 // * Code:
+
+// ** Tests:
 
 func TestLiteral(t *testing.T) {
 	strval := "foo"
 	errval := errors.Base("test error")
-	errstr := "<error: " + errval.Error() + ">"
-	vallit := literal{value: strval}
-	errlit := literal{err: errval}
+	errstr := errval.Error()
+	vallit := Literal{Value: strval}
+	errlit := Literal{Err: errval}
 
+	// Test the stringer.
 	t.Run("String", func(t *testing.T) {
 		t.Run("Value", func(t *testing.T) {
 			got := vallit.String()
@@ -78,6 +77,7 @@ func TestLiteral(t *testing.T) {
 		})
 	})
 
+	// Test the `IsError' predicate.
 	t.Run("IsError", func(t *testing.T) {
 		t.Run("Value", func(t *testing.T) {
 			if vallit.IsError() {
@@ -92,6 +92,7 @@ func TestLiteral(t *testing.T) {
 		})
 	})
 
+	// Test the `Error' method.
 	t.Run("Error", func(t *testing.T) {
 		t.Run("Value", func(t *testing.T) {
 			if len(vallit.Error()) > 0 {

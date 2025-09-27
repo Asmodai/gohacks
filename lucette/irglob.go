@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// irglob.go --- IR `Glob' node.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,38 +33,52 @@
 
 // * Package:
 
+//nolint:dupl
 package lucette
 
 // * Imports:
 
-import "testing"
+import "github.com/Asmodai/gohacks/debug"
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+// ** Structure:
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
-
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+type IRGlob struct {
+	Field string
+	Glob  string
 }
 
-// * tokentype_test.go ends here.
+// ** Methods:
+
+// Generate the key.
+func (n IRGlob) Key() string {
+	return "glob|" + n.Field + "|" + n.Glob
+}
+
+// Display debugging information.
+func (n IRGlob) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug("Glob")
+
+	dbg.Init(params...)
+	dbg.Printf("Field:  %s", n.Field)
+	dbg.Printf("Glob:   %q", n.Glob)
+
+	dbg.End()
+	dbg.Print()
+
+	return dbg
+}
+
+// Emit opcode.
+func (n IRGlob) Emit(program *Program, trueLabel, falseLabel LabelID) {
+	fidx := program.AddFieldConstant(n.Field)
+	sidx := program.AddStringConstant(n.Glob)
+
+	program.AppendIsn(OpLoadField, fidx)    // LDFLD fIdx
+	program.AppendIsn(OpGlob, sidx)         // GLB.S sIdx
+	program.AppendJump(OpJumpNZ, trueLabel) // JNZ true continuation
+	program.AppendJump(OpJump, falseLabel)  // JMP false continuation
+}
+
+// * irglob.go ends here.

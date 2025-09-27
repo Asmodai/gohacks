@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// irnumbercmp.go --- IR numerical compare node.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,40 +31,63 @@
 
 // * Comments:
 
+// This node will resolve dynamically to any of the numeric operations.
+
 // * Package:
 
+//nolint:dupl
 package lucette
 
 // * Imports:
 
-import "testing"
+import (
+	"fmt"
+
+	"github.com/Asmodai/gohacks/debug"
+)
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+// ** Structure:
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
-
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+type IRNumberCmp struct {
+	Field string
+	Op    ComparatorKind
+	Value float64
 }
 
-// * tokentype_test.go ends here.
+// ** Methods:
+
+// Generate the key.
+func (n IRNumberCmp) Key() string {
+	return fmt.Sprintf("cn|%s|%d|%g", n.Field, n.Op, n.Value)
+}
+
+// Display debugging information.
+func (n IRNumberCmp) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug("Number Comparator")
+
+	dbg.Init(params...)
+	dbg.Printf("Field:  %s", n.Field)
+	dbg.Printf("Op:     %s", ComparatorKindToString(n.Op))
+	dbg.Printf("Value:  %f", n.Value)
+
+	dbg.End()
+	dbg.Print()
+
+	return dbg
+}
+
+// Generate opcode.
+func (n IRNumberCmp) Emit(program *Program, trueLabel, falseLabel LabelID) {
+	operator := GetNumberComparator(n.Op, OpNumberEQ)
+	fidx := program.AddFieldConstant(n.Field)
+	nidx := program.AddNumberConstant(n.Value)
+
+	program.AppendIsn(OpLoadField, fidx)    // LDFLD fIdx
+	program.AppendIsn(operator, nidx)       // <op> nIdx
+	program.AppendJump(OpJumpNZ, trueLabel) // JNZ true continuation
+	program.AppendJump(OpJump, falseLabel)  // JMP false continuation
+}
+
+// * irnumbercmp.go ends here.

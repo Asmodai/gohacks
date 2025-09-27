@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// astrange.go --- AST range type.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,34 +37,39 @@ package lucette
 
 // * Imports:
 
-import "testing"
+import "github.com/Asmodai/gohacks/debug"
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+// ** Structure:
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
-
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+// Range structure.
+type ASTRange struct {
+	Lo   *ASTLiteral // Start of range.
+	Hi   *ASTLiteral // End of range.
+	IncL bool        // Start is inclusive?
+	IncH bool        // End is inclusive?
 }
 
-// * tokentype_test.go ends here.
+// ** Methods:
+
+// Display debugging information.
+func (r ASTRange) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug("Range")
+
+	dbg.Init(params...)
+	dbg.Printf("Increment Lo? %t", r.IncL)
+	dbg.Printf("Increment Hi? %t", r.IncH)
+
+	r.Lo.Debug(&dbg, "Range Start")
+	r.Hi.Debug(&dbg, "Range High")
+
+	dbg.End()
+	dbg.Print()
+
+	return dbg
+}
+
+// ** Functions:
+
+// * astrange.go ends here.

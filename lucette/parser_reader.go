@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// parser_reader.go --- Parser reader methods.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,34 +37,70 @@ package lucette
 
 // * Imports:
 
-import "testing"
+import "fmt"
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+// Generate a diagnostic message.
+func (p *parser) errorf(span *Span, format string, args ...any) {
+	p.diags = append(p.diags, NewDiagnostic(fmt.Sprintf(format, args...), span))
+}
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
+// Return the current token without advancing the token reader.
+func (p *parser) peek() LexedToken {
+	return p.tokens[p.index]
+}
 
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
+// Get the next token.
+func (p *parser) next() LexedToken {
+	tok := p.tokens[p.index]
+	p.index++
 
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
+	return tok
+}
+
+// Unread a token back to the reader.
+func (p *parser) unread() {
+	if p.index > 0 {
+		p.index--
 	}
 }
 
-// * tokentype_test.go ends here.
+// Advance the token reader if the current token is of the given type.
+func (p *parser) accept(tType Token) bool {
+	if p.peek().Token == tType {
+		p.index++
+
+		return true
+	}
+
+	return false
+}
+
+// Expect the current token to be of the given type.
+//
+// If it is not, then generate a diagnostic message.
+func (p *parser) expect(tType Token, msg string) LexedToken {
+	tok := p.next()
+
+	if tok.Token != tType {
+		p.errorf(spanTok(tok), "expected %s", msg)
+
+		return NewLexedToken(tType, "", tok.Start, tok.End)
+	}
+
+	return tok
+}
+
+// Return the previous token type.
+//
+//nolint:unused
+func (p *parser) prevType() Token {
+	if p.index == 0 {
+		return TokenIllegal
+	}
+
+	return p.tokens[p.index-1].Token
+}
+
+// * parser_reader.go ends here.

@@ -38,6 +38,7 @@ package lucette
 // * Imports:
 
 import (
+	"bufio"
 	"hash/fnv"
 	"io"
 	"math/rand"
@@ -136,10 +137,10 @@ func injectInvisibles(s string, rng *rand.Rand) string {
 func TestLexer_Reader(t *testing.T) {
 	t.Run("Reader", func(t *testing.T) {
 		input := "abcdef!hijklm"
-		lexer := NewLexer(strings.NewReader(input))
+		lx := &lexer{reader: bufio.NewReader(strings.NewReader(input))}
 
 		t.Run("readRune", func(t *testing.T) {
-			res, err := lexer.readRune()
+			res, err := lx.readRune()
 			if err != nil {
 				t.Fatalf("Unexpected error: %#v", err)
 			}
@@ -151,13 +152,13 @@ func TestLexer_Reader(t *testing.T) {
 
 		t.Run("unreadRune", func(t *testing.T) {
 			t.Run("Works", func(t *testing.T) {
-				if err := lexer.unreadRune(); err != nil {
+				if err := lx.unreadRune(); err != nil {
 					t.Fatalf("Unexpected error: %#v", err)
 				}
 			})
 
 			t.Run("Errors on double unread", func(t *testing.T) {
-				err := lexer.unreadRune()
+				err := lx.unreadRune()
 
 				if err == nil {
 					t.Fatal("Expected an error")
@@ -169,14 +170,14 @@ func TestLexer_Reader(t *testing.T) {
 			})
 
 			t.Run("unread before any read errors", func(t *testing.T) {
-				lx := NewLexer(strings.NewReader("x"))
+				lx := &lexer{reader: bufio.NewReader(strings.NewReader("x"))}
 				if err := lx.unreadRune(); err == nil {
 					t.Fatal("expected error")
 				}
 			})
 
 			t.Run("read, read, unread gives back last rune", func(t *testing.T) {
-				lx := NewLexer(strings.NewReader("ab"))
+				lx := &lexer{reader: bufio.NewReader(strings.NewReader("ab"))}
 
 				r1, _ := lx.readRune()
 				r2, _ := lx.readRune()
@@ -198,7 +199,7 @@ func TestLexer_Reader(t *testing.T) {
 
 		t.Run("peekRune", func(t *testing.T) {
 			t.Run("Works", func(t *testing.T) {
-				res, err := lexer.peekRune()
+				res, err := lx.peekRune()
 				if err != nil {
 					t.Fatalf("Unexpected error: %#v", err)
 				}
@@ -210,7 +211,7 @@ func TestLexer_Reader(t *testing.T) {
 			})
 
 			t.Run("Does not advance", func(t *testing.T) {
-				res, err := lexer.peekRune()
+				res, err := lx.peekRune()
 				if err != nil {
 					t.Fatalf("Unexpected error: %#v", err)
 				}
@@ -222,7 +223,7 @@ func TestLexer_Reader(t *testing.T) {
 			})
 
 			t.Run("peek then read returns same rune", func(t *testing.T) {
-				lx := NewLexer(strings.NewReader("xyz"))
+				lx := &lexer{reader: bufio.NewReader(strings.NewReader("xyz"))}
 
 				p, err := lx.peekRune()
 				if err != nil {
@@ -244,7 +245,7 @@ func TestLexer_Reader(t *testing.T) {
 			var err error
 
 			for err == nil {
-				_, err = lexer.readRune()
+				_, err = lx.readRune()
 
 				if err != nil {
 					if !errors.Is(err, io.EOF) {
@@ -256,7 +257,7 @@ func TestLexer_Reader(t *testing.T) {
 		})
 
 		t.Run("Peek errors at end", func(t *testing.T) {
-			_, err := lexer.peekRune()
+			_, err := lx.peekRune()
 
 			if err == nil {
 				t.Fatal("Expected an error")
@@ -268,13 +269,13 @@ func TestLexer_Reader(t *testing.T) {
 		})
 
 		t.Run("readWhile", func(t *testing.T) {
-			lexer := NewLexer(strings.NewReader(input))
+			lx := &lexer{reader: bufio.NewReader(strings.NewReader(input))}
 
 			t.Run("Works", func(t *testing.T) {
 				stopAt := '!'
 				want := "abcdef"
 
-				res, err := lexer.readWhile(func(r rune) bool {
+				res, err := lx.readWhile(func(r rune) bool {
 					return r != stopAt
 				})
 
@@ -290,7 +291,7 @@ func TestLexer_Reader(t *testing.T) {
 			})
 
 			t.Run("readWhile leaves stop rune unread", func(t *testing.T) {
-				res, err := lexer.readRune()
+				res, err := lx.readRune()
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -304,7 +305,7 @@ func TestLexer_Reader(t *testing.T) {
 			t.Run("Error at EOF", func(t *testing.T) {
 				stopAt := '#' // Will never be found.
 
-				_, err := lexer.readWhile(func(r rune) bool {
+				_, err := lx.readWhile(func(r rune) bool {
 					return r != stopAt
 				})
 
@@ -320,7 +321,7 @@ func TestLexer_Reader(t *testing.T) {
 			t.Run(
 				"readWhile immediate stop returns empty and does not consume",
 				func(t *testing.T) {
-					lx := NewLexer(strings.NewReader("!boom"))
+					lx := &lexer{reader: bufio.NewReader(strings.NewReader("!boom"))}
 
 					s, err := lx.readWhile(func(r rune) bool {
 						return r != '!'
@@ -342,14 +343,14 @@ func TestLexer_Reader(t *testing.T) {
 		})
 
 		t.Run("unicode rune and newline positions", func(t *testing.T) {
-			lx := NewLexer(strings.NewReader("α\nβ"))
+			lx := &lexer{reader: bufio.NewReader(strings.NewReader("α\nβ"))}
 
 			r, _ := lx.readRune()
 			if r != 'α' {
 				t.Fatal("expected alpha")
 			}
 
-			if lx.pos.column != 1 {
+			if lx.currPos.Column != 1 {
 				t.Fatal("Not at column 1")
 			}
 
@@ -369,7 +370,7 @@ func TestLexer_Reader(t *testing.T) {
 		})
 
 		t.Run("comparators lookahead", func(t *testing.T) {
-			lx := NewLexer(strings.NewReader("<="))
+			lx := &lexer{reader: bufio.NewReader(strings.NewReader("<="))}
 
 			r1, _ := lx.readRune()
 			if r1 != '<' {
@@ -392,7 +393,7 @@ func TestLexer_Reader(t *testing.T) {
 // ** Fuzzers:
 
 func fuzzums(t *testing.T, s string, rng *rand.Rand) {
-	lx := NewLexer(strings.NewReader(s))
+	lx := &lexer{reader: bufio.NewReader(strings.NewReader(s))}
 	runes := []rune(s)
 
 	i := 0
@@ -551,7 +552,5 @@ func FuzzLexer_ReadUnreadPeek(f *testing.F) {
 		}
 	})
 }
-
-// ** Benchmarks:
 
 // * lexer_test.go ends here.

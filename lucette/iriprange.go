@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// irnumberrange.go --- IR IP address `Range' node.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,34 +37,70 @@ package lucette
 
 // * Imports:
 
-import "testing"
+import (
+	"fmt"
+	"net/netip"
+
+	"github.com/Asmodai/gohacks/debug"
+)
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+// ** Structure:
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
-
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+type IRIPRange struct {
+	Field string
+	Lo    netip.Addr
+	Hi    netip.Addr
+	IncL  bool
+	IncH  bool
 }
 
-// * tokentype_test.go ends here.
+// ** Methods:
+
+// Generate the key.
+func (n IRIPRange) Key() string {
+	return fmt.Sprintf("rip|%s|%s|%s|%t|%t",
+		n.Field,
+		n.Lo.String(),
+		n.Hi.String(),
+		n.IncL,
+		n.IncH)
+}
+
+// Display debugging information.
+func (n IRIPRange) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug("IP Address Range")
+
+	dbg.Init(params...)
+	dbg.Printf("Field:          %s", n.Field)
+	dbg.Printf("Low:            %s", n.Lo.String())
+	dbg.Printf("High:           %s", n.Hi.String())
+	dbg.Printf("Increment Low:  %v", n.IncL)
+	dbg.Printf("Increment High: %v", n.IncH)
+
+	dbg.End()
+	dbg.Print()
+
+	return dbg
+}
+
+// Generate opcode.
+func (n IRIPRange) Emit(program *Program, trueLabel, falseLabel LabelID) {
+	fidx := program.AddFieldConstant(n.Field)
+	lidx := program.AddIPConstant(n.Lo)
+	hidx := program.AddIPConstant(n.Hi)
+
+	program.AppendIsn(OpLoadField, fidx) // LDFLD fIdx
+
+	program.AppendIsn(OpIPRange, // RNG.IP lIdx hIdx IncL IncH
+		lidx,
+		hidx,
+		n.IncL,
+		n.IncH)
+
+	program.AppendJump(OpJumpNZ, trueLabel) // JNZ true continuation
+	program.AppendJump(OpJump, falseLabel)  // JMP false continuation
+}
+
+// * irnumberrange.go ends here.

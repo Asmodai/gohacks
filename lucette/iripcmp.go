@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// parser_test.go --- Parser tests.
+// irnumbercmp.go --- IR IP address compare node.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -31,20 +31,63 @@
 
 // * Comments:
 
+// This node will resolve dynamically to any of the numeric operations.
+
 // * Package:
 
 package lucette
 
 // * Imports:
 
-// * Constants:
+import (
+	"fmt"
+	"net/netip"
 
-// * Variables:
+	"github.com/Asmodai/gohacks/debug"
+)
 
 // * Code:
 
-// ** Tests:
+// ** Structure:
 
-// ** Parsing:
+type IRIPCmp struct {
+	Field string
+	Op    ComparatorKind
+	Value netip.Addr
+}
 
-// * parser_test.go ends here.
+// ** Methods:
+
+// Generate the key.
+func (n IRIPCmp) Key() string {
+	return fmt.Sprintf("cip|%s|%d|%s", n.Field, n.Op, n.Value.String())
+}
+
+// Display debugging information.
+func (n IRIPCmp) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug("IP Address Comparator")
+
+	dbg.Init(params...)
+	dbg.Printf("Field:  %s", n.Field)
+	dbg.Printf("Op:     %s", ComparatorKindToString(n.Op))
+	dbg.Printf("Value:  %s", n.Value.String())
+
+	dbg.End()
+	dbg.Print()
+
+	return dbg
+}
+
+// Generate opcode.
+func (n IRIPCmp) Emit(program *Program, trueLabel, falseLabel LabelID) {
+	operator := GetNumberComparator(n.Op, OpIPEQ)
+	fidx := program.AddStringConstant(n.Field)
+	nidx := program.AddIPConstant(n.Value)
+
+	program.AppendIsn(OpLoadField, fidx)    // LDFLD fIdx
+	program.AppendIsn(operator, nidx)       // <op> ipIdx
+	program.AppendJump(OpJumpNZ, trueLabel) // JNZ true continuation
+	program.AppendJump(OpJump, falseLabel)  // JMP false continuation
+}
+
+// * irnumbercmp.go ends here.

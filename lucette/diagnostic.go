@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// peephole.go --- Peephole optimiser.
+// diagnostic.go --- Diagnostic type.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,79 +37,49 @@ package lucette
 
 // * Imports:
 
+import "strings"
+
 // * Constants:
 
 // * Variables:
 
 // * Code:
 
-//nolint:cyclop,exhaustive,forcetypeassert
-func (p *Program) Peephole() {
-	oldCode := p.Code
-	newCode := make([]Instr, 0, len(oldCode))
-	lastfid := -1
-	idx := 0
+// ** Structure:
 
-	for idx < len(oldCode) {
-		isn := oldCode[idx]
-
-		switch isn.Op {
-		case opLABEL:
-			// Keep labels as-is.
-			newCode = append(newCode, isn)
-			idx++
-
-			continue
-
-		case opSET_F:
-			// Remove unchanged field sets.
-			fid, _ := isn.Args[0].(int)
-
-			if fid == lastfid {
-				idx++
-
-				continue
-			}
-
-			lastfid = fid
-
-		case opNOT:
-			// Collapse double NOT.
-			if idx+1 < len(oldCode) && oldCode[idx+1].Op == opNOT {
-				idx++
-
-				continue
-			}
-
-		case opRANGE_N:
-			// Replace RANGE(lo==hi,inclusives) -> EQ
-			low, high := isn.Args[0].(int), isn.Args[1].(int)
-			incl, inch := isn.Args[2].(bool), isn.Args[3].(bool)
-
-			if low != -1 && high != -1 && low == high && incl && inch {
-				isn = Instr{Op: opEQ_N, Args: []any{low}}
-			}
-
-		case opJMP, opJZ, opJNZ:
-			// Drop jumps to immediate next label.
-			if idx+1 < len(oldCode) && oldCode[idx+1].Op == opLABEL && len(isn.Args) == 1 {
-				if tgt, ok := isn.Args[0].(LabelID); ok {
-					if lbl, _ := oldCode[idx+1].Args[0].(LabelID); lbl == tgt {
-						idx++
-
-						continue
-					}
-				}
-			}
-		}
-
-		// Keep re-written or unchanged instructions.
-		newCode = append(newCode, isn)
-
-		idx++
-	}
-
-	p.Code = newCode
+type Diagnostic struct {
+	Msg  string // Diagnostic message.
+	At   *Span  // Location within source code.
+	Hint string // Hint message, if applicable.
 }
 
-// * peephole.go ends here.
+// ** Methods:
+
+// Return the string representation of a diagnostic.
+func (d Diagnostic) String() string {
+	var sbld strings.Builder
+
+	sbld.WriteString(d.At.String())
+	sbld.WriteString(": ")
+	sbld.WriteString(d.Msg)
+
+	if len(d.Hint) > 0 {
+		sbld.WriteString(" [")
+		sbld.WriteString(d.Hint)
+		sbld.WriteRune(']')
+	}
+
+	return sbld.String()
+}
+
+// ** Functions:
+
+func NewDiagnostic(msg string, at *Span) Diagnostic {
+	return Diagnostic{Msg: msg, At: at}
+}
+
+func NewDiagnosticHint(msg, hint string, at *Span) Diagnostic {
+	return Diagnostic{Msg: msg, Hint: hint, At: at}
+}
+
+// * diagnostic.go ends here.

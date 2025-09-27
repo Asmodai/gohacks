@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// astand.go --- AST `AND' node.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,34 +37,48 @@ package lucette
 
 // * Imports:
 
-import "testing"
+import (
+	"github.com/Asmodai/gohacks/debug"
+)
+
+// * Constants:
+
+// * Variables:
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+// ** Type:
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
-
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
-
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+// An AST node for the `AND' logical operator.
+type ASTAnd struct {
+	Kids []ASTNode // Child nodes.
+	span *Span     // Source code span.
 }
 
-// * tokentype_test.go ends here.
+// ** Methods:
+
+// Return the span for the AST node.
+func (n ASTAnd) Span() *Span {
+	return n.span
+}
+
+// Display debugging information.
+func (n ASTAnd) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug("AST 'AND' Node")
+
+	dbg.Init(params...)
+
+	dbg.Printf("Span: %s", n.span.String())
+	dbg.Printf("Children:")
+
+	for idx := range n.Kids {
+		n.Kids[idx].Debug(&dbg)
+	}
+
+	dbg.End()
+	dbg.Print()
+
+	return dbg
+}
+
+// * astand.go ends here.

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// tokentype_test.go --- Token type tests.
+// fieldtype.go --- Field typer.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -37,34 +37,54 @@ package lucette
 
 // * Imports:
 
-import "testing"
+// * Constants:
+
+const (
+	FTKeyword FieldType = iota
+	FTText
+	FTNumeric
+	FTDateTime
+	FTIP
+)
+
+// * Variables:
+
+var (
+	//nolint:gochecknoglobals
+	ftypeString = map[FieldType]string{
+		FTKeyword:  "Keyword",
+		FTText:     "Text",
+		FTNumeric:  "Numeric",
+		FTDateTime: "Datetime",
+		FTIP:       "IP Address",
+	}
+)
 
 // * Code:
 
-func TestTokenType(t *testing.T) {
-	tests := []struct {
-		token   Token
-		pretty  string
-		literal string
-	}{
-		// vvv - Is a legal token but doesn't have a literal.
-		{TokenNumber, "TokenNumber", "Illegal"},
-		{TokenPlus, "TokenPlus", "+"},
-		{Token(100), "TokenUnknown", "Illegal"},
-	}
+// ** Types:
 
-	for _, test := range tests {
-		strval := test.token.String()
-		litval := test.token.Literal()
+type FieldType int
 
-		if strval != test.pretty {
-			t.Fatalf("String mismatch: %q != %q", test.pretty, strval)
-		}
+type Schema map[string]FieldSpec
 
-		if litval != test.literal {
-			t.Fatalf("Literal mismatch: %q != %q", test.literal, litval)
-		}
-	}
+// ** Structure:
+
+type FieldSpec struct {
+	Name     string    // Name of the field.
+	FType    FieldType // Field type of the field.
+	Analyser string    // Unused.
+	Layouts  []string  // Layouts used for type parsers.
 }
 
-// * tokentype_test.go ends here.
+// ** Functions:
+
+func FieldTypeToString(fType FieldType) string {
+	if str, found := ftypeString[fType]; found {
+		return str
+	}
+
+	return invalidStr
+}
+
+// * fieldtype.go ends here.

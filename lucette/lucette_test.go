@@ -54,162 +54,162 @@ import (
 var (
 	tests = []struct {
 		input  string
-		tokens []Token
+		tokens []LexedToken
 		err    error
 	}{
 		{
 			input:  "field:string",
-			tokens: []Token{},
+			tokens: []LexedToken{},
 			err:    ErrUnexpectedBareword,
 		}, {
 			input: `level:42 && message:"whee"`,
-			tokens: []Token{
-				makeLiteralToken(ttField, "", "level"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttNumber, "", float64(42)),
-				makeLiteralToken(ttAnd, "&&", ""),
-				makeLiteralToken(ttField, "", "message"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttPhrase, "", "whee"),
-				makeLiteralToken(ttEOF, "", ""),
+			tokens: []LexedToken{
+				makeLiteralToken(TokenField, "", "level"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenNumber, "", float64(42)),
+				makeLiteralToken(TokenAnd, "&&", ""),
+				makeLiteralToken(TokenField, "", "message"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenPhrase, "", "whee"),
+				makeLiteralToken(TokenEOF, "", ""),
 			},
 		}, {
 			input: `'the level':42 && 'the message':"whee"`,
-			tokens: []Token{
-				makeLiteralToken(ttField, "", "the level"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttNumber, "", float64(42)),
-				makeLiteralToken(ttAnd, "&&", ""),
-				makeLiteralToken(ttField, "", "the message"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttPhrase, "", "whee"),
-				makeLiteralToken(ttEOF, "", ""),
+			tokens: []LexedToken{
+				makeLiteralToken(TokenField, "", "the level"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenNumber, "", float64(42)),
+				makeLiteralToken(TokenAnd, "&&", ""),
+				makeLiteralToken(TokenField, "", "the message"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenPhrase, "", "whee"),
+				makeLiteralToken(TokenEOF, "", ""),
 			},
 		}, {
 			input: `message:"value"~5 && level:95`,
-			tokens: []Token{
-				makeLiteralToken(ttField, "", "message"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttPhrase, "", "value"),
-				makeLiteralToken(ttTilde, "~", ""),
-				makeLiteralToken(ttNumber, "", float64(5)),
-				makeLiteralToken(ttAnd, "&&", ""),
-				makeLiteralToken(ttField, "", "level"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttNumber, "", float64(95)),
-				makeLiteralToken(ttEOF, "", ""),
+			tokens: []LexedToken{
+				makeLiteralToken(TokenField, "", "message"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenPhrase, "", "value"),
+				makeLiteralToken(TokenTilde, "~", ""),
+				makeLiteralToken(TokenNumber, "", float64(5)),
+				makeLiteralToken(TokenAnd, "&&", ""),
+				makeLiteralToken(TokenField, "", "level"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenNumber, "", float64(95)),
+				makeLiteralToken(TokenEOF, "", ""),
 			},
 		}, {
 			input: `percent:3_123_456 || percent:3.1e+02`,
-			tokens: []Token{
-				makeLiteralToken(ttField, "", "percent"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttNumber, "", float64(3_123_456)),
-				makeLiteralToken(ttOr, "||", ""),
-				makeLiteralToken(ttField, "", "percent"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttNumber, "", float64(3.1e+02)),
-				makeLiteralToken(ttEOF, "", ""),
+			tokens: []LexedToken{
+				makeLiteralToken(TokenField, "", "percent"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenNumber, "", float64(3_123_456)),
+				makeLiteralToken(TokenOr, "||", ""),
+				makeLiteralToken(TokenField, "", "percent"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenNumber, "", float64(3.1e+02)),
+				makeLiteralToken(TokenEOF, "", ""),
 			},
 		}, {
 			input: `(message:"yes" or message:"maybe") and !message:"no"`,
-			tokens: []Token{
-				makeLiteralToken(ttLParen, "(", ""),
-				makeLiteralToken(ttField, "", "message"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttPhrase, "", "yes"),
-				makeLiteralToken(ttOr, "or", ""),
-				makeLiteralToken(ttField, "", "message"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttPhrase, "", "maybe"),
-				makeLiteralToken(ttRParen, ")", ""),
-				makeLiteralToken(ttAnd, "and", ""),
-				makeLiteralToken(ttNot, "!", ""),
-				makeLiteralToken(ttField, "", "message"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttPhrase, "", "no"),
-				makeLiteralToken(ttEOF, "", ""),
+			tokens: []LexedToken{
+				makeLiteralToken(TokenLParen, "(", ""),
+				makeLiteralToken(TokenField, "", "message"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenPhrase, "", "yes"),
+				makeLiteralToken(TokenOr, "or", ""),
+				makeLiteralToken(TokenField, "", "message"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenPhrase, "", "maybe"),
+				makeLiteralToken(TokenRParen, ")", ""),
+				makeLiteralToken(TokenAnd, "and", ""),
+				makeLiteralToken(TokenNot, "!", ""),
+				makeLiteralToken(TokenField, "", "message"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenPhrase, "", "no"),
+				makeLiteralToken(TokenEOF, "", ""),
 			},
 		}, {
 			input: `(message:"ye*" or message:"n?") and (not message:"chuckles" and !+message:"ass")`,
-			tokens: []Token{
-				makeLiteralToken(ttLParen, "(", ""),
-				makeLiteralToken(ttField, "", "message"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttPhrase, "", "ye*"),
-				makeLiteralToken(ttOr, "or", ""),
-				makeLiteralToken(ttField, "", "message"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttPhrase, "", "n?"),
-				makeLiteralToken(ttRParen, ")", ""),
-				makeLiteralToken(ttAnd, "and", ""),
-				makeLiteralToken(ttLParen, "(", ""),
-				makeLiteralToken(ttNot, "not", ""),
-				makeLiteralToken(ttField, "", "message"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttPhrase, "", "chuckles"),
-				makeLiteralToken(ttAnd, "and", ""),
-				makeLiteralToken(ttNot, "!", ""),
-				makeLiteralToken(ttPlus, "+", ""),
-				makeLiteralToken(ttField, "", "message"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttPhrase, "", "ass"),
-				makeLiteralToken(ttRParen, ")", ""),
-				makeLiteralToken(ttEOF, "", ""),
+			tokens: []LexedToken{
+				makeLiteralToken(TokenLParen, "(", ""),
+				makeLiteralToken(TokenField, "", "message"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenPhrase, "", "ye*"),
+				makeLiteralToken(TokenOr, "or", ""),
+				makeLiteralToken(TokenField, "", "message"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenPhrase, "", "n?"),
+				makeLiteralToken(TokenRParen, ")", ""),
+				makeLiteralToken(TokenAnd, "and", ""),
+				makeLiteralToken(TokenLParen, "(", ""),
+				makeLiteralToken(TokenNot, "not", ""),
+				makeLiteralToken(TokenField, "", "message"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenPhrase, "", "chuckles"),
+				makeLiteralToken(TokenAnd, "and", ""),
+				makeLiteralToken(TokenNot, "!", ""),
+				makeLiteralToken(TokenPlus, "+", ""),
+				makeLiteralToken(TokenField, "", "message"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenPhrase, "", "ass"),
+				makeLiteralToken(TokenRParen, ")", ""),
+				makeLiteralToken(TokenEOF, "", ""),
 			},
 		}, {
 			input: `(level:[1 to *})`,
-			tokens: []Token{
-				makeLiteralToken(ttLParen, "(", ""),
-				makeLiteralToken(ttField, "", "level"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttLBracket, "[", ""),
-				makeLiteralToken(ttNumber, "", float64(1)),
-				makeLiteralToken(ttTo, "to", ""),
-				makeLiteralToken(ttStar, "*", ""),
-				makeLiteralToken(ttRCurly, "}", ""),
-				makeLiteralToken(ttRParen, ")", ""),
-				makeLiteralToken(ttEOF, "", ""),
+			tokens: []LexedToken{
+				makeLiteralToken(TokenLParen, "(", ""),
+				makeLiteralToken(TokenField, "", "level"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenLBracket, "[", ""),
+				makeLiteralToken(TokenNumber, "", float64(1)),
+				makeLiteralToken(TokenTo, "to", ""),
+				makeLiteralToken(TokenStar, "*", ""),
+				makeLiteralToken(TokenRCurly, "}", ""),
+				makeLiteralToken(TokenRParen, ")", ""),
+				makeLiteralToken(TokenEOF, "", ""),
 			},
 		}, {
 			input: `(source:["192.168.1.1" to "192.168.1.254"])`,
-			tokens: []Token{
-				makeLiteralToken(ttLParen, "(", ""),
-				makeLiteralToken(ttField, "", "source"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttLBracket, "[", ""),
-				makeLiteralToken(ttPhrase, "", "192.168.1.1"),
-				makeLiteralToken(ttTo, "to", ""),
-				makeLiteralToken(ttPhrase, "", "192.168.1.254"),
-				makeLiteralToken(ttRBracket, "]", ""),
-				makeLiteralToken(ttRParen, ")", ""),
-				makeLiteralToken(ttEOF, "", ""),
+			tokens: []LexedToken{
+				makeLiteralToken(TokenLParen, "(", ""),
+				makeLiteralToken(TokenField, "", "source"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenLBracket, "[", ""),
+				makeLiteralToken(TokenPhrase, "", "192.168.1.1"),
+				makeLiteralToken(TokenTo, "to", ""),
+				makeLiteralToken(TokenPhrase, "", "192.168.1.254"),
+				makeLiteralToken(TokenRBracket, "]", ""),
+				makeLiteralToken(TokenRParen, ")", ""),
+				makeLiteralToken(TokenEOF, "", ""),
 			},
 		}, {
 			input: `!source:"8.8.8.8"`,
-			tokens: []Token{
-				makeLiteralToken(ttNot, "!", ""),
-				makeLiteralToken(ttField, "", "source"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttPhrase, "", "8.8.8.8"),
-				makeLiteralToken(ttEOF, "", ""),
+			tokens: []LexedToken{
+				makeLiteralToken(TokenNot, "!", ""),
+				makeLiteralToken(TokenField, "", "source"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenPhrase, "", "8.8.8.8"),
+				makeLiteralToken(TokenEOF, "", ""),
 			},
 		}, {
 			input: `source:>="8.8.8.8"`,
-			tokens: []Token{
-				makeLiteralToken(ttField, "", "source"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttGTE, ">=", ""),
-				makeLiteralToken(ttPhrase, "", "8.8.8.8"),
-				makeLiteralToken(ttEOF, "", ""),
+			tokens: []LexedToken{
+				makeLiteralToken(TokenField, "", "source"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenGTE, ">=", ""),
+				makeLiteralToken(TokenPhrase, "", "8.8.8.8"),
+				makeLiteralToken(TokenEOF, "", ""),
 			},
 		}, {
 			input: `message:/testing/i`,
-			tokens: []Token{
-				makeLiteralToken(ttField, "", "message"),
-				makeLiteralToken(ttColon, ":", ""),
-				makeLiteralToken(ttRegexp, "", "(?i)testing"),
-				makeLiteralToken(ttEOF, "", ""),
+			tokens: []LexedToken{
+				makeLiteralToken(TokenField, "", "message"),
+				makeLiteralToken(TokenColon, ":", ""),
+				makeLiteralToken(TokenRegex, "", "(?i)testing"),
+				makeLiteralToken(TokenEOF, "", ""),
 			},
 		},
 	}
@@ -252,7 +252,7 @@ func MakeStructSchema() Schema {
 
 // ** Utilities:
 
-func dumpTokens(toks []Token) string {
+func dumpTokens(toks []LexedToken) string {
 	var sbld strings.Builder
 
 	length := len(toks)
@@ -268,40 +268,40 @@ func dumpTokens(toks []Token) string {
 	return sbld.String()
 }
 
-func makeLiteralToken(ttype TokenType, lexeme string, literal any) Token {
-	return newTokenWithLiteral(ttype,
+func makeLiteralToken(token Token, lexeme string, literal any) LexedToken {
+	return NewLexedTokenWithLiteral(token,
 		lexeme,
 		literal,
-		newPosition(0, 0),
-		newPosition(0, 0))
+		NewPosition(0, 0),
+		NewPosition(0, 0))
 }
 
 // ** Tests:
 
-func TestLucette(t *testing.T) {
+func TestLuceTokene(t *testing.T) {
 	for testno, test := range tests {
 		var (
-			lx     *Lexer
-			pr     *Parser
-			tr     *Typer
-			lexed  []Token
-			parsed Node
-			typed  TypedNode
-			nnf    TypedNode
-			simple TypedNode
+			lx     Lexer
+			pr     Parser
+			tr     Typer
+			lexed  []LexedToken
+			parsed ASTNode
+			typed  IRNode
+			nnf    IRNode
+			simple IRNode
 			code   *Program
 			diags  []Diagnostic
 			err    error
 		)
 
-		lx = NewLexer(strings.NewReader(test.input))
+		lx = NewLexer()
 		if lx == nil {
 			t.Fatal("Didn't get a working lexer")
 		}
 
 		// Lexer test.
 		t.Run(fmt.Sprintf("lexer test %04d", testno), func(t *testing.T) {
-			lexed, err = lx.lex()
+			lexed, err = lx.Lex(strings.NewReader(test.input))
 			if err != nil && test.err == nil {
 				t.Fatalf("Unexpected error: %#v", err)
 			}
@@ -332,25 +332,25 @@ func TestLucette(t *testing.T) {
 			}
 
 			for idx, tok := range test.tokens {
-				if lexed[idx].tokenType != tok.tokenType {
+				if lexed[idx].Token != tok.Token {
 					t.Errorf("%04d: Token type mismatch: %q != %q",
 						idx,
-						lexed[idx].tokenType.String(),
-						tok.tokenType.String())
+						lexed[idx].Token.String(),
+						tok.Token.String())
 				}
 
-				if lexed[idx].lexeme != tok.lexeme {
+				if lexed[idx].Lexeme != tok.Lexeme {
 					t.Errorf("%04d: Lexeme mismatch: %q != %q",
 						idx,
-						lexed[idx].lexeme,
-						tok.lexeme)
+						lexed[idx].Lexeme,
+						tok.Lexeme)
 				}
 
-				if lexed[idx].literal != tok.literal {
+				if lexed[idx].Literal != tok.Literal {
 					t.Errorf("%04d: Literal mismatch: %q != %q",
 						idx,
-						lexed[idx].literal.value,
-						tok.literal.value)
+						lexed[idx].Literal.Value,
+						tok.Literal.Value)
 				}
 			}
 		})
@@ -363,9 +363,9 @@ func TestLucette(t *testing.T) {
 
 		// Parser test.
 		t.Run(fmt.Sprintf("parser test %04d", testno), func(t *testing.T) {
-			pr = NewParser(lexed)
+			pr = NewParser()
 
-			parsed, diags = pr.Parse()
+			parsed, diags = pr.Parse(lexed)
 
 			parsed.Debug()
 
@@ -399,38 +399,44 @@ func TestLucette(t *testing.T) {
 
 		// NNF tests.
 		t.Run(fmt.Sprintf("NNF test %04d", testno), func(t *testing.T) {
-			nnf = ToNNF(typed)
+			nf := NewNNF()
+			nnf = nf.NNF(typed)
 
 			//nnf.Debug()
 		})
 
 		// Simplifier.
 		t.Run(fmt.Sprintf("Simplifier test %04d", testno), func(t *testing.T) {
-			simple = Simplify(nnf)
+			si := NewSimplifier()
+			simple = si.Simplify(nnf)
 
 			simple.Debug()
 		})
 
-		// Code emitter.
+		// Code emiTokener.
 		t.Run(fmt.Sprintf("Code emit test %04d", testno), func(t *testing.T) {
 			code = NewProgram()
 			code.Emit(simple)
-			code.PrettyPrint(os.Stdout, NewDefaultPrettyPrinterOptions())
+
+			ds := NewDefaultDisassembler()
+			ds.SetProgram(code)
+			ds.Dissassemble(os.Stdout)
+			//code.PrettyPrint(os.Stdout, NewDefaultPreTokenyPrinterOptions())
 		})
 	}
 }
 
 // ** Benchmarks:
 
-func BenchmarkLucette(b *testing.B) {
+func BenchmarkLuceTokene(b *testing.B) {
 	var (
-		lexed  []Token
-		parsed Node
-		typed  TypedNode
-		nnf    TypedNode
-		//simple TypedNode
-		diags []Diagnostic
-		err   error
+		lexed  []LexedToken
+		parsed ASTNode
+		typed  IRNode
+		nnf    IRNode
+		simple IRNode
+		diags  []Diagnostic
+		err    error
 	)
 
 	input := tests[6].input
@@ -440,9 +446,9 @@ func BenchmarkLucette(b *testing.B) {
 		b.ReportAllocs()
 
 		for range b.N {
-			lx := NewLexer(strings.NewReader(input))
+			lx := NewLexer()
 
-			if lexed, err = lx.lex(); err != nil {
+			if lexed, err = lx.Lex(strings.NewReader(input)); err != nil {
 				b.Fatalf("Unexpected error: %#v", err)
 			}
 		}
@@ -452,9 +458,9 @@ func BenchmarkLucette(b *testing.B) {
 		b.ReportAllocs()
 
 		for range b.N {
-			pr := NewParser(lexed)
+			pr := NewParser()
 
-			if parsed, diags = pr.Parse(); len(diags) > 0 {
+			if parsed, diags = pr.Parse(lexed); len(diags) > 0 {
 				b.Fatalf("Unexpected error: %#v", diags)
 			}
 		}
@@ -476,7 +482,9 @@ func BenchmarkLucette(b *testing.B) {
 		b.ReportAllocs()
 
 		for range b.N {
-			nnf = ToNNF(typed)
+			nf := NewNNF()
+
+			nnf = nf.NNF(typed)
 		}
 	})
 
@@ -484,10 +492,21 @@ func BenchmarkLucette(b *testing.B) {
 		b.ReportAllocs()
 
 		for range b.N {
-			_ = Simplify(nnf)
+			si := NewSimplifier()
+
+			simple = si.Simplify(nnf)
 		}
 	})
 
+	b.Run("Compiler", func(b *testing.B) {
+		b.ReportAllocs()
+
+		for range b.N {
+			code := NewProgram()
+
+			code.Emit(simple)
+		}
+	})
 }
 
 // * lucette_test.go ends here.

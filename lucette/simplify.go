@@ -28,6 +28,8 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+//mock:yes
 
 // * Comments:
 
@@ -35,25 +37,37 @@
 
 package lucette
 
-// * Imports:
-
 // * Constants:
 
 const (
-	OpAnd BoolOp = iota
-	OpOr
+	BooleAnd BooleOp = iota
+	BooleOr
 )
-
-// * Variables:
 
 // * Code:
 
-type BoolOp int
+// ** Types:
 
-type buildFn func([]TypedNode) TypedNode
+// Boolean operation type.
+type BooleOp int
 
-func dedupeFlat(opcode BoolOp, flat []TypedNode, build buildFn) TypedNode {
-	uniq := make([]TypedNode, 0, len(flat))
+type buildFn func([]IRNode) IRNode
+
+// ** Interface:
+
+type Simplifier interface {
+	Simplify(IRNode) IRNode
+}
+
+// ** Structure:
+
+type simplifier struct {
+}
+
+// ** Methods:
+
+func (s *simplifier) dedupeFlat(boolop BooleOp, flat []IRNode, build buildFn) IRNode {
+	uniq := make([]IRNode, 0, len(flat))
 	seen := make(map[string]struct{}, len(flat))
 
 	for _, kid := range flat {
@@ -70,11 +84,11 @@ func dedupeFlat(opcode BoolOp, flat []TypedNode, build buildFn) TypedNode {
 
 	switch len(uniq) {
 	case 0:
-		if opcode == OpAnd {
-			return &TypedNodeTrue{}
+		if boolop == BooleAnd {
+			return &IRTrue{}
 		}
 
-		return &TypedNodeFalse{}
+		return &IRFalse{}
 
 	case 1:
 		return uniq[0]
@@ -83,20 +97,20 @@ func dedupeFlat(opcode BoolOp, flat []TypedNode, build buildFn) TypedNode {
 	return build(uniq)
 }
 
-func simplifyFlat(opcode BoolOp, flat []TypedNode, build buildFn) TypedNode {
+func (s *simplifier) simplifyFlat(boolop BooleOp, flat []IRNode, build buildFn) IRNode {
 	pos := make(map[string]bool, len(flat))
 	neg := make(map[string]bool, len(flat))
 
 	for _, kid := range flat {
-		if node, isNot := kid.(*TypedNodeNot); isNot {
+		if node, isNot := kid.(*IRNot); isNot {
 			key := node.Key()
 
 			if pos[key] {
-				switch opcode {
-				case OpOr:
-					return &TypedNodeTrue{}
-				case OpAnd:
-					return &TypedNodeFalse{}
+				switch boolop {
+				case BooleOr:
+					return &IRTrue{}
+				case BooleAnd:
+					return &IRFalse{}
 				}
 			}
 
@@ -105,11 +119,11 @@ func simplifyFlat(opcode BoolOp, flat []TypedNode, build buildFn) TypedNode {
 			key := kid.Key()
 
 			if neg[key] {
-				switch opcode {
-				case OpOr:
-					return &TypedNodeTrue{}
-				case OpAnd:
-					return &TypedNodeFalse{}
+				switch boolop {
+				case BooleOr:
+					return &IRTrue{}
+				case BooleAnd:
+					return &IRFalse{}
 				}
 			}
 
@@ -117,23 +131,23 @@ func simplifyFlat(opcode BoolOp, flat []TypedNode, build buildFn) TypedNode {
 		}
 	}
 
-	return dedupeFlat(opcode, flat, build)
+	return s.dedupeFlat(boolop, flat, build)
 }
 
-func simplifyAnd(node *TypedNodeAnd) TypedNode {
-	flat := make([]TypedNode, 0, len(node.kids))
+func (s *simplifier) simplifyAnd(node *IRAnd) IRNode {
+	flat := make([]IRNode, 0, len(node.Kids))
 
-	for _, kid := range node.kids {
-		simp := Simplify(kid)
+	for _, kid := range node.Kids {
+		simp := s.Simplify(kid)
 
 		switch val := simp.(type) {
-		case *TypedNodeTrue:
-			// Drop.
+		case *IRTrue:
+		// Drop.
 
-		case *TypedNodeAnd:
-			flat = append(flat, val.kids...)
+		case *IRAnd:
+			flat = append(flat, val.Kids...)
 
-		case *TypedNodeFalse:
+		case *IRFalse:
 			return val
 
 		default:
@@ -141,25 +155,25 @@ func simplifyAnd(node *TypedNodeAnd) TypedNode {
 		}
 	}
 
-	return simplifyFlat(OpAnd, flat, func(uniq []TypedNode) TypedNode {
-		return &TypedNodeAnd{kids: uniq}
+	return s.simplifyFlat(BooleAnd, flat, func(uniq []IRNode) IRNode {
+		return &IRAnd{Kids: uniq}
 	})
 }
 
-func simplifyOr(node *TypedNodeOr) TypedNode {
-	flat := make([]TypedNode, 0, len(node.kids))
+func (s *simplifier) simplifyOr(node *IROr) IRNode {
+	flat := make([]IRNode, 0, len(node.Kids))
 
-	for _, kid := range node.kids {
-		simp := Simplify(kid)
+	for _, kid := range node.Kids {
+		simp := s.Simplify(kid)
 
 		switch val := simp.(type) {
-		case *TypedNodeFalse:
-			// Drop.
+		case *IRFalse:
+		// Drop.
 
-		case *TypedNodeOr:
-			flat = append(flat, val.kids...)
+		case *IROr:
+			flat = append(flat, val.Kids...)
 
-		case *TypedNodeTrue:
+		case *IRTrue:
 			return val
 
 		default:
@@ -167,38 +181,53 @@ func simplifyOr(node *TypedNodeOr) TypedNode {
 		}
 	}
 
-	return simplifyFlat(OpOr, flat, func(uniq []TypedNode) TypedNode {
-		return &TypedNodeOr{kids: uniq}
+	return s.simplifyFlat(BooleOr, flat, func(uniq []IRNode) IRNode {
+		return &IROr{Kids: uniq}
 	})
 }
 
-func simplifyNot(node *TypedNodeNot) TypedNode {
-	kid := Simplify(node.kid)
+func (s *simplifier) simplifyNot(node *IRNot) IRNode {
+	kid := s.Simplify(node.Kid)
 
 	switch kid.(type) {
-	case *TypedNodeTrue:
-		return &TypedNodeFalse{}
-	case *TypedNodeFalse:
-		return &TypedNodeTrue{}
+	case *IRTrue:
+		return &IRFalse{}
+
+	case *IRFalse:
+		return &IRTrue{}
 	}
 
-	return &TypedNodeNot{kid: kid}
+	return &IRNot{Kid: kid}
 }
 
-func Simplify(node TypedNode) TypedNode {
+//nolint:unused
+func (s *simplifier) simplifyPhrase(_ *IRPhrase) IRNode {
+	// if node.Proximity == 0 || node.HasWildcard() {
+	// TODO: This needs to be investigated.
+	// }
+	return nil
+}
+
+func (s *simplifier) Simplify(node IRNode) IRNode {
 	switch val := node.(type) {
-	case *TypedNodeAnd:
-		return simplifyAnd(val)
+	case *IRAnd:
+		return s.simplifyAnd(val)
 
-	case *TypedNodeOr:
-		return simplifyOr(val)
+	case *IROr:
+		return s.simplifyOr(val)
 
-	case *TypedNodeNot:
-		return simplifyNot(val)
+	case *IRNot:
+		return s.simplifyNot(val)
 
 	default:
 		return node
 	}
+}
+
+// ** Functions:
+
+func NewSimplifier() Simplifier {
+	return &simplifier{}
 }
 
 // * simplify.go ends here.

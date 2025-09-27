@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// token.go --- Token type.
+// lexedtoken.go --- Lexed token type.
 //
 // Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
 //
@@ -33,7 +33,6 @@
 
 // * Package:
 
-//nolint:unused
 package lucette
 
 // * Imports:
@@ -41,6 +40,7 @@ package lucette
 import (
 	"strings"
 
+	"github.com/Asmodai/gohacks/debug"
 	"github.com/Asmodai/gohacks/utils"
 )
 
@@ -48,17 +48,18 @@ import (
 
 // ** Type:
 
-type Token struct {
-	tokenType TokenType
-	lexeme    string
-	literal   literal
-	start     Position
-	end       Position
+// A lexed token.
+type LexedToken struct {
+	Literal Literal  // Literal value for the token.
+	Lexeme  string   // Lexeme for the token.
+	Start   Position // Start position within source code.
+	End     Position // End position within source code.
+	Token   Token    // The token.
 }
 
 // ** Methods:
 
-func (t *Token) String() string {
+func (lt *LexedToken) String() string {
 	const (
 		padType   = 10
 		padLexeme = 4
@@ -68,48 +69,69 @@ func (t *Token) String() string {
 	var sbld strings.Builder
 
 	sbld.WriteString("Token -- start:")
-	sbld.WriteString(utils.Pad(t.start.String(), padPos))
+	sbld.WriteString(utils.Pad(lt.Start.String(), padPos))
 
 	sbld.WriteString(" end:")
-	sbld.WriteString(utils.Pad(t.end.String(), padPos))
+	sbld.WriteString(utils.Pad(lt.End.String(), padPos))
 
 	sbld.WriteString(" start:")
-	sbld.WriteString(utils.Pad(t.tokenType.String(), padType))
+	sbld.WriteString(utils.Pad(lt.Token.String(), padType))
 
 	sbld.WriteString(" lexeme:")
-	sbld.WriteString(utils.Pad(t.lexeme, padLexeme))
+	sbld.WriteString(utils.Pad(lt.Lexeme, padLexeme))
 
 	sbld.WriteString(" literal:\"")
-	sbld.WriteString(t.literal.String())
+	sbld.WriteString(lt.Literal.String())
 	sbld.WriteRune('"')
 
 	return sbld.String()
 }
 
+// Display debugging information.
+func (lt *LexedToken) Debug(params ...any) *debug.Debug {
+	dbg := debug.NewDebug("Lexed Token")
+
+	dbg.Init(params...)
+
+	dbg.Printf("Token:   %s", lt.Token.String())
+	dbg.Printf("Lexeme:  %q", lt.Lexeme)
+	dbg.Printf("Literal: %q", lt.Literal.String())
+	dbg.Printf("Start:   %s", lt.Start.String())
+	dbg.Printf("End:     %s", lt.End.String())
+
+	dbg.End()
+	dbg.Print()
+
+	return dbg
+}
+
 // ** Functions:
 
-func newToken(tokType TokenType, lexeme string, start, end Position) Token {
-	return newTokenWithLiteral(tokType, lexeme, "", start, end)
+// Return a new lexed token with the given lexeme.
+func NewLexedToken(token Token, lexeme string, start, end Position) LexedToken {
+	return NewLexedTokenWithLiteral(token, lexeme, "", start, end)
 }
 
-func newTokenWithLiteral(tokType TokenType, lexeme string, lit any, start, end Position) Token {
-	return Token{
-		tokenType: tokType,
-		lexeme:    lexeme,
-		literal:   literal{value: lit},
-		start:     start,
-		end:       end,
+// Return a new lexed token with the given lexeme and literal.
+func NewLexedTokenWithLiteral(token Token, lexeme string, lit any, start, end Position) LexedToken {
+	return LexedToken{
+		Token:   token,
+		Lexeme:  lexeme,
+		Literal: NewLiteral(lit),
+		Start:   start,
+		End:     end,
 	}
 }
 
-func newTokenWithError(tokType TokenType, lexeme string, err error, start, end Position) Token {
-	return Token{
-		tokenType: tokType,
-		lexeme:    lexeme,
-		literal:   literal{err: err},
-		start:     start,
-		end:       end,
+// Return a new lexed token with the given lexeme and error message.
+func NewLexedTokenWithError(token Token, lexeme string, err error, start, end Position) LexedToken {
+	return LexedToken{
+		Token:   token,
+		Lexeme:  lexeme,
+		Literal: NewErrorLiteral(err),
+		Start:   start,
+		End:     end,
 	}
 }
 
-// * token.go ends here.
+// * lexedtoken.go ends here.
