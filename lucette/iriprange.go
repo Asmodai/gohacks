@@ -76,8 +76,8 @@ func (n IRIPRange) Debug(params ...any) *debug.Debug {
 	dbg.Printf("Field:          %s", n.Field)
 	dbg.Printf("Low:            %s", n.Lo.String())
 	dbg.Printf("High:           %s", n.Hi.String())
-	dbg.Printf("Increment Low:  %v", n.IncL)
-	dbg.Printf("Increment High: %v", n.IncH)
+	dbg.Printf("Inclusive Low:  %v", n.IncL)
+	dbg.Printf("Inclusive High: %v", n.IncH)
 
 	dbg.End()
 	dbg.Print()

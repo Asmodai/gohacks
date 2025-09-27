@@ -116,6 +116,8 @@ func (l *lexer) Lex(reader io.Reader) ([]LexedToken, error) {
 	l.reader = bufio.NewReader(reader)
 
 	for {
+		l.startPos = l.currPos
+
 		err := l.lexToken()
 		if err != nil {
 			if errors.Is(err, io.EOF) {

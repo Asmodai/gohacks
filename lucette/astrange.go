@@ -58,8 +58,8 @@ func (r ASTRange) Debug(params ...any) *debug.Debug {
 	dbg := debug.NewDebug("Range")
 
 	dbg.Init(params...)
-	dbg.Printf("Increment Lo? %t", r.IncL)
-	dbg.Printf("Increment Hi? %t", r.IncH)
+	dbg.Printf("Inclusive Lo? %t", r.IncL)
+	dbg.Printf("Inclusive Hi? %t", r.IncH)
 
 	r.Lo.Debug(&dbg, "Range Start")
 	r.Hi.Debug(&dbg, "Range High")
