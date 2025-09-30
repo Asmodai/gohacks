@@ -74,6 +74,7 @@ MODULES = amqp            \
 	  selector        \
 	  semver          \
 	  service         \
+	  stringy         \
 	  sysinfo         \
 	  timedcache      \
 	  types           \
