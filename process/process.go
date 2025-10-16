@@ -51,7 +51,7 @@ import (
 // * Constants:
 
 const (
-	eventLoopSleep    time.Duration = 250 * time.Millisecond
+	eventLoopSleep    time.Duration = 150 * time.Millisecond
 	channelBufferSize int           = 1
 	processTypeString string        = "process.Process"
 )
@@ -313,9 +313,10 @@ func (p *Process) runAction() {
 
 		if p.function != nil {
 			p.function(p.state)
-		} else {
-			time.Sleep(eventLoopSleep)
 		}
+
+		// Give time back to the scheduler.
+		time.Sleep(eventLoopSleep)
 	}
 }
 
