@@ -339,7 +339,7 @@ func (obj *Config) URL() string {
 		sbld.WriteString(obj.Hostname)
 
 		if obj.Port > 0 {
-			fmt.Fprintf(&sbld, "%d", obj.Port)
+			fmt.Fprintf(&sbld, ":%d", obj.Port)
 		}
 
 		sbld.WriteString(obj.VirtualHost)
