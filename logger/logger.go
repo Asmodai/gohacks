@@ -4,7 +4,7 @@
 //
 // logger.go --- Logger interface.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2021-2026 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -63,6 +63,9 @@ If an empty string is passed to `NewLogger`, then the log facility will
 display messages on standard output.
 */
 type Logger interface {
+	// Sync a log file to disk, if available.
+	Sync()
+
 	// Set whether the logger prints in human-readable 'debug' output or
 	// machine-readable JSON format.
 	SetDebug(bool)
@@ -74,6 +77,9 @@ type Logger interface {
 	//
 	// This is only used by the Zap logger.
 	SetSampling(initial, threshold int)
+
+	// Set logger level.
+	SetLevel(Level)
 
 	// Log a Go error.
 	GoError(error, ...any)

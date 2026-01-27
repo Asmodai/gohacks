@@ -4,7 +4,7 @@
 //
 // zaplogger.go --- Logger using Zap as the implementation.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2021-2026 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -54,6 +54,19 @@ const (
 	defaultSamplingThereafter = 100 //nolint:unused
 )
 
+// * Variables:
+
+var (
+	zapLevels = map[Level]zapcore.Level{
+		LevelDebug: zap.DebugLevel,
+		LevelInfo:  zap.InfoLevel,
+		LevelWarn:  zap.WarnLevel,
+		LevelError: zap.ErrorLevel,
+		LevelPanic: zap.PanicLevel,
+		LevelFatal: zap.FatalLevel,
+	}
+)
+
 // * Code:
 
 // ** Types:
@@ -69,6 +82,7 @@ type zapLogger struct {
 	logfile  string
 	debug    bool
 	facility string
+	level    zap.AtomicLevel
 }
 
 // ** Methods:
@@ -78,6 +92,7 @@ type zapLogger struct {
 // Debug mode is a production-friendly runtime mode that will print
 // human-readable messages to standard output instead of the defined log file.
 func (l *zapLogger) SetDebug(flag bool) {
+	// NOTE: This could be done better and more modular.
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -105,6 +120,10 @@ func (l *zapLogger) SetDebug(flag bool) {
 	}
 	*/
 
+	// Set up logging level.
+	l.level = zap.NewAtomicLevelAt(zap.InfoLevel)
+	cfg.Level = l.level
+
 	// Skip the first frame of the stack trace so we have the true
 	// caller rather than our own functions.
 	built, err := cfg.Build(zap.AddCaller(), zap.AddCallerSkip(1))
@@ -114,8 +133,14 @@ func (l *zapLogger) SetDebug(flag bool) {
 
 	l.logger = built
 	l.debug = flag
+}
 
-	//nolint:errcheck
+// Sync a log file to disk, if available.
+func (l *zapLogger) Sync() {
+	if l.logger == nil {
+		return
+	}
+
 	l.logger.Sync()
 }
 
@@ -130,6 +155,19 @@ func (l *zapLogger) SetLogFile(file string) {
 	l.mu.Unlock()
 
 	l.SetDebug(l.debug)
+}
+
+// Set the log level.
+func (l *zapLogger) SetLevel(level Level) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	zl, ok := zapLevels[level]
+	if !ok {
+		zl = zap.InfoLevel
+	}
+
+	l.level.SetLevel(zl)
 }
 
 // Write a Go error to the log.
@@ -226,6 +264,7 @@ func (l *zapLogger) WithFields(fields Fields) Logger {
 		logfile:  l.logfile,
 		debug:    l.debug,
 		facility: l.facility,
+		level:    l.level,
 	}
 }
 

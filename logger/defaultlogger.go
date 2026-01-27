@@ -4,7 +4,7 @@
 //
 // defaultlogger.go --- Default logger.
 //
-// Copyright (c) 2021-2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2021-2026 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -54,15 +54,27 @@ func NewDefaultLogger() Logger {
 	return &defaultLogger{}
 }
 
+func (l *defaultLogger) Sync() {
+	// This is a NOP with the default logger.
+}
+
 func (l *defaultLogger) SetSampling(_, _ int) {
+	// This is a NOP with the default logger.
 }
 
 // Set debug mode.
 func (l *defaultLogger) SetDebug(_ bool) {
+	// This is a NOP with the default logger.
 }
 
 // Set the log file to use.
 func (l *defaultLogger) SetLogFile(_ string) {
+	// This is a NOP with the default logger.
+}
+
+// Set the log level.
+func (l *defaultLogger) SetLevel(_ Level) {
+	// This is a NOP with the default logger.
 }
 
 // Write a Go error to the log.
