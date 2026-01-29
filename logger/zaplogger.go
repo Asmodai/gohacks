@@ -56,6 +56,7 @@ const (
 
 // * Variables:
 
+//nolint:gochecknoglobals
 var (
 	zapLevels = map[Level]zapcore.Level{
 		LevelDebug: zap.DebugLevel,
@@ -136,12 +137,12 @@ func (l *zapLogger) SetDebug(flag bool) {
 }
 
 // Sync a log file to disk, if available.
-func (l *zapLogger) Sync() {
+func (l *zapLogger) Sync() error {
 	if l.logger == nil {
-		return
+		return nil
 	}
 
-	l.logger.Sync()
+	return errors.WithStack(l.logger.Sync())
 }
 
 func (l *zapLogger) SetSampling(_, _ int) {

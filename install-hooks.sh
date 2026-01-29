@@ -5,7 +5,7 @@
 #
 # install-hooks --- Install git hooks.
 #
-# Copyright (c) 2017-2025 Paul Ward <paul@lisphacker.uk>
+# Copyright (c) 2017-2026 Paul Ward <paul@lisphacker.uk>
 #
 # Author:     Paul Ward <paul@lisphacker.uk>
 # Maintainer: Paul Ward <paul@lisphacker.uk>

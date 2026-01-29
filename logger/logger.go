@@ -64,7 +64,7 @@ display messages on standard output.
 */
 type Logger interface {
 	// Sync a log file to disk, if available.
-	Sync()
+	Sync() error
 
 	// Set whether the logger prints in human-readable 'debug' output or
 	// machine-readable JSON format.

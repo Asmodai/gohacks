@@ -239,6 +239,18 @@ func (mr *MockLoggerMockRecorder) SetDebug(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDebug", reflect.TypeOf((*MockLogger)(nil).SetDebug), arg0)
 }
 
+// SetLevel mocks base method.
+func (m *MockLogger) SetLevel(arg0 logger.Level) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetLevel", arg0)
+}
+
+// SetLevel indicates an expected call of SetLevel.
+func (mr *MockLoggerMockRecorder) SetLevel(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLevel", reflect.TypeOf((*MockLogger)(nil).SetLevel), arg0)
+}
+
 // SetLogFile mocks base method.
 func (m *MockLogger) SetLogFile(arg0 string) {
 	m.ctrl.T.Helper()
@@ -261,6 +273,20 @@ func (m *MockLogger) SetSampling(initial, threshold int) {
 func (mr *MockLoggerMockRecorder) SetSampling(initial, threshold any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSampling", reflect.TypeOf((*MockLogger)(nil).SetSampling), initial, threshold)
+}
+
+// Sync mocks base method.
+func (m *MockLogger) Sync() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Sync")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Sync indicates an expected call of Sync.
+func (mr *MockLoggerMockRecorder) Sync() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Sync", reflect.TypeOf((*MockLogger)(nil).Sync))
 }
 
 // Warn mocks base method.

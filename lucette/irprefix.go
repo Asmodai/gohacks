@@ -4,7 +4,7 @@
 //
 // irprefix.go --- IR `Prefix' node.
 //
-// Copyright (c) 2025 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2025-2026 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>

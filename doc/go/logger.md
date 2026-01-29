@@ -47,10 +47,31 @@ type Fields map[string]any
 
 Log field map type.
 
+#### type Level
+
+```go
+type Level int8
+```
+
+
+```go
+const (
+	LevelDebug Level = iota
+	LevelInfo
+	LevelWarn
+	LevelError
+	LevelPanic
+	LevelFatal
+)
+```
+
 #### type Logger
 
 ```go
 type Logger interface {
+	// Sync a log file to disk, if available.
+	Sync() error
+
 	// Set whether the logger prints in human-readable 'debug' output or
 	// machine-readable JSON format.
 	SetDebug(bool)
@@ -62,6 +83,9 @@ type Logger interface {
 	//
 	// This is only used by the Zap logger.
 	SetSampling(initial, threshold int)
+
+	// Set logger level.
+	SetLevel(Level)
 
 	// Log a Go error.
 	GoError(error, ...any)

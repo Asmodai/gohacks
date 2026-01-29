@@ -54,8 +54,8 @@ func NewDefaultLogger() Logger {
 	return &defaultLogger{}
 }
 
-func (l *defaultLogger) Sync() {
-	// This is a NOP with the default logger.
+func (l *defaultLogger) Sync() error {
+	return nil
 }
 
 func (l *defaultLogger) SetSampling(_, _ int) {
