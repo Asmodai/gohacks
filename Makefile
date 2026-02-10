@@ -72,6 +72,7 @@ MODULES = amqp            \
 	  responder       \
 	  rfc3339         \
 	  rlhttp          \
+	  scheduler       \
 	  secrets         \
 	  selector        \
 	  semver          \
