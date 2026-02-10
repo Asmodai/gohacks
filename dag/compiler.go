@@ -57,8 +57,9 @@ const (
 // * Variables:
 
 var (
-	ErrUnknownOperator   = errors.Base("unknown operator")
-	ErrRuleCompileFailed = errors.Base("rule compilation failed")
+	ErrUnknownOperator      = errors.Base("unknown operator")
+	ErrRuleCompileFailed    = errors.Base("rule compilation failed")
+	ErrRuleActionAndActions = errors.Base("rule contains action and actions")
 )
 
 // * Code:
@@ -66,7 +67,7 @@ var (
 // ** Interface:
 
 type Compiler interface {
-	CompileAction(ActionSpec) (ActionFn, error)
+	CompileAction(*ActionSpec) (ActionFn, error)
 	CompileFailure(FailureSpec) (ActionFn, error)
 	Compile([]RuleSpec) []error
 	Evaluate(Filterable)
@@ -107,7 +108,7 @@ func (cmplr *compiler) getOrCreateNode(pred Predicate, key string) *node {
 }
 
 // Compile an action from an action specification.
-func (cmplr *compiler) CompileAction(spec ActionSpec) (ActionFn, error) {
+func (cmplr *compiler) CompileAction(spec *ActionSpec) (ActionFn, error) {
 	built, err := cmplr.builder.Builder(spec.Perform, spec.Params)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -162,6 +163,11 @@ func (cmplr *compiler) initRoot() {
 func (cmplr *compiler) compileRule(rule RuleSpec) error {
 	current := cmplr.root
 
+	// Perform sanity on rulespec.
+	if err := cmplr.validateActions(rule); err != nil {
+		return err
+	}
+
 	for _, cond := range rule.Conditions {
 		pred, key, err := cmplr.buildPredicate(cond)
 		if err != nil {
@@ -177,11 +183,8 @@ func (cmplr *compiler) compileRule(rule RuleSpec) error {
 		current = next
 	}
 
-	if err := cmplr.attachAction(current, rule.Action); err != nil {
-		return errors.WithMessagef(
-			err,
-			"Rule %q",
-			rule.Name)
+	if err := cmplr.attachActionOrActions(current, rule); err != nil {
+		return err
 	}
 
 	if err := cmplr.attachFailure(current, rule.Failure); err != nil {
@@ -240,9 +243,23 @@ func (cmplr *compiler) linkNodes(current, next *node) {
 	}
 }
 
+// Validate whether both `action` and `actions` is set.
+func (cmplr *compiler) validateActions(rule RuleSpec) error {
+	if rule.Action != nil && len(rule.Actions) > 0 {
+		// Can't have both an action and a list of actions!
+		return errors.WithMessagef(
+			ErrRuleActionAndActions,
+			"rule '%s' has both action and actions set",
+			rule.Name,
+		)
+	}
+
+	return nil
+}
+
 // Attach a success action to the given node.
-func (cmplr *compiler) attachAction(current *node, action ActionSpec) error {
-	if len(action.Perform) == 0 {
+func (cmplr *compiler) attachAction(current *node, action *ActionSpec) error {
+	if action == nil || len(action.Perform) == 0 {
 		return nil
 	}
 
@@ -254,13 +271,46 @@ func (cmplr *compiler) attachAction(current *node, action ActionSpec) error {
 			action.Name)
 	}
 
-	if len(action.Name) > 0 {
-		current.ActionName = action.Name
-	} else {
-		current.ActionName = action.Perform
+	if current.Actions == nil {
+		current.Actions = make([]*nodeAction, 0, 1)
 	}
 
-	current.Action = compiled
+	elt := &nodeAction{Fn: compiled}
+
+	if len(action.Name) > 0 {
+		elt.Name = action.Name
+	} else {
+		elt.Name = action.Perform
+	}
+
+	current.Actions = append(current.Actions, elt)
+
+	return nil
+}
+
+// Attach either an action or multiple actions.
+func (cmplr *compiler) attachActionOrActions(current *node, rule RuleSpec) error {
+	if current == nil {
+		return nil
+	}
+
+	actions := make([]*ActionSpec, 0, 1)
+
+	if rule.Action != nil {
+		actions = append(actions, rule.Action)
+	}
+
+	if len(rule.Actions) > 0 {
+		actions = rule.Actions
+	}
+
+	for _, action := range actions {
+		if err := cmplr.attachAction(current, action); err != nil {
+			return errors.WithMessagef(err,
+				"Rule %q",
+				rule.Name)
+		}
+	}
 
 	return nil
 }
@@ -279,13 +329,19 @@ func (cmplr *compiler) attachFailure(current *node, failure FailureSpec) error {
 			failure.Name)
 	}
 
-	if len(failure.Name) > 0 {
-		current.FailureName = failure.Name
-	} else {
-		current.FailureName = failure.Perform
+	if current.Failures == nil {
+		current.Failures = make([]*nodeAction, 0, 1)
 	}
 
-	current.Failure = compiled
+	elt := &nodeAction{Fn: compiled}
+
+	if len(failure.Name) > 0 {
+		elt.Name = failure.Name
+	} else {
+		elt.Name = failure.Perform
+	}
+
+	current.Failures = append(current.Failures, elt)
 
 	return nil
 }

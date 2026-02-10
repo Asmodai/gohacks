@@ -45,15 +45,24 @@ import (
 
 // * Code:
 
+// ** Action type:
+
+type nodeAction struct {
+	Name string   // Pretty name of thing.
+	Fn   ActionFn // Action to execute.
+}
+
+// ** Node type:
+
 // Graph node type.
 type node struct {
-	Predicate   Predicate // Predicate.
-	Action      ActionFn  // Action to execute upon successful predicate.
-	ActionName  string    // Action name.
-	Failure     ActionFn  // Action to execute upon predicate failure.
-	FailureName string    // Failure action name.
-	Children    []*node   // Child nodes.
+	Predicate Predicate     // Predicate.
+	Actions   []*nodeAction // Success actions.
+	Failures  []*nodeAction // Failure actions.
+	Children  []*node       // Child nodes.
 }
+
+// ** Functions:
 
 // Traverse each child node in the given root node.
 //
@@ -69,8 +78,10 @@ func traverse(ctx context.Context, root *node, input Filterable, debug bool, log
 			)
 		}
 
-		if root.Failure != nil {
-			root.Failure(ctx, input)
+		if len(root.Failures) > 0 {
+			for _, elt := range root.Failures {
+				elt.Fn(ctx, input)
+			}
 		}
 
 		return
@@ -84,8 +95,10 @@ func traverse(ctx context.Context, root *node, input Filterable, debug bool, log
 		)
 	}
 
-	if root.Action != nil {
-		root.Action(ctx, input)
+	if len(root.Actions) > 0 {
+		for _, elt := range root.Actions {
+			elt.Fn(ctx, input)
+		}
 	}
 
 	for _, child := range root.Children {

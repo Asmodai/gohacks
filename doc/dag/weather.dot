@@ -1,13 +1,17 @@
 digraph DAG {
   graph [bgcolor=transparent];
   rankdir=TB;
-  node [shape=record, style="rounded,filled", fontname="monospace", fontsize=10];
-  edge [color="#666666"];
-  n0 [label="{<f0> NOOP | <f1> \<no operation\>}" fillcolor="#f0f0f0", fontcolor="#000000", color="#999999"];
-  n1 [label="{<f0> SSEQ | <f1> \"type\" string-equal \"weather\"}" fillcolor="#d8eaf8", fontcolor="#003366", color="#6699cc"];
-  n2 [label="{<f0> GTE | <f1> \"temp\" \>= 22 | <f2> Action: warm_weather_action}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
-  n1 -> n2 [color="#4CAF50", style=bold];
-  n3 [label="{<f0> LTE | <f1> \"temp\" \<= 10 | <f2> Action: cold_weather_action}" fillcolor="#e8f6e0", fontcolor="#003300", color="#66cc66"];
-  n1 -> n3 [color="#4CAF50", style=bold];
-  n0 -> n1 [color="#4CAF50", style=bold];
+  node [fontname="monospace", fontsize=10];
+  edge [fontname="monospace", fontsize=9, color="#666666"];
+  p0 [shape=plain, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#d8eaf8"><TR><TD BGCOLOR="#6699cc"><FONT COLOR="#ffffff"><B>NOOP</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="monospace">&lt;no operation&gt;</FONT></TD></TR></TABLE>>];
+  p1 [shape=plain, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#d8eaf8"><TR><TD BGCOLOR="#6699cc"><FONT COLOR="#ffffff"><B>SSEQ</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="monospace">&#34;type&#34; string-equal &#34;weather&#34;</FONT></TD></TR></TABLE>>];
+  p2 [shape=plain, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#d8eaf8"><TR><TD BGCOLOR="#6699cc"><FONT COLOR="#ffffff"><B>GTE</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="monospace">&#34;temp&#34; &gt;= 22</FONT></TD></TR></TABLE>>];
+  a0 [shape=box, style="rounded,filled", fillcolor="#e8f5e9", color="#2e7d32", fontcolor="#1b5e20", label="ACTION: warm_weather_action"];
+  p2 -> a0 [color="#2e7d32", style=dashed, label=""];
+  p1 -> p2 [color="#2e7d32", penwidth=2, label=""];
+  p3 [shape=plain, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#d8eaf8"><TR><TD BGCOLOR="#6699cc"><FONT COLOR="#ffffff"><B>LTE</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="monospace">&#34;temp&#34; &lt;= 10</FONT></TD></TR></TABLE>>];
+  a1 [shape=box, style="rounded,filled", fillcolor="#e8f5e9", color="#2e7d32", fontcolor="#1b5e20", label="ACTION: cold_weather_action"];
+  p3 -> a1 [color="#2e7d32", style=dashed, label=""];
+  p1 -> p3 [color="#2e7d32", penwidth=2, label=""];
+  p0 -> p1 [color="#2e7d32", penwidth=2, label=""];
 }

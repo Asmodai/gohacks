@@ -98,7 +98,10 @@ type ActionFn func(context.Context, Filterable)
 // Filter rule specification.
 type RuleSpec struct {
 	// Action to evaluate.
-	Action ActionSpec `json:"action" yaml:"action"`
+	Action *ActionSpec `json:"action" yaml:"action"`
+
+	// Multiple actions to evaluate.
+	Actions []*ActionSpec `json:"actions" yaml:"actions"`
 
 	// Action to evaluate on failure.
 	Failure FailureSpec `json:"failure" yaml:"failure"`

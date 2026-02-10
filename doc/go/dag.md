@@ -9,6 +9,15 @@
 ## Usage
 
 ```go
+const (
+	RankDirectionTB RankDirection = 0
+	RankDirectionLR RankDirection = 1
+
+	DefaultMaxInlineItems int = 6
+)
+```
+
+```go
 var (
 	ErrExpectedParams = errors.Base("expected parameters to be given")
 	ErrExpectedString = errors.Base("expected a string value")
@@ -19,8 +28,9 @@ var (
 
 ```go
 var (
-	ErrUnknownOperator   = errors.Base("unknown operator")
-	ErrRuleCompileFailed = errors.Base("rule compilation failed")
+	ErrUnknownOperator      = errors.Base("unknown operator")
+	ErrRuleCompileFailed    = errors.Base("rule compilation failed")
+	ErrRuleActionAndActions = errors.Base("rule contains action and actions")
 )
 ```
 
@@ -44,7 +54,12 @@ Dump a slice of rule specifications to YAML format.
 ```go
 func ExportToDOT(writer io.Writer, root *node)
 ```
-Generate a Graphviz visualisation of the DAG starting from the given node.
+
+#### func  ExportToDOTWithOptions
+
+```go
+func ExportToDOTWithOptions(writer io.Writer, root *node, opt DOTOptions)
+```
 
 #### func  FormatDebugIsnf
 
@@ -136,7 +151,7 @@ Create a new empty `Actions` object.
 
 ```go
 type Compiler interface {
-	CompileAction(ActionSpec) (ActionFn, error)
+	CompileAction(*ActionSpec) (ActionFn, error)
 	CompileFailure(FailureSpec) (ActionFn, error)
 	Compile([]RuleSpec) []error
 	Evaluate(Filterable)
@@ -179,6 +194,25 @@ type ConditionSpec struct {
 ```
 
 Condition specification.
+
+#### type DOTOptions
+
+```go
+type DOTOptions struct {
+	// "TB" or "LR"
+	RankDir RankDirection
+
+	// Emit `Action` nodes?
+	EmitActionNodes bool
+
+	// Emit `Failure` nodes?
+	EmitFailureNodes bool
+
+	// Maximum number of items to show inline before truncating.
+	MaxInlineItems int
+}
+```
+
 
 #### type DataInput
 
@@ -1117,12 +1151,28 @@ func (pred *RESMPredicate) String() string
 func (pred *RESMPredicate) Token() string
 ```
 
+#### type RankDirection
+
+```go
+type RankDirection int
+```
+
+
+#### func (RankDirection) Direction
+
+```go
+func (rd RankDirection) Direction() string
+```
+
 #### type RuleSpec
 
 ```go
 type RuleSpec struct {
 	// Action to evaluate.
-	Action ActionSpec `json:"action" yaml:"action"`
+	Action *ActionSpec `json:"action" yaml:"action"`
+
+	// Multiple actions to evaluate.
+	Actions []*ActionSpec `json:"actions" yaml:"actions"`
 
 	// Action to evaluate on failure.
 	Failure FailureSpec `json:"failure" yaml:"failure"`
