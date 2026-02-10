@@ -58,7 +58,7 @@ type Validator struct {
 // ** Methods:
 
 // Compile an action from an action specification.
-func (v *Validator) CompileAction(spec dag.ActionSpec) (dag.ActionFn, error) {
+func (v *Validator) CompileAction(spec *dag.ActionSpec) (dag.ActionFn, error) {
 	act, err := v.cmplr.CompileAction(spec)
 
 	return act, errors.WithStack(err)

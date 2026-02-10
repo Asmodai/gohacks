@@ -1245,7 +1245,7 @@ Compile a slice of rule specs into a DAG graph.
 #### func (*Validator) CompileAction
 
 ```go
-func (v *Validator) CompileAction(spec dag.ActionSpec) (dag.ActionFn, error)
+func (v *Validator) CompileAction(spec *dag.ActionSpec) (dag.ActionFn, error)
 ```
 Compile an action from an action specification.
 

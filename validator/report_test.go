@@ -167,7 +167,7 @@ var (
 
 // ** Tests:
 
-func TestShit(t *testing.T) {
+func TestValidator(t *testing.T) {
 	var rules []dag.RuleSpec
 
 	mocker := gomock.NewController(t)
