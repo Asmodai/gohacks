@@ -57,9 +57,11 @@ MODULES = amqp            \
 	  database        \
 	  debug           \
 	  dynworker       \
+	  errx            \
 	  events          \
 	  fileio          \
 	  generics        \
+	  health          \
 	  logger          \
 	  lucette         \
 	  math            \
