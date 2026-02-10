@@ -1,0 +1,65 @@
+// -*- Mode: Go; auto-fill: t; fill-column: 78; -*-
+//
+// SPDX-License-Identifier: MIT
+//
+// interface.go --- Envelope interface.
+//
+// Copyright (c) 2026 Paul Ward <paul@lisphacker.uk>
+//
+// Author:     Paul Ward <paul@lisphacker.uk>
+// Maintainer: Paul Ward <paul@lisphacker.uk>
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation files
+// (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+//mock:yes
+
+// * Comments:
+
+// * Package:
+
+package envelope
+
+// * Imports:
+
+import "net/http"
+
+// * Code:
+
+// ** Interfaces:
+
+/*
+Envelope interface.
+*/
+type Envelope interface {
+	// Return a status code.
+	//
+	// This could be a HTTP status code or any other integer that makes
+	// sense in this context; e.g. Unix error code.
+	Status() int
+
+	// Return HTTP headers.
+	Headers() http.Header
+
+	// Return the envelope's body.
+	Body() any
+}
+
+// * interface.go ends here.

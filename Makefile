@@ -57,6 +57,7 @@ MODULES = amqp            \
 	  database        \
 	  debug           \
 	  dynworker       \
+	  envelope        \
 	  errx            \
 	  events          \
 	  fileio          \
