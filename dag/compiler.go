@@ -275,7 +275,10 @@ func (cmplr *compiler) attachAction(current *node, action *ActionSpec) error {
 		current.Actions = make([]*nodeAction, 0, 1)
 	}
 
-	elt := &nodeAction{Fn: compiled}
+	elt := &nodeAction{
+		Fn:     compiled,
+		Reason: action.Reason,
+	}
 
 	if len(action.Name) > 0 {
 		elt.Name = action.Name
@@ -333,7 +336,10 @@ func (cmplr *compiler) attachFailure(current *node, failure FailureSpec) error {
 		current.Failures = make([]*nodeAction, 0, 1)
 	}
 
-	elt := &nodeAction{Fn: compiled}
+	elt := &nodeAction{
+		Fn:     compiled,
+		Reason: failure.Reason,
+	}
 
 	if len(failure.Name) > 0 {
 		elt.Name = failure.Name

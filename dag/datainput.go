@@ -76,6 +76,9 @@ func (input *DataInput) Keys() []string {
 }
 
 // Set the value of the given field to the given value.
+//
+// The graph engine should not add new entries, so if an attempt is
+// made to do so, then `false` is returned and nothing happens.
 func (input *DataInput) Set(key string, value any) bool {
 	_, found := input.fields[key]
 	if !found {

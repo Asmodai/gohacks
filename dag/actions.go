@@ -33,10 +33,6 @@
 
 // * Comments:
 
-//
-// It might be nice if we allowed multiple actions to be attached to a rule.
-//
-
 // * Package:
 
 package dag

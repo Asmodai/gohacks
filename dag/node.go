@@ -48,8 +48,9 @@ import (
 // ** Action type:
 
 type nodeAction struct {
-	Name string   // Pretty name of thing.
-	Fn   ActionFn // Action to execute.
+	Name   string   // Pretty name of thing.
+	Reason string   // Reason why action was taken.
+	Fn     ActionFn // Action to execute.
 }
 
 // ** Node type:
@@ -97,6 +98,10 @@ func traverse(ctx context.Context, root *node, input Filterable, debug bool, log
 
 	if len(root.Actions) > 0 {
 		for _, elt := range root.Actions {
+			logger.Debug(
+				"Action triggered",
+				"reasons", elt.Reason,
+			)
 			elt.Fn(ctx, input)
 		}
 	}

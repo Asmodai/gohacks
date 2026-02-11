@@ -108,6 +108,9 @@ type ActionSpec struct {
 	// Action name.
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 
+	// Reason why the action was invoked.
+	Reason string `json:"reason,omitempty" yaml:"reason,omitempty"`
+
 	// Function to perform.
 	Perform string `json:"perform,omitempty" yaml:"perform,omitempty"`
 }
@@ -262,6 +265,9 @@ func (input *DataInput) Set(key string, value any) bool
 ```
 Set the value of the given field to the given value.
 
+The graph engine should not add new entries, so if an attempt is made to do so,
+then `false` is returned and nothing happens.
+
 #### func (*DataInput) String
 
 ```go
@@ -401,6 +407,9 @@ type FailureSpec struct {
 	// Action name.
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 
+	// Reason why the failure was invoked.
+	Reason string `json:"reason,omitempty" yaml:"reason,omitempty"`
+
 	// Function to perform.
 	Perform string `json:"perform,omitempty" yaml:"perform,omitempty"`
 }
@@ -420,9 +429,6 @@ type Filterable interface {
 	Get(string) (any, bool)
 
 	// Set the given key to the given value.
-	//
-	// The graph engine should not add new entries, so if an attempt is
-	// made to do so, then `false` is returned and nothing happens.
 	Set(string, any) bool
 
 	// Get a list of keys from the filterable entity.
