@@ -101,6 +101,9 @@ type BoundObject struct {
 }
 ```
 
+Structure binding object.
+
+Implements `dag.Filterable`.
 
 #### func (*BoundObject) Get
 

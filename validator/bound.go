@@ -39,6 +39,9 @@ package validator
 
 // ** Types:
 
+// Structure binding object.
+//
+// Implements `dag.Filterable`.
 type BoundObject struct {
 	Descriptor *StructDescriptor
 	Binding    any
