@@ -60,6 +60,7 @@ MODULES = amqp            \
 	  envelope        \
 	  errx            \
 	  events          \
+	  expertsys       \
 	  fileio          \
 	  generics        \
 	  health          \
