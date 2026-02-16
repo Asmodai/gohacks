@@ -28,7 +28,7 @@ func SetManager(ctx context.Context, inst Manager) (context.Context, error) {
 	return val, nil
 }
 
-// Get the logger from the given context.
+// Get the instance from the given context.
 //
 // Will return ErrValueNotManager if the value in the context is not of type
 // Manager.

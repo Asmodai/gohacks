@@ -230,7 +230,7 @@ func main() {
 
 	flag.StringVar(&pattern, "pattern", ".", "package pattern to load (e.g. ., ./..., ./pkg)")
 	flag.StringVar(&out, "out", "di_gen.go", "output file name (per package)")
-	flag.StringVar(&test, "teset", "di_gen_test.go", "output file name for unit tests")
+	flag.StringVar(&test, "test", "di_gen_test.go", "output file name for unit tests")
 	flag.StringVar(&contextdiImport, "contextdi", "github.com/Asmodai/gohacks/contextdi", "import path for contextdi")
 	flag.StringVar(&errorsImport, "errors", "gitlab.com/tozd/go/errors", "import path for errors package")
 	flag.BoolVar(&failOnEmpty, "fail-empty", false, "error if no //di:gen annotations found")

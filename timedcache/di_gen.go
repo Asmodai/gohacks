@@ -28,7 +28,7 @@ func SetTimedCache(ctx context.Context, inst TimedCache) (context.Context, error
 	return val, nil
 }
 
-// Get the logger from the given context.
+// Get the instance from the given context.
 //
 // Will return ErrValueNotTimedCache if the value in the context is not of type
 // TimedCache.

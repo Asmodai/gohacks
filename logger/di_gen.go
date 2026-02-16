@@ -28,7 +28,7 @@ func SetLogger(ctx context.Context, inst Logger) (context.Context, error) {
 	return val, nil
 }
 
-// Get the logger from the given context.
+// Get the instance from the given context.
 //
 // Will return ErrValueNotLogger if the value in the context is not of type
 // Logger.

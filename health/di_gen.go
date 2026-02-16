@@ -28,7 +28,7 @@ func SetHealth(ctx context.Context, inst Reporter) (context.Context, error) {
 	return val, nil
 }
 
-// Get the logger from the given context.
+// Get the instance from the given context.
 //
 // Will return ErrValueNotHealth if the value in the context is not of type
 // Reporter.

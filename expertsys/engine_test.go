@@ -189,7 +189,6 @@ func TestEngine(t *testing.T) {
 	})
 
 	cmplr.Export(os.Stdout)
-
 }
 
 // * engine_test.go ends here.

@@ -81,7 +81,7 @@ func Set{{ .Basename }}(ctx context.Context, inst {{ .TypeExpr }}) (context.Cont
 	return val, nil
 }
 
-// Get the logger from the given context.
+// Get the instance from the given context.
 //
 // Will return ErrValueNot{{ .Basename }} if the value in the context is not of type
 // {{ .TypeExpr }}.

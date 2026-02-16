@@ -28,7 +28,7 @@ func SetMemoise(ctx context.Context, inst Memoise) (context.Context, error) {
 	return val, nil
 }
 
-// Get the logger from the given context.
+// Get the instance from the given context.
 //
 // Will return ErrValueNotMemoise if the value in the context is not of type
 // Memoise.
