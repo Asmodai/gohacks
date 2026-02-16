@@ -40,7 +40,7 @@ var (
 ```
 
 ```go
-var ErrValueNotRLHTTP = errors.Base("value is not *Client")
+var ErrValueNotRLHTTP = errx.Base("value is not *Client")
 ```
 Signalled if the instance associated with the context key is not of type
 *Client.

@@ -50,7 +50,7 @@ var (
 ```
 
 ```go
-var ErrValueNotClient = errors.Base("value is not Client")
+var ErrValueNotClient = errx.Base("value is not Client")
 ```
 Signalled if the instance associated with the context key is not of type Client.
 
@@ -59,7 +59,7 @@ var (
 
 	// Signalled if the instance associated with the context key is not of
 	// type HTTPClient.
-	ErrValueNotHTTPClient = errors.Base("value is not HTTPClient")
+	ErrValueNotHTTPClient = errx.Base("value is not HTTPClient")
 )
 ```
 

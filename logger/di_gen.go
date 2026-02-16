@@ -6,7 +6,7 @@ import (
 	"context"
 
 	contextdi "github.com/Asmodai/gohacks/contextdi"
-	errors "gitlab.com/tozd/go/errors"
+	errx "github.com/Asmodai/gohacks/errx"
 )
 
 // --- Logger ---
@@ -16,13 +16,13 @@ const ContextKeyLogger = "gohacks/logger@v1"
 
 // Signalled if the instance associated with the context key is not of
 // type Logger.
-var ErrValueNotLogger = errors.Base("value is not Logger")
+var ErrValueNotLogger = errx.Base("value is not Logger")
 
 // Set Logger stores the instance in the context map.
 func SetLogger(ctx context.Context, inst Logger) (context.Context, error) {
 	val, err := contextdi.PutToContext(ctx, ContextKeyLogger, inst)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	return val, nil
@@ -37,12 +37,12 @@ func GetLogger(ctx context.Context) (Logger, error) {
 
 	val, err := contextdi.GetFromContext(ctx, ContextKeyLogger)
 	if err != nil {
-		return zero, errors.WithStack(err)
+		return zero, errx.WithStack(err)
 	}
 
 	inst, ok := val.(Logger)
 	if !ok {
-		return zero, errors.WithStack(ErrValueNotLogger)
+		return zero, errx.WithStack(ErrValueNotLogger)
 	}
 
 	return inst, nil
@@ -54,7 +54,7 @@ func MustGetLogger(ctx context.Context) Logger {
 	inst, err := GetLogger(ctx)
 
 	if err != nil {
-		panic(errors.WithMessage(err, "Logger missing in context"))
+		panic(errx.WithMessage(err, "Logger missing in context"))
 	}
 
 	return inst

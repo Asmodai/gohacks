@@ -14,7 +14,7 @@ const ContextKeyMemoise = "gohacks/memoise@v1"
 Key used to store the instance in the context's user value.
 
 ```go
-var ErrValueNotMemoise = errors.Base("value is not Memoise")
+var ErrValueNotMemoise = errx.Base("value is not Memoise")
 ```
 Signalled if the instance associated with the context key is not of type
 Memoise.

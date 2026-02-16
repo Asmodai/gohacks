@@ -32,7 +32,7 @@
 package contextext
 
 import (
-	"gitlab.com/tozd/go/errors"
+	"github.com/Asmodai/gohacks/errx"
 
 	"context"
 )
@@ -45,9 +45,9 @@ const (
 )
 
 var (
-	ErrInvalidContext   = errors.Base("invalid context")
-	ErrInvalidValueMap  = errors.Base("invalid value map")
-	ErrValueMapNotFound = errors.Base("value map not found")
+	ErrInvalidContext   = errx.Base("invalid context")
+	ErrInvalidValueMap  = errx.Base("invalid value map")
+	ErrValueMapNotFound = errx.Base("value map not found")
 )
 
 func extractValueMap(thing any) (ValueMap, error) {
@@ -55,7 +55,7 @@ func extractValueMap(thing any) (ValueMap, error) {
 		return vmap, nil
 	}
 
-	return nil, errors.WithStack(ErrInvalidValueMap)
+	return nil, errx.WithStack(ErrInvalidValueMap)
 }
 
 // Get the value map (if any) from the context.
@@ -63,14 +63,14 @@ func extractValueMap(thing any) (ValueMap, error) {
 // Returns nil if there is no value map.
 func GetValueMap(ctx context.Context) (ValueMap, error) {
 	if ctx == nil {
-		return nil, errors.WithStack(ErrInvalidContext)
+		return nil, errx.WithStack(ErrInvalidContext)
 	}
 
 	if v := ctx.Value(mapKey); v != nil {
 		return extractValueMap(v)
 	}
 
-	return nil, errors.WithStack(ErrValueMapNotFound)
+	return nil, errx.WithStack(ErrValueMapNotFound)
 }
 
 // Get the value map (if any) from the context with the specified value
@@ -80,7 +80,7 @@ func GetValueMapWithKey(ctx context.Context, key string) (ValueMap, error) {
 		return extractValueMap(v)
 	}
 
-	return nil, errors.WithStack(ErrInvalidValueMap)
+	return nil, errx.WithStack(ErrInvalidValueMap)
 }
 
 // Create a context with the value map using a default key.

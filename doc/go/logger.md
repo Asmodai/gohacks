@@ -14,7 +14,7 @@ const ContextKeyLogger = "gohacks/logger@v1"
 Key used to store the instance in the context's user value.
 
 ```go
-var ErrValueNotLogger = errors.Base("value is not Logger")
+var ErrValueNotLogger = errx.Base("value is not Logger")
 ```
 Signalled if the instance associated with the context key is not of type Logger.
 

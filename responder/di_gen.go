@@ -6,7 +6,7 @@ import (
 	"context"
 
 	contextdi "github.com/Asmodai/gohacks/contextdi"
-	errors "gitlab.com/tozd/go/errors"
+	errx "github.com/Asmodai/gohacks/errx"
 )
 
 // --- ResponderChain ---
@@ -16,13 +16,13 @@ const ContextKeyResponderChain = "gohacks/responder@v1"
 
 // Signalled if the instance associated with the context key is not of
 // type *Chain.
-var ErrValueNotResponderChain = errors.Base("value is not *Chain")
+var ErrValueNotResponderChain = errx.Base("value is not *Chain")
 
 // Set ResponderChain stores the instance in the context map.
 func SetResponderChain(ctx context.Context, inst *Chain) (context.Context, error) {
 	val, err := contextdi.PutToContext(ctx, ContextKeyResponderChain, inst)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	return val, nil
@@ -37,12 +37,12 @@ func GetResponderChain(ctx context.Context) (*Chain, error) {
 
 	val, err := contextdi.GetFromContext(ctx, ContextKeyResponderChain)
 	if err != nil {
-		return zero, errors.WithStack(err)
+		return zero, errx.WithStack(err)
 	}
 
 	inst, ok := val.(*Chain)
 	if !ok {
-		return zero, errors.WithStack(ErrValueNotResponderChain)
+		return zero, errx.WithStack(ErrValueNotResponderChain)
 	}
 
 	return inst, nil
@@ -54,7 +54,7 @@ func MustGetResponderChain(ctx context.Context) *Chain {
 	inst, err := GetResponderChain(ctx)
 
 	if err != nil {
-		panic(errors.WithMessage(err, "ResponderChain missing in context"))
+		panic(errx.WithMessage(err, "ResponderChain missing in context"))
 	}
 
 	return inst

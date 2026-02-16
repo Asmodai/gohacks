@@ -16,7 +16,7 @@ const (
 
 ```go
 var (
-	ErrKeyNotFound = errors.Base("value map key not found")
+	ErrKeyNotFound = errx.Base("value map key not found")
 )
 ```
 

@@ -32,7 +32,7 @@ var (
 ```
 
 ```go
-var ErrValueNotTimedCache = errors.Base("value is not TimedCache")
+var ErrValueNotTimedCache = errx.Base("value is not TimedCache")
 ```
 Signalled if the instance associated with the context key is not of type
 TimedCache.

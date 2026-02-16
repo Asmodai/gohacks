@@ -41,13 +41,13 @@ import (
 	"context"
 
 	"github.com/Asmodai/gohacks/contextext"
-	"gitlab.com/tozd/go/errors"
+	"github.com/Asmodai/gohacks/errx"
 )
 
 // * Variables:
 
 var (
-	ErrKeyNotFound = errors.Base("value map key not found")
+	ErrKeyNotFound = errx.Base("value map key not found")
 )
 
 // * Code:
@@ -62,12 +62,12 @@ var (
 func GetFromContext(ctx context.Context, key string) (any, error) {
 	vmap, err := contextext.GetValueMap(ctx)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	rval, found := vmap.Get(key)
 	if !found {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	return rval, nil

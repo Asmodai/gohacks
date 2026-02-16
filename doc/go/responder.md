@@ -26,7 +26,7 @@ var (
 ```
 
 ```go
-var ErrValueNotResponderChain = errors.Base("value is not *Chain")
+var ErrValueNotResponderChain = errx.Base("value is not *Chain")
 ```
 Signalled if the instance associated with the context key is not of type *Chain.
 

@@ -14,7 +14,7 @@ const ContextKeyManager = "gohacks/process@v1"
 Key used to store the instance in the context's user value.
 
 ```go
-var ErrValueNotManager = errors.Base("value is not Manager")
+var ErrValueNotManager = errx.Base("value is not Manager")
 ```
 Signalled if the instance associated with the context key is not of type
 Manager.

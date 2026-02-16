@@ -6,7 +6,7 @@ import (
 	"context"
 
 	contextdi "github.com/Asmodai/gohacks/contextdi"
-	errors "gitlab.com/tozd/go/errors"
+	errx "github.com/Asmodai/gohacks/errx"
 )
 
 // --- Manager ---
@@ -16,13 +16,13 @@ const ContextKeyManager = "gohacks/database@v1"
 
 // Signalled if the instance associated with the context key is not of
 // type Manager.
-var ErrValueNotManager = errors.Base("value is not Manager")
+var ErrValueNotManager = errx.Base("value is not Manager")
 
 // Set Manager stores the instance in the context map.
 func SetManager(ctx context.Context, inst Manager) (context.Context, error) {
 	val, err := contextdi.PutToContext(ctx, ContextKeyManager, inst)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	return val, nil
@@ -37,12 +37,12 @@ func GetManager(ctx context.Context) (Manager, error) {
 
 	val, err := contextdi.GetFromContext(ctx, ContextKeyManager)
 	if err != nil {
-		return zero, errors.WithStack(err)
+		return zero, errx.WithStack(err)
 	}
 
 	inst, ok := val.(Manager)
 	if !ok {
-		return zero, errors.WithStack(ErrValueNotManager)
+		return zero, errx.WithStack(ErrValueNotManager)
 	}
 
 	return inst, nil
@@ -54,7 +54,7 @@ func MustGetManager(ctx context.Context) Manager {
 	inst, err := GetManager(ctx)
 
 	if err != nil {
-		panic(errors.WithMessage(err, "Manager missing in context"))
+		panic(errx.WithMessage(err, "Manager missing in context"))
 	}
 
 	return inst

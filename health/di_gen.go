@@ -6,7 +6,7 @@ import (
 	"context"
 
 	contextdi "github.com/Asmodai/gohacks/contextdi"
-	errors "gitlab.com/tozd/go/errors"
+	errx "github.com/Asmodai/gohacks/errx"
 )
 
 // --- Health ---
@@ -16,13 +16,13 @@ const ContextKeyHealth = "gohacks/health@v1"
 
 // Signalled if the instance associated with the context key is not of
 // type Reporter.
-var ErrValueNotHealth = errors.Base("value is not Reporter")
+var ErrValueNotHealth = errx.Base("value is not Reporter")
 
 // Set Health stores the instance in the context map.
 func SetHealth(ctx context.Context, inst Reporter) (context.Context, error) {
 	val, err := contextdi.PutToContext(ctx, ContextKeyHealth, inst)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	return val, nil
@@ -37,12 +37,12 @@ func GetHealth(ctx context.Context) (Reporter, error) {
 
 	val, err := contextdi.GetFromContext(ctx, ContextKeyHealth)
 	if err != nil {
-		return zero, errors.WithStack(err)
+		return zero, errx.WithStack(err)
 	}
 
 	inst, ok := val.(Reporter)
 	if !ok {
-		return zero, errors.WithStack(ErrValueNotHealth)
+		return zero, errx.WithStack(ErrValueNotHealth)
 	}
 
 	return inst, nil
@@ -54,7 +54,7 @@ func MustGetHealth(ctx context.Context) Reporter {
 	inst, err := GetHealth(ctx)
 
 	if err != nil {
-		panic(errors.WithMessage(err, "Health missing in context"))
+		panic(errx.WithMessage(err, "Health missing in context"))
 	}
 
 	return inst

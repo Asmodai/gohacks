@@ -6,7 +6,7 @@ import (
 	"context"
 
 	contextdi "github.com/Asmodai/gohacks/contextdi"
-	errors "gitlab.com/tozd/go/errors"
+	errx "github.com/Asmodai/gohacks/errx"
 )
 
 // --- TimedCache ---
@@ -16,13 +16,13 @@ const ContextKeyTimedCache = "gohacks/timedcache@v1"
 
 // Signalled if the instance associated with the context key is not of
 // type TimedCache.
-var ErrValueNotTimedCache = errors.Base("value is not TimedCache")
+var ErrValueNotTimedCache = errx.Base("value is not TimedCache")
 
 // Set TimedCache stores the instance in the context map.
 func SetTimedCache(ctx context.Context, inst TimedCache) (context.Context, error) {
 	val, err := contextdi.PutToContext(ctx, ContextKeyTimedCache, inst)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	return val, nil
@@ -37,12 +37,12 @@ func GetTimedCache(ctx context.Context) (TimedCache, error) {
 
 	val, err := contextdi.GetFromContext(ctx, ContextKeyTimedCache)
 	if err != nil {
-		return zero, errors.WithStack(err)
+		return zero, errx.WithStack(err)
 	}
 
 	inst, ok := val.(TimedCache)
 	if !ok {
-		return zero, errors.WithStack(ErrValueNotTimedCache)
+		return zero, errx.WithStack(ErrValueNotTimedCache)
 	}
 
 	return inst, nil
@@ -54,7 +54,7 @@ func MustGetTimedCache(ctx context.Context) TimedCache {
 	inst, err := GetTimedCache(ctx)
 
 	if err != nil {
-		panic(errors.WithMessage(err, "TimedCache missing in context"))
+		panic(errx.WithMessage(err, "TimedCache missing in context"))
 	}
 
 	return inst

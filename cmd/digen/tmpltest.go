@@ -105,7 +105,7 @@ func Test{{ .Basename }}DI(t *testing.T) {
 					t.Fatalf("expected panic, got none")
 				} else {
 					// Panic value is an error from
-					// errors.WithMessage; check the text.
+					// errx.WithMessage; check the text.
 					msg := fmt.Sprint(r)
 					if !strings.Contains(msg, panicMsg) {
 						t.Fatalf("panic = %q, want %q",

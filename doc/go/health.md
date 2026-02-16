@@ -21,7 +21,7 @@ const (
 ```
 
 ```go
-var ErrValueNotHealth = errors.Base("value is not Reporter")
+var ErrValueNotHealth = errx.Base("value is not Reporter")
 ```
 Signalled if the instance associated with the context key is not of type
 Reporter.

@@ -6,7 +6,7 @@ import (
 	"context"
 
 	contextdi "github.com/Asmodai/gohacks/contextdi"
-	errors "gitlab.com/tozd/go/errors"
+	errx "github.com/Asmodai/gohacks/errx"
 )
 
 // --- RLHTTP ---
@@ -16,13 +16,13 @@ const ContextKeyRLHTTP = "gohacks/rlhttp@v1"
 
 // Signalled if the instance associated with the context key is not of
 // type *Client.
-var ErrValueNotRLHTTP = errors.Base("value is not *Client")
+var ErrValueNotRLHTTP = errx.Base("value is not *Client")
 
 // Set RLHTTP stores the instance in the context map.
 func SetRLHTTP(ctx context.Context, inst *Client) (context.Context, error) {
 	val, err := contextdi.PutToContext(ctx, ContextKeyRLHTTP, inst)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	return val, nil
@@ -37,12 +37,12 @@ func GetRLHTTP(ctx context.Context) (*Client, error) {
 
 	val, err := contextdi.GetFromContext(ctx, ContextKeyRLHTTP)
 	if err != nil {
-		return zero, errors.WithStack(err)
+		return zero, errx.WithStack(err)
 	}
 
 	inst, ok := val.(*Client)
 	if !ok {
-		return zero, errors.WithStack(ErrValueNotRLHTTP)
+		return zero, errx.WithStack(ErrValueNotRLHTTP)
 	}
 
 	return inst, nil
@@ -54,7 +54,7 @@ func MustGetRLHTTP(ctx context.Context) *Client {
 	inst, err := GetRLHTTP(ctx)
 
 	if err != nil {
-		panic(errors.WithMessage(err, "RLHTTP missing in context"))
+		panic(errx.WithMessage(err, "RLHTTP missing in context"))
 	}
 
 	return inst

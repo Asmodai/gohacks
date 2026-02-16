@@ -6,7 +6,7 @@ import (
 	"context"
 
 	contextdi "github.com/Asmodai/gohacks/contextdi"
-	errors "gitlab.com/tozd/go/errors"
+	errx "github.com/Asmodai/gohacks/errx"
 )
 
 // --- Memoise ---
@@ -16,13 +16,13 @@ const ContextKeyMemoise = "gohacks/memoise@v1"
 
 // Signalled if the instance associated with the context key is not of
 // type Memoise.
-var ErrValueNotMemoise = errors.Base("value is not Memoise")
+var ErrValueNotMemoise = errx.Base("value is not Memoise")
 
 // Set Memoise stores the instance in the context map.
 func SetMemoise(ctx context.Context, inst Memoise) (context.Context, error) {
 	val, err := contextdi.PutToContext(ctx, ContextKeyMemoise, inst)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	return val, nil
@@ -37,12 +37,12 @@ func GetMemoise(ctx context.Context) (Memoise, error) {
 
 	val, err := contextdi.GetFromContext(ctx, ContextKeyMemoise)
 	if err != nil {
-		return zero, errors.WithStack(err)
+		return zero, errx.WithStack(err)
 	}
 
 	inst, ok := val.(Memoise)
 	if !ok {
-		return zero, errors.WithStack(ErrValueNotMemoise)
+		return zero, errx.WithStack(ErrValueNotMemoise)
 	}
 
 	return inst, nil
@@ -54,7 +54,7 @@ func MustGetMemoise(ctx context.Context) Memoise {
 	inst, err := GetMemoise(ctx)
 
 	if err != nil {
-		panic(errors.WithMessage(err, "Memoise missing in context"))
+		panic(errx.WithMessage(err, "Memoise missing in context"))
 	}
 
 	return inst

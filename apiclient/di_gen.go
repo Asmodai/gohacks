@@ -6,7 +6,7 @@ import (
 	"context"
 
 	contextdi "github.com/Asmodai/gohacks/contextdi"
-	errors "gitlab.com/tozd/go/errors"
+	errx "github.com/Asmodai/gohacks/errx"
 )
 
 // --- Client ---
@@ -16,13 +16,13 @@ const ContextKeyClient = "gohacks/apiclient/Client@v1"
 
 // Signalled if the instance associated with the context key is not of
 // type Client.
-var ErrValueNotClient = errors.Base("value is not Client")
+var ErrValueNotClient = errx.Base("value is not Client")
 
 // Set Client stores the instance in the context map.
 func SetClient(ctx context.Context, inst Client) (context.Context, error) {
 	val, err := contextdi.PutToContext(ctx, ContextKeyClient, inst)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	return val, nil
@@ -37,12 +37,12 @@ func GetClient(ctx context.Context) (Client, error) {
 
 	val, err := contextdi.GetFromContext(ctx, ContextKeyClient)
 	if err != nil {
-		return zero, errors.WithStack(err)
+		return zero, errx.WithStack(err)
 	}
 
 	inst, ok := val.(Client)
 	if !ok {
-		return zero, errors.WithStack(ErrValueNotClient)
+		return zero, errx.WithStack(ErrValueNotClient)
 	}
 
 	return inst, nil
@@ -54,7 +54,7 @@ func MustGetClient(ctx context.Context) Client {
 	inst, err := GetClient(ctx)
 
 	if err != nil {
-		panic(errors.WithMessage(err, "Client missing in context"))
+		panic(errx.WithMessage(err, "Client missing in context"))
 	}
 
 	return inst

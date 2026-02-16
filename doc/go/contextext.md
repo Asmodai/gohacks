@@ -10,9 +10,9 @@
 
 ```go
 var (
-	ErrInvalidContext   = errors.Base("invalid context")
-	ErrInvalidValueMap  = errors.Base("invalid value map")
-	ErrValueMapNotFound = errors.Base("value map not found")
+	ErrInvalidContext   = errx.Base("invalid context")
+	ErrInvalidValueMap  = errx.Base("invalid value map")
+	ErrValueMapNotFound = errx.Base("value map not found")
 )
 ```
 

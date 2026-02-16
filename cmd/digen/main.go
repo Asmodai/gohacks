@@ -46,7 +46,7 @@ import (
 	"sort"
 	"strings"
 
-	"gitlab.com/tozd/go/errors"
+	"github.com/Asmodai/gohacks/errx"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
 )
@@ -162,7 +162,7 @@ func writeTests(pkg *packages.Package, job *fileJob) error {
 	var sbld strings.Builder
 
 	if err := testTempl.Execute(&sbld, job); err != nil {
-		return errors.WithStack(err)
+		return errx.WithStack(err)
 	}
 
 	formatted, err := imports.Process(
@@ -172,7 +172,7 @@ func writeTests(pkg *packages.Package, job *fileJob) error {
 	if err != nil {
 		_ = os.WriteFile(job.Out, []byte(sbld.String()), defaultFileMode)
 
-		return errors.WithStack(err)
+		return errx.WithStack(err)
 	}
 
 	dir := "."
@@ -182,7 +182,7 @@ func writeTests(pkg *packages.Package, job *fileJob) error {
 
 	path := filepath.Join(dir, job.TestOut)
 
-	return errors.WithStack(os.WriteFile(path, formatted, defaultFileMode))
+	return errx.WithStack(os.WriteFile(path, formatted, defaultFileMode))
 }
 
 //nolint:dupl
@@ -194,7 +194,7 @@ func writeJob(pkg *packages.Package, job *fileJob) error {
 	var sbld strings.Builder
 
 	if err := codeTempl.Execute(&sbld, job); err != nil {
-		return errors.WithStack(err)
+		return errx.WithStack(err)
 	}
 
 	formatted, err := imports.Process(
@@ -204,7 +204,7 @@ func writeJob(pkg *packages.Package, job *fileJob) error {
 	if err != nil {
 		_ = os.WriteFile(job.Out, []byte(sbld.String()), defaultFileMode)
 
-		return errors.WithStack(err)
+		return errx.WithStack(err)
 	}
 
 	dir := "."
@@ -214,7 +214,7 @@ func writeJob(pkg *packages.Package, job *fileJob) error {
 
 	path := filepath.Join(dir, job.Out)
 
-	return errors.WithStack(os.WriteFile(path, formatted, defaultFileMode))
+	return errx.WithStack(os.WriteFile(path, formatted, defaultFileMode))
 }
 
 //nolint:funlen
@@ -232,7 +232,7 @@ func main() {
 	flag.StringVar(&out, "out", "di_gen.go", "output file name (per package)")
 	flag.StringVar(&test, "test", "di_gen_test.go", "output file name for unit tests")
 	flag.StringVar(&contextdiImport, "contextdi", "github.com/Asmodai/gohacks/contextdi", "import path for contextdi")
-	flag.StringVar(&errorsImport, "errors", "gitlab.com/tozd/go/errors", "import path for errors package")
+	flag.StringVar(&errorsImport, "errx", "github.com/Asmodai/gohacks/errx", "import path for errx package")
 	flag.BoolVar(&failOnEmpty, "fail-empty", false, "error if no //di:gen annotations found")
 	flag.Parse()
 
@@ -271,7 +271,7 @@ func main() {
 			Imports: map[string]string{
 				"":          "context",
 				"contextdi": contextdiImport,
-				"errors":    errorsImport,
+				"errx":      errorsImport,
 			},
 		}
 

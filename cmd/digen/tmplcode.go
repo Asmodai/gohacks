@@ -69,13 +69,13 @@ const ContextKey{{ .Basename }} = "{{ .Key }}"
 
 // Signalled if the instance associated with the context key is not of
 // type {{ .TypeExpr }}.
-var ErrValueNot{{ .Basename }} = errors.Base("value is not {{ .TypeExpr }}")
+var ErrValueNot{{ .Basename }} = errx.Base("value is not {{ .TypeExpr }}")
 
 // Set {{ .Basename }} stores the instance in the context map.
 func Set{{ .Basename }}(ctx context.Context, inst {{ .TypeExpr }}) (context.Context, error) {
 	val, err := contextdi.PutToContext(ctx, ContextKey{{ .Basename }}, inst)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	return val, nil
@@ -90,12 +90,12 @@ func Get{{ .Basename }}(ctx context.Context) ({{ .TypeExpr }}, error) {
 
 	val, err := contextdi.GetFromContext(ctx, ContextKey{{ .Basename }})
 	if err != nil {
-		return zero, errors.WithStack(err)
+		return zero, errx.WithStack(err)
 	}
 
 	inst, ok := val.({{ .TypeExpr }})
 	if !ok {
-		return zero, errors.WithStack(ErrValueNot{{ .Basename }})
+		return zero, errx.WithStack(ErrValueNot{{ .Basename }})
 	}
 
 	return inst, nil
@@ -107,7 +107,7 @@ func MustGet{{ .Basename }}(ctx context.Context) {{ .TypeExpr }} {
 	inst, err := Get{{ .Basename }}(ctx)
 
 	if err != nil {
-		panic(errors.WithMessage(err, "{{ .Basename }} missing in context"))
+		panic(errx.WithMessage(err, "{{ .Basename }} missing in context"))
 	}
 
 	return inst

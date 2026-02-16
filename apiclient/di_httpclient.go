@@ -41,7 +41,7 @@ import (
 	"context"
 
 	contextdi "github.com/Asmodai/gohacks/contextdi"
-	errors "gitlab.com/tozd/go/errors"
+	errx "github.com/Asmodai/gohacks/errx"
 )
 
 // * Constants:
@@ -57,7 +57,7 @@ var (
 
 	// Signalled if the instance associated with the context key is not of
 	// type HTTPClient.
-	ErrValueNotHTTPClient = errors.Base("value is not HTTPClient")
+	ErrValueNotHTTPClient = errx.Base("value is not HTTPClient")
 )
 
 // * Code:
@@ -67,7 +67,7 @@ var (
 func SetHTTPClient(ctx context.Context, inst HTTPClient) (context.Context, error) {
 	val, err := contextdi.PutToContext(ctx, ContextKeyHTTPClient, inst)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errx.WithStack(err)
 	}
 
 	return val, nil
@@ -82,12 +82,12 @@ func GetHTTPClient(ctx context.Context) (HTTPClient, error) {
 
 	val, err := contextdi.GetFromContext(ctx, ContextKeyHTTPClient)
 	if err != nil {
-		return zero, errors.WithStack(err)
+		return zero, errx.WithStack(err)
 	}
 
 	inst, ok := val.(HTTPClient)
 	if !ok {
-		return zero, errors.WithStack(ErrValueNotHTTPClient)
+		return zero, errx.WithStack(ErrValueNotHTTPClient)
 	}
 
 	return inst, nil
@@ -99,7 +99,7 @@ func MustGetHTTPClient(ctx context.Context) HTTPClient {
 	inst, err := GetHTTPClient(ctx)
 
 	if err != nil {
-		panic(errors.WithMessage(err, "HTTPClient missing in context"))
+		panic(errx.WithMessage(err, "HTTPClient missing in context"))
 	}
 
 	return inst
