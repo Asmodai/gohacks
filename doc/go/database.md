@@ -249,7 +249,7 @@ FromManager returns the instance or the fallback.
 ```go
 func GetManager(ctx context.Context) (Manager, error)
 ```
-Get the logger from the given context.
+Get the instance from the given context.
 
 Will return ErrValueNotManager if the value in the context is not of type
 Manager.

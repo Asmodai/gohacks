@@ -30,9 +30,6 @@
 // SOFTWARE.
 //
 // mock:yes
-//
-//go:generate go run github.com/Asmodai/gohacks/cmd/digen -pattern . -out di_httpclient.go -test di_httpclient_test.go
-//di:gen basename=HTTPClient key=/gohacks/apiclient/HTTPClient@v1 type=HTTPClient fallback=NewDefaultHTTPClient()
 
 // * Comments:
 

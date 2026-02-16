@@ -165,7 +165,7 @@ FromHealth returns the instance or the fallback.
 ```go
 func GetHealth(ctx context.Context) (Reporter, error)
 ```
-Get the logger from the given context.
+Get the instance from the given context.
 
 Will return ErrValueNotHealth if the value in the context is not of type
 Reporter.

@@ -78,7 +78,7 @@ FromResponderChain returns the instance or the fallback.
 ```go
 func GetResponderChain(ctx context.Context) (*Chain, error)
 ```
-Get the logger from the given context.
+Get the instance from the given context.
 
 Will return ErrValueNotResponderChain if the value in the context is not of type
 *Chain.

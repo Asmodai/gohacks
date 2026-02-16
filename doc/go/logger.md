@@ -168,7 +168,7 @@ FromLogger returns the instance or the fallback.
 ```go
 func GetLogger(ctx context.Context) (Logger, error)
 ```
-Get the logger from the given context.
+Get the instance from the given context.
 
 Will return ErrValueNotLogger if the value in the context is not of type Logger.
 

@@ -21,6 +21,18 @@ const (
 ```
 
 ```go
+const ContextKeyClient = "gohacks/apiclient/Client@v1"
+```
+Key used to store the instance in the context's user value.
+
+```go
+const (
+	// Key used to store the instance in the context's user value.
+	ContextKeyHTTPClient = "gohacks/apiclient/HTTPClient@v1"
+)
+```
+
+```go
 var (
 	// Triggered when an invalid authentication method is passed via the API
 	// parameters.  Will also be triggered if both basic auth and auth token
@@ -36,6 +48,48 @@ var (
 	ErrNotOk = errors.Base("not ok")
 )
 ```
+
+```go
+var ErrValueNotClient = errors.Base("value is not Client")
+```
+Signalled if the instance associated with the context key is not of type Client.
+
+```go
+var (
+
+	// Signalled if the instance associated with the context key is not of
+	// type HTTPClient.
+	ErrValueNotHTTPClient = errors.Base("value is not HTTPClient")
+)
+```
+
+#### func  SetClient
+
+```go
+func SetClient(ctx context.Context, inst Client) (context.Context, error)
+```
+Set Client stores the instance in the context map.
+
+#### func  SetClientIfAbsent
+
+```go
+func SetClientIfAbsent(ctx context.Context, inst Client) (context.Context, error)
+```
+SetClientIfAbsent sets only if not already present.
+
+#### func  SetHTTPClient
+
+```go
+func SetHTTPClient(ctx context.Context, inst HTTPClient) (context.Context, error)
+```
+Set HTTPClient stores the instance in the context map.
+
+#### func  WithClient
+
+```go
+func WithClient(ctx context.Context, fn func(Client))
+```
+WithClient calls fn with the instance or fallback.
 
 #### type AuthBasic
 
@@ -112,15 +166,22 @@ followed.
 
     ```go
     conf := &apiclient.Config{
-    	RequestsPerSecond: 5,    // 5 requests per second.
-    	Timeout:           types.Duration(5*time.Second),
+    	// ...
     }
     ```
 
 2) Create your client
 
     ```go
-    api := apiclient.NewClient(conf)
+    ctx := context.WithParent(context.Background())
+    client := &http.Client{}
+
+    ctx, err := apiclient.SetHTTPClient(ctx, client)
+    if err != nil {
+    	panic(err)
+    }
+
+    api := apiclient.NewClient(ctx, conf)
     ```
 
 3) ???
@@ -134,8 +195,8 @@ followed.
 4) Profit
 
     ```go
-    data, code, err := api.Get(params)
-    // check `err` and `code` here.
+    response := api.Get(params)
+    // check `err` and `code` via `response.StatusCode` etc.
     // `data` will need to be converted from `[]byte`.
     ```
 
@@ -147,23 +208,54 @@ method` error.
 For full information about the API client parameters, please see the
 documentation for the `Params` type.
 
+#### func  FromClient
+
+```go
+func FromClient(ctx context.Context) Client
+```
+FromClient returns the instance or the fallback.
+
+#### func  GetClient
+
+```go
+func GetClient(ctx context.Context) (Client, error)
+```
+Get the instance from the given context.
+
+Will return ErrValueNotClient if the value in the context is not of type Client.
+
+#### func  MustGetClient
+
+```go
+func MustGetClient(ctx context.Context) Client
+```
+Attempt to get the instance from the given context. Panics if the operation
+fails.
+
 #### func  NewClient
 
 ```go
-func NewClient(config *Config, logger logger.Logger) Client
+func NewClient(ctx context.Context, config *Config) Client
 ```
 Create a new API client with the given configuration.
+
+#### func  NewDefaultClient
+
+```go
+func NewDefaultClient() Client
+```
+
+#### func  TryGetClient
+
+```go
+func TryGetClient(ctx context.Context) (Client, bool)
+```
+TryGetClient returns the instance and true if present and typed.
 
 #### type Config
 
 ```go
 type Config struct {
-	// The number of requests per second should rate limiting be required.
-	RequestsPerSecond int `json:"requests_per_second"`
-
-	// HTTP connection timeout value.
-	Timeout types.Duration `json:"timeout"`
-
 	// Callback to call in order to check request success.
 	SuccessCheck SuccessCheckFn `json:"-"`
 }
@@ -174,7 +266,7 @@ API client configuration.
 #### func  NewConfig
 
 ```go
-func NewConfig(reqsPerSec int, timeout types.Duration) *Config
+func NewConfig(successCheckFn SuccessCheckFn) *Config
 ```
 Create a new API client configuration.
 
@@ -209,6 +301,37 @@ type HTTPClient interface {
 }
 ```
 
+
+#### func  GetHTTPClient
+
+```go
+func GetHTTPClient(ctx context.Context) (HTTPClient, error)
+```
+Get the instance from the given context.
+
+Will return ErrValueNotHTTPClient if the value in the context is not of type
+HTTPClient.
+
+#### func  MustGetHTTPClient
+
+```go
+func MustGetHTTPClient(ctx context.Context) HTTPClient
+```
+Attempt to get the instance from the given context. Panics if the operation
+fails.
+
+#### func  NewDefaultHTTPClient
+
+```go
+func NewDefaultHTTPClient() HTTPClient
+```
+
+#### func  TryGetHTTPClient
+
+```go
+func TryGetHTTPClient(ctx context.Context) (HTTPClient, bool)
+```
+TryGetHTTPClient returns the instance and true if present and typed.
 
 #### type Params
 

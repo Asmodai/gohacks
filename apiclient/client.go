@@ -30,6 +30,9 @@
 // SOFTWARE.
 //
 // mock:yes
+//
+//go:generate go run github.com/Asmodai/gohacks/cmd/digen -pattern .
+//di:gen basename=Client key=gohacks/apiclient/Client@v1 type=Client fallback=NewDefaultClient()
 
 // * Comments:
 
@@ -335,6 +338,10 @@ func NewClient(ctx context.Context, config *Config) Client {
 	}
 
 	return inst
+}
+
+func NewDefaultClient() Client {
+	return &client{logger: logger.NewDefaultLogger()}
 }
 
 // * client.go ends here.

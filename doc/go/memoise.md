@@ -106,7 +106,7 @@ FromMemoise returns the instance or the fallback.
 ```go
 func GetMemoise(ctx context.Context) (Memoise, error)
 ```
-Get the logger from the given context.
+Get the instance from the given context.
 
 Will return ErrValueNotMemoise if the value in the context is not of type
 Memoise.

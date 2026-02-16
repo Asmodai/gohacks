@@ -190,7 +190,7 @@ FromTimedCache returns the instance or the fallback.
 ```go
 func GetTimedCache(ctx context.Context) (TimedCache, error)
 ```
-Get the logger from the given context.
+Get the instance from the given context.
 
 Will return ErrValueNotTimedCache if the value in the context is not of type
 TimedCache.

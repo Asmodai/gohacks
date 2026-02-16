@@ -11,7 +11,6 @@ package apiclient
 
 import (
 	context "context"
-	http "net/http"
 	reflect "reflect"
 
 	apiclient "github.com/Asmodai/gohacks/apiclient"
@@ -96,43 +95,4 @@ func (m *MockClient) PostWithContext(arg0 context.Context, arg1 *apiclient.Param
 func (mr *MockClientMockRecorder) PostWithContext(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostWithContext", reflect.TypeOf((*MockClient)(nil).PostWithContext), arg0, arg1)
-}
-
-// MockHTTPClient is a mock of HTTPClient interface.
-type MockHTTPClient struct {
-	ctrl     *gomock.Controller
-	recorder *MockHTTPClientMockRecorder
-	isgomock struct{}
-}
-
-// MockHTTPClientMockRecorder is the mock recorder for MockHTTPClient.
-type MockHTTPClientMockRecorder struct {
-	mock *MockHTTPClient
-}
-
-// NewMockHTTPClient creates a new mock instance.
-func NewMockHTTPClient(ctrl *gomock.Controller) *MockHTTPClient {
-	mock := &MockHTTPClient{ctrl: ctrl}
-	mock.recorder = &MockHTTPClientMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockHTTPClient) EXPECT() *MockHTTPClientMockRecorder {
-	return m.recorder
-}
-
-// Do mocks base method.
-func (m *MockHTTPClient) Do(arg0 *http.Request) (*http.Response, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Do", arg0)
-	ret0, _ := ret[0].(*http.Response)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Do indicates an expected call of Do.
-func (mr *MockHTTPClientMockRecorder) Do(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockHTTPClient)(nil).Do), arg0)
 }
