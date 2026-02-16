@@ -53,7 +53,6 @@ import (
 	"gitlab.com/tozd/go/errors"
 
 	"github.com/Asmodai/gohacks/logger"
-	"github.com/Asmodai/gohacks/rlhttp"
 )
 
 // * Variables:
@@ -87,15 +86,22 @@ are followed.
 
 	```go
 	conf := &apiclient.Config{
-		RequestsPerSecond: 5,    // 5 requests per second.
-		Timeout:           types.Duration(5*time.Second),
+		// ...
 	}
 	```
 
 2) Create your client
 
 	```go
-	api := apiclient.NewClient(conf)
+	ctx := context.WithParent(context.Background())
+	client := &http.Client{}
+
+	ctx, err := apiclient.SetHTTPClient(ctx, client)
+	if err != nil {
+		panic(err)
+	}
+
+	api := apiclient.NewClient(ctx, conf)
 	```
 
 3) ???
@@ -109,8 +115,8 @@ are followed.
 4) Profit
 
 	```go
-	data, code, err := api.Get(params)
-	// check `err` and `code` here.
+	response := api.Get(params)
+	// check `err` and `code` via `response.StatusCode` etc.
 	// `data` will need to be converted from `[]byte`.
 	```
 
@@ -154,10 +160,6 @@ type Client interface {
 	//
 	// You will need to remember to check both the error and status code.
 	PostWithContext(context.Context, *Params) Response
-}
-
-type HTTPClient interface {
-	Do(*http.Request) (*http.Response, error)
 }
 
 // ** Types:
@@ -274,11 +276,13 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) Resp
 	if err != nil {
 		return NewResponseFromError(errors.WithStack(err))
 	}
-	defer resp.Body.Close()
 
-	if c.checkSuccess == nil {
-		c.checkSuccess = c.defaultCheckSuccess
-	}
+	// Must ensure the body is closed so that the connection can be
+	// reused by `net.http`.
+	defer func() {
+		_, _ = io.Copy(io.Discard, resp.Body)
+		_ = resp.Body.Close()
+	}()
 
 	// Was the request not successful?
 	if !c.checkSuccess(resp.StatusCode) {
@@ -314,20 +318,23 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) Resp
 // ** Functions:
 
 // Create a new API client with the given configuration.
-func NewClient(config *Config, logger logger.Logger) Client {
+func NewClient(ctx context.Context, config *Config) Client {
+	lgr := logger.MustGetLogger(ctx)
+	httpclient := MustGetHTTPClient(ctx)
 	trace := &httptrace.ClientTrace{}
 
-	rlclient := rlhttp.NewClient(
-		config.RequestsPerSecond,
-		config.Timeout.Duration(),
-	)
-
-	return &client{
-		Client:       rlclient,
+	inst := &client{
+		Client:       httpclient,
 		Trace:        trace,
-		logger:       logger,
+		logger:       lgr,
 		checkSuccess: config.SuccessCheck,
 	}
+
+	if config.SuccessCheck == nil {
+		inst.checkSuccess = inst.defaultCheckSuccess
+	}
+
+	return inst
 }
 
 // * client.go ends here.

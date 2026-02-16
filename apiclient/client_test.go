@@ -29,7 +29,7 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// * Comments:
+// * comments:
 
 //
 //
@@ -43,6 +43,7 @@ package apiclient
 
 import (
 	"github.com/Asmodai/gohacks/logger"
+	"github.com/Asmodai/gohacks/rlhttp"
 
 	"bytes"
 	"context"
@@ -90,8 +91,8 @@ func defaultParams() *Params {
 }
 
 // Invoke afake HTTP magic GET request.
-func invokeGet(params *Params, payloadfn FakeHttpFn) Response {
-	c := NewClient(NewDefaultConfig(), logger.NewDefaultLogger())
+func invokeGet(ctx context.Context, params *Params, payloadfn FakeHttpFn) Response {
+	c := NewClient(ctx, NewDefaultConfig())
 	c.(*client).Client = &FakeHttp{
 		Payload: payloadfn,
 	}
@@ -100,8 +101,8 @@ func invokeGet(params *Params, payloadfn FakeHttpFn) Response {
 }
 
 // Invoke afake HTTP magic POST request.
-func invokePost(params *Params, payloadfn FakeHttpFn) Response {
-	c := NewClient(NewDefaultConfig(), logger.NewDefaultLogger())
+func invokePost(ctx context.Context, params *Params, payloadfn FakeHttpFn) Response {
+	c := NewClient(ctx, NewDefaultConfig())
 	c.(*client).Client = &FakeHttp{
 		Payload: payloadfn,
 	}
@@ -110,13 +111,8 @@ func invokePost(params *Params, payloadfn FakeHttpFn) Response {
 }
 
 // Invoke a fake HTTP magic request with a custom HTTP method verb.
-func invokeVerb(verb string, params *Params, payloadfn FakeHttpFn) Response {
-	conf := &Config{
-		RequestsPerSecond: defaultRequestsPerSecond,
-		Timeout:           defaultTimeout,
-	}
-
-	c := NewClient(conf, logger.NewDefaultLogger())
+func invokeVerb(ctx context.Context, verb string, params *Params, payloadfn FakeHttpFn) Response {
+	c := NewClient(ctx, NewDefaultConfig())
 	c.(*client).Client = &FakeHttp{
 		Payload: payloadfn,
 	}
@@ -128,12 +124,18 @@ func invokeVerb(verb string, params *Params, payloadfn FakeHttpFn) Response {
 
 // Test the 'Get' method.
 func TestGet(t *testing.T) {
+	ctx := context.Background()
+
+	ctx, _ = logger.SetLogger(ctx, logger.NewDefaultLogger())
+	ctx, _ = SetHTTPClient(ctx, rlhttp.NewDefault())
+
 	// Basic run, no errors.
 	t.Run(
 		"Works as expected",
 		func(t *testing.T) {
 			payload := []byte("{}")
 			resp := invokeGet(
+				ctx,
 				defaultParams(),
 				func(_ *http.Request) Response {
 					return NewResponse(
@@ -163,6 +165,7 @@ func TestGet(t *testing.T) {
 		"Handles server-side errors",
 		func(t *testing.T) {
 			resp := invokeGet(
+				ctx,
 				defaultParams(),
 				func(_ *http.Request) Response {
 					return NewResponse(
@@ -189,6 +192,7 @@ func TestGet(t *testing.T) {
 		"Handles invalid methods",
 		func(t *testing.T) {
 			resp := invokeVerb(
+				ctx,
 				"Do The Thing",
 				defaultParams(),
 				func(_ *http.Request) Response {
@@ -219,6 +223,7 @@ func TestGet(t *testing.T) {
 			accept := "text/gibberish"
 			contentType := "text/shenanigans"
 			resp := invokeGet(
+				ctx,
 				&Params{
 					URL: "http://127.0.0.1/test",
 					Content: ContentType{
@@ -261,6 +266,7 @@ func TestGet(t *testing.T) {
 		"Complains if both auth types are used",
 		func(t *testing.T) {
 			resp := invokeGet(
+				ctx,
 				&Params{
 					UseBasic: true,
 					UseToken: true,
@@ -290,6 +296,7 @@ func TestGet(t *testing.T) {
 		"Complains if basic auth is missing a username",
 		func(t *testing.T) {
 			resp := invokeGet(
+				ctx,
 				&Params{
 					URL:      "http://127.0.0.1/test",
 					UseBasic: true,
@@ -315,6 +322,7 @@ func TestGet(t *testing.T) {
 		"Complains if token auth is missing headers",
 		func(t *testing.T) {
 			resp := invokeGet(
+				ctx,
 				&Params{
 					URL:      "http://127.0.0.1/test",
 					UseToken: true,
@@ -345,6 +353,7 @@ func TestGet(t *testing.T) {
 			params.AddQueryParam("test", "value")
 
 			resp := invokeGet(
+				ctx,
 				params,
 				func(req *http.Request) Response {
 					return NewResponse(
@@ -369,12 +378,18 @@ func TestGet(t *testing.T) {
 
 // POST tests.
 func TestPost(t *testing.T) {
+	ctx := context.Background()
+
+	ctx, _ = logger.SetLogger(ctx, logger.NewDefaultLogger())
+	ctx, _ = SetHTTPClient(ctx, rlhttp.NewDefault())
+
 	// Can we POST?
 	t.Run(
 		"Works as expected",
 		func(t *testing.T) {
 			payload := []byte("woot")
 			resp := invokePost(
+				ctx,
 				defaultParams(),
 				func(_ *http.Request) Response {
 					return NewResponse(
@@ -399,12 +414,18 @@ func TestPost(t *testing.T) {
 
 // Token auth tests.
 func TestTokenAuth(t *testing.T) {
+	ctx := context.Background()
+
+	ctx, _ = logger.SetLogger(ctx, logger.NewDefaultLogger())
+	ctx, _ = SetHTTPClient(ctx, rlhttp.NewDefault())
+
 	// Do auth token headers get appended?
 	t.Run(
 		"Does auth token header get added if required",
 		func(t *testing.T) {
 			payload := []byte("TOKEN")
 			resp := invokeGet(
+				ctx,
 				&Params{
 					URL:      "http://127.0.0.1/test",
 					UseToken: true,
@@ -438,12 +459,18 @@ func TestTokenAuth(t *testing.T) {
 
 // Basic auth tests.
 func TestBasicAuth(t *testing.T) {
+	ctx := context.Background()
+
+	ctx, _ = logger.SetLogger(ctx, logger.NewDefaultLogger())
+	ctx, _ = SetHTTPClient(ctx, rlhttp.NewDefault())
+
 	// Are the basic auth details set in the request?
 	t.Run(
 		"Is basic auth added when required",
 		func(t *testing.T) {
 			payload := []byte("user:pass")
 			resp := invokeGet(
+				ctx,
 				&Params{
 					URL:      "http://127.0.0.1/test",
 					UseBasic: true,
@@ -482,10 +509,16 @@ func TestBasicAuth(t *testing.T) {
 }
 
 func TestStatusCode(t *testing.T) {
+	ctx := context.Background()
+
+	ctx, _ = logger.SetLogger(ctx, logger.NewDefaultLogger())
+	ctx, _ = SetHTTPClient(ctx, rlhttp.NewDefault())
+
 	t.Run(
 		"Non-200 status codes should generate errors",
 		func(t *testing.T) {
 			resp := invokeGet(
+				ctx,
 				defaultParams(),
 				func(req *http.Request) Response {
 					return NewResponse(

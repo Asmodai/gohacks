@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-// response.go --- API client response structure.
+// httpclient.go --- Interface for `http.Client`.
 //
-// Copyright (c) 2025-2026 Paul Ward <paul@lisphacker.uk>
+// Copyright (c) 2026 Paul Ward <paul@lisphacker.uk>
 //
 // Author:     Paul Ward <paul@lisphacker.uk>
 // Maintainer: Paul Ward <paul@lisphacker.uk>
@@ -28,6 +28,11 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+// mock:yes
+//
+//go:generate go run github.com/Asmodai/gohacks/cmd/digen -pattern . -out di_httpclient.go -test di_httpclient_test.go
+//di:gen basename=HTTPClient key=/gohacks/apiclient/HTTPClient@v1 type=HTTPClient fallback=NewDefaultHTTPClient()
 
 // * Comments:
 
@@ -37,46 +42,19 @@ package apiclient
 
 // * Imports:
 
-import (
-	"net/http"
-)
-
-// * Constants:
-
-// * Variables:
+import "net/http"
 
 // * Code:
+// ** Interface
 
-// ** Types:
-
-type Response struct {
-	Body       []byte
-	StatusCode int
-	Headers    http.Header
-	Limits     RateLimitInfo
-	Error      error
+type HTTPClient interface {
+	Do(*http.Request) (*http.Response, error)
 }
-
-// ** Methods:
 
 // ** Functions:
 
-func NewResponse(code int, body []byte, headers http.Header, err error) Response {
-	return Response{
-		Body:       body,
-		StatusCode: code,
-		Headers:    headers,
-		Limits:     NewRateLimitInfo(code, headers),
-		Error:      err,
-	}
+func NewDefaultHTTPClient() HTTPClient {
+	return &http.Client{}
 }
 
-func NewResponseFromError(err error) Response {
-	return NewResponse(0, nil, http.Header{}, err)
-}
-
-func NewResponseWithCodeFromError(code int, err error) Response {
-	return NewResponse(code, nil, http.Header{}, err)
-}
-
-// * response.go ends here.
+// * httpclient.go ends here.

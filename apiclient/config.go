@@ -31,28 +31,9 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package apiclient
-
-// * Imports:
-
-import (
-	"time"
-
-	"github.com/Asmodai/gohacks/types"
-)
-
-// * Constants:
-
-const (
-	defaultRequestsPerSecond int            = 60
-	defaultTimeout           types.Duration = types.Duration(30 * time.Second)
-)
 
 // * Code:
 
@@ -60,12 +41,6 @@ const (
 
 // API client configuration.
 type Config struct {
-	// The number of requests per second should rate limiting be required.
-	RequestsPerSecond int `json:"requests_per_second"`
-
-	// HTTP connection timeout value.
-	Timeout types.Duration `json:"timeout"`
-
 	// Callback to call in order to check request success.
 	SuccessCheck SuccessCheckFn `json:"-"`
 }
@@ -73,16 +48,15 @@ type Config struct {
 // ** Functions:
 
 // Create a new API client configuration.
-func NewConfig(reqsPerSec int, timeout types.Duration) *Config {
+func NewConfig(successCheckFn SuccessCheckFn) *Config {
 	return &Config{
-		RequestsPerSecond: reqsPerSec,
-		Timeout:           timeout,
+		SuccessCheck: successCheckFn,
 	}
 }
 
 // Return a new default API client configuration.
 func NewDefaultConfig() *Config {
-	return NewConfig(defaultRequestsPerSecond, defaultTimeout)
+	return NewConfig(nil)
 }
 
 // * config.go ends here.
