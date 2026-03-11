@@ -262,7 +262,8 @@ func (st *Table) invoke(
 	if !found || entry == nil || entry.primary == nil {
 		st.mu.RUnlock()
 
-		return event, false
+		// Don't resend the event back.
+		return nil, false
 	}
 
 	// Snapshot.
@@ -289,6 +290,11 @@ func (st *Table) invoke(
 					"%q panic: %v",
 					effsel,
 					rec))
+
+			Trace("Recover assigned result: type=%T nil=%v value=%#v",
+				result,
+				result == nil,
+				result)
 		}
 	}()
 
@@ -366,7 +372,12 @@ func (st *Table) invoke(
 		_ = wrap.method(target, result)
 	}
 
-	Trace("Selector %q completed", effsel)
+	Trace("Selector %q completed.  result=%#v type=%T nil=%v retok=%v",
+		effsel,
+		result,
+		result,
+		result == nil,
+		retok)
 
 	return result, retok
 }

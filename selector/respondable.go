@@ -139,15 +139,20 @@ func (sr *Respondable) Invoke(evt events.Event) events.Event {
 			evt))
 	}
 
-	if result, ok := sr.methods.InvokeSelector(selEvt.Selector(), sr, evt); ok {
+	result, ok := sr.methods.InvokeSelector(selEvt.Selector(), sr, evt)
+	if ok {
 		return result
 	}
 
-	return NewSelectorError(errors.WithMessagef(
-		ErrSelectorNotFound,
-		"Event %T selector %q",
-		evt,
-		selEvt.Selector()))
+	if result == nil {
+		return NewSelectorError(errors.WithMessagef(
+			ErrSelectorNotFound,
+			"Event %T selector %q",
+			evt,
+			selEvt.Selector()))
+	}
+
+	return result
 }
 
 // ** Functions:
