@@ -35,6 +35,9 @@ issues:
       text: '^// \*+ \w+:$'
 
 linters-settings:
+  varnamelen:
+    ignore-names:
+      - ok
   godox:
     keywords:
       - OPTIMIZE

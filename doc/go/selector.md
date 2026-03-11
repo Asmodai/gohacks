@@ -381,7 +381,7 @@ we want. This is an explicit event, not to be confused with `events.Error`.
 #### func  NewSelectorError
 
 ```go
-func NewSelectorError(err error) *SelectorError
+func NewSelectorError(sel string, err error) *SelectorError
 ```
 
 #### func (*SelectorError) Error

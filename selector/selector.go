@@ -251,7 +251,7 @@ func (st *Table) invoke(
 
 		Trace(err.Error())
 
-		return NewSelectorError(err), false
+		return NewSelectorError(sel, err), false
 	}
 
 	// START CRITICAL SECTION.
@@ -285,6 +285,7 @@ func (st *Table) invoke(
 
 			retok = false
 			result = NewSelectorError(
+				effsel,
 				errors.BaseWrapf(
 					ErrSelectorPanic,
 					"%q panic: %v",

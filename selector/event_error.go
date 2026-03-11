@@ -53,16 +53,18 @@ import (
 //
 //nolint:revive
 type SelectorError struct {
-	err events.Error
+	err      events.Error
+	selector string
 }
 
 func (e *SelectorError) When() time.Time  { return e.err.Time.When() }
 func (e *SelectorError) String() string   { return e.err.Err.Error() }
 func (e *SelectorError) Error() error     { return e.err.Err }
-func (e *SelectorError) Selector() string { return "error" }
+func (e *SelectorError) Selector() string { return e.selector }
 
-func NewSelectorError(err error) *SelectorError {
+func NewSelectorError(sel string, err error) *SelectorError {
 	return &SelectorError{
+		selector: sel,
 		err: events.Error{
 			Time: events.Time{TStamp: time.Now()},
 			Err:  err,

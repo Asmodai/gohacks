@@ -133,10 +133,12 @@ func (sr *Respondable) RespondsTo(evt events.Event) bool {
 func (sr *Respondable) Invoke(evt events.Event) events.Event {
 	selEvt, selEvtOk := evt.(SelectorEvent)
 	if !selEvtOk {
-		return NewSelectorError(errors.WithMessagef(
-			ErrHasNoSelector,
-			"event %T",
-			evt))
+		return NewSelectorError(
+			evt.String(),
+			errors.WithMessagef(
+				ErrHasNoSelector,
+				"event %T",
+				evt))
 	}
 
 	result, ok := sr.methods.InvokeSelector(selEvt.Selector(), sr, evt)
@@ -145,11 +147,13 @@ func (sr *Respondable) Invoke(evt events.Event) events.Event {
 	}
 
 	if result == nil {
-		return NewSelectorError(errors.WithMessagef(
-			ErrSelectorNotFound,
-			"Event %T selector %q",
-			evt,
-			selEvt.Selector()))
+		return NewSelectorError(
+			selEvt.Selector(),
+			errors.WithMessagef(
+				ErrSelectorNotFound,
+				"Event %T selector %q",
+				evt,
+				selEvt.Selector()))
 	}
 
 	return result

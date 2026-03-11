@@ -120,14 +120,16 @@ func TestBeforeShortCircuit(t *testing.T) {
 	_ = res.Respondable.Methods().AddBefore(
 		"gate",
 		func(r responder.Respondable, e events.Event) events.Event {
-			return NewSelectorError(errors.New("wrong before"))
+			return NewSelectorError("gate",
+				errors.New("wrong before"))
 		})
 
 	_ = res.Respondable.Methods().AddBeforeWithPriority(
 		1,
 		"gate",
 		func(r responder.Respondable, e events.Event) events.Event {
-			return NewSelectorError(errors.New("denied"))
+			return NewSelectorError("gate",
+				errors.New("denied"))
 		})
 
 	_ = res.Respondable.Methods().AddAfter(
