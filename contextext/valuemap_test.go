@@ -43,7 +43,7 @@ func TestValueMap(t *testing.T) {
 
 	t.Run("Constructs properly", func(t *testing.T) {
 		vmap = NewValueMap()
-		tnam := reflect.TypeOf(vmap).Name()
+		tnam := reflect.TypeOf(vmap).Elem().Name()
 
 		// Remember, this wants the internal type.
 		if tnam != "valueMap" {

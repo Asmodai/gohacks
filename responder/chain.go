@@ -119,7 +119,7 @@ func (chain *Chain) rebuildIndices() {
 	for idx, ent := range chain.responders {
 		chain.nameIndex[ent.name] = idx
 
-		typ := ent.responder.Type()
+		typ := ent.responder.ResponderType()
 		chain.typeIndex[typ] = append(chain.typeIndex[typ], idx)
 	}
 }
@@ -270,7 +270,7 @@ func (chain *Chain) AddOrReplaceNamed(name string, responder Respondable) Respon
 // Returns `ErrDuplicateResponder` if a non-unique responder is added.
 func (chain *Chain) Add(responder Respondable) (Respondable, error) {
 	return chain.AddNamedWithPriority(
-		responder.Name(),
+		responder.ResponderName(),
 		responder,
 		defaultResponderPriority,
 	)
@@ -281,7 +281,7 @@ func (chain *Chain) Add(responder Respondable) (Respondable, error) {
 // Returns `ErrDuplicateResponder` if a non-unique responder is added.
 func (chain *Chain) AddWithPriority(responder Respondable, priority int) (Respondable, error) {
 	return chain.AddNamedWithPriority(
-		responder.Name(),
+		responder.ResponderName(),
 		responder,
 		priority,
 	)
@@ -295,7 +295,7 @@ func (chain *Chain) AddWithPriority(responder Respondable, priority int) (Respon
 // provided responder.
 func (chain *Chain) AddOrReplace(responder Respondable) Respondable {
 	return chain.AddOrReplaceNamedWithPriority(
-		responder.Name(),
+		responder.ResponderName(),
 		responder,
 		defaultResponderPriority,
 	)
@@ -307,7 +307,7 @@ func (chain *Chain) AddOrReplace(responder Respondable) Respondable {
 // provided responder.
 func (chain *Chain) AddOrReplaceWithPriority(responder Respondable, priority int) Respondable {
 	return chain.AddOrReplaceNamedWithPriority(
-		responder.Name(),
+		responder.ResponderName(),
 		responder,
 		priority,
 	)
@@ -334,11 +334,11 @@ func (chain *Chain) RemoveNamed(name string) bool {
 }
 
 func (chain *Chain) Remove(responder Respondable) bool {
-	if len(responder.Name()) == 0 {
+	if len(responder.ResponderName()) == 0 {
 		return false
 	}
 
-	return chain.RemoveNamed(responder.Name())
+	return chain.RemoveNamed(responder.ResponderName())
 }
 
 // Internal unsafe helper function for sending to named receivers.
@@ -549,12 +549,12 @@ func (chain *Chain) SendType(typeName string, event events.Event) []events.Event
 // Return the name of the chain.
 //
 // Implements `Respondable`.
-func (chain *Chain) Name() string { return chain.name }
+func (chain *Chain) ResponderName() string { return chain.name }
 
 // Return the type name of the chain.
 //
 // Implements `Respondable`.
-func (chain *Chain) Type() string { return chainTypeName }
+func (chain *Chain) ResponderType() string { return chainTypeName }
 
 // Iterate over responders checking if any implement the given event.
 //

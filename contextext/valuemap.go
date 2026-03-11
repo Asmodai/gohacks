@@ -33,6 +33,11 @@
 
 package contextext
 
+import (
+	"fmt"
+	"sync"
+)
+
 // A map-based storage structure to pass multiple values via contexts
 // rather than many invocations of `context.WithValue` and their respective
 // copy operations.
@@ -48,18 +53,40 @@ package contextext
 type ValueMap interface {
 	Get(string) (key any, ok bool)
 	Set(key string, value any)
+	Immutable() bool
+	Finalise()
 }
 
 // Internal structure.
 type valueMap struct {
-	data map[string]any // Map of string keys to any value type.
+	sync.Mutex
+	data      map[string]any // Map of string keys to any value type.
+	finalised bool           // Can we write further elements to the map?
 }
 
 // Create a new value map with no data.
 func NewValueMap() ValueMap {
-	return valueMap{
+	return &valueMap{
 		data: map[string]any{},
 	}
+}
+
+// Is the value map immutable?
+func (vm *valueMap) Immutable() bool {
+	vm.Lock()
+	defer vm.Unlock()
+
+	return vm.finalised
+}
+
+// Finalise the value map.
+//
+// Once finalised, the map is treated as immutable.  Further `Set' operations
+// will silently return.
+func (vm *valueMap) Finalise() {
+	vm.Lock()
+	vm.finalised = true
+	vm.Unlock()
 }
 
 // Returns a value associated with the given key.
@@ -68,8 +95,11 @@ func NewValueMap() ValueMap {
 // true.
 //
 // Otherwise, nil is returned with an `ok` value of false.
-func (obj valueMap) Get(key string) (any, bool) {
-	value, ok := obj.data[key]
+func (vm *valueMap) Get(key string) (any, bool) {
+	vm.Lock()
+	defer vm.Unlock()
+
+	value, ok := vm.data[key]
 
 	return value, ok
 }
@@ -83,8 +113,15 @@ func (obj valueMap) Get(key string) (any, bool) {
 // will not be affected and only children that inherit from the context
 // *after* any `set` operation will see the changes.  This is due to
 // the context's value field being copied.
-func (obj valueMap) Set(key string, value any) {
-	obj.data[key] = value
+func (vm *valueMap) Set(key string, value any) {
+	vm.Lock()
+	defer vm.Unlock()
+
+	if vm.finalised {
+		panic(fmt.Sprintf("attempted to set %q on immutable value map", key))
+	}
+
+	vm.data[key] = value
 }
 
 // valuemap.go ends here.

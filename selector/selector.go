@@ -56,7 +56,6 @@ const (
 )
 
 // * Code:
-
 // ** Types:
 
 // Selector method function signature type.
@@ -278,8 +277,8 @@ func (st *Table) invoke(
 
 	Trace("Invoking selector %q on %s (%s)",
 		effsel,
-		target.Name(),
-		target.Type())
+		target.ResponderName(),
+		target.ResponderType())
 
 	defer func() {
 		if rec := recover(); rec != nil {

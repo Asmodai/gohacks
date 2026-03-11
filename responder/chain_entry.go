@@ -35,14 +35,7 @@
 
 package responder
 
-// * Imports:
-
-// * Constants:
-
-// * Variables:
-
 // * Code:
-
 // ** Types:
 
 // Chain entry structure.

@@ -213,12 +213,19 @@ func (sr *SignalResponder) Invoke(evt events.Event) events.Event
 ```
 Invokes the given event.
 
-#### func (*SignalResponder) Name
+#### func (*SignalResponder) ResponderName
 
 ```go
-func (sr *SignalResponder) Name() string
+func (sr *SignalResponder) ResponderName() string
 ```
 Returns the name of the responder.
+
+#### func (*SignalResponder) ResponderType
+
+```go
+func (sr *SignalResponder) ResponderType() string
+```
+Returns the type of the responder.
 
 #### func (*SignalResponder) RespondsTo
 
@@ -233,10 +240,3 @@ Returns whether the responder can respond to a given event.
 func (sr *SignalResponder) SetOnSignal(callback OnSignalFn)
 ```
 Sets the callback function.
-
-#### func (*SignalResponder) Type
-
-```go
-func (sr *SignalResponder) Type() string
-```
-Returns the type of the responder.

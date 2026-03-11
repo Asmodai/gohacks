@@ -112,18 +112,32 @@ func (mr *MockIntrospectableMockRecorder) Methods() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Methods", reflect.TypeOf((*MockIntrospectable)(nil).Methods))
 }
 
-// Name mocks base method.
-func (m *MockIntrospectable) Name() string {
+// ResponderName mocks base method.
+func (m *MockIntrospectable) ResponderName() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Name")
+	ret := m.ctrl.Call(m, "ResponderName")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// Name indicates an expected call of Name.
-func (mr *MockIntrospectableMockRecorder) Name() *gomock.Call {
+// ResponderName indicates an expected call of ResponderName.
+func (mr *MockIntrospectableMockRecorder) ResponderName() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockIntrospectable)(nil).Name))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponderName", reflect.TypeOf((*MockIntrospectable)(nil).ResponderName))
+}
+
+// ResponderType mocks base method.
+func (m *MockIntrospectable) ResponderType() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResponderType")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// ResponderType indicates an expected call of ResponderType.
+func (mr *MockIntrospectableMockRecorder) ResponderType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponderType", reflect.TypeOf((*MockIntrospectable)(nil).ResponderType))
 }
 
 // RespondsTo mocks base method.
@@ -166,18 +180,4 @@ func (m *MockIntrospectable) SortedSelectors() []string {
 func (mr *MockIntrospectableMockRecorder) SortedSelectors() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SortedSelectors", reflect.TypeOf((*MockIntrospectable)(nil).SortedSelectors))
-}
-
-// Type mocks base method.
-func (m *MockIntrospectable) Type() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Type")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// Type indicates an expected call of Type.
-func (mr *MockIntrospectableMockRecorder) Type() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockIntrospectable)(nil).Type))
 }

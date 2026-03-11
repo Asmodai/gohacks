@@ -238,12 +238,21 @@ Send an event to the process's responder chain.
 
 Implements `responder.Respondable`.
 
-#### func (*DispatcherProc) Name
+#### func (*DispatcherProc) ResponderName
 
 ```go
-func (p *DispatcherProc) Name() string
+func (p *DispatcherProc) ResponderName() string
 ```
 Return the name of the process's responder component.
+
+Implements `responder.Respondable`.
+
+#### func (*DispatcherProc) ResponderType
+
+```go
+func (p *DispatcherProc) ResponderType() string
+```
+Return the type of the process's responder component.
 
 Implements `responder.Respondable`.
 
@@ -253,15 +262,6 @@ Implements `responder.Respondable`.
 func (p *DispatcherProc) RespondsTo(event events.Event) bool
 ```
 Return if the process responds to the given event.
-
-Implements `responder.Respondable`.
-
-#### func (*DispatcherProc) Type
-
-```go
-func (p *DispatcherProc) Type() string
-```
-Return the type of the process's responder component.
 
 Implements `responder.Respondable`.
 

@@ -59,8 +59,8 @@ type Respondable struct {
 
 // ** Methods:
 
-func (sr *Respondable) Name() string { return sr.name }
-func (sr *Respondable) Type() string { return sr.typeName }
+func (sr *Respondable) ResponderName() string { return sr.name }
+func (sr *Respondable) ResponderType() string { return sr.typeName }
 
 func (sr *Respondable) AddProtocol(name string) {
 	if sr.protocols == nil {

@@ -54,6 +54,21 @@ var (
 
 // ** Functions:
 
+// Finalise the value map in the context.
+//
+// This will essentially make the value map an immutable entity, and any
+// further attempts to put to the value map will result in a panic.
+func FinaliseContext(ctx context.Context) error {
+	vmap, err := contextext.GetValueMap(ctx)
+	if err != nil {
+		return errx.WithStack(err)
+	}
+
+	vmap.Finalise()
+
+	return nil
+}
+
 // Get a value from a context.
 //
 // Will signal `contextext.ErrInvalidContext` if the context is not valid.
@@ -67,7 +82,9 @@ func GetFromContext(ctx context.Context, key string) (any, error) {
 
 	rval, found := vmap.Get(key)
 	if !found {
-		return nil, errx.WithStack(err)
+		return nil, errx.WithMessagef(ErrKeyNotFound,
+			"key %q was not found",
+			key)
 	}
 
 	return rval, nil
@@ -78,6 +95,8 @@ func GetFromContext(ctx context.Context, key string) (any, error) {
 // If there is no value map in the context then one will be created.
 //
 // Returns a new context with the value map.
+//
+// Will panic if an attempt is made to set a value on an immutable value map.
 func PutToContext(ctx context.Context, key string, value any) (context.Context, error) {
 	var (
 		vmap contextext.ValueMap
@@ -89,6 +108,7 @@ func PutToContext(ctx context.Context, key string, value any) (context.Context, 
 		vmap = contextext.NewValueMap()
 	}
 
+	// Will panic if vmap is immutable.
 	vmap.Set(key, value)
 
 	return contextext.WithValueMap(ctx, vmap), nil

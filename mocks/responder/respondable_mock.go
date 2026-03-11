@@ -54,18 +54,32 @@ func (mr *MockRespondableMockRecorder) Invoke(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Invoke", reflect.TypeOf((*MockRespondable)(nil).Invoke), arg0)
 }
 
-// Name mocks base method.
-func (m *MockRespondable) Name() string {
+// ResponderName mocks base method.
+func (m *MockRespondable) ResponderName() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Name")
+	ret := m.ctrl.Call(m, "ResponderName")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// Name indicates an expected call of Name.
-func (mr *MockRespondableMockRecorder) Name() *gomock.Call {
+// ResponderName indicates an expected call of ResponderName.
+func (mr *MockRespondableMockRecorder) ResponderName() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockRespondable)(nil).Name))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponderName", reflect.TypeOf((*MockRespondable)(nil).ResponderName))
+}
+
+// ResponderType mocks base method.
+func (m *MockRespondable) ResponderType() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResponderType")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// ResponderType indicates an expected call of ResponderType.
+func (mr *MockRespondableMockRecorder) ResponderType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponderType", reflect.TypeOf((*MockRespondable)(nil).ResponderType))
 }
 
 // RespondsTo mocks base method.
@@ -80,18 +94,4 @@ func (m *MockRespondable) RespondsTo(arg0 events.Event) bool {
 func (mr *MockRespondableMockRecorder) RespondsTo(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RespondsTo", reflect.TypeOf((*MockRespondable)(nil).RespondsTo), arg0)
-}
-
-// Type mocks base method.
-func (m *MockRespondable) Type() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Type")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// Type indicates an expected call of Type.
-func (mr *MockRespondableMockRecorder) Type() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockRespondable)(nil).Type))
 }

@@ -336,10 +336,16 @@ func (sr *Respondable) MetadataForSelector(selector string) (map[string]string, 
 func (sr *Respondable) Methods() *Table
 ```
 
-#### func (*Respondable) Name
+#### func (*Respondable) ResponderName
 
 ```go
-func (sr *Respondable) Name() string
+func (sr *Respondable) ResponderName() string
+```
+
+#### func (*Respondable) ResponderType
+
+```go
+func (sr *Respondable) ResponderType() string
 ```
 
 #### func (*Respondable) RespondsTo
@@ -358,12 +364,6 @@ func (sr *Respondable) Selectors() []string
 
 ```go
 func (sr *Respondable) SortedSelectors() []string
-```
-
-#### func (*Respondable) Type
-
-```go
-func (sr *Respondable) Type() string
 ```
 
 #### type SelectorError

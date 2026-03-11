@@ -110,7 +110,7 @@ func (p *DispatcherProc) stop(_ *process.State) {
 // Return the name of the process's responder component.
 //
 // Implements `responder.Respondable`.
-func (p *DispatcherProc) Name() string {
+func (p *DispatcherProc) ResponderName() string {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -120,7 +120,7 @@ func (p *DispatcherProc) Name() string {
 // Return the type of the process's responder component.
 //
 // Implements `responder.Respondable`.
-func (p *DispatcherProc) Type() string {
+func (p *DispatcherProc) ResponderType() string {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 

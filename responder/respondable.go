@@ -52,7 +52,7 @@ type Respondable interface {
 	//
 	// As this allows us to send events to a specific thing the value
 	// returned here must be unique.
-	Name() string
+	ResponderName() string
 
 	// The type of the respondable object.
 	//
@@ -60,7 +60,7 @@ type Respondable interface {
 	// value that makes sense to you.
 	//
 	// This is used to implement a "send to all of type" system.
-	Type() string
+	ResponderType() string
 
 	// Does the receiver respond to a specific event or event type?
 	//

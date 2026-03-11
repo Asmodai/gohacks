@@ -73,7 +73,7 @@ type SignalResponder struct {
 // *** Methods
 
 // Returns the name of the responder.
-func (sr *SignalResponder) Name() string {
+func (sr *SignalResponder) ResponderName() string {
 	sr.mu.RLock()
 	defer sr.mu.RUnlock()
 
@@ -81,7 +81,7 @@ func (sr *SignalResponder) Name() string {
 }
 
 // Returns the type of the responder.
-func (sr *SignalResponder) Type() string {
+func (sr *SignalResponder) ResponderType() string {
 	sr.mu.RLock()
 	defer sr.mu.RUnlock()
 

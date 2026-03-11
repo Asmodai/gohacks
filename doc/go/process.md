@@ -282,12 +282,6 @@ Return the context for the process.
 func (p *Process) Invoke(event events.Event) events.Event
 ```
 
-#### func (*Process) Name
-
-```go
-func (p *Process) Name() string
-```
-
 #### func (*Process) Query
 
 ```go
@@ -296,6 +290,18 @@ func (p *Process) Query(arg any) any
 Query the running process.
 
 This allows interaction with the process's base object without using `Action`.
+
+#### func (*Process) ResponderName
+
+```go
+func (p *Process) ResponderName() string
+```
+
+#### func (*Process) ResponderType
+
+```go
+func (p *Process) ResponderType() string
+```
 
 #### func (*Process) RespondsTo
 
@@ -329,12 +335,6 @@ Stop the process.
 
 Returns 'true' if the process was successfully stopped, or 'false' if it was not
 running.
-
-#### func (*Process) Type
-
-```go
-func (p *Process) Type() string
-```
 
 #### type QueryFn
 

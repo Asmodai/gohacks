@@ -134,7 +134,9 @@ func DumpIntrospectableInfo(obj Introspectable) string {
 
 	var sbld strings.Builder
 
-	fmt.Fprintf(&sbld, "Object: %s (%s)\n", obj.Name(), obj.Type())
+	fmt.Fprintf(&sbld, "Object: %s (%s)\n",
+		obj.ResponderName(),
+		obj.ResponderType())
 
 	//
 	// Print protocols.

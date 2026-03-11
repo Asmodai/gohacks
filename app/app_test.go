@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package app
@@ -60,12 +56,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// * Constants:
-
-// * Variables:
-
 // * Code:
-
 // ** Types:
 
 type CallbackTester struct {
@@ -99,8 +90,8 @@ type ResponderTester struct {
 	log  *[]string
 }
 
-func (d *ResponderTester) Name() string { return d.name }
-func (d *ResponderTester) Type() string { return d.typ }
+func (d *ResponderTester) ResponderName() string { return d.name }
+func (d *ResponderTester) ResponderType() string { return d.typ }
 
 func (d *ResponderTester) RespondsTo(_ events.Event) bool {
 	return true

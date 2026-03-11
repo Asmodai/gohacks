@@ -141,8 +141,8 @@ func TestBeforeShortCircuit(t *testing.T) {
 			// e.g. :before signals failure?  no :primary or
 			// :after.
 			Trace(":after - responder:%s:%s - event:%s\n",
-				r.Name(),
-				r.Type(),
+				r.ResponderName(),
+				r.ResponderType(),
 				e.String())
 
 			return e

@@ -73,8 +73,8 @@ type dummyResponder struct {
 	response    any
 }
 
-func (d *dummyResponder) Name() string { return d.name }
-func (d *dummyResponder) Type() string { return d.typ }
+func (d *dummyResponder) ResponderName() string { return d.name }
+func (d *dummyResponder) ResponderType() string { return d.typ }
 
 func (d *dummyResponder) SetUseResponse(val bool) { d.useResponse = val }
 func (d *dummyResponder) SetResponse(val any)     { d.response = val }

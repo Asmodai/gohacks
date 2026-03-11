@@ -263,15 +263,6 @@ func (chain *Chain) MustSendNamed(name string, event events.Event) events.Event
 Send a message to a specific responder. Panics if the responder does not exist
 or does not respond to the event.
 
-#### func (*Chain) Name
-
-```go
-func (chain *Chain) Name() string
-```
-Return the name of the chain.
-
-Implements `Respondable`.
-
 #### func (*Chain) Names
 
 ```go
@@ -293,6 +284,24 @@ func (chain *Chain) RemoveNamed(name string) bool
 Remove the named responder from the responder chain.
 
 Returns false if no such responder was found.
+
+#### func (*Chain) ResponderName
+
+```go
+func (chain *Chain) ResponderName() string
+```
+Return the name of the chain.
+
+Implements `Respondable`.
+
+#### func (*Chain) ResponderType
+
+```go
+func (chain *Chain) ResponderType() string
+```
+Return the type name of the chain.
+
+Implements `Respondable`.
 
 #### func (*Chain) RespondsTo
 
@@ -396,15 +405,6 @@ event as was passed. Doing sanity on the return values is up to you.
 
 This method is thread-safe.
 
-#### func (*Chain) Type
-
-```go
-func (chain *Chain) Type() string
-```
-Return the type name of the chain.
-
-Implements `Respondable`.
-
 #### type Respondable
 
 ```go
@@ -413,7 +413,7 @@ type Respondable interface {
 	//
 	// As this allows us to send events to a specific thing the value
 	// returned here must be unique.
-	Name() string
+	ResponderName() string
 
 	// The type of the respondable object.
 	//
@@ -421,7 +421,7 @@ type Respondable interface {
 	// value that makes sense to you.
 	//
 	// This is used to implement a "send to all of type" system.
-	Type() string
+	ResponderType() string
 
 	// Does the receiver respond to a specific event or event type?
 	//

@@ -36,6 +36,8 @@ Create a context with the value map using the specified key.
 type ValueMap interface {
 	Get(string) (key any, ok bool)
 	Set(key string, value any)
+	Immutable() bool
+	Finalise()
 }
 ```
 

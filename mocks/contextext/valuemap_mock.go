@@ -39,6 +39,18 @@ func (m *MockValueMap) EXPECT() *MockValueMapMockRecorder {
 	return m.recorder
 }
 
+// Finalise mocks base method.
+func (m *MockValueMap) Finalise() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Finalise")
+}
+
+// Finalise indicates an expected call of Finalise.
+func (mr *MockValueMapMockRecorder) Finalise() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Finalise", reflect.TypeOf((*MockValueMap)(nil).Finalise))
+}
+
 // Get mocks base method.
 func (m *MockValueMap) Get(arg0 string) (any, bool) {
 	m.ctrl.T.Helper()
@@ -52,6 +64,20 @@ func (m *MockValueMap) Get(arg0 string) (any, bool) {
 func (mr *MockValueMapMockRecorder) Get(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockValueMap)(nil).Get), arg0)
+}
+
+// Immutable mocks base method.
+func (m *MockValueMap) Immutable() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Immutable")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Immutable indicates an expected call of Immutable.
+func (mr *MockValueMapMockRecorder) Immutable() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Immutable", reflect.TypeOf((*MockValueMap)(nil).Immutable))
 }
 
 // Set mocks base method.

@@ -61,8 +61,8 @@ var (
 type DummyResponder struct {
 }
 
-func (r *DummyResponder) Name() string { return "Test Responder" }
-func (r *DummyResponder) Type() string { return "DummyResponder" }
+func (r *DummyResponder) ResponderName() string { return "Test Responder" }
+func (r *DummyResponder) ResponderType() string { return "DummyResponder" }
 
 func (r *DummyResponder) RespondsTo(event events.Event) bool {
 	switch val := event.(type) {

@@ -20,6 +20,16 @@ var (
 )
 ```
 
+#### func  FinaliseContext
+
+```go
+func FinaliseContext(ctx context.Context) error
+```
+Finalise the value map in the context.
+
+This will essentially make the value map an immutable entity, and any further
+attempts to put to the value map will result in a panic.
+
 #### func  GetDebugMode
 
 ```go
@@ -48,6 +58,8 @@ Place a value in a context.
 If there is no value map in the context then one will be created.
 
 Returns a new context with the value map.
+
+Will panic if an attempt is made to set a value on an immutable value map.
 
 #### func  SetDebugMode
 

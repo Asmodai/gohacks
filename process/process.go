@@ -368,14 +368,14 @@ func (p *Process) everyAction() {
 	}
 }
 
-func (p *Process) Name() string {
+func (p *Process) ResponderName() string {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
 	return p.name
 }
 
-func (p *Process) Type() string {
+func (p *Process) ResponderType() string {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
