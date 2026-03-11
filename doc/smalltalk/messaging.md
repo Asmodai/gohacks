@@ -1,8 +1,12 @@
 <!-- -*- mode: gfm; auto-fill: t; fill-column: 78; -*- -->
+
+# Message Passing, Responder Chains, Selectors, and Protocols
+
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
 - [Message Passing, Responder Chains, Selectors, and Protocols](#message-passing-responder-chains-selectors-and-protocols)
+  - [Synopsis](#synopsis)
   - [1. Architecture at a glance](#1-architecture-at-a-glance)
   - [2. The events package](#2-the-events-package)
     - [Included event types](#included-event-types)
@@ -50,8 +54,7 @@
 
 <!-- markdown-toc end -->
 
-
-# Message Passing, Responder Chains, Selectors, and Protocols
+## Synopsis
 
 This document explains how the `events`, `responder`, `selector`, and `protocols` packages fit together.
 
@@ -102,10 +105,10 @@ You can use the layers independently:
 
 The rough rule of thumb is:
 
-    * start with events
-    * add responder when you want named receivers and chain-based delivery
-    * add selector when you want symbolic message names and method tables
-    * add protocols when you want to declare and validate capabilities
+- start with events
+- add responder when you want named receivers and chain-based delivery
+- add selector when you want symbolic message names and method tables
+- add protocols when you want to declare and validate capabilities
 
 ## 2. The events package
 
@@ -126,14 +129,14 @@ That is intentionally tiny. Any object with a timestamp and a string form can pa
 
 The package currently includes these core event types:
 
-    * Time: basic timestamp carrier
-    * Message: command + payload + monotonically increasing index
-    * Response: response to a Message
-    * Error: event that wraps an error
-    * Interrupt: generic interrupt-like event with a payload
-    * Signal: wraps an os.Signal
-    * Forward: requests forwarding to another selector target
-    * Queue: thread-safe FIFO for events
+- Time: basic timestamp carrier
+- Message: command + payload + monotonically increasing index
+- Response: response to a Message
+- Error: event that wraps an error
+- Interrupt: generic interrupt-like event with a payload
+- Signal: wraps an os.Signal
+- Forward: requests forwarding to another selector target
+- Queue: thread-safe FIFO for events
 
 ### Why this exists
 
@@ -193,11 +196,11 @@ func main() {
 
 Use `events` alone when you need:
 
-    * a consistent event interface
-    * timestamped messages
-    * in-process queues
-    * simple request/response style event objects
-    * a foundation for higher-level dispatch later
+- a consistent event interface
+- timestamped messages
+- in-process queues
+- simple request/response style event objects
+- a foundation for higher-level dispatch later
 
 ## 3. The responder package
 
@@ -216,11 +219,11 @@ This is the first big step upward. Now events are not just data; they can be sen
 
 ### What it gives you
 
-    * named targets via ResponderName()
-    * groupable targets via ResponderType()
-    * capability checks via RespondsTo()
-    * dynamic invocation via Invoke()
-    * a thread-safe responder chain via Chain
+- named targets via `ResponderName()`
+- groupable targets via `ResponderType()`
+- capability checks via `RespondsTo()`
+- dynamic invocation via `Invoke()`
+- a thread-safe responder chain via `Chain`
 
 ### The responder chain
 
@@ -228,11 +231,11 @@ A `responder.Chain` is a registry of receivers. Responders can be added by name,
 
 Delivery styles include:
 
-    * SendNamed: send to one named responder
-    * MustSendNamed: same, but panic on failure
-    * SendFirst: send to the first responder in priority order that accepts it
-    * MustSendFirst: same, but panic on failure
-    * SendAll: broadcast to all responders that accept the event
+- `SendNamed`: send to one named responder
+- `MustSendNamed`: same, but panic on failure
+- `SendFirst`: send to the first responder in priority order that accepts it
+- `MustSendFirst`: same, but panic on failure
+- `SendAll`: broadcast to all responders that accept the event
 
 The chain also tracks responders by type and priority, which makes it suitable for small object systems, plugin architectures, actor-ish subsystems, or UI-like propagation.
 
@@ -284,10 +287,10 @@ func main() {
 
 This layer is enough when you want:
 
-    * named receivers
-    * chain traversal
-    * dynamic routing by object name or type
-    * event-driven delivery without a selector table
+- named receivers
+- chain traversal
+- dynamic routing by object name or type
+- event-driven delivery without a selector table
 
 If you are happy writing your own `RespondsTo` and `Invoke` logic, you can stop here.
 
@@ -316,9 +319,9 @@ A selector-aware object can then dispatch on the selector name instead of doing 
 
 A `Table` maps selector names to methods. Each selector entry can have:
 
-    * one primary method
-    * zero or more before methods
-    * zero or more after methods
+- one primary method
+- zero or more before methods
+- zero or more after methods
 
 The primary method has the signature:
 
@@ -345,8 +348,8 @@ If a method returns `*events.Forward`, the table can re-dispatch to another sele
 
 The package defines selector-native result types:
 
-    * SelectorResponse
-    * SelectorError
+- SelectorResponse
+- SelectorError
 
 Both are still events, so the whole system stays message-oriented.
 
@@ -357,23 +360,23 @@ This is a ready-made implementation of a selector-aware receiver.
 
 It provides:
 
-    * ResponderName()
-    * ResponderType()
-    * a selector Table
-    * protocol membership tracking
-    * selector introspection helpers
-    * an Invoke() that dispatches via selector name
+- `ResponderName()`
+- `ResponderType()`
+- a selector Table
+- protocol membership tracking
+- selector introspection helpers
+- an `Invoke()` that dispatches via selector name
 
 ### Introspection
 
 Objects implementing `selector.Introspectable` can describe themselves:
 
-    * Selectors()
-    * SortedSelectors()
-    * Methods()
-    * ConformsTo()
-    * ListProtocols()
-    * MetadataForSelector()
+- `Selectors()`
+- `SortedSelectors()`
+- `Methods()`
+- `ConformsTo()`
+- `ListProtocols()`
+- `MetadataForSelector()`
 
 `DumpIntrospectableInfo()` turns that into a human-readable description.
 
@@ -468,9 +471,9 @@ This prints the object's name, type, protocols, selectors, and metadata such as 
 
 Use it when you want selector namespaces that behave more like a language package:
 
-    * export only chosen selectors
-    * define aliases
-    * define default selectors for operations
+- export only chosen selectors
+- define aliases
+- define default selectors for operations
 
 ``` go
 pkg := selector.NewPackage("core")
@@ -504,12 +507,12 @@ That gives you a natural place to manage subsystems, command namespaces, or plug
 
 Use selector when you want:
 
-    * Objective-C style symbolic dispatch
-    * Smalltalk-ish message passing
-    * Flavors/CLOS-style before/after behaviour
-    * explicit forwarding
-    * method tables instead of giant switch statements
-    * introspection and metadata
+- Objective-C style symbolic dispatch
+- Smalltalk-ish message passing
+- Flavors/CLOS-style before/after behaviour
+- explicit forwarding
+- method tables instead of giant switch statements
+- introspection and metadata
 
 ## 5. The protocols package
 
@@ -530,15 +533,15 @@ That minimal shape is a feature, not a limitation. It lets you define what an ob
 
 A `protocols.Registry` stores:
 
-    * registered protocols
-    * optional verifier functions per protocol
+- registered protocols
+- optional verifier functions per protocol
 
 Key operations are:
 
-    * Register(proto)
-    * RegisterWithVerifier(proto, verifier)
-    * Verify(name, obj)
-    * Validate(name, rbl)
+- Register(proto)
+- RegisterWithVerifier(proto, verifier)
+- Verify(name, obj)
+- Validate(name, rbl)
 
 ### Validate versus Verify
 
@@ -609,11 +612,11 @@ This is useful when “has the selectors” is necessary but not sufficient.
 
 Use protocols when you want:
 
-    * named capability sets
-    * conformance checks
-    * plugin validation
-    * runtime contracts for selector-aware objects
-    * richer tooling and documentation
+- named capability sets
+- conformance checks
+- plugin validation
+- runtime contracts for selector-aware objects
+- richer tooling and documentation
 
 ## 6. Typical usage patterns
 
@@ -621,8 +624,8 @@ Use protocols when you want:
 
 Use:
 
-    * events
-    * optionally responder
+- events
+- optionally responder
 
 Good when you just want a set of objects that can receive timestamped messages.
 
@@ -630,8 +633,8 @@ Good when you just want a set of objects that can receive timestamped messages.
 
 Use:
 
-    * events
-    * selector
+- events
+- selector
 
 This is the sweet spot when you want code that reads more like:
 
@@ -645,9 +648,9 @@ instead of building ad-hoc command structs and giant switch statements.
 
 Use:
 
-    * events
-    * responder
-    * selector
+- events
+- responder
+- selector
 
 Good when you want named objects in a chain, but each object also has a proper selector table.
 
@@ -657,11 +660,11 @@ Use all four packages.
 
 This is the full-fat model:
 
-    * event vocabulary
-    * named responders
-    * selector dispatch
-    * protocol contracts
-    * introspection and metadata
+- event vocabulary
+- named responders
+- selector dispatch
+- protocol contracts
+- introspection and metadata
 
 ## 7. Design notes and trade-offs
 
@@ -690,9 +693,9 @@ reply, ok := chain.SendFirst(evt)
 
 Because the system stays inside one conceptual model:
 
-    * input is an event
-    * output is an event
-    * errors are also events
+- input is an event
+- output is an event
+- errors are also events
 
 That keeps dispatch logic uniform and makes tracing and routing simpler.
 
@@ -772,47 +775,47 @@ func main() {
 
 The important part is not the exact toy event type. The important part is the flow:
 
-    * define a selector event
-    * register selector methods on a selector-aware object
-    * optionally put the object in a responder chain
-    * optionally validate it against a protocol
-    * invoke it and handle a selector response or selector error
+- define a selector event
+- register selector methods on a selector-aware object
+- optionally put the object in a responder chain
+- optionally validate it against a protocol
+- invoke it and handle a selector response or selector error
 
 ## 9. Choosing the right package
 
 Use `events` when
 
-    * you need timestamped event values
-    * you want a queue
-    * you want a tiny common interface
+- you need timestamped event values
+- you want a queue
+- you want a tiny common interface
 
 Use `responder` when
 
-    * you want named targets
-    * you want chain-based delivery
-    * you want to route by object identity or type
+- you want named targets
+- you want chain-based delivery
+- you want to route by object identity or type
 
 Use `selector` when
 
-    * you want message names instead of a big switch
-    * you want before/after hooks
-    * you want forwarding
-    * you want self-describing objects
+- you want message names instead of a big switch
+- you want before/after hooks
+- you want forwarding
+- you want self-describing objects
 
 Use `protocols` when
 
-    * you want formal capability sets
-    * you want runtime validation
-    * you want plugins or modules to declare what they implement
+- you want formal capability sets
+- you want runtime validation
+- you want plugins or modules to declare what they implement
 
 10. Summary
 
 These packages form a layered runtime:
 
-    * events gives you the atoms
-    * responder gives you named receivers and chains
-    * selector gives you symbolic dispatch and method combination
-    & protocols gives you contracts and validation
+- events gives you the atoms
+- responder gives you named receivers and chains
+- selector gives you symbolic dispatch and method combination
+- protocols gives you contracts and validation
 
 That combination is a neat fit when you want message passing in Go without turning everything into command channels, ad-hoc RPC structs, or giant switch-based dispatchers.
 
