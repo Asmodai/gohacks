@@ -438,6 +438,11 @@ type SelectorResponse struct {
 }
 ```
 
+Selector response event.
+
+NOTE: `golangci-lint` will want this to be called `Response', and that is not
+what we want. This is an explicit event, not to be confused with
+`events.Response`.
 
 #### func (*SelectorResponse) Response
 

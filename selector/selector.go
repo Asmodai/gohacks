@@ -233,17 +233,15 @@ func (st *Table) Get(name string) (*Entry, bool) {
 
 // Dispatch a message to a selector.
 //
-//nolint:cyclop,funlen
+//nolint:cyclop,funlen,nonamedreturns
 func (st *Table) invoke(
 	sel string,
-	target responder.Respondable, event events.Event,
-	depth int, path []string, limit int,
-) (events.Event, bool) {
-	var (
-		result events.Event
-		retok  bool
-	)
-
+	target responder.Respondable,
+	event events.Event,
+	depth int,
+	path []string,
+	limit int,
+) (result events.Event, retok bool) {
 	if depth > limit {
 		err := errors.WithMessagef(
 			ErrForwardLoop,
@@ -317,9 +315,13 @@ func (st *Table) invoke(
 		out := wrap.method(target, curr)
 
 		if errEvt, isErr := out.(*SelectorError); isErr || out == nil {
-			msg := out.String()
+			var msg string
 
-			if isErr {
+			switch {
+			case out == nil:
+				msg = "<nil>"
+
+			case isErr:
 				msg = errEvt.Error().Error()
 			}
 
