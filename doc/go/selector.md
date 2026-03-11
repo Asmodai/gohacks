@@ -424,6 +424,45 @@ NOTE: `golangci-lint` will want this to be called `Event`. this is a bad idea
 because this type is explicitly for selector-specific events, and should not be
 confused with `events.Event`.
 
+#### func  NewSelectorResponse
+
+```go
+func NewSelectorResponse(sel SelectorEvent, data any) SelectorEvent
+```
+
+#### type SelectorResponse
+
+```go
+type SelectorResponse struct {
+	events.Time
+}
+```
+
+
+#### func (*SelectorResponse) Response
+
+```go
+func (r *SelectorResponse) Response() any
+```
+
+#### func (*SelectorResponse) Selector
+
+```go
+func (r *SelectorResponse) Selector() string
+```
+
+#### func (*SelectorResponse) String
+
+```go
+func (r *SelectorResponse) String() string
+```
+
+#### func (*SelectorResponse) When
+
+```go
+func (r *SelectorResponse) When() time.Time
+```
+
 #### type Table
 
 ```go
