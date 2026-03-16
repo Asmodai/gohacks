@@ -64,6 +64,7 @@ type Job interface {
 	Object() Task
 	Function() JobFn
 	Name() string
+	SetName(string)
 	String() string
 }
 
@@ -82,22 +83,27 @@ type job struct {
 // ** Methods:
 
 // Return the object associated with this task.
-func (j job) Object() Task {
+func (j *job) Object() Task {
 	return j.obj
 }
 
 // Return the task's function.
-func (j job) Function() JobFn {
+func (j *job) Function() JobFn {
 	return j.fn
 }
 
 // Return the task's name.
-func (j job) Name() string {
+func (j *job) Name() string {
 	return j.name
 }
 
+// Set the task's name.
+func (j *job) SetName(name string) {
+	j.name = name
+}
+
 // Return the string representation of the task.
-func (j job) String() string {
+func (j *job) String() string {
 	return j.Name()
 }
 
@@ -106,7 +112,7 @@ func (j job) String() string {
 // A job is valid if it has either an object or a function.
 //
 // If the job has both an object and a function, it is invalid.
-func (j job) Validate() error {
+func (j *job) Validate() error {
 	// Check identifier.
 	switch {
 	case j.obj == nil && j.fn == nil:
@@ -124,7 +130,7 @@ func (j job) Validate() error {
 //
 // This will either invoke the `Execute` method on a job, or call the job's
 // function.
-func (j job) Resolve(ctx context.Context) error {
+func (j *job) Resolve(ctx context.Context) error {
 	if j.obj != nil {
 		return errors.WithStack(j.obj.Execute(ctx))
 	}
@@ -145,6 +151,15 @@ func MakeJob(obj Task, fn JobFn) Job {
 		obj: obj,
 		fn:  fn,
 	}
+}
+
+// Create a new job with a name.
+func MakeJobWithName(obj Task, fn JobFn, name string) Job {
+	inst := MakeJob(obj, fn)
+
+	inst.SetName(name)
+
+	return inst
 }
 
 // Insert a job into a list of jobs.

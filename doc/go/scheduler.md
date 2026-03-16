@@ -86,6 +86,7 @@ type Job interface {
 	Object() Task
 	Function() JobFn
 	Name() string
+	SetName(string)
 	String() string
 }
 ```
@@ -104,6 +105,13 @@ Insert a job into a list of jobs.
 func MakeJob(obj Task, fn JobFn) Job
 ```
 Create a new job.
+
+#### func  MakeJobWithName
+
+```go
+func MakeJobWithName(obj Task, fn JobFn, name string) Job
+```
+Create a new job with a name.
 
 #### type JobFn
 
@@ -229,3 +237,9 @@ Insert a timed job into a list of jobs.
 func MakeTimedJob(runAt time.Time, obj Task, fn JobFn) TimedJob
 ```
 Create a new timed job.
+
+#### func  MakeTimedJobWithName
+
+```go
+func MakeTimedJobWithName(runAt time.Time, obj Task, fn JobFn, name string) TimedJob
+```

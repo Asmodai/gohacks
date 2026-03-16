@@ -112,6 +112,18 @@ func (mr *MockTimedJobMockRecorder) RunAt() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunAt", reflect.TypeOf((*MockTimedJob)(nil).RunAt))
 }
 
+// SetName mocks base method.
+func (m *MockTimedJob) SetName(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetName", arg0)
+}
+
+// SetName indicates an expected call of SetName.
+func (mr *MockTimedJobMockRecorder) SetName(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetName", reflect.TypeOf((*MockTimedJob)(nil).SetName), arg0)
+}
+
 // String mocks base method.
 func (m *MockTimedJob) String() string {
 	m.ctrl.T.Helper()

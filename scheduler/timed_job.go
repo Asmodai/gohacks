@@ -66,8 +66,14 @@ type timedjob struct {
 
 // ** Methods:
 
-func (t timedjob) RunAt() time.Time {
+// Get execution time.
+func (t *timedjob) RunAt() time.Time {
 	return t.runAt
+}
+
+// Set human-readable name.
+func (t *timedjob) SetName(name string) {
+	t.name = name
 }
 
 // Validate a job.
@@ -76,7 +82,7 @@ func (t timedjob) RunAt() time.Time {
 // function.
 //
 // If the job has both an object and a function, it is invalid.
-func (t timedjob) Validate() error {
+func (t *timedjob) Validate() error {
 	if err := t.job.Validate(); err != nil {
 		return err
 	}
@@ -99,6 +105,14 @@ func MakeTimedJob(runAt time.Time, obj Task, fn JobFn) TimedJob {
 		},
 		runAt: runAt,
 	}
+}
+
+func MakeTimedJobWithName(runAt time.Time, obj Task, fn JobFn, name string) TimedJob {
+	inst := MakeTimedJob(runAt, obj, fn)
+
+	inst.SetName(name)
+
+	return inst
 }
 
 // Insert a timed job into a list of jobs.

@@ -118,9 +118,10 @@ type testTimedJob struct {
 	runAt time.Time
 }
 
-func (t *testTimedJob) RunAt() time.Time { return t.runAt }
-func (t *testTimedJob) Name() string     { return t.id }
-func (t *testTimedJob) String() string   { return t.Name() }
+func (t *testTimedJob) RunAt() time.Time   { return t.runAt }
+func (t *testTimedJob) Name() string       { return t.id }
+func (t *testTimedJob) String() string     { return t.Name() }
+func (t *testTimedJob) SetName(val string) { t.id = val }
 
 // Satisfy `Job`.
 //

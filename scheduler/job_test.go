@@ -147,7 +147,7 @@ func TestJobInsertion(t *testing.T) {
 		for idx := range names {
 			jobs, err = InsertJob(
 				jobs,
-				job{obj: &SomeStruct{Name: names[idx]}, fn: nil})
+				&job{obj: &SomeStruct{Name: names[idx]}, fn: nil})
 
 			if err != nil {
 				t.Fatalf("Got error %#v", err)
