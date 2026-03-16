@@ -56,6 +56,20 @@ func (mr *MockTimedJobMockRecorder) Function() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Function", reflect.TypeOf((*MockTimedJob)(nil).Function))
 }
 
+// Name mocks base method.
+func (m *MockTimedJob) Name() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Name")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Name indicates an expected call of Name.
+func (mr *MockTimedJobMockRecorder) Name() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockTimedJob)(nil).Name))
+}
+
 // Object mocks base method.
 func (m *MockTimedJob) Object() scheduler.Task {
 	m.ctrl.T.Helper()
@@ -96,6 +110,20 @@ func (m *MockTimedJob) RunAt() time.Time {
 func (mr *MockTimedJobMockRecorder) RunAt() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunAt", reflect.TypeOf((*MockTimedJob)(nil).RunAt))
+}
+
+// String mocks base method.
+func (m *MockTimedJob) String() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "String")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// String indicates an expected call of String.
+func (mr *MockTimedJobMockRecorder) String() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockTimedJob)(nil).String))
 }
 
 // Validate mocks base method.

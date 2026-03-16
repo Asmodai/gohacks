@@ -821,4 +821,6 @@ That combination is a neat fit when you want message passing in Go without turni
 
 11. Do you miss `SELECTQ` and `DEFSELECT`?
 
-Yes.  Yes I do.
+Yes.
+
+Yes I do.

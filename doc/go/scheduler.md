@@ -85,6 +85,8 @@ type Job interface {
 
 	Object() Task
 	Function() JobFn
+	Name() string
+	String() string
 }
 ```
 

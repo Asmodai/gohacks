@@ -63,6 +63,8 @@ type Job interface {
 
 	Object() Task
 	Function() JobFn
+	Name() string
+	String() string
 }
 
 // ** Types:
@@ -72,18 +74,31 @@ type JobFn func(context.Context) error
 
 // Job structure.
 type job struct {
-	obj Task  // Object to execute.
-	fn  JobFn // Function to execute.
+	obj  Task   // Object to execute.
+	fn   JobFn  // Function to execute.
+	name string // Human-readable job name.
 }
 
 // ** Methods:
 
+// Return the object associated with this task.
 func (j job) Object() Task {
 	return j.obj
 }
 
+// Return the task's function.
 func (j job) Function() JobFn {
 	return j.fn
+}
+
+// Return the task's name.
+func (j job) Name() string {
+	return j.name
+}
+
+// Return the string representation of the task.
+func (j job) String() string {
+	return j.Name()
 }
 
 // Validate a job.
