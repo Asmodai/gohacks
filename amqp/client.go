@@ -514,8 +514,10 @@ func NewClient(ctx context.Context, cfg *Config, pool dynworker.WorkerPool) Clie
 		publishErrorMetric:     publishErrorTotal.With(label),
 	}
 
-	// Set the scaling function.
-	inst.pool.SetScalerFunction(inst.scaleWorkers)
+	if inst.pool != nil {
+		// Set the scaling function.
+		inst.pool.SetScalerFunction(inst.scaleWorkers)
+	}
 
 	return inst
 }
