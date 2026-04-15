@@ -116,7 +116,7 @@ func TestDispatch(t *testing.T) {
 		srv.SDFn = nil
 		srv.LSTLSFn = nil
 		srv.LSFn = func() error {
-			return fmt.Errorf(errmsg)
+			return fmt.Errorf("%s", errmsg)
 		}
 
 		lgr.EXPECT().
@@ -142,7 +142,7 @@ func TestDispatch(t *testing.T) {
 		srv.SDFn = nil
 		srv.LSFn = nil
 		srv.LSTLSFn = func(_, _ string) error {
-			return fmt.Errorf(errmsg)
+			return fmt.Errorf("%s", errmsg)
 		}
 
 		lgr.EXPECT().
@@ -168,7 +168,7 @@ func TestDispatch(t *testing.T) {
 		srv.LSFn = nil
 		srv.LSTLSFn = nil
 		srv.SDFn = func(_ context.Context) error {
-			return fmt.Errorf(errmsg)
+			return fmt.Errorf("%s", errmsg)
 		}
 
 		lgr.EXPECT().

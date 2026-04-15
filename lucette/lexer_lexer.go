@@ -113,6 +113,7 @@ func (l *lexer) lexRegex() error {
 			if errors.Is(err, io.EOF) {
 				return errors.WithMessagef(
 					ErrUnterminatedRegex,
+					"%s",
 					l.startPos.String())
 			}
 
@@ -121,7 +122,9 @@ func (l *lexer) lexRegex() error {
 
 		switch next {
 		case '\r', '\n':
-			return errors.WithMessagef(ErrNewlineInRegex, l.currPos.String())
+			return errors.WithMessagef(ErrNewlineInRegex,
+				"%s",
+				l.currPos.String())
 
 		case '\\':
 			next, err := l.readRune()
@@ -284,6 +287,7 @@ func (l *lexer) lexQuotedField() error {
 			if errors.Is(err, io.EOF) {
 				return errors.WithMessagef(
 					ErrUnterminatedField,
+					"%s",
 					l.currPos.String())
 			}
 
@@ -294,6 +298,7 @@ func (l *lexer) lexQuotedField() error {
 		case '\r', '\n':
 			return errors.WithMessagef(
 				ErrNewlineInField,
+				"%s",
 				l.currPos.String())
 
 		case '\\':
@@ -374,6 +379,7 @@ func (l *lexer) lexPhrase() error {
 			if errors.Is(err, io.EOF) {
 				return errors.WithMessagef(
 					ErrUnterminatedString,
+					"%s",
 					l.startPos.String())
 			}
 

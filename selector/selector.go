@@ -249,7 +249,7 @@ func (st *Table) invoke(
 			depth,
 			path)
 
-		Trace(err.Error())
+		Trace("%s", err.Error())
 
 		return NewSelectorError(sel, err), false
 	}
