@@ -250,6 +250,7 @@ func (obj *client) monitorConnection() {
 			"consumer", consumer,
 		)
 
+		obj.Close()
 		obj.disconnectMetric.Inc()
 		obj.reconnectLoop()
 
@@ -268,6 +269,9 @@ func (obj *client) reconnectLoop() {
 
 		default:
 			time.Sleep(obj.cfg.ReconnectDelay.Duration())
+
+			obj.lgr.Info("Attempting to reconnect to AMQP.",
+				"consumer", obj.cfg.ConsumerName)
 
 			obj.reconnectAttemptMetric.Inc()
 

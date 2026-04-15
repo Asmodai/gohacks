@@ -38,17 +38,17 @@ var (
 	// Error condition that signals an invalid time duration of some kind.
 	//
 	// This error is usually wrapped around a descriptive message string.
-	ErrInvalidDuration error = errors.Base("invalid time duration")
+	ErrInvalidDuration = errx.Base("invalid time duration")
 
 	// Error condition that signals that a duration is not a string value.
 	//
 	// This error is used by `Set` as well as JSON and YAML methods.
-	ErrDurationNotString error = errors.Base("duration must be a string")
+	ErrDurationNotString = errx.Base("duration must be a string")
 
 	// Error condition that signals that a duration is out of bounds.
 	//
 	// This is used by `Validate`.
-	ErrOutOfBounds error = errors.Base("duration out of bounds")
+	ErrOutOfBounds = errx.Base("duration out of bounds")
 )
 ```
 
@@ -58,13 +58,13 @@ var (
 	// kind.
 	//
 	// This error is usually wrapped around a descriptive message string.
-	ErrInvalidRFC3339 error = errors.Base("invalid RFC3339 timestamp")
+	ErrInvalidRFC3339 error = errx.Base("invalid RFC3339 timestamp")
 
 	// Error condition that signals that an RFC3339 timestamp is not a
 	// string format.
 	//
 	// This error is used by `Set` as well as JSON and YAML methods.
-	ErrRFC3339NotString error = errors.Base("RFC3339 timestamp  must be a string")
+	ErrRFC3339NotString error = errx.Base("RFC3339 timestamp  must be a string")
 )
 ```
 

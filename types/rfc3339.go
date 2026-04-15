@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package types
@@ -46,8 +42,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Asmodai/gohacks/errx"
+
 	"github.com/btubbs/datetime"
-	"gitlab.com/tozd/go/errors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -70,17 +67,16 @@ var (
 	// kind.
 	//
 	// This error is usually wrapped around a descriptive message string.
-	ErrInvalidRFC3339 error = errors.Base("invalid RFC3339 timestamp")
+	ErrInvalidRFC3339 error = errx.Base("invalid RFC3339 timestamp")
 
 	// Error condition that signals that an RFC3339 timestamp is not a
 	// string format.
 	//
 	// This error is used by `Set` as well as JSON and YAML methods.
-	ErrRFC3339NotString error = errors.Base("RFC3339 timestamp  must be a string")
+	ErrRFC3339NotString error = errx.Base("RFC3339 timestamp  must be a string")
 )
 
 // * Code:
-
 // ** Types
 
 // RFC 3339 time type.
@@ -89,7 +85,6 @@ var (
 type RFC3339 time.Time
 
 // ** Methods:
-
 // *** Coercion methods:
 
 // Coerce an RFC3339 time value to a string.
@@ -179,12 +174,10 @@ func (obj RFC3339) Sub(t time.Time) time.Duration {
 func (obj *RFC3339) Set(str string) error {
 	parsed, err := ParseRFC3339(str)
 	if err != nil {
-		return errors.WithMessagef(
-			ErrInvalidRFC3339,
+		return errx.WithMessagef(ErrInvalidRFC3339,
 			"invalid RFC3339 timestamp %q: %s",
 			str,
-			err.Error(),
-		)
+			err.Error())
 	}
 
 	*obj = parsed
@@ -212,11 +205,7 @@ func (obj *RFC3339) UnmarshalJSON(data []byte) error {
 func (obj RFC3339) MarshalJSON() ([]byte, error) {
 	res, err := json.Marshal(obj.String())
 
-	if err != nil {
-		err = errors.WithStack(err)
-	}
-
-	return res, err
+	return res, errx.WithStack(err)
 }
 
 // *** YAML methods:
@@ -226,7 +215,7 @@ func (obj *RFC3339) UnmarshalYAML(value *yaml.Node) error {
 	var str string
 
 	if err := value.Decode(&str); err != nil {
-		return errors.WrapWith(err, ErrRFC3339NotString)
+		return errx.WrapWith(err, ErrRFC3339NotString)
 	}
 
 	return obj.Set(str)
@@ -246,7 +235,7 @@ func (obj RFC3339) MarshalYAML() (any, error) {
 func (obj *RFC3339) SetYAML(value any) error {
 	str, ok := value.(string)
 	if !ok {
-		return errors.WithMessagef(
+		return errx.WithMessagef(
 			ErrRFC3339NotString,
 			"expected string, got %T",
 			value,
@@ -287,7 +276,7 @@ func TimeToMySQL(val time.Time) string {
 // is returned.
 func ParseRFC3339(data string) (RFC3339, error) {
 	if len(data) < minRFC3339Length {
-		return RFC3339{}, errors.WithMessagef(
+		return RFC3339{}, errx.WithMessagef(
 			ErrInvalidRFC3339,
 			"timestamp too short: %q",
 			data,
@@ -300,7 +289,7 @@ func ParseRFC3339(data string) (RFC3339, error) {
 	if tzChar == "Z" || tzOff == "+" || tzOff == "-" {
 		rval, err := time.Parse(time.RFC3339, data)
 		if err != nil {
-			return RFC3339{}, errors.WithStack(err)
+			return RFC3339{}, errx.WithStack(err)
 		}
 
 		return RFC3339(rval), nil
@@ -321,7 +310,7 @@ func ParseRFC3339(data string) (RFC3339, error) {
 	//nolint:gosmopolitan
 	rval, err := datetime.Parse(data, time.Local)
 	if err != nil {
-		return RFC3339{}, errors.WithStack(err)
+		return RFC3339{}, errx.WithStack(err)
 	}
 
 	return RFC3339(rval), nil

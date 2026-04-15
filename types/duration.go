@@ -31,10 +31,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package types
@@ -47,7 +43,8 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/tozd/go/errors"
+	"github.com/Asmodai/gohacks/errx"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -66,21 +63,20 @@ var (
 	// Error condition that signals an invalid time duration of some kind.
 	//
 	// This error is usually wrapped around a descriptive message string.
-	ErrInvalidDuration error = errors.Base("invalid time duration")
+	ErrInvalidDuration = errx.Base("invalid time duration")
 
 	// Error condition that signals that a duration is not a string value.
 	//
 	// This error is used by `Set` as well as JSON and YAML methods.
-	ErrDurationNotString error = errors.Base("duration must be a string")
+	ErrDurationNotString = errx.Base("duration must be a string")
 
 	// Error condition that signals that a duration is out of bounds.
 	//
 	// This is used by `Validate`.
-	ErrOutOfBounds error = errors.Base("duration out of bounds")
+	ErrOutOfBounds = errx.Base("duration out of bounds")
 )
 
 // * Code:
-
 // ** Types:
 
 // Enhanced time duration type.
@@ -115,7 +111,7 @@ func (obj Duration) Duration() time.Duration {
 func (obj *Duration) Set(str string) error {
 	dur, err := time.ParseDuration(str)
 	if err != nil {
-		return errors.WithMessagef(
+		return errx.WithMessagef(
 			ErrInvalidDuration,
 			"invalid duration %q: %s",
 			str,
@@ -144,7 +140,7 @@ func (obj Duration) Validate(minDuration, maxDuration time.Duration) error {
 	dur := time.Duration(obj)
 
 	if dur < minDuration || dur > maxDuration {
-		return errors.WithMessagef(
+		return errx.WithMessagef(
 			ErrOutOfBounds,
 			"duration %s is out of bounds [%s, %s]",
 			dur,
@@ -169,11 +165,7 @@ func (obj *Duration) UnmarshalJSON(data []byte) error {
 func (obj Duration) MarshalJSON() ([]byte, error) {
 	res, err := json.Marshal(obj.String())
 
-	if err != nil {
-		err = errors.WithStack(err)
-	}
-
-	return res, err
+	return res, errx.WithStack(err)
 }
 
 // *** YAML methods:
@@ -183,7 +175,7 @@ func (obj *Duration) UnmarshalYAML(value *yaml.Node) error {
 	var str string
 
 	if err := value.Decode(&str); err != nil {
-		return errors.WrapWith(err, ErrDurationNotString)
+		return errx.WrapWith(err, ErrDurationNotString)
 	}
 
 	return obj.Set(str)
@@ -203,7 +195,7 @@ func (obj Duration) MarshalYAML() (any, error) {
 func (obj *Duration) SetYAML(value any) error {
 	str, ok := value.(string)
 	if !ok {
-		return errors.WithMessagef(
+		return errx.WithMessagef(
 			ErrDurationNotString,
 			"expected string, got %T",
 			value,
@@ -222,7 +214,7 @@ func NewFromDuration(duration string) (Duration, error) {
 
 	err := obj.Set(duration)
 	if err != nil {
-		return obj, errors.WithStack(err)
+		return obj, errx.WithStack(err)
 	}
 
 	return obj, nil
