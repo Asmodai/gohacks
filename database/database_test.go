@@ -45,7 +45,7 @@ import (
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-sql-driver/mysql"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -131,10 +131,10 @@ func TestGetError_Postgres_Mappings_pgx(t *testing.T) {
 		err  error
 		want error
 	}{
-		{&pgx.PgError{Code: "40P01", Message: "deadlock"}, ErrTxnDeadlock},
-		{&pgx.PgError{Code: "40001", Message: "serialization"}, ErrTxnSerialization},
-		{&pgx.PgError{Code: "08006", Message: "conn failure"}, ErrLostConn},
-		{&pgx.PgError{Code: "57P01", Message: "admin shutdown"}, ErrServerConnClosed},
+		{&pgconn.PgError{Code: "40P01", Message: "deadlock"}, ErrTxnDeadlock},
+		{&pgconn.PgError{Code: "40001", Message: "serialization"}, ErrTxnSerialization},
+		{&pgconn.PgError{Code: "08006", Message: "conn failure"}, ErrLostConn},
+		{&pgconn.PgError{Code: "57P01", Message: "admin shutdown"}, ErrServerConnClosed},
 	}
 
 	for _, tt := range tests {
@@ -278,7 +278,7 @@ func TestWithTransaction_RetryOnPgSerialization(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectExec(regexp.QuoteMeta("UPDATE t SET v=$1 WHERE id=$2")).
 		WithArgs(1, 42).
-		WillReturnError(&pgx.PgError{Code: "40001", Message: "serialization failure"})
+		WillReturnError(&pgconn.PgError{Code: "40001", Message: "serialization failure"})
 	mock.ExpectRollback()
 
 	// Attempt 2: success -> commit

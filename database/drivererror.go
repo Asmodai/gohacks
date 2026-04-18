@@ -41,8 +41,8 @@ import (
 	"context"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/jackc/pgx" // for pgx
-	"github.com/lib/pq"    // for lib/pq
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 
 	"gitlab.com/tozd/go/errors"
 )
@@ -122,7 +122,7 @@ func mapMySQLError(err error) error {
 // Map PostgreSQL errors.
 func mapPostgresError(err error) error {
 	// pgx first
-	var pgerr *pgx.PgError
+	var pgerr *pgconn.PgError
 
 	if errors.As(err, &pgerr) {
 		return errors.WithStack(mapPgSQLState(pgerr.Code))
