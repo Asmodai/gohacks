@@ -85,17 +85,18 @@ func (mr *MockTimedCacheMockRecorder) Delete(arg0 any) *gomock.Call {
 }
 
 // Expired mocks base method.
-func (m *MockTimedCache) Expired() bool {
+func (m *MockTimedCache) Expired(arg0 any) (bool, bool) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Expired")
+	ret := m.ctrl.Call(m, "Expired", arg0)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
 }
 
 // Expired indicates an expected call of Expired.
-func (mr *MockTimedCacheMockRecorder) Expired() *gomock.Call {
+func (mr *MockTimedCacheMockRecorder) Expired(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Expired", reflect.TypeOf((*MockTimedCache)(nil).Expired))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Expired", reflect.TypeOf((*MockTimedCache)(nil).Expired), arg0)
 }
 
 // Flush mocks base method.

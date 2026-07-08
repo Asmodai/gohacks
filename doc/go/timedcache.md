@@ -96,7 +96,8 @@ Create a timed cache with a default configuration.
 
 ```go
 type Item struct {
-	Object any
+	Object    any
+	ExpiresAt time.Time
 }
 ```
 
@@ -169,8 +170,10 @@ type TimedCache interface {
 	// Return the time the cache was last updated.
 	LastUpdated() time.Time
 
-	//  Returns `true` if the cache has expired.
-	Expired() bool
+	//  Returns `true` if the cached key has expired.
+	//
+	// The second return value will be `true` if the item was found.
+	Expired(any) (bool, bool)
 
 	// Return a list of all keys in the cache.
 	Keys() []any

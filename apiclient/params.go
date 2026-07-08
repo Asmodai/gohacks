@@ -31,25 +31,20 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package apiclient
 
 // * Code:
-
 // ** Types:
 
-// Basic authentication configuration.
+// AuthBasic contains basic authentication configuration.
 type AuthBasic struct {
 	Username string
 	Password string
 }
 
-// Authentication token configuration.
+// AuthToken contains Authentication token configuration.
 //
 // This type does not care about the token type.  If you intend to make use of
 // token types such as JWTs then you must implement that code yourself.
@@ -59,6 +54,12 @@ type AuthToken struct {
 
 	// The authentication token.
 	Data string
+}
+
+// AuthBearer contains bearer header authentication configuration.
+type AuthBearer struct {
+	Header string
+	Bearer string
 }
 
 // Content types configuration.
@@ -86,6 +87,9 @@ type Params struct {
 	// Use an 'authentication token' to authenticate to the remote server.
 	UseToken bool
 
+	// Use a bearer token to authenticate to the remote server.
+	UseBearer bool
+
 	// MIME content type of the data we are sending and wish to accept from the
 	// remote server.
 	Content ContentType
@@ -95,6 +99,9 @@ type Params struct {
 
 	// Basic Auth configuration.
 	Basic AuthBasic
+
+	// Bearer authentication configuration.
+	Bearer AuthBearer
 
 	// Queries that are sent via the HTTP request.
 	Queries []*QueryParam
@@ -126,6 +133,11 @@ func (p *Params) SetUseToken(val bool) {
 	p.UseToken = val
 }
 
+// Enable/disable authentication via bearer header.
+func (p *Params) SetUseBearer(val bool) {
+	p.UseBearer = val
+}
+
 // ** Functions:
 
 // Create a new API parameters object.
@@ -145,6 +157,10 @@ func NewParams() *Params {
 		Basic: AuthBasic{
 			Username: "",
 			Password: "",
+		},
+		Bearer: AuthBearer{
+			Header: "",
+			Bearer: "",
 		},
 		Queries: []*QueryParam{},
 	}

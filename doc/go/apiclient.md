@@ -37,15 +37,15 @@ var (
 	// Triggered when an invalid authentication method is passed via the API
 	// parameters.  Will also be triggered if both basic auth and auth token
 	// methods are specified in the same parameters.
-	ErrInvalidAuthMethod = errors.Base("invalid authentication method")
+	ErrInvalidAuthMethod = errx.Base("invalid authentication method")
 
 	// Triggered if a required authentication method argument is not provided in
 	// the API parameters.
-	ErrMissingArgument = errors.Base("missing argument")
+	ErrMissingArgument = errx.Base("missing argument")
 
 	// Triggered if the result of an API call via the client does not have a
 	// `2xx` HTTP status code or fails the user-defined success check.
-	ErrNotOk = errors.Base("not ok")
+	ErrNotOk = errx.Base("not ok")
 )
 ```
 
@@ -100,7 +100,18 @@ type AuthBasic struct {
 }
 ```
 
-Basic authentication configuration.
+AuthBasic contains basic authentication configuration.
+
+#### type AuthBearer
+
+```go
+type AuthBearer struct {
+	Header string
+	Bearer string
+}
+```
+
+AuthBearer contains bearer header authentication configuration.
 
 #### type AuthToken
 
@@ -114,7 +125,7 @@ type AuthToken struct {
 }
 ```
 
-Authentication token configuration.
+AuthToken contains Authentication token configuration.
 
 This type does not care about the token type. If you intend to make use of token
 types such as JWTs then you must implement that code yourself.
@@ -346,6 +357,9 @@ type Params struct {
 	// Use an 'authentication token' to authenticate to the remote server.
 	UseToken bool
 
+	// Use a bearer token to authenticate to the remote server.
+	UseBearer bool
+
 	// MIME content type of the data we are sending and wish to accept from the
 	// remote server.
 	Content ContentType
@@ -355,6 +369,9 @@ type Params struct {
 
 	// Basic Auth configuration.
 	Basic AuthBasic
+
+	// Bearer authentication configuration.
+	Bearer AuthBearer
 
 	// Queries that are sent via the HTTP request.
 	Queries []*QueryParam
@@ -393,6 +410,13 @@ Clear all query parameters.
 func (p *Params) SetUseBasic(val bool)
 ```
 Enable/disable basic authentication.
+
+#### func (*Params) SetUseBearer
+
+```go
+func (p *Params) SetUseBearer(val bool)
+```
+Enable/disable authentication via bearer header.
 
 #### func (*Params) SetUseToken
 

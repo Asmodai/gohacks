@@ -185,8 +185,10 @@ type TimedCache interface {
 	// Return the time the cache was last updated.
 	LastUpdated() time.Time
 
-	//  Returns `true` if the cache has expired.
-	Expired() bool
+	//  Returns `true` if the cached key has expired.
+	//
+	// The second return value will be `true` if the item was found.
+	Expired(any) (bool, bool)
 
 	// Return a list of all keys in the cache.
 	Keys() []any
@@ -202,7 +204,8 @@ type MetricFn func()
 
 // Type definition for the internal cache item structure.
 type Item struct {
-	Object any
+	Object    any
+	ExpiresAt time.Time
 }
 
 // Type definition for the map of items in the cache.
@@ -230,12 +233,12 @@ type timedCache struct {
 // ** Methods:
 
 // Return a list of all keys in the cache.
-func (obj *timedCache) Keys() []any {
-	obj.mutex.RLock()
-	defer obj.mutex.RUnlock()
+func (tc *timedCache) Keys() []any {
+	tc.mutex.RLock()
+	defer tc.mutex.RUnlock()
 
-	keys := make([]any, 0, len(obj.items))
-	for k := range obj.items {
+	keys := make([]any, 0, len(tc.items))
+	for k := range tc.items {
 		keys = append(keys, k)
 	}
 
@@ -243,61 +246,67 @@ func (obj *timedCache) Keys() []any {
 }
 
 // Set the value for the given key.
-func (obj *timedCache) Set(key any, value any) {
+func (tc *timedCache) Set(key any, value any) {
 	var size int
 
 	now := time.Now()
 
-	obj.mutex.Lock()
+	tc.mutex.Lock()
 	// CRITICAL SECTION START.
 	{
-		obj.updated = now
-		obj.items[key] = Item{Object: value}
-		size = len(obj.items)
+		tc.updated = now
+		tc.items[key] = Item{
+			Object:    value,
+			ExpiresAt: now.Add(tc.expiration),
+		}
+		size = len(tc.items)
 	}
 	// CRITICAL SECTION END.
-	obj.mutex.Unlock()
+	tc.mutex.Unlock()
 
-	obj.cacheSetMetric.Inc()
-	obj.cacheItemsMetric.Set(float64(size))
-	obj.cacheUpdatedMetric.Set(float64(now.Unix()))
+	tc.cacheSetMetric.Inc()
+	tc.cacheItemsMetric.Set(float64(size))
+	tc.cacheUpdatedMetric.Set(float64(now.Unix()))
 }
 
-// Ge the value for the given key.
-func (obj *timedCache) Get(key any) (any, bool) {
-	obj.mutex.RLock()
-	itm, found := obj.items[key]
-	obj.mutex.RUnlock()
+// Get the value for the given key.
+func (tc *timedCache) Get(key any) (any, bool) {
+	tc.mutex.RLock()
+	itm, found := tc.items[key]
+	tc.mutex.RUnlock()
 
-	get := obj.cacheGetMetric
+	get := tc.cacheGetMetric
+	get.Inc()
 
-	if found {
-		get.Inc()
-		obj.cacheHitMetric.Inc()
+	if found && time.Now().Before(itm.ExpiresAt) {
+		tc.cacheHitMetric.Inc()
 
 		return itm.Object, true
 	}
 
-	get.Inc()
-	obj.cacheMissMetric.Inc()
+	if time.Now().After(itm.ExpiresAt) {
+		tc.Delete(key)
+	}
 
-	return itm, found
+	tc.cacheMissMetric.Inc()
+
+	return nil, false
 }
 
 // Add a new key/value pair to the cache.
 //
 // Triggers `ErrKeyExists` if the given key already exists.
-func (obj *timedCache) Add(key any, value any) error {
+func (tc *timedCache) Add(key any, value any) error {
 	var (
 		size int
 		now  time.Time
 	)
 
-	obj.mutex.Lock()
+	tc.mutex.Lock()
 	// CRITICAL SECTION START.
 	{
-		if _, exists := obj.items[key]; exists {
-			obj.mutex.Unlock() // Exit critical section here.
+		if _, exists := tc.items[key]; exists {
+			tc.mutex.Unlock() // Exit critical section here.
 
 			return errors.WithMessagef(
 				ErrKeyExists,
@@ -306,16 +315,19 @@ func (obj *timedCache) Add(key any, value any) error {
 		}
 
 		now = time.Now()
-		obj.items[key] = Item{Object: value}
-		obj.updated = now
-		size = len(obj.items)
+		tc.items[key] = Item{
+			Object:    value,
+			ExpiresAt: now.Add(tc.expiration),
+		}
+		tc.updated = now
+		size = len(tc.items)
 	}
 	// CRITICAL SECTION END.
-	obj.mutex.Unlock()
+	tc.mutex.Unlock()
 
-	obj.cacheSetMetric.Inc()
-	obj.cacheItemsMetric.Set(float64(size))
-	obj.cacheUpdatedMetric.Set(float64(now.Unix()))
+	tc.cacheSetMetric.Inc()
+	tc.cacheItemsMetric.Set(float64(size))
+	tc.cacheUpdatedMetric.Set(float64(now.Unix()))
 
 	return nil
 }
@@ -323,14 +335,14 @@ func (obj *timedCache) Add(key any, value any) error {
 // Replace the value for the given key.
 //
 // Triggers `ErrKeyNotExist` if the key does not exist.
-func (obj *timedCache) Replace(key any, value any) error {
+func (tc *timedCache) Replace(key any, value any) error {
 	var now time.Time
 
-	obj.mutex.Lock()
+	tc.mutex.Lock()
 	// CRITICAL SECTION START.
 	{
-		if _, exists := obj.items[key]; !exists {
-			obj.mutex.Unlock() // Exit critical section here.
+		if _, exists := tc.items[key]; !exists {
+			tc.mutex.Unlock() // Exit critical section here.
 
 			return errors.WithMessagef(
 				ErrKeyNotExist,
@@ -339,116 +351,132 @@ func (obj *timedCache) Replace(key any, value any) error {
 		}
 
 		now = time.Now()
-		obj.items[key] = Item{Object: value}
-		obj.updated = now
+		tc.items[key] = Item{
+			Object:    value,
+			ExpiresAt: now.Add(tc.expiration),
+		}
+		tc.updated = now
 	}
 	// CRITICAL SECTION END.
-	obj.mutex.Unlock()
+	tc.mutex.Unlock()
 
-	obj.cacheSetMetric.Inc()
-	obj.cacheUpdatedMetric.Set(float64(now.Unix()))
+	tc.cacheSetMetric.Inc()
+	tc.cacheUpdatedMetric.Set(float64(now.Unix()))
 
 	return nil
 }
 
 // Delete the given key from the cache.
-func (obj *timedCache) Delete(key any) (any, bool) {
+func (tc *timedCache) Delete(key any) (any, bool) {
 	var (
 		val      any
 		canEvict bool
 		evict    OnEvictFn
+		size     int
 	)
 
-	obj.mutex.Lock()
+	tc.mutex.Lock()
 	// CRITICAL SECTION START.
 	{
-		if itm, found := obj.items[key]; found {
-			delete(obj.items, key)
+		if itm, found := tc.items[key]; found {
+			delete(tc.items, key)
 
 			val = itm.Object
 			canEvict = true
-			evict = obj.onEvicted
+			evict = tc.onEvicted
 		}
+
+		size = len(tc.items)
 	}
 	// CRITICAL SECTION END.
-	obj.mutex.Unlock()
+	tc.mutex.Unlock()
 
 	if canEvict && evict != nil {
-		obj.cacheEvictMetric.Inc()
-		obj.cacheDeleteMetric.Inc()
-		obj.cacheUpdatedMetric.Set(float64(time.Now().Unix()))
+		tc.cacheEvictMetric.Inc()
+		tc.cacheDeleteMetric.Inc()
+		tc.cacheUpdatedMetric.Set(float64(time.Now().Unix()))
 
 		evict(key, val)
 	}
+
+	tc.cacheItemsMetric.Set(float64(size))
 
 	return val, canEvict
 }
 
 // Set the "on eviction" callback function.
-func (obj *timedCache) OnEvicted(fn OnEvictFn) {
-	obj.mutex.Lock()
-	obj.onEvicted = fn
-	obj.mutex.Unlock()
+func (tc *timedCache) OnEvicted(fn OnEvictFn) {
+	tc.mutex.Lock()
+	tc.onEvicted = fn
+	tc.mutex.Unlock()
 }
 
 // Return a count of the elements in the cache.
-func (obj *timedCache) Count() int {
-	obj.mutex.RLock()
-	itms := len(obj.items)
-	obj.mutex.RUnlock()
+func (tc *timedCache) Count() int {
+	tc.mutex.RLock()
+	itms := len(tc.items)
+	tc.mutex.RUnlock()
 
 	return itms
 }
 
 // Flush all elements from the cache.
-func (obj *timedCache) Flush() {
+func (tc *timedCache) Flush() {
 	var (
 		items CacheItems
 		evict OnEvictFn
 		now   time.Time
 	)
 
-	obj.mutex.Lock()
+	tc.mutex.Lock()
 	// CRITICAL SECTION START.
 	{
-		items = obj.items
-		evict = obj.onEvicted
+		items = tc.items
+		evict = tc.onEvicted
 		now = time.Now()
 
-		obj.updated = now
-		obj.items = CacheItems{}
+		tc.updated = now
+		tc.items = CacheItems{}
+
+		// Update the items count metric inside the lock.
+		tc.cacheItemsMetric.Set(float64(0))
 	}
 	// CRITICAL SECTION END.
-	obj.mutex.Unlock()
+	tc.mutex.Unlock()
 
 	if evict != nil {
 		for k, v := range items {
-			obj.cacheEvictMetric.Inc()
+			tc.cacheEvictMetric.Inc()
 
 			evict(k, v.Object)
 		}
 	}
 
-	obj.cacheFlushMetric.Inc()
-	obj.cacheUpdatedMetric.Set(float64(now.Unix()))
+	tc.cacheFlushMetric.Inc()
+	tc.cacheUpdatedMetric.Set(float64(now.Unix()))
 }
 
 // Return the time of the last cache update.
-func (obj *timedCache) LastUpdated() time.Time {
-	obj.mutex.RLock()
-	updated := obj.updated
-	obj.mutex.RUnlock()
+func (tc *timedCache) LastUpdated() time.Time {
+	tc.mutex.RLock()
+	updated := tc.updated
+	tc.mutex.RUnlock()
 
 	return updated
 }
 
-// Has the cache expired?
-func (obj *timedCache) Expired() bool {
-	obj.mutex.RLock()
-	end := obj.updated.Add(obj.expiration)
-	obj.mutex.RUnlock()
+// Has the cached item expired?
+func (tc *timedCache) Expired(key any) (bool, bool) {
+	tc.mutex.RLock()
+	itm, found := tc.items[key]
+	tc.mutex.RUnlock()
 
-	return time.Now().After(end)
+	// If not found, then bomb out.
+	if !found {
+		return false, false
+	}
+
+	return time.Now().After(itm.ExpiresAt), true
 }
 
 // * Functions:

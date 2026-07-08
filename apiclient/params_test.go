@@ -68,6 +68,14 @@ func TestAccessors(t *testing.T) {
 		}
 	})
 
+	t.Run("SetUseBearer works", func(t *testing.T) {
+		p.SetUseBearer(true)
+
+		if !p.UseBearer {
+			t.Error("No, UseBearer is not set!")
+		}
+	})
+
 	t.Run("AddQueryParam works", func(t *testing.T) {
 		p.AddQueryParam("drink", "yes please")
 

@@ -36,10 +36,11 @@ package timedcache
 // * Imports:
 
 import (
-	"gitlab.com/tozd/go/errors"
-
 	"fmt"
 	"testing"
+	"time"
+
+	"gitlab.com/tozd/go/errors"
 )
 
 // * Constants:
@@ -76,7 +77,7 @@ func OnEvictedEvent(key any, _ any) { hasEvicted = true }
 func NewTestConfig() *Config {
 	return &Config{
 		Name:           "test",
-		ExpirationTime: 2,
+		ExpirationTime: 15,
 		OnEvicted:      nil,
 	}
 }
@@ -115,7 +116,10 @@ func CheckKey(cache TimedCache, key any, value any) error {
 func TestAccessors(t *testing.T) {
 	testCache = New(NewTestConfig())
 
-	testCache.(*timedCache).items[TestKey1] = Item{Object: TestValue1}
+	testCache.(*timedCache).items[TestKey1] = Item{
+		Object:    TestValue1,
+		ExpiresAt: time.Now().Add(time.Duration(1) * time.Hour),
+	}
 
 	//
 	// Test Get() with a valid key.
@@ -222,6 +226,22 @@ func TestAccessors(t *testing.T) {
 	})
 
 	//
+	// Test Expired()
+	//
+	t.Run("Expired() works", func(t *testing.T) {
+		val, found := testCache.Expired(TestKey1)
+
+		if !found {
+			t.Fatal("Test key not found")
+		}
+
+		// We should be expired by now.
+		if val {
+			t.Error("Expired!?")
+		}
+	})
+
+	//
 	// Test that Delete() works.
 	//
 	t.Run("Delete() works", func(t *testing.T) {
@@ -272,17 +292,6 @@ func TestAccessors(t *testing.T) {
 		}
 	})
 
-	//
-	// Test Expired()
-	//
-	t.Run("Expired() works", func(t *testing.T) {
-		val := testCache.Expired()
-
-		// We should be expired by now.
-		if val {
-			t.Error("Expired!?")
-		}
-	})
 }
 
 func TestCallbacks(t *testing.T) {

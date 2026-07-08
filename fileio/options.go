@@ -167,7 +167,7 @@ func (opt *WriteOptions) sanity() error {
 	if opt.CreateMode != CreateModeAppend && opt.CreateMode != CreateModeTruncate {
 		return errors.WithMessagef(
 			ErrInvalidWriteMode,
-			"invalid create mode %q",
+			"invalid create mode %v",
 			opt.CreateMode)
 	}
 

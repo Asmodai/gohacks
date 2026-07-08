@@ -36,10 +36,6 @@
 
 // * Comments:
 
-//
-//
-//
-
 // * Package:
 
 package apiclient
@@ -53,8 +49,7 @@ import (
 	"net/http"
 	"net/http/httptrace"
 
-	"gitlab.com/tozd/go/errors"
-
+	"github.com/Asmodai/gohacks/errx"
 	"github.com/Asmodai/gohacks/logger"
 )
 
@@ -64,15 +59,15 @@ var (
 	// Triggered when an invalid authentication method is passed via the API
 	// parameters.  Will also be triggered if both basic auth and auth token
 	// methods are specified in the same parameters.
-	ErrInvalidAuthMethod = errors.Base("invalid authentication method")
+	ErrInvalidAuthMethod = errx.Base("invalid authentication method")
 
 	// Triggered if a required authentication method argument is not provided in
 	// the API parameters.
-	ErrMissingArgument = errors.Base("missing argument")
+	ErrMissingArgument = errx.Base("missing argument")
 
 	// Triggered if the result of an API call via the client does not have a
 	// `2xx` HTTP status code or fails the user-defined success check.
-	ErrNotOk = errors.Base("not ok")
+	ErrNotOk = errx.Base("not ok")
 )
 
 // * Code:
@@ -203,6 +198,24 @@ func (c *client) defaultCheckSuccess(code int) bool {
 	return (code >= http.StatusOK && code < http.StatusMultipleChoices)
 }
 
+func (c *client) sanityAuth(data *Params) bool {
+	methods := 0
+
+	if data.UseBasic {
+		methods++
+	}
+
+	if data.UseToken {
+		methods++
+	}
+
+	if data.UseBearer {
+		methods++
+	}
+
+	return methods <= 1
+}
+
 // The actual meat of the API client.
 // TODO: This function is way to complex.
 // TODO: Have this function pass HTTP headers to the success check
@@ -212,7 +225,7 @@ func (c *client) defaultCheckSuccess(code int) bool {
 func (c *client) httpAction(ctx context.Context, verb string, data *Params) Response {
 	req, err := http.NewRequestWithContext(ctx, verb, data.URL, nil)
 	if err != nil {
-		return NewResponseFromError(errors.WithStack(err))
+		return NewResponseFromError(errx.WithStack(err))
 	}
 
 	// Set `Accept` header if required.
@@ -226,11 +239,11 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) Resp
 	}
 
 	// Error if we're told to use both basic auth and an auth token.
-	if data.UseBasic && data.UseToken {
+	if !c.sanityAuth(data) {
 		return NewResponseFromError(
-			errors.Wrap(
+			errx.Wrap(
 				ErrInvalidAuthMethod,
-				"cannot use basic auth and token at the same time",
+				"multiple authentication methods enabled",
 			),
 		)
 	}
@@ -239,7 +252,7 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) Resp
 	if data.UseBasic {
 		if data.Basic.Username == "" {
 			return NewResponseFromError(
-				errors.Wrap(
+				errx.Wrap(
 					ErrMissingArgument,
 					"no basic auth username given",
 				),
@@ -253,7 +266,7 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) Resp
 	if data.UseToken {
 		if data.Token.Header == "" {
 			return NewResponseFromError(
-				errors.Wrap(
+				errx.Wrap(
 					ErrMissingArgument,
 					"no auth token header given",
 				),
@@ -261,6 +274,30 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) Resp
 		}
 
 		req.Header.Add(data.Token.Header, data.Token.Data)
+	}
+
+	// Set up bearer token if required.
+	if data.UseBearer {
+		if data.Bearer.Header == "" {
+			return NewResponseFromError(
+				errx.Wrap(
+					ErrMissingArgument,
+					"no bearer header given",
+				),
+			)
+		}
+
+		if data.Bearer.Bearer == "" {
+			return NewResponseFromError(
+				errx.Wrap(
+					ErrMissingArgument,
+					"no bearer value given",
+				),
+			)
+		}
+
+		req.Header.Add(data.Bearer.Header,
+			"Bearer "+data.Bearer.Bearer)
 	}
 
 	// Append URI parameters.
@@ -277,7 +314,7 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) Resp
 	// Perform the request.
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return NewResponseFromError(errors.WithStack(err))
+		return NewResponseFromError(errx.WithStack(err))
 	}
 
 	// Must ensure the body is closed so that the connection can be
@@ -293,7 +330,7 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) Resp
 			resp.StatusCode,
 			[]byte{},
 			resp.Header,
-			errors.Wrap(
+			errx.Wrap(
 				ErrNotOk,
 				fmt.Sprintf(
 					"received status code %d for %s",
@@ -311,7 +348,7 @@ func (c *client) httpAction(ctx context.Context, verb string, data *Params) Resp
 			resp.StatusCode,
 			[]byte{},
 			resp.Header,
-			errors.WithStack(err),
+			errx.WithStack(err),
 		)
 	}
 

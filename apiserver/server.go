@@ -34,13 +34,14 @@
 package apiserver
 
 import (
-	"github.com/gin-gonic/gin"
-	"gitlab.com/tozd/go/errors"
-
 	"context"
 	"crypto/tls"
+	"net"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"gitlab.com/tozd/go/errors"
 )
 
 const (
@@ -103,6 +104,15 @@ func (s *server) ListenAndServeTLS(cert, key string) error {
 // Listen and serve requests using HTTP.
 func (s *server) ListenAndServe() error {
 	if err := s.srv.ListenAndServe(); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+// Serve from a Unix socket.
+func (s *server) ServeSocket(lst net.Listener) error {
+	if err := s.srv.Serve(lst); err != nil {
 		return errors.WithStack(err)
 	}
 

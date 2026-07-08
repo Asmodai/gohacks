@@ -42,6 +42,7 @@ package apiclient
 // * Imports:
 
 import (
+	"github.com/Asmodai/gohacks/errx"
 	"github.com/Asmodai/gohacks/logger"
 	"github.com/Asmodai/gohacks/rlhttp"
 
@@ -263,7 +264,7 @@ func TestGet(t *testing.T) {
 
 	// Test if client complains if multiple auth types are requested.
 	t.Run(
-		"Complains if both auth types are used",
+		"Complains if multiple auth types are used",
 		func(t *testing.T) {
 			resp := invokeGet(
 				ctx,
@@ -286,7 +287,8 @@ func TestGet(t *testing.T) {
 				return
 			}
 
-			if resp.Error.Error() != "cannot use basic auth and token at the same time" {
+			if !errx.Is(resp.Error, ErrInvalidAuthMethod) {
+				//			if resp.Error.Error() != "cannot use basic auth and token at the same time" {
 				t.Errorf("No, '%v'", resp.Error.Error())
 			}
 		},

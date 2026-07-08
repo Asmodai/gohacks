@@ -258,7 +258,9 @@ func (s *Priority) run() {
 
 				jobs, err = InsertTimedJob(jobs, njob)
 				if err != nil {
-					s.lgr.Fatalf(err.Error())
+					s.lgr.Fatal(
+						"Error while inserting job",
+						"err", err.Error())
 				}
 
 				s.activeTasksMetric.Set(float64(len(jobs)))
