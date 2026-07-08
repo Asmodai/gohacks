@@ -48,6 +48,7 @@ MODULES = amqp            \
 	  apiclient       \
 	  apiserver       \
 	  app             \
+	  cache           \
 	  config          \
 	  contextdi       \
 	  contextext      \
