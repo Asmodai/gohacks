@@ -43,6 +43,7 @@ package apiclient
 // * Imports:
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -223,7 +224,14 @@ func (c *client) sanityAuth(data *Params) bool {
 //
 //nolint:cyclop,funlen
 func (c *client) httpAction(ctx context.Context, verb string, data *Params) Response {
-	req, err := http.NewRequestWithContext(ctx, verb, data.URL, nil)
+	var body io.Reader
+
+	// Body.
+	if len(data.Body) > 0 {
+		body = bytes.NewReader(data.Body)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, verb, data.URL, body)
 	if err != nil {
 		return NewResponseFromError(errx.WithStack(err))
 	}

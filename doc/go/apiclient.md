@@ -375,6 +375,9 @@ type Params struct {
 
 	// Queries that are sent via the HTTP request.
 	Queries []*QueryParam
+
+	// `POST' body.
+	Body []byte
 }
 ```
 
